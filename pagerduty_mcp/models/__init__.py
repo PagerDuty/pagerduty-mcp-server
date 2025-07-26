@@ -26,9 +26,9 @@ from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
 from .users import User, UserQuery
 
 __all__ = [
+    "MAX_RESULTS",
     "Alert",
     "AlertQuery",
-    "MAX_RESULTS",
     "EscalationPolicy",
     "EscalationPolicyQuery",
     "Incident",

@@ -68,10 +68,10 @@ def list_schedule_users(schedule_id: str) -> ListResponseModel[User]:
 
 def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
     """Create a new on-call schedule.
-    
+
     Args:
         create_model: The schedule creation data
-        
+
     Returns:
         The created schedule
     """

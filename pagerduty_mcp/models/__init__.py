@@ -71,6 +71,7 @@ from .schedules import (
     ScheduleLayerUser,
     ScheduleOverrideCreate,
     ScheduleQuery,
+    ScheduleUpdateRequest,
 )
 from .services import Service, ServiceCreate, ServiceQuery
 from .status_pages import (
@@ -147,7 +148,6 @@ __all__ = [
     "InlineStepInput",
     "IntelligentGroupingConfig",
     "ListResponseModel",
-    "MAX_RESULTS",
     "MCPContext",
     "Oncall",
     "OncallQuery",
@@ -169,6 +169,7 @@ __all__ = [
     "ScheduleOverrideCreate",
     "ScheduleQuery",
     "ScheduleReference",
+    "ScheduleUpdateRequest",
     "Service",
     "ServiceCreate",
     "ServiceQuery",

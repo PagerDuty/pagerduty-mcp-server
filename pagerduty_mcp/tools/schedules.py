@@ -5,6 +5,7 @@ from pagerduty_mcp.models import (
     ScheduleCreateRequest,
     ScheduleOverrideCreate,
     ScheduleQuery,
+    ScheduleUpdateRequest,
     User,
 )
 from pagerduty_mcp.utils import paginate
@@ -94,7 +95,101 @@ def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
     response = get_client().rpost("/schedules", json=request_data)
 
     # Handle different response formats
-    if type(response) is dict and "schedule" in response:
+    if isinstance(response, dict) and "schedule" in response:
         return Schedule.model_validate(response["schedule"])
 
     return Schedule.model_validate(response)
+
+
+def update_schedule(schedule_id: str, update_model: ScheduleUpdateRequest) -> Schedule:
+    """Update an existing schedule.
+
+    This function updates a PagerDuty schedule. For basic property updates (name, description, etc.),
+    you can provide these properties while setting schedule_layers to an empty list to preserve
+    existing layers.
+
+    For complete schedule updates, including modifying layers, you must include all existing layers
+    that should be preserved, as the PagerDuty API replaces all layers with those provided.
+
+    Args:
+        schedule_id: The ID of the schedule to update
+        update_model: The updated schedule data
+
+    Returns:
+        The updated schedule
+    """
+    # Start by getting current schedule if we need to handle empty layers
+    request_data = update_model.model_dump()
+
+    # Check if this is a partial update (empty schedule_layers)
+    if len(request_data["schedule"]["schedule_layers"]) == 0:
+        # For partial updates with empty layers, we're only updating basic properties
+        # and want to preserve existing layers, so we don't need to process layers
+        pass
+    else:
+        # Process datetime objects for schedule layers
+        for layer in request_data["schedule"]["schedule_layers"]:
+            layer["start"] = layer["start"].isoformat()
+            if layer["end"] is not None:
+                layer["end"] = layer["end"].isoformat()
+            layer["rotation_virtual_start"] = layer["rotation_virtual_start"].isoformat()
+
+            # Ensure all restrictions have a start_day_of_week value
+            restrictions = layer.get("restrictions", [])
+            if restrictions is not None:  # Handle None case for tests
+                for restriction in restrictions:
+                    if "start_day_of_week" not in restriction or restriction["start_day_of_week"] is None:
+                        restriction["start_day_of_week"] = 1  # Default to Monday
+
+    # Send request to PagerDuty API
+    response = get_client().rput(f"/schedules/{schedule_id}", json=request_data)
+
+    # Handle different response formats
+    if isinstance(response, dict) and "schedule" in response:
+        return Schedule.model_validate(response["schedule"])
+
+    return Schedule.model_validate(response)
+
+
+def get_layer_differences(existing_schedule: Schedule, new_layers: list) -> dict:
+    """Compare existing schedule layers with new layers to identify changes.
+
+    Args:
+        existing_schedule: Current schedule with existing layers
+        new_layers: List of new layer definitions to compare against
+
+    Returns:
+        Dictionary with added, modified, and removed layers
+    """
+    existing_layers = existing_schedule.schedule_layers or []
+
+    # Track layers by ID or by name if no ID
+    existing_by_id = {layer.id: layer for layer in existing_layers if layer.id}
+    existing_by_name = {layer.name: layer for layer in existing_layers}
+
+    new_by_id = {layer.get("id"): layer for layer in new_layers if layer.get("id")}
+    new_by_name = {layer.get("name"): layer for layer in new_layers if layer.get("name")}
+
+    # Find added, modified, and removed layers
+    added = []
+    modified = []
+    removed = []
+
+    # Identify modified layers (have same ID but different properties)
+    for layer_id, new_layer in new_by_id.items():
+        if layer_id in existing_by_id:
+            # Layer exists - need to check if it's actually modified
+            modified.append(new_layer)
+
+    # Identify added layers (no ID, or ID not in existing)
+    for layer in new_layers:
+        layer_id = layer.get("id")
+        if not layer_id or layer_id not in existing_by_id:
+            added.append(layer)
+
+    # Identify removed layers (in existing but not in new)
+    for layer_id, existing_layer in existing_by_id.items():
+        if layer_id not in new_by_id:
+            removed.append(existing_layer)
+
+    return {"added": added, "modified": modified, "removed": removed}

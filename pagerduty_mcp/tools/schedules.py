@@ -44,15 +44,12 @@ def create_schedule_override(schedule_id: str, override_request: ScheduleOverrid
     Returns:
         The created schedule override
     """
-    json_data = override_request.model_dump()
+    request_data = override_request.model_dump()
+    for override in request_data["overrides"]:
+        override["start"] = override["start"].isoformat()
+        override["end"] = override["end"].isoformat()
 
-    # Convert datetime objects to ISO format strings for API compatibility
-    for i, override in enumerate(json_data["overrides"]):
-        original_override = override_request.overrides[i]
-        override["start"] = original_override.start.isoformat()
-        override["end"] = original_override.end.isoformat()
-
-    return get_client().rpost(f"/schedules/{schedule_id}/overrides", json=json_data)
+    return get_client().rpost(f"/schedules/{schedule_id}/overrides", json=request_data)
 
 
 def list_schedule_users(schedule_id: str) -> ListResponseModel[User]:

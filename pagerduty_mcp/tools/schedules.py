@@ -2,6 +2,7 @@ from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
     ListResponseModel,
     Schedule,
+    ScheduleCreateRequest,
     ScheduleOverrideCreate,
     ScheduleQuery,
     User,
@@ -62,3 +63,30 @@ def list_schedule_users(schedule_id: str) -> ListResponseModel[User]:
     response = get_client().rget(f"/schedules/{schedule_id}/users")
     users = [User(**user) for user in response]
     return ListResponseModel[User](response=users)
+
+
+def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
+    """Create a new on-call schedule.
+    
+    Args:
+        create_model: The schedule creation data
+        
+    Returns:
+        The created schedule
+    """
+    # Convert datetime objects to ISO 8601 strings for all schedule layers
+    request_data = create_model.model_dump()
+    for layer in request_data["schedule"]["schedule_layers"]:
+        layer["start"] = layer["start"].isoformat()
+        if layer["end"] is not None:
+            layer["end"] = layer["end"].isoformat()
+        layer["rotation_virtual_start"] = layer["rotation_virtual_start"].isoformat()
+
+    # Send request to PagerDuty API
+    response = get_client().rpost("/schedules", json=request_data)
+
+    # Handle different response formats
+    if type(response) is dict and "schedule" in response:
+        return Schedule.model_validate(response["schedule"])
+
+    return Schedule.model_validate(response)

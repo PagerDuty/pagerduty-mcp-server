@@ -102,12 +102,19 @@ class ScheduleOverrideCreate(BaseModel):
 
 
 class ScheduleLayerRestriction(BaseModel):
+    """Represents a restriction on a schedule layer.
+
+    Note: The PagerDuty API requires a start_day_of_week value for ALL restrictions,
+    even for daily_restriction type. We default to 1 (Monday) when not specified.
+    Values follow ISO-8601 convention: 1=Monday through 7=Sunday.
+    """
+
     type: str = Field(description="The type of restriction (daily_restriction or weekly_restriction)")
     start_time_of_day: str = Field(description="The time of day when the restriction starts (HH:MM:SS)")
     duration_seconds: int = Field(description="The duration of the restriction in seconds")
-    start_day_of_week: int | None = Field(
-        default=None,
-        description="The day of week the restriction starts (only for weekly_restriction)",
+    start_day_of_week: int = Field(
+        default=1,  # Default to Monday (1)
+        description="The day of week the restriction starts (1=Monday, 7=Sunday, ISO-8601). Required for all types.",
     )
 
 

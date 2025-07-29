@@ -16,6 +16,7 @@ from .incidents import (
 )
 from .oncalls import list_oncalls
 from .schedules import (
+    create_schedule,
     create_schedule_override,
     get_schedule,
     list_schedule_users,
@@ -82,6 +83,7 @@ write_tools = [
     add_team_member,
     remove_team_member,
     # Schedules
+    create_schedule,
     create_schedule_override,
     # Escalation Policies - currently disabled
     # create_escalation_policy,

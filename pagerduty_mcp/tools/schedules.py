@@ -83,6 +83,13 @@ def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
             layer["end"] = layer["end"].isoformat()
         layer["rotation_virtual_start"] = layer["rotation_virtual_start"].isoformat()
 
+        # Ensure all restrictions have a start_day_of_week value
+        restrictions = layer.get("restrictions", [])
+        if restrictions is not None:  # Handle None case for tests
+            for restriction in restrictions:
+                if "start_day_of_week" not in restriction or restriction["start_day_of_week"] is None:
+                    restriction["start_day_of_week"] = 1  # Default to Monday
+
     # Send request to PagerDuty API
     response = get_client().rpost("/schedules", json=request_data)
 

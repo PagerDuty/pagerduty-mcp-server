@@ -41,6 +41,7 @@ from .schedules import (
     get_schedule,
     list_schedule_users,
     list_schedules,
+    update_schedule,
 )
 from .services import (
     create_service,

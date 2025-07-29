@@ -152,3 +152,13 @@ class ScheduleCreateRequest(BaseModel):
     schedule: ScheduleCreateData = Field(
         description="The schedule to be created",
     )
+
+
+class ScheduleUpdateRequest(BaseModel):
+    schedule: ScheduleCreateData = Field(
+        description="The updated schedule data",
+    )
+    id: str | None = Field(
+        default=None,
+        description="The ID of the schedule to update (optional if provided in path)",
+    )

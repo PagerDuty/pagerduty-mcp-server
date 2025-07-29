@@ -238,6 +238,7 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | list_schedule_users      | Schedules          | Lists users in a schedule                           | ✅         |
 | list_schedules           | Schedules          | Lists schedules                                     | ✅         |
 | create_schedule          | Schedules          | Creates a new on-call schedule                      | ❌         |
+| update_schedule          | Schedules          | Updates an existing schedule                        | ❌         |
 | create_service           | Services           | Creates a new service                               | ❌         |
 | get_service              | Services           | Retrieves a specific service                        | ✅         |
 | list_services            | Services           | Lists services                                      | ✅         |

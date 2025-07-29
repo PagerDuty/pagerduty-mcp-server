@@ -23,12 +23,14 @@ from .schedules import (
     ScheduleLayerUser,
     ScheduleOverrideCreate,
     ScheduleQuery,
+    ScheduleUpdateRequest,
 )
 from .services import Service, ServiceCreate, ServiceQuery
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
 from .users import User, UserQuery
 
 __all__ = [
+    "MAX_RESULTS",
     "EscalationPolicy",
     "EscalationPolicyQuery",
     "Incident",
@@ -41,7 +43,6 @@ __all__ = [
     "IncidentResponderRequest",
     "IncidentResponderRequestResponse",
     "ListResponseModel",
-    "MAX_RESULTS",
     "MCPContext",
     "Oncall",
     "OncallQuery",
@@ -55,6 +56,7 @@ __all__ = [
     "ScheduleOverrideCreate",
     "ScheduleQuery",
     "ScheduleReference",
+    "ScheduleUpdateRequest",
     "Service",
     "ServiceCreate",
     "ServiceQuery",

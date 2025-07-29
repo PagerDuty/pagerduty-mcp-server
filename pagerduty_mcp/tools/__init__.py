@@ -21,6 +21,7 @@ from .schedules import (
     get_schedule,
     list_schedule_users,
     list_schedules,
+    update_schedule,
 )
 from .services import (
     create_service,
@@ -85,6 +86,7 @@ write_tools = [
     # Schedules
     create_schedule,
     create_schedule_override,
+    update_schedule,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

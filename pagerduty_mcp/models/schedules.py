@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, ClassVar, Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, computed_field
 

@@ -16,10 +16,12 @@ from .incidents import (
 )
 from .oncalls import list_oncalls
 from .schedules import (
+    create_schedule,
     create_schedule_override,
     get_schedule,
     list_schedule_users,
     list_schedules,
+    update_schedule,
 )
 from .services import (
     create_service,
@@ -82,7 +84,9 @@ write_tools = [
     add_team_member,
     remove_team_member,
     # Schedules
+    create_schedule,
     create_schedule_override,
+    update_schedule,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

@@ -192,3 +192,9 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Project Documentation
+IMPLEMENTATION_GUIDE.md
+Adding\ Schedule\ Creation\ Support.md
+Golden\ Template\ and\ Requirements\ for\ Extending\ PagerDuty\ MCP\ Server.md
+CLAUDE.md

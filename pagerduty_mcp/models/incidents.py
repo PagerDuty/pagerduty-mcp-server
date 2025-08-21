@@ -195,6 +195,7 @@ class IncidentResponderRequestResponse(BaseModel):
     message: str | None = Field(default=None, description="The message included with the request")
     responder_request_targets: list[dict[str, Any]] = Field(description="The users requested to respond")
 
+
 class IncidentNote(BaseModel):
     id: str | None = Field(description="The ID of the note", default=None)
     content: str = Field(description="The content of the note")

@@ -15,10 +15,15 @@ from .oncalls import Oncall, OncallQuery
 from .references import IncidentReference, ScheduleReference, ServiceReference, TeamReference, UserReference
 from .schedules import (
     Schedule,
+    ScheduleCreateData,
+    ScheduleCreateRequest,
     ScheduleLayer,
+    ScheduleLayerCreate,
+    ScheduleLayerRestriction,
     ScheduleLayerUser,
     ScheduleOverrideCreate,
     ScheduleQuery,
+    ScheduleUpdateRequest,
 )
 from .services import Service, ServiceCreate, ServiceQuery
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
@@ -42,11 +47,16 @@ __all__ = [
     "Oncall",
     "OncallQuery",
     "Schedule",
+    "ScheduleCreateData",
+    "ScheduleCreateRequest",
     "ScheduleLayer",
+    "ScheduleLayerCreate",
+    "ScheduleLayerRestriction",
     "ScheduleLayerUser",
     "ScheduleOverrideCreate",
     "ScheduleQuery",
     "ScheduleReference",
+    "ScheduleUpdateRequest",
     "Service",
     "ServiceCreate",
     "ServiceQuery",

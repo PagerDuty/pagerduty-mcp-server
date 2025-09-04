@@ -19,7 +19,7 @@ def list_log_entries(query_model: LogEntriesQuery) -> ListResponseModel[LogEntri
     return ListResponseModel[LogEntries](response=log_entries)
 
 
-def get_log_entry(log_entry_id: str, query_model: GetLogEntriesQuery) -> LogEntries:
+def get_log_entry(log_entry_id: str, query_model: GetLogEntriesQuery = GetLogEntriesQuery(include=["channels"])) -> LogEntries:
     """Get a specific log entry by ID for a given incident.
 
     Args:

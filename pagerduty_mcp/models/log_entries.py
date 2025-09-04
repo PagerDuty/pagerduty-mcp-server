@@ -52,7 +52,7 @@ class LogEntriesQuery(BaseModel):
 
 class GetLogEntriesQuery(BaseModel):
     include: list[LogEntriesInclude] | None = Field(
-        description="Additional Models to include in response", default=["channels"]
+        description="Additional Models to include in response", default=[]
     )
     time_zone: str | None = Field(
         description="Time zone in which dates should be rendered (e.g., 'America/New_York')", default=None

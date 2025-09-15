@@ -80,6 +80,10 @@ class Alert(BaseModel):
         default=None,
         description="The alert body containing details and context",
     )
+    first_trigger_log_entry: dict[str, Any] | None = Field(
+        default=None,
+        description="The first log entry for the alert",
+    )
 
     @computed_field
     @property

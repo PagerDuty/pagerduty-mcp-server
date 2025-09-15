@@ -38,6 +38,11 @@ class TestAlertTools(unittest.TestCase):
                 "type": "alert_body",
                 "details": "Test alert details",
             },
+            "first_trigger_log_entry": {
+                "id": "PLOGENTRY123",
+                "type": "trigger_log_entry",
+                "summary": "Alert triggered",
+            },
         }
 
         cls.sample_alert_list_response = {
@@ -62,6 +67,9 @@ class TestAlertTools(unittest.TestCase):
         self.assertEqual(result.summary, "Test Alert")
         self.assertEqual(result.status, "triggered")
         self.assertEqual(result.severity, "critical")
+        self.assertIsNotNone(result.first_trigger_log_entry)
+        self.assertEqual(result.first_trigger_log_entry["id"], "PLOGENTRY123")
+        self.assertEqual(result.first_trigger_log_entry["type"], "trigger_log_entry")
         mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/alerts/PALERT123")
 
     @patch("pagerduty_mcp.tools.alerts.paginate")

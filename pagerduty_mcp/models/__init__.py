@@ -11,6 +11,7 @@ from .incidents import (
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
 )
+from .log_entries import GetLogEntriesQuery, LogEntries, LogEntriesQuery
 from .oncalls import Oncall, OncallQuery
 from .references import IncidentReference, ScheduleReference, ServiceReference, TeamReference, UserReference
 from .schedules import (
@@ -38,6 +39,9 @@ __all__ = [
     "IncidentResponderRequest",
     "IncidentResponderRequestResponse",
     "ListResponseModel",
+    "GetLogEntriesQuery",
+    "LogEntries",
+    "LogEntriesQuery",
     "MCPContext",
     "Oncall",
     "OncallQuery",

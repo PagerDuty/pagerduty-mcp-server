@@ -199,6 +199,8 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_service              | Services           | Retrieves a specific service                        | ✅         |
 | list_services            | Services           | Lists services                                      | ✅         |
 | update_service           | Services           | Updates an existing service                         | ❌         |
+| list_log_entries         | Log Entries        | List all of the incident log entries                | ✅         |
+| get_log_entry            | Log Entries        | Get details for a specific incident log entry       | ✅         |
 
 
 ## Support

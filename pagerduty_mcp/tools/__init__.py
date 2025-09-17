@@ -14,6 +14,7 @@ from .incidents import (
     list_incidents,
     manage_incidents,
 )
+from .log_entries import list_log_entries, get_log_entry
 from .oncalls import list_oncalls
 from .schedules import (
     create_schedule_override,
@@ -63,6 +64,9 @@ read_tools = [
     # Escalation Policies
     list_escalation_policies,
     get_escalation_policy,
+    # Log Entries
+    list_log_entries,
+    get_log_entry,
 ]
 
 # Write tools (potentially dangerous operations that modify state)

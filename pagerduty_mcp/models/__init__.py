@@ -10,6 +10,8 @@ from .incidents import (
     IncidentQuery,
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
+    ResponderRequest,
+    ResponderRequestTarget,
 )
 from .oncalls import Oncall, OncallQuery
 from .references import IncidentReference, ScheduleReference, ServiceReference, TeamReference, UserReference
@@ -41,6 +43,8 @@ __all__ = [
     "MCPContext",
     "Oncall",
     "OncallQuery",
+    "ResponderRequest",
+    "ResponderRequestTarget",
     "Schedule",
     "ScheduleLayer",
     "ScheduleLayerUser",

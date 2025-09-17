@@ -178,17 +178,15 @@ class IncidentManageRequest(BaseModel):
 
 
 class ResponderRequest(BaseModel):
-    id: str = Field(description="The ID of the user to request as a responder")
-
-    @computed_field
-    @property
-    def type(self) -> Literal["user_reference"]:
-        return "user_reference"
+    id: str = Field(description="The ID of the user or escalation policy to request as a responder")
+    type: Literal["user_reference", "escalation_policy_reference"] = Field(
+        description="The type of target (either a user or an escalation policy)"
+    )
 
 
 class ResponderRequestTarget(BaseModel):
     responder_request_target: ResponderRequest = Field(
-        description="Array of user IDs to request as responders",
+        description="Array of user or escalation policy IDs to request as responders",
     )
 
 
@@ -198,7 +196,7 @@ class IncidentResponderRequest(BaseModel):
         description="Optional message to include with the responder request",
     )
     responder_request_targets: list[ResponderRequestTarget] = Field(
-        description="Array of user IDs to request as responders",
+        description="Array of user or escalation policy IDs to request as responders",
     )
 
 

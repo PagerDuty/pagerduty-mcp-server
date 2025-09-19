@@ -6,5 +6,6 @@ def main():
     print("Starting PagerDuty MCP Server. Use the --enable-write-tools flag to enable write tools.")
     app()
 
+
 if __name__ == "__main__":
     main()

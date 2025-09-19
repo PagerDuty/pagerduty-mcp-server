@@ -208,8 +208,48 @@ class IncidentResponderRequestResponse(BaseModel):
     message: str | None = Field(default=None, description="The message included with the request")
     responder_request_targets: list[dict[str, Any]] = Field(description="The users requested to respond")
 
+
 class IncidentNote(BaseModel):
     id: str | None = Field(description="The ID of the note", default=None)
     content: str = Field(description="The content of the note")
     created_at: datetime = Field(description="The time the note was created")
     user: UserReference = Field(description="The user who created the note")
+
+
+# Log Entry Models
+class LogEntryAgent(BaseModel):
+    id: str = Field(description="The ID of the agent")
+    type: str = Field(description="The type of the agent")
+    summary: str = Field(description="A summary of the agent")
+    self: str | None = Field(default=None, description="The API URL of the agent")
+    html_url: str | None = Field(default=None, description="The web URL of the agent")
+
+
+class LogEntryChannel(BaseModel):
+    type: str = Field(description="The type of channel")
+    summary: str | None = Field(default=None, description="Summary of the channel")
+    notification: dict[str, Any] | None = Field(default=None, description="Notification details")
+    client: str | None = Field(default=None, description="Client name")
+    client_url: str | None = Field(default=None, description="Client URL")
+
+
+class LogEntry(BaseModel):
+    id: str = Field(description="The ID of the log entry")
+    type: str = Field(description="The type of log entry")
+    summary: str = Field(description="A summary of the log entry")
+    self: str = Field(description="The API URL of the log entry")
+    html_url: str | None = Field(default=None, description="The web URL of the log entry")
+    created_at: datetime = Field(description="The time the log entry was created")
+    agent: LogEntryAgent | None = Field(default=None, description="The agent that created the log entry")
+    channel: LogEntryChannel | None = Field(default=None, description="The channel information")
+    service: ServiceReference = Field(description="The service associated with the log entry")
+    incident: dict[str, Any] = Field(description="The incident reference")
+    teams: list[dict[str, Any]] = Field(default=[], description="The teams associated with the log entry")
+    contexts: list[dict[str, Any]] = Field(default=[], description="Additional context information")
+    # Optional fields specific to certain log entry types
+    acknowledgement_timeout: int | None = Field(default=None, description="Acknowledgement timeout in seconds")
+    assignees: list[UserReference] | None = Field(default=None, description="Users assigned in this log entry")
+    user: UserReference | None = Field(default=None, description="User associated with the log entry")
+    linked_incident: dict[str, Any] | None = Field(default=None, description="Linked incident reference")
+    event_details: dict[str, Any] = Field(default={}, description="Event details")
+    event_rule_action: dict[str, Any] | None = Field(default=None, description="Event rule action details")

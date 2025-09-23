@@ -598,6 +598,66 @@ class TestIncidentTools(unittest.TestCase):
         self.assertIn("Unexpected response format", result)
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_add_responders_mixed_targets_payload(self, mock_get_client):
+        """Ensure payload includes both user and escalation policy targets with proper types."""
+        # Setup mock client response to match expected shape
+        mock_client = Mock()
+        mock_client.rpost.return_value = {
+            "responder_request": {
+                "requester": {"id": "PUSER123", "type": "user_reference"},
+                "message": "Help needed",
+                "requested_at": "2023-01-01T00:00:00Z",
+                "responder_request_targets": [],
+            }
+        }
+        mock_get_client.return_value = mock_client
+
+        # Build request with mixed targets
+        from pagerduty_mcp.models import (
+            IncidentResponderRequest,
+            ResponderRequest,
+            ResponderRequestTarget,
+        )
+
+        user_target = ResponderRequestTarget(
+            responder_request_target=ResponderRequest(id="PUSER999", type="user_reference")
+        )
+        ep_target = ResponderRequestTarget(
+            responder_request_target=ResponderRequest(id="PESC123", type="escalation_policy_reference")
+        )
+
+        request = IncidentResponderRequest(
+            requester_id="PUSER123",
+            message="Help needed",
+            responder_request_targets=[user_target, ep_target],
+        )
+
+        # Context with user info
+        context = Mock(spec=Context)
+        mcp_context = Mock(spec=MCPContext)
+        user_mock = Mock()
+        user_mock.id = "PUSER123"
+        mcp_context.user = user_mock
+        context.request_context.lifespan_context = mcp_context
+
+        # Execute
+        _ = add_responders("PINC1", request, context)
+
+        # Validate payload structure and types
+        call_args = mock_client.rpost.call_args
+        self.assertEqual(call_args[0][0], "/incidents/PINC1/responder_requests")
+        payload = call_args[1]["json"]
+        self.assertIn("responder_request_targets", payload)
+        self.assertEqual(len(payload["responder_request_targets"]), 2)
+
+        first = payload["responder_request_targets"][0]["responder_request_target"]
+        second = payload["responder_request_targets"][1]["responder_request_target"]
+        self.assertEqual(first["type"], "user_reference")
+        self.assertEqual(first["id"], "PUSER999")
+        self.assertEqual(second["type"], "escalation_policy_reference")
+        self.assertEqual(second["id"], "PESC123")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_add_note_to_incident_success(self, mock_get_client):
         """Test successfully adding a note to an incident."""
         # Setup mock response

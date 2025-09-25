@@ -10,6 +10,7 @@ from .incidents import (
     IncidentQuery,
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
+    LogEntry,
     ResponderRequest,
     ResponderRequestTarget,
 )
@@ -40,6 +41,7 @@ __all__ = [
     "IncidentResponderRequest",
     "IncidentResponderRequestResponse",
     "ListResponseModel",
+    "LogEntry",
     "MCPContext",
     "Oncall",
     "OncallQuery",

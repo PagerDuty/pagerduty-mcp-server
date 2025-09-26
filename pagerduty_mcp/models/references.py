@@ -37,3 +37,7 @@ class IncidentReference(ReferenceBase):
 
 class ServiceReference(ReferenceBase):
     _type: ClassVar[str] = "service_reference"
+
+
+class IntegrationReference(ReferenceBase):
+    _type: ClassVar[str] = "integration_reference"

@@ -6,6 +6,11 @@ from .escalation_policies import (
     # get_escalation_policy_services,
     list_escalation_policies,
 )
+from .event_orchestrations import (
+    get_event_orchestration,
+    get_event_orchestration_router,
+    list_event_orchestrations,
+)
 from .incidents import (
     add_note_to_incident,
     add_responders,
@@ -63,6 +68,10 @@ read_tools = [
     # Escalation Policies
     list_escalation_policies,
     get_escalation_policy,
+    # Event Orchestrations
+    list_event_orchestrations,
+    get_event_orchestration,
+    get_event_orchestration_router,
 ]
 
 # Write tools (potentially dangerous operations that modify state)

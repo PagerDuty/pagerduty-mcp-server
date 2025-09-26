@@ -33,6 +33,7 @@ test-coverage:
 	uv run python -m coverage report --include="pagerduty_mcp/tools/schedules.py" --show-missing
 	uv run python -m coverage report --include="pagerduty_mcp/tools/escalation_policies.py" --show-missing
 	uv run python -m coverage report --include="pagerduty_mcp/tools/oncalls.py" --show-missing
+	uv run python -m coverage report --include="pagerduty_mcp/tools/event_orchestrations.py" --show-missing
 
 # Run tests with HTML coverage report
 test-html-coverage:

@@ -42,13 +42,15 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
         >>> result = list_incidents(IncidentQuery(status=["triggered", "acknowledged"], limit=10))
     """
     params = query_model.to_params()
-    user_data = get_user_data()
 
-    if query_model.request_scope == "assigned":
-        params["user_ids[]"] = [user_data.id]
-    elif query_model.request_scope == "teams":
-        user_team_ids = [team.id for team in user_data.teams]
-        params["teams_ids[]"] = user_team_ids
+    if query_model.request_scope in ["assigned", "teams"]:
+        user_data = get_user_data()
+
+        if query_model.request_scope == "assigned":
+            params["user_ids[]"] = [user_data.id]
+        elif query_model.request_scope == "teams":
+            user_team_ids = [team.id for team in user_data.teams]
+            params["teams_ids[]"] = user_team_ids
 
     response = paginate(
         client=get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100

@@ -1,3 +1,11 @@
+from .alert_grouping_settings import (
+    create_alert_grouping_setting,
+    delete_alert_grouping_setting,
+    get_alert_grouping_setting,
+    list_alert_grouping_settings,
+    update_alert_grouping_setting,
+)
+
 # Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
     # create_escalation_policy,
@@ -41,6 +49,9 @@ from .users import get_user_data, list_users
 
 # Read-only tools (safe, non-destructive operations)
 read_tools = [
+    # Alert Grouping Settings
+    list_alert_grouping_settings,
+    get_alert_grouping_setting,
     # Incidents
     list_incidents,
     get_incident,
@@ -67,6 +78,10 @@ read_tools = [
 
 # Write tools (potentially dangerous operations that modify state)
 write_tools = [
+    # Alert Grouping Settings
+    create_alert_grouping_setting,
+    update_alert_grouping_setting,
+    delete_alert_grouping_setting,
     # Incidents
     create_incident,
     manage_incidents,

@@ -23,13 +23,15 @@ from pagerduty_mcp.tools import read_tools, write_tools
 from tests.evals.competency_test import CompetencyTest
 from tests.evals.llm_clients import BedrockClient, LLMClient, OpenAIClient
 from tests.evals.mcp_tool_tracer import MockedMCPServer
+from tests.evals.test_alert_grouping_settings import ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
 from tests.evals.test_incidents import INCIDENT_COMPETENCY_TESTS
 from tests.evals.test_teams import TEAMS_COMPETENCY_TESTS
 
 test_mapping = {
+    "alert-grouping-settings": ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
     "incidents": INCIDENT_COMPETENCY_TESTS,
     "teams": TEAMS_COMPETENCY_TESTS,
-    "all": INCIDENT_COMPETENCY_TESTS + TEAMS_COMPETENCY_TESTS,
+    "all": INCIDENT_COMPETENCY_TESTS + TEAMS_COMPETENCY_TESTS + ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
 }
 
 load_dotenv()
@@ -300,11 +302,9 @@ class TestAgent:
 def main():
     """Main entry point for running the tests."""
     parser = argparse.ArgumentParser(description="Test LLM competency with MCP tools")
+    parser.add_argument("--llm", choices=["gpt", "bedrock"], default="gpt", help="LLM provider to use for testing")
     parser.add_argument(
-        "--llm", choices=["gpt", "bedrock"], default="gpt", help="LLM provider to use for testing"
-    )
-    parser.add_argument(
-        "--domain", choices=["all", "incidents", "teams", "services"], default="all", help="Domain to test"
+        "--domain", choices=["all", "alert-grouping-settings", "incidents", "teams", "services"], default="all", help="Domain to test"
     )
     parser.add_argument("--output", type=str, help="Output file for test report")
     parser.add_argument("--model", type=str, default="gpt-4.1", help="LLM model to use for tests")

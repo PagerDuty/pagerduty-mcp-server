@@ -1,3 +1,4 @@
+from .alerts import Alert, AlertQuery
 from .base import MAX_RESULTS, ListResponseModel
 from .context import MCPContext
 from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
@@ -28,6 +29,8 @@ from .users import User, UserQuery
 
 __all__ = [
     "MAX_RESULTS",
+    "Alert",
+    "AlertQuery",
     "EscalationPolicy",
     "EscalationPolicyQuery",
     "Incident",

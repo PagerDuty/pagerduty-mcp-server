@@ -72,7 +72,7 @@ class IncidentQuery(BaseModel):
         if isinstance(data, dict) and "statuses" in data:
             raise ValueError(
                 'The correct parameter to filter by multiple Incidents statuses is "status", not "statuses",'
-                ' please correct your input and try again'
+                " please correct your input and try again"
             )
         return data
 
@@ -205,6 +205,7 @@ class IncidentResponderRequestResponse(BaseModel):
     requested_at: datetime = Field(description="When the request was made")
     message: str | None = Field(default=None, description="The message included with the request")
     responder_request_targets: list[dict[str, Any]] = Field(description="The users requested to respond")
+
 
 class IncidentNote(BaseModel):
     id: str | None = Field(description="The ID of the note", default=None)

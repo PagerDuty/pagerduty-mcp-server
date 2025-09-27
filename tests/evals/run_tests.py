@@ -4,18 +4,12 @@ import argparse
 import asyncio
 import json
 import logging
-import os
 from collections.abc import Sequence
 from contextlib import suppress
 from typing import Any
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
-from openai.types.chat import (
-    ChatCompletionAssistantMessageParam,
-    ChatCompletionSystemMessageParam,
-    ChatCompletionUserMessageParam,
-)
 from pydantic import BaseModel
 
 from pagerduty_mcp.server import add_read_only_tool, add_write_tool
@@ -23,13 +17,15 @@ from pagerduty_mcp.tools import read_tools, write_tools
 from tests.evals.competency_test import CompetencyTest
 from tests.evals.llm_clients import BedrockClient, LLMClient, OpenAIClient
 from tests.evals.mcp_tool_tracer import MockedMCPServer
+from tests.evals.test_event_orchestrations import EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
 from tests.evals.test_incidents import INCIDENT_COMPETENCY_TESTS
 from tests.evals.test_teams import TEAMS_COMPETENCY_TESTS
 
 test_mapping = {
     "incidents": INCIDENT_COMPETENCY_TESTS,
     "teams": TEAMS_COMPETENCY_TESTS,
-    "all": INCIDENT_COMPETENCY_TESTS + TEAMS_COMPETENCY_TESTS,
+    "event-orchestrations": EVENT_ORCHESTRATIONS_COMPETENCY_TESTS,
+    "all": INCIDENT_COMPETENCY_TESTS + TEAMS_COMPETENCY_TESTS + EVENT_ORCHESTRATIONS_COMPETENCY_TESTS,
 }
 
 load_dotenv()
@@ -92,10 +88,9 @@ class TestAgent:
         """
         if llm_type == "gpt":
             return OpenAIClient()
-        elif llm_type == "bedrock":
+        if llm_type == "bedrock":
             return BedrockClient(region_name=aws_region)
-        else:
-            raise ValueError(f"LLM type {llm_type} is not supported. Choose from: gpt, bedrock")
+        raise ValueError(f"LLM type {llm_type} is not supported. Choose from: gpt, bedrock")
 
     def _get_available_tools(self) -> list[dict[str, Any]]:
         """Get tool schemas directly from MCP server (like dbt-labs approach)."""
@@ -300,11 +295,12 @@ class TestAgent:
 def main():
     """Main entry point for running the tests."""
     parser = argparse.ArgumentParser(description="Test LLM competency with MCP tools")
+    parser.add_argument("--llm", choices=["gpt", "bedrock"], default="gpt", help="LLM provider to use for testing")
     parser.add_argument(
-        "--llm", choices=["gpt", "bedrock"], default="gpt", help="LLM provider to use for testing"
-    )
-    parser.add_argument(
-        "--domain", choices=["all", "incidents", "teams", "services"], default="all", help="Domain to test"
+        "--domain",
+        choices=["all", "incidents", "teams", "event-orchestrations", "services"],
+        default="all",
+        help="Domain to test",
     )
     parser.add_argument("--output", type=str, help="Output file for test report")
     parser.add_argument("--model", type=str, default="gpt-4.1", help="LLM model to use for tests")

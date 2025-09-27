@@ -1,6 +1,21 @@
 from .base import MAX_RESULTS, ListResponseModel
 from .context import MCPContext
 from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
+from .event_orchestrations import (
+    EventOrchestration,
+    EventOrchestrationCatchAll,
+    EventOrchestrationIntegration,
+    EventOrchestrationPath,
+    EventOrchestrationPathUpdateRequest,
+    EventOrchestrationQuery,
+    EventOrchestrationRouter,
+    EventOrchestrationRouterUpdateRequest,
+    EventOrchestrationRule,
+    EventOrchestrationRuleActions,
+    EventOrchestrationRuleCondition,
+    EventOrchestrationRuleCreateRequest,
+    EventOrchestrationRuleSet,
+)
 from .incidents import (
     Incident,
     IncidentCreate,
@@ -30,6 +45,19 @@ __all__ = [
     "MAX_RESULTS",
     "EscalationPolicy",
     "EscalationPolicyQuery",
+    "EventOrchestration",
+    "EventOrchestrationCatchAll",
+    "EventOrchestrationIntegration",
+    "EventOrchestrationPath",
+    "EventOrchestrationPathUpdateRequest",
+    "EventOrchestrationQuery",
+    "EventOrchestrationRouter",
+    "EventOrchestrationRouterUpdateRequest",
+    "EventOrchestrationRule",
+    "EventOrchestrationRuleActions",
+    "EventOrchestrationRuleCondition",
+    "EventOrchestrationRuleCreateRequest",
+    "EventOrchestrationRuleSet",
     "Incident",
     "IncidentCreate",
     "IncidentCreateRequest",

@@ -527,10 +527,7 @@ class TestIncidentTools(unittest.TestCase):
             "id": "PNOTE123",
             "content": "This is a test note",
             "created_at": "2023-01-01T10:00:00Z",
-            "user": {
-                "id": "PUSER123",
-                "summary": "Test User"
-            }
+            "user": {"id": "PUSER123", "summary": "Test User"},
         }
 
         mock_client = Mock()
@@ -548,8 +545,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Verify API call
         mock_client.rpost.assert_called_once_with(
-            "/incidents/PINC123/notes",
-            json={"note": {"content": "This is a test note"}}
+            "/incidents/PINC123/notes", json={"note": {"content": "This is a test note"}}
         )
 
     def test_incidentquery_reject_statuses_param(self):
@@ -563,6 +559,7 @@ class TestIncidentTools(unittest.TestCase):
             'The correct parameter to filter by multiple Incidents statuses is "status", not "statuses"',
             str(ctx.exception),
         )
+
 
 if __name__ == "__main__":
     unittest.main()

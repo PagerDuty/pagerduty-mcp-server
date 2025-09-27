@@ -33,6 +33,7 @@ test-coverage:
 	uv run python -m coverage report --include="pagerduty_mcp/tools/schedules.py" --show-missing
 	uv run python -m coverage report --include="pagerduty_mcp/tools/escalation_policies.py" --show-missing
 	uv run python -m coverage report --include="pagerduty_mcp/tools/oncalls.py" --show-missing
+	uv run python -m coverage report --include="pagerduty_mcp/tools/event_orchestrations.py" --show-missing
 
 # Run tests with HTML coverage report
 test-html-coverage:
@@ -80,3 +81,8 @@ coverage-summary:
 	@echo "================="
 	@uv run python -m coverage run -m pytest tests/ > /dev/null 2>&1
 	@uv run python -m coverage report --include="pagerduty_mcp/tools/*" | tail -1
+
+# Start mcp server debugging session
+debug:
+	@echo "Starting mcp server debugging session..."
+	npx @modelcontextprotocol/inspector uv run --directory ./ python -m pagerduty_mcp --enable-write-tools

@@ -2,7 +2,7 @@
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=pagerduty-mcp&config=ewogICAgICAidHlwZSI6ICJzdGRpbyIsCiAgICAgICJjb21tYW5kIjogInV2eCIsCiAgICAgICJhcmdzIjogWwogICAgICAgICJwYWdlcmR1dHktbWNwIiwKICAgICAgICAiLS1lbmFibGUtd3JpdGUtdG9vbHMiCiAgICAgIF0sCiAgICAgICJlbnYiOiB7CiAgICAgICAgIlBBR0VSRFVUWV9VU0VSX0FQSV9LRVkiOiAiIiwKICAgICAgICAiUEFHRVJEVVRZX0FQSV9IT1NUIjogImh0dHBzOi8vYXBpLnBhZ2VyZHV0eS5jb20iCiAgICAgIH0KICAgIH0=)
 
-PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, and more directly from your MCP-enabled client.
+PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
 ## Prerequisites
 
@@ -66,7 +66,7 @@ You can configure this MCP server directly within Visual Studio Code's `settings
 2.  Configure the server as described above.
 3.  Open the Chat view in VS Code (`View` > `Chat`).
 4.  Make sure `Agent` mode is selected. In the Chat view, you can enable or disable specific tools by clicking the 🛠️ icon.
-5.  Enter a command such as `Show me the latest incident` to interact with your PagerDuty account through the MCP server.
+5.  Enter a command such as `Show me the latest incident` or `List my event orchestrations` to interact with your PagerDuty account through the MCP server.
 6.  You can start, stop, and manage your MCP servers using the command palette (`Cmd+Shift+P`/`Ctrl+Shift+P`) and searching for `MCP: List Servers`. Ensure the server is running before sending commands. You can also try to restart the server if you encounter any issues.
 
 ### Claude Desktop Integration
@@ -104,7 +104,7 @@ You can configure this MCP server to work with Claude Desktop by adding it to Cl
 
 4.  **Restart Claude Desktop** completely for the changes to take effect.
 
-5.  **Test the integration** by starting a conversation with Claude and asking something like "Show me my latest PagerDuty incidents" to verify the MCP server is working.
+5.  **Test the integration** by starting a conversation with Claude and asking something like "Show me my latest PagerDuty incidents" or "List my event orchestrations" to verify the MCP server is working.
 
     > **Security Note:** Unlike VS Code's secure input prompts, Claude Desktop requires you to store your API key directly in the configuration file. Ensure this file has appropriate permissions (readable only by your user account) and consider the security implications of storing credentials in plain text.
 
@@ -172,6 +172,9 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 
 | Tool                   | Area               | Description                                         | Read-only |
 |------------------------|--------------------|-----------------------------------------------------|-----------|
+| get_event_orchestration | Event Orchestrations | Retrieves a specific event orchestration           | ✅         |
+| get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅         |
+| list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅         |
 | list_escalation_policies | Escalation Policy  | Lists escalation policies                           | ✅         |
 | get_escalation_policy    | Escalation Policy  | Retrieves a specific escalation policy              | ✅         |
 | add_note_to_incident     | Incidents          | Adds note to an incident                            | ❌         |

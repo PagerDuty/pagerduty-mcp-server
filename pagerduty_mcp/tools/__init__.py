@@ -7,9 +7,11 @@ from .escalation_policies import (
     list_escalation_policies,
 )
 from .event_orchestrations import (
+    append_event_orchestration_router_rule,
     get_event_orchestration,
     get_event_orchestration_router,
     list_event_orchestrations,
+    update_event_orchestration_router,
 )
 from .incidents import (
     add_note_to_incident,
@@ -92,6 +94,9 @@ write_tools = [
     remove_team_member,
     # Schedules
     create_schedule_override,
+    # Event Orchestrations
+    update_event_orchestration_router,
+    append_event_orchestration_router_rule,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

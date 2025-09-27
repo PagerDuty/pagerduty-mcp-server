@@ -81,3 +81,8 @@ coverage-summary:
 	@echo "================="
 	@uv run python -m coverage run -m pytest tests/ > /dev/null 2>&1
 	@uv run python -m coverage report --include="pagerduty_mcp/tools/*" | tail -1
+
+# Start mcp server debugging session
+debug:
+	@echo "Starting mcp server debugging session..."
+	npx @modelcontextprotocol/inspector uv run --directory ./ python -m pagerduty_mcp --enable-write-tools

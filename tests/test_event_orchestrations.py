@@ -7,11 +7,17 @@ from pagerduty_mcp.models.event_orchestrations import (
     EventOrchestration,
     EventOrchestrationQuery,
     EventOrchestrationRouter,
+    EventOrchestrationRouterUpdateRequest,
+    EventOrchestrationRuleActions,
+    EventOrchestrationRuleCondition,
+    EventOrchestrationRuleCreateRequest,
 )
 from pagerduty_mcp.tools.event_orchestrations import (
+    append_event_orchestration_router_rule,
     get_event_orchestration,
     get_event_orchestration_router,
     list_event_orchestrations,
+    update_event_orchestration_router,
 )
 
 
@@ -463,6 +469,375 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(router.orchestration_path.parent.id, "empty-orchestration-id")
         self.assertEqual(len(router.orchestration_path.sets), 0)  # Should handle empty sets
         self.assertEqual(router.orchestration_path.catch_all.actions.route_to, "unrouted")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_router_success(self, mock_get_client):
+        """Test successful update_event_orchestration_router call."""
+        # Mock the client response
+        mock_client = MagicMock()
+        mock_client.rput.return_value = self.sample_router_response
+        mock_get_client.return_value = mock_client
+
+        # Create update request using factory method to exclude readonly fields
+        from pagerduty_mcp.models.event_orchestrations import EventOrchestrationPath
+
+        path = EventOrchestrationPath.model_validate(self.sample_router_response["orchestration_path"])
+        update_request = EventOrchestrationRouterUpdateRequest.from_path(path)
+
+        # Call function
+        result = update_event_orchestration_router("b02e973d-9620-4e0a-9edc-00fedf7d4694", update_request)
+
+        # Assert client was called correctly
+        mock_client.rput.assert_called_once_with(
+            "/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/router", json=update_request.model_dump()
+        )
+
+        # Assert result
+        self.assertIsInstance(result, EventOrchestrationRouter)
+        self.assertEqual(result.orchestration_path.type, "router")
+        self.assertEqual(result.orchestration_path.parent.id, "b02e973d-9620-4e0a-9edc-00fedf7d4694")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_router_direct_response(self, mock_get_client):
+        """Test update_event_orchestration_router with direct API response (no wrapper)."""
+        # Mock the client to return direct response format
+        direct_response = self.sample_router_response["orchestration_path"]
+        mock_client = MagicMock()
+        mock_client.rput.return_value = direct_response
+        mock_get_client.return_value = mock_client
+
+        # Create update request using factory method to exclude readonly fields
+        from pagerduty_mcp.models.event_orchestrations import EventOrchestrationPath
+
+        path = EventOrchestrationPath.model_validate(direct_response)
+        update_request = EventOrchestrationRouterUpdateRequest.from_path(path)
+
+        # Call function
+        result = update_event_orchestration_router("b02e973d-9620-4e0a-9edc-00fedf7d4694", update_request)
+
+        # Assert result
+        self.assertIsInstance(result, EventOrchestrationRouter)
+        self.assertEqual(result.orchestration_path.type, "router")
+        self.assertEqual(result.orchestration_path.parent.id, "b02e973d-9620-4e0a-9edc-00fedf7d4694")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_append_event_orchestration_router_rule_success(self, mock_get_client):
+        """Test successful append_event_orchestration_router_rule call."""
+        # Mock the client responses
+        mock_client = MagicMock()
+
+        # Mock GET response (current router config)
+        mock_client.rget.return_value = self.sample_router_response
+
+        # Mock PUT response (updated router config with new rule)
+        updated_response = {
+            "orchestration_path": {
+                **self.sample_router_response["orchestration_path"],
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            *self.sample_router_response["orchestration_path"]["sets"][0]["rules"],
+                            {
+                                "label": "New monitoring rule",
+                                "id": "new_rule_id",
+                                "conditions": [{"expression": "event.summary matches part 'monitoring'"}],
+                                "actions": {"route_to": "NEW_SERVICE"},
+                            },
+                        ],
+                    }
+                ],
+            }
+        }
+        mock_client.rput.return_value = updated_response
+        mock_get_client.return_value = mock_client
+
+        # Create new rule request
+        new_rule = EventOrchestrationRuleCreateRequest(
+            label="New monitoring rule",
+            conditions=[EventOrchestrationRuleCondition(expression="event.summary matches part 'monitoring'")],
+            actions=EventOrchestrationRuleActions(route_to="NEW_SERVICE"),
+        )
+
+        # Call function
+        result = append_event_orchestration_router_rule("b02e973d-9620-4e0a-9edc-00fedf7d4694", new_rule)
+
+        # Assert GET was called to fetch current config
+        mock_client.rget.assert_called_once_with("/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/router")
+
+        # Assert PUT was called with updated config
+        mock_client.rput.assert_called_once()
+        put_call_args = mock_client.rput.call_args
+        self.assertEqual(put_call_args[0][0], "/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/router")
+
+        # Verify the PUT request contains the new rule
+        put_data = put_call_args[1]["json"]  # Access json keyword argument
+        self.assertIn("orchestration_path", put_data)
+        rules = put_data["orchestration_path"]["sets"][0]["rules"]
+        self.assertEqual(len(rules), 3)  # Original 2 + 1 new rule
+
+        # Check the new rule was appended
+        new_rule_data = rules[-1]  # Last rule should be the new one
+        self.assertEqual(new_rule_data["label"], "New monitoring rule")
+        self.assertEqual(new_rule_data["actions"]["route_to"], "NEW_SERVICE")
+
+        # Assert result
+        self.assertIsInstance(result, EventOrchestrationRouter)
+        self.assertEqual(len(result.orchestration_path.sets[0].rules), 3)
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_append_event_orchestration_router_rule_empty_rules(self, mock_get_client):
+        """Test append_event_orchestration_router_rule with empty existing rules."""
+        # Create router response with empty rules
+        empty_router_response = {
+            "orchestration_path": {
+                "type": "router",
+                "parent": {
+                    "id": "b02e973d-9620-4e0a-9edc-00fedf7d4694",
+                    "self": "https://api.pagerduty.com/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694",
+                    "type": "event_orchestration_reference",
+                },
+                "self": "https://api.pagerduty.com/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/router",
+                "sets": [{"id": "start", "rules": []}],  # No existing rules
+                "catch_all": {"actions": {"route_to": "unrouted"}},
+                "created_at": "2021-11-18T16:42:01Z",
+                "created_by": self.sample_user,
+                "updated_at": "2021-11-18T16:42:01Z",
+                "updated_by": self.sample_user,
+                "version": "9co0z4b152oICsoV91_PW2.ww8ip_xap",
+            }
+        }
+
+        # Mock the client responses
+        mock_client = MagicMock()
+        mock_client.rget.return_value = empty_router_response
+
+        # Mock PUT response with the new rule added
+        updated_response = {
+            "orchestration_path": {
+                **empty_router_response["orchestration_path"],
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "label": "First rule",
+                                "id": "first_rule_id",
+                                "conditions": [{"expression": "event.summary matches part 'error'"}],
+                                "actions": {"route_to": "ERROR_SERVICE"},
+                            }
+                        ],
+                    }
+                ],
+            }
+        }
+        mock_client.rput.return_value = updated_response
+        mock_get_client.return_value = mock_client
+
+        # Create new rule request
+        new_rule = EventOrchestrationRuleCreateRequest(
+            label="First rule",
+            conditions=[EventOrchestrationRuleCondition(expression="event.summary matches part 'error'")],
+            actions=EventOrchestrationRuleActions(route_to="ERROR_SERVICE"),
+        )
+
+        # Call function
+        result = append_event_orchestration_router_rule("b02e973d-9620-4e0a-9edc-00fedf7d4694", new_rule)
+
+        # Assert both GET and PUT were called
+        mock_client.rget.assert_called_once()
+        mock_client.rput.assert_called_once()
+
+        # Verify the result
+        self.assertIsInstance(result, EventOrchestrationRouter)
+        self.assertEqual(len(result.orchestration_path.sets[0].rules), 1)
+        self.assertEqual(result.orchestration_path.sets[0].rules[0].label, "First rule")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_event_orchestration_router")
+    def test_append_event_orchestration_router_rule_invalid_config(self, mock_get_router):
+        """Test append_event_orchestration_router_rule with invalid router configuration."""
+        # Mock router with no orchestration_path
+        invalid_router = EventOrchestrationRouter(orchestration_path=None)
+        mock_get_router.return_value = invalid_router
+
+        # Create new rule request
+        new_rule = EventOrchestrationRuleCreateRequest(
+            label="Test rule",
+            conditions=[EventOrchestrationRuleCondition(expression="event.summary matches part 'test'")],
+            actions=EventOrchestrationRuleActions(route_to="TEST_SERVICE"),
+        )
+
+        # Should raise ValueError for invalid configuration
+        with self.assertRaises(ValueError) as context:
+            append_event_orchestration_router_rule("invalid-orchestration-id", new_rule)
+
+        self.assertIn("has no valid router configuration", str(context.exception))
+
+    def test_event_orchestration_router_update_request_model(self):
+        """Test EventOrchestrationRouterUpdateRequest model validation."""
+        from pagerduty_mcp.models.event_orchestrations import EventOrchestrationPath
+
+        # Create an EventOrchestrationPath from the sample data
+        path = EventOrchestrationPath.model_validate(self.sample_router_response["orchestration_path"])
+
+        # Use the factory method to create the update request, which excludes readonly fields
+        update_request = EventOrchestrationRouterUpdateRequest.from_path(path)
+
+        self.assertEqual(update_request.orchestration_path.type, "router")
+        self.assertEqual(len(update_request.orchestration_path.sets), 1)
+
+        # Verify that readonly fields are excluded
+        path_dict = update_request.orchestration_path.model_dump()
+        self.assertNotIn("created_at", path_dict)
+        self.assertNotIn("updated_at", path_dict)
+        self.assertNotIn("version", path_dict)
+        self.assertNotIn("parent", path_dict)  # parent is also excluded from update requests
+
+    def test_event_orchestration_rule_create_request_model(self):
+        """Test EventOrchestrationRuleCreateRequest model validation."""
+        rule_data = {
+            "label": "Test rule",
+            "conditions": [{"expression": "event.summary matches part 'test'"}],
+            "actions": {"route_to": "TEST_SERVICE"},
+            "disabled": False,
+        }
+
+        rule_request = EventOrchestrationRuleCreateRequest.model_validate(rule_data)
+
+        self.assertEqual(rule_request.label, "Test rule")
+        self.assertEqual(len(rule_request.conditions), 1)
+        self.assertEqual(rule_request.conditions[0].expression, "event.summary matches part 'test'")
+        self.assertEqual(rule_request.actions.route_to, "TEST_SERVICE")
+        self.assertEqual(rule_request.disabled, False)
+
+    def test_event_orchestration_rule_create_request_minimal(self):
+        """Test EventOrchestrationRuleCreateRequest with minimal required fields."""
+        rule_data = {
+            "conditions": [{"expression": "event.summary matches part 'minimal'"}],
+            "actions": {"route_to": "MINIMAL_SERVICE"},
+        }
+
+        rule_request = EventOrchestrationRuleCreateRequest.model_validate(rule_data)
+
+        self.assertIsNone(rule_request.label)  # Optional field
+        self.assertEqual(len(rule_request.conditions), 1)
+        self.assertEqual(rule_request.actions.route_to, "MINIMAL_SERVICE")
+        self.assertEqual(rule_request.disabled, False)  # Default value
+
+    def test_serialization_fix_excludes_readonly_fields(self):
+        """Test that the fix properly excludes readonly fields from update requests.
+
+        This test verifies that the EventOrchestrationRouterUpdateRequest.from_path()
+        factory method excludes readonly fields that would cause JSON serialization errors.
+        """
+        import json
+
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationPath,
+            EventOrchestrationRouterUpdateRequest,
+        )
+
+        # Create orchestration path data similar to what comes from the API
+        # This includes readonly datetime fields
+        orchestration_path_data = {
+            "type": "router",
+            "parent": {
+                "id": "test-orchestration-id",
+                "type": "event_orchestration_reference",
+                "self": "https://api.pagerduty.com/event_orchestrations/test-orchestration-id",
+            },
+            "self": "https://api.pagerduty.com/event_orchestrations/test-orchestration-id/router",
+            "sets": [
+                {
+                    "id": "start",
+                    "rules": [
+                        {
+                            "id": "rule_id_1",
+                            "label": "Test rule",
+                            "conditions": [{"expression": "event.summary matches part 'test'"}],
+                            "actions": {"route_to": "TEST_SERVICE"},
+                            "disabled": False,
+                        }
+                    ],
+                }
+            ],
+            "catch_all": {"actions": {"route_to": "unrouted"}},
+            # These readonly fields would cause JSON serialization errors if included
+            "created_at": "2021-11-18T16:42:01Z",
+            "created_by": self.sample_user,
+            "updated_at": "2021-11-18T16:42:01Z",
+            "updated_by": self.sample_user,
+            "version": "test-version",
+        }
+
+        # Create full EventOrchestrationPath (as would come from API)
+        path = EventOrchestrationPath.model_validate(orchestration_path_data)
+
+        # Create update request using factory method that excludes readonly fields
+        update_request = EventOrchestrationRouterUpdateRequest.from_path(path)
+
+        # Serialize to dict (what happens in update_event_orchestration_router)
+        serialized_data = update_request.model_dump()
+
+        # The serialized data should NOT contain readonly fields
+        path_data = serialized_data["orchestration_path"]
+        self.assertNotIn("created_at", path_data)
+        self.assertNotIn("updated_at", path_data)
+        self.assertNotIn("version", path_data)
+        self.assertNotIn("parent", path_data)
+        self.assertNotIn("self", path_data)
+
+        # JSON serialization should now work without errors
+        json_data = json.dumps(serialized_data)
+        self.assertIsInstance(json_data, str)
+
+        # Verify the essential fields are still present
+        self.assertEqual(path_data["type"], "router")
+        self.assertIn("sets", path_data)
+        self.assertIn("catch_all", path_data)
+
+    def test_mixed_rule_types_validation_behavior(self):
+        """Test behavior when mixing EventOrchestrationRule objects with plain dicts.
+
+        This demonstrates what happens in append_event_orchestration_router_rule when it
+        mixes EventOrchestrationRule objects with plain dicts - Pydantic handles validation
+        but it can cause issues during serialization.
+        """
+        from pagerduty_mcp.models.event_orchestrations import EventOrchestrationRule, EventOrchestrationRuleSet
+
+        # Create existing rule as an EventOrchestrationRule object
+        existing_rule = EventOrchestrationRule(
+            id="existing_rule_id",
+            label="Existing rule",
+            conditions=[EventOrchestrationRuleCondition(expression="event.summary matches part 'existing'")],
+            actions=EventOrchestrationRuleActions(route_to="EXISTING_SERVICE"),
+            disabled=False,
+        )
+
+        # Create new rule as a plain dict (what append_event_orchestration_router_rule currently does)
+        new_rule_dict = {
+            "id": "new_rule_id",  # Add required id field
+            "label": "New rule as dict",
+            "conditions": [{"expression": "event.summary matches part 'new'"}],
+            "actions": {"route_to": "NEW_SERVICE"},
+            "disabled": False,
+        }
+
+        # Create rule set with mixed types
+        mixed_rules = [existing_rule, new_rule_dict]
+
+        # This should work, but may cause serialization inconsistencies
+        rule_set = EventOrchestrationRuleSet(id="start", rules=mixed_rules)
+
+        # Validate that the rule set was created
+        self.assertEqual(len(rule_set.rules), 2)
+
+        # Both rules should now be EventOrchestrationRule objects after validation
+        self.assertIsInstance(rule_set.rules[0], EventOrchestrationRule)
+        self.assertIsInstance(rule_set.rules[1], EventOrchestrationRule)
+
+        # But the original issue is that in append_event_orchestration_router_rule,
+        # we're mixing objects and dicts before model validation
 
 
 if __name__ == "__main__":

@@ -211,3 +211,61 @@ class EventOrchestrationRouter(BaseModel):
 
         # Response is direct router data, wrap it
         return cls(orchestration_path=EventOrchestrationPath.model_validate(response_data))
+
+
+class EventOrchestrationPathUpdateRequest(BaseModel):
+    """Orchestration path model for update requests, excluding readonly fields."""
+
+    type: Literal["router"] = Field(
+        description="Indicates that these are a 'router' type set of rules.", default="router"
+    )
+    sets: list[EventOrchestrationRuleSet] = Field(
+        description=(
+            "The Router contains a single set of rules (the 'start' set). "
+            "The Router evaluates Events against these Rules, one at a time, "
+            "and routes each Event to a specific Service based on the first rule that matches."
+        ),
+        max_length=1,
+    )
+    catch_all: EventOrchestrationCatchAll = Field(
+        description=(
+            "When none of the rules match an event, the event will be routed according to the catch_all settings."
+        )
+    )
+    # Note: Explicitly exclude readonly fields like created_at, updated_at, version, etc.
+    # that cause JSON serialization errors and shouldn't be sent in update requests
+
+
+class EventOrchestrationRouterUpdateRequest(BaseModel):
+    """Request model for updating an event orchestration router configuration."""
+
+    orchestration_path: EventOrchestrationPathUpdateRequest = Field(
+        description="The orchestration router path configuration to update"
+    )
+
+    @classmethod
+    def from_path(cls, path: EventOrchestrationPath) -> "EventOrchestrationRouterUpdateRequest":
+        """Create update request from an EventOrchestrationPath, excluding readonly fields."""
+        update_path = EventOrchestrationPathUpdateRequest(type=path.type, sets=path.sets, catch_all=path.catch_all)
+        return cls(orchestration_path=update_path)
+
+
+class EventOrchestrationRuleCreateRequest(BaseModel):
+    """Request model for creating a new event orchestration rule."""
+
+    label: str | None = Field(description="A description of this rule's purpose.", default=None)
+    conditions: list[EventOrchestrationRuleCondition] = Field(
+        description=(
+            "Each of these conditions is evaluated to check if an event matches this rule. "
+            "The rule is considered a match if **any** of these conditions match."
+        )
+    )
+    actions: EventOrchestrationRuleActions = Field(
+        description=(
+            "When an event matches this rule, these are the actions that will be taken "
+            "to change the resulting alert and incident."
+        )
+    )
+    disabled: bool | None = Field(
+        description="Indicates whether the rule is disabled and would therefore not be evaluated.", default=False
+    )

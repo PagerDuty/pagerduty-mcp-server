@@ -26,6 +26,9 @@ from .incidents import (
     add_responders,
     create_incident,
     get_incident,
+    get_outlier_incident,
+    get_past_incidents,
+    get_related_incidents,
     list_incidents,
     manage_incidents,
 )
@@ -62,6 +65,9 @@ read_tools = [
     # Incidents
     list_incidents,
     get_incident,
+    get_outlier_incident,
+    get_past_incidents,
+    get_related_incidents,
     # Services
     list_services,
     get_service,

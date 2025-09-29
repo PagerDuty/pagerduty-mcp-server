@@ -212,3 +212,39 @@ class IncidentNote(BaseModel):
     content: str = Field(description="The content of the note")
     created_at: datetime = Field(description="The time the note was created")
     user: UserReference = Field(description="The user who created the note")
+
+
+class OutlierIncident(BaseModel):
+    incident: Incident = Field(description="The outlier incident details")
+
+
+class OutlierIncidentResponse(BaseModel):
+    outlier_incident: OutlierIncident = Field(description="Outlier incident information")
+
+
+class PastIncidentReference(BaseModel):
+    id: str = Field(description="The globally unique identifier of the incident")
+    created_at: datetime = Field(description="The date/time the incident was first triggered")
+    self: str = Field(description="The URL at which the object is accessible")
+    title: str = Field(description="The description of the nature, symptoms, cause, or effect of the incident")
+
+
+class PastIncident(BaseModel):
+    incident: PastIncidentReference = Field(description="Past incident reference")
+    score: float = Field(description="The computed similarity score associated with the incident and parent incident")
+
+
+class PastIncidentsResponse(BaseModel):
+    past_incidents: list[PastIncident] = Field(description="List of past incidents")
+    total: int | None = Field(
+        default=None, description="The total number of Past Incidents if the total parameter was set"
+    )
+    limit: int = Field(description="The maximum number of Incidents requested")
+
+
+class RelatedIncident(BaseModel):
+    incident: Incident = Field(description="The related incident details")
+
+
+class RelatedIncidentsResponse(BaseModel):
+    related_incidents: list[RelatedIncident] = Field(description="List of related incidents")

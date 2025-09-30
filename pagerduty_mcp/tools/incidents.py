@@ -253,6 +253,7 @@ def get_outlier_incident(
 def get_past_incidents(
     incident_id: str,
     limit: int | None = None,
+    *,
     total: bool | None = None,
 ) -> PastIncidentsResponse:
     """Get Past Incidents related to a specific incident ID.

@@ -13,6 +13,7 @@ from pagerduty_mcp.models import (
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
+    LogEntry,
     MCPContext,
     UserReference,
 )
@@ -70,6 +71,24 @@ def get_incident(incident_id: str) -> Incident:
     """
     response = get_client().rget(f"/incidents/{incident_id}")
     return Incident.model_validate(response)
+
+
+def get_incident_log_entries(incident_id: str) -> list[LogEntry]:
+    """Get log entries (timeline) for a specific incident.
+
+    This function retrieves the complete timeline of activities for an incident,
+    including acknowledgments, assignments, status changes, and other actions.
+    This provides the same information visible in the PagerDuty UI Timeline tab.
+
+    Args:
+        incident_id: The ID of the incident to retrieve log entries for.
+
+    Returns:
+        List of log entries representing the incident timeline
+    """
+    response = get_client().rget(f"/incidents/{incident_id}/log_entries")
+    # The response is a direct list of log entries
+    return [LogEntry.model_validate(entry) for entry in response]
 
 
 def create_incident(create_model: IncidentCreateRequest) -> Incident:

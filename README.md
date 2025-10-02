@@ -216,6 +216,8 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_incident             | Incidents          | Retrieves a specific incident                       | ✅         |
 | list_incidents           | Incidents          | Lists incidents                                     | ✅         |
 | manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
+| get_alert                | Alerts             | Retrieves a specific alert of an incident           | ✅         |
+| list_alerts              | Alerts             | Lists alerts of an incident                         | ✅         |
 | add_team_member          | Teams              | Adds a user to a team with a specific role          | ❌         |
 | create_team              | Teams              | Creates a new team                                  | ❌         |
 | delete_team              | Teams              | Deletes a team                                      | ❌         |

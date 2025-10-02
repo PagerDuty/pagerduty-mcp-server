@@ -30,6 +30,7 @@ from .schedules import (
     list_schedules,
 )
 from .services import (
+    chatbot,
     create_service,
     get_service,
     list_services,
@@ -74,6 +75,7 @@ read_tools = [
     # Escalation Policies
     list_escalation_policies,
     get_escalation_policy,
+    chatbot,
 ]
 
 # Write tools (potentially dangerous operations that modify state)

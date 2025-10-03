@@ -10,6 +10,7 @@ from .alert_grouping_settings import (
     TimeGroupingConfig,
 )
 from .base import MAX_RESULTS, ListResponseModel
+from .chat_assistant_service import ChatAssistantServiceRequest, ChatAssistantServiceResponse, ClientMetadata
 from .context import MCPContext
 from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
 from .incidents import (
@@ -38,16 +39,17 @@ from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
 from .users import User, UserQuery
 
 __all__ = [
+    "MAX_RESULTS",
     "AlertGroupingSetting",
     "AlertGroupingSettingCreate",
     "AlertGroupingSettingCreateRequest",
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
+    "ChatAssistantServiceRequest",
+    "ChatAssistantServiceResponse",
+    "ClientMetadata",
     "ContentBasedConfig",
     "ContentBasedIntelligentConfig",
-    "IntelligentGroupingConfig",
-    "TimeGroupingConfig",
-    "MAX_RESULTS",
     "EscalationPolicy",
     "EscalationPolicyQuery",
     "Incident",
@@ -59,6 +61,7 @@ __all__ = [
     "IncidentReference",
     "IncidentResponderRequest",
     "IncidentResponderRequestResponse",
+    "IntelligentGroupingConfig",
     "ListResponseModel",
     "MCPContext",
     "Oncall",
@@ -80,6 +83,7 @@ __all__ = [
     "TeamMemberAdd",
     "TeamQuery",
     "TeamReference",
+    "TimeGroupingConfig",
     "User",
     "UserQuery",
     "UserReference",

@@ -4,10 +4,11 @@ from contextlib import asynccontextmanager
 
 import typer
 from mcp.server.fastmcp import FastMCP
-from mcp.types import ToolAnnotations
+from mcp.types import Prompt, ToolAnnotations
 
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import MCPContext
+from pagerduty_mcp.prompts import prompts
 from pagerduty_mcp.tools import read_tools, write_tools
 from pagerduty_mcp.utils import get_mcp_context
 
@@ -17,11 +18,21 @@ logging.basicConfig(level=logging.WARNING)
 app = typer.Typer()
 
 MCP_SERVER_INSTRUCTIONS = """
+CRITICAL: Always read and follow the available prompts BEFORE executing any tools.
+Use the available prompts to understand the proper context and approach for each task.
+
+Workflow:
+1. FIRST: Check available prompts for guidance on the user's request
+2. THEN: Get user data and scope any requests using the user id
+3. FINALLY: Execute appropriate tools based on prompt guidance
+
 When the user asks for information about their resources, first get the user data and scope any
 requests using the user id.
 
 READ operations are safe to use, but be cautious with WRITE operations as they can modify the
 live environment. Always confirm with the user before using any tool marked as destructive.
+
+Available prompts contain essential context and examples - always consult them first.
 """
 
 
@@ -49,7 +60,9 @@ def add_read_only_tool(mcp_instance: FastMCP, tool: Callable) -> None:
     """
     mcp_instance.add_tool(
         tool,
-        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(
+            readOnlyHint=True, destructiveHint=False, idempotentHint=True
+        ),
     )
 
 
@@ -62,8 +75,20 @@ def add_write_tool(mcp_instance: FastMCP, tool: Callable) -> None:
     """
     mcp_instance.add_tool(
         tool,
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False),
+        annotations=ToolAnnotations(
+            readOnlyHint=False, destructiveHint=True, idempotentHint=False
+        ),
     )
+
+
+def add_prompt(mcp_instance: FastMCP, prompt: Prompt) -> None:
+    """Add a prompt to the MCP instance.
+
+    Args:
+        mcp_instance: The MCP server instance
+        prompt: The prompt to add
+    """
+    mcp_instance.add_prompt(prompt)  # type: ignore
 
 
 @app.command()
@@ -84,5 +109,9 @@ def run(*, enable_write_tools: bool = False) -> None:
     if enable_write_tools:
         for tool in write_tools:
             add_write_tool(mcp, tool)
+
+    # Add all prompts
+    for prompt in prompts:
+        add_prompt(mcp, prompt)
 
     mcp.run()

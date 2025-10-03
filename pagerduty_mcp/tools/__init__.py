@@ -5,6 +5,7 @@ from .alert_grouping_settings import (
     list_alert_grouping_settings,
     update_alert_grouping_setting,
 )
+from .chat_assistant_service_request import chat_assistant_service_request
 
 # Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
@@ -30,7 +31,6 @@ from .schedules import (
     list_schedules,
 )
 from .services import (
-    chatbot,
     create_service,
     get_service,
     list_services,
@@ -48,8 +48,14 @@ from .teams import (
 )
 from .users import get_user_data, list_users
 
-# Read-only tools (safe, non-destructive operations)
+# Read tools (safe operations that only retrieve data)
 read_tools = [
+    # Prompt Gateway Tools (should be used first)
+    # get_available_prompts,
+    # validate_prompt_consultation,
+    # User and basic info
+    get_user_data,
+    list_users,
     # Alert Grouping Settings
     list_alert_grouping_settings,
     get_alert_grouping_setting,
@@ -63,9 +69,6 @@ read_tools = [
     list_teams,
     get_team,
     list_team_members,
-    # Users
-    get_user_data,
-    list_users,
     # Schedules
     list_schedules,
     get_schedule,
@@ -75,7 +78,6 @@ read_tools = [
     # Escalation Policies
     list_escalation_policies,
     get_escalation_policy,
-    chatbot,
 ]
 
 # Write tools (potentially dangerous operations that modify state)
@@ -100,9 +102,12 @@ write_tools = [
     remove_team_member,
     # Schedules
     create_schedule_override,
+    # AI Chat
+    chat_assistant_service_request,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]
+
 
 # All tools (combined list for backward compatibility)
 all_tools = read_tools + write_tools

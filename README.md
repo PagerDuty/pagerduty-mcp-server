@@ -12,6 +12,7 @@ PagerDuty's local MCP (Model Context Protocol) server which provides tools to in
     To obtain a PagerDuty User API Token, follow these steps:
 
     1. **Navigate to User Settings.** Click on your user profile icon, then select **My Profile** and then **User Settings**.
+        > For **Freemium** accounts, the permissions for generating User API tokens are limited to the user role as defined [here](https://support.pagerduty.com/main/docs/user-roles).
     2. In your user settings, locate the **API Access** section.
     3. Click the **Create API User Token** button and follow the prompts to generate a new token.
     4. **Copy the generated token and store it securely**. You will need this token to configure the MCP server.

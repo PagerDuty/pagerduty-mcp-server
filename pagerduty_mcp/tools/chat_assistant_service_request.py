@@ -27,7 +27,7 @@ async def chat_assistant_service_request(
         The AI agent's response
     """
     formatted_timestamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-
+    print(">> chatData:", chat_assistant_data)
     # Create a new ChatAssistantServiceRequest with additional fields
     complete_request = ChatAssistantServiceRequest(
         session_id=str(uuid.uuid4()),
@@ -37,17 +37,8 @@ async def chat_assistant_service_request(
         client_metadata=ClientMetadata(client_type="public_api"),
     )
 
-    # TODO: for some reason rpost does not work here, failing with 400 due to payload
-    # response = get_client().rpost("/chat_assistant/chat", json=complete_request.model_dump())
-
-    response = get_client().post(
-        f"{API_HOST}/chat_assistant/chat",
-        json=complete_request.model_dump(),
-        headers={
-            "Authorization": f"Token token={API_KEY}",
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        },
+    response = get_client().jpost(
+        "/chat_assistant/chat", json=complete_request.model_dump()
     )
 
-    return ChatAssistantServiceResponse.model_validate(response.json())
+    return ChatAssistantServiceResponse.model_validate(response)

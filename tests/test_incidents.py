@@ -17,6 +17,7 @@ from pagerduty_mcp.models import (
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
+    LogEntry,
     MCPContext,
     ServiceReference,
     UserReference,
@@ -32,6 +33,7 @@ from pagerduty_mcp.tools.incidents import (
     add_responders,
     create_incident,
     get_incident,
+    get_incident_log_entries,
     list_incidents,
     manage_incidents,
 )
@@ -60,6 +62,80 @@ class TestIncidentTools(unittest.TestCase):
             "incident_key": "test-key",
             "html_url": "https://test.pagerduty.com/incidents/PINCIDENT123",
         }
+
+        cls.sample_log_entry_data = [
+            {
+                "id": "RO52CY6QBZKDN9PEGS3YPN35TH",
+                "type": "resolve_log_entry",
+                "summary": "Resolved through the API.",
+                "self": "https://api.pagerduty.com/log_entries/RO52CY6QBZKDN9PEGS3YPN35TH",
+                "html_url": None,
+                "created_at": "2025-09-18T22:59:28Z",
+                "agent": {
+                    "id": "PWB6A94",
+                    "type": "events_api_v2_inbound_integration_reference",
+                    "summary": "AlertManager",
+                    "self": "https://api.pagerduty.com/services/P9TYXZJ/integrations/PWB6A94",
+                    "html_url": "https://thousandeyesops.pagerduty.com/services/P9TYXZJ/integrations/PWB6A94",
+                },
+                "channel": {
+                    "type": "integration",
+                    "client": "Alertmanager",
+                    "client_url": "https://alertmanager.example.com",
+                },
+                "service": {
+                    "id": "P9TYXZJ",
+                    "type": "service_reference",
+                    "summary": "[PROD] Webapps",
+                    "self": "https://api.pagerduty.com/services/P9TYXZJ",
+                    "html_url": "https://thousandeyesops.pagerduty.com/service-directory/P9TYXZJ",
+                },
+                "incident": {
+                    "id": "Q0Y9H9AUGZHAHS",
+                    "type": "incident_reference",
+                    "summary": "[#568677] Test incident",
+                    "self": "https://api.pagerduty.com/incidents/Q0Y9H9AUGZHAHS",
+                    "html_url": "https://thousandeyesops.pagerduty.com/incidents/Q0Y9H9AUGZHAHS",
+                },
+                "teams": [],
+                "contexts": [],
+                "event_details": {},
+            },
+            {
+                "id": "RONF3S8XQ8TVEA2DXQS6FRPBEV",
+                "type": "acknowledge_log_entry",
+                "summary": "Acknowledged by Test User.",
+                "self": "https://api.pagerduty.com/log_entries/RONF3S8XQ8TVEA2DXQS6FRPBEV",
+                "html_url": None,
+                "created_at": "2025-09-18T22:54:38Z",
+                "agent": {
+                    "id": "PE9XZ7K",
+                    "type": "user_reference",
+                    "summary": "Test User",
+                    "self": "https://api.pagerduty.com/users/PE9XZ7K",
+                    "html_url": "https://thousandeyesops.pagerduty.com/users/PE9XZ7K",
+                },
+                "channel": {"type": "mobile"},
+                "service": {
+                    "id": "P9TYXZJ",
+                    "type": "service_reference",
+                    "summary": "[PROD] Webapps",
+                    "self": "https://api.pagerduty.com/services/P9TYXZJ",
+                    "html_url": "https://thousandeyesops.pagerduty.com/service-directory/P9TYXZJ",
+                },
+                "incident": {
+                    "id": "Q0Y9H9AUGZHAHS",
+                    "type": "incident_reference",
+                    "summary": "[#568677] Test incident",
+                    "self": "https://api.pagerduty.com/incidents/Q0Y9H9AUGZHAHS",
+                    "html_url": "https://thousandeyesops.pagerduty.com/incidents/Q0Y9H9AUGZHAHS",
+                },
+                "teams": [],
+                "contexts": [],
+                "acknowledgement_timeout": 3600,
+                "event_details": {},
+            },
+        ]
 
         cls.sample_user_data = Mock()
         cls.sample_user_data.id = "PUSER123"
@@ -210,6 +286,68 @@ class TestIncidentTools(unittest.TestCase):
         # Test that exception is raised
         with self.assertRaises(Exception) as context:
             get_incident("PINCIDENT123")
+
+        self.assertIn("API Error", str(context.exception))
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_log_entries_success(self, mock_get_client):
+        """Test getting incident log entries successfully."""
+        # Setup mock
+        mock_client = Mock()
+        mock_client.rget.return_value = self.sample_log_entry_data
+        mock_get_client.return_value = mock_client
+
+        # Test
+        result = get_incident_log_entries("PINCIDENT123")
+
+        # Assertions
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 2)
+        self.assertIsInstance(result[0], LogEntry)
+        self.assertIsInstance(result[1], LogEntry)
+
+        # Check first log entry (resolve)
+        self.assertEqual(result[0].id, "RO52CY6QBZKDN9PEGS3YPN35TH")
+        self.assertEqual(result[0].type, "resolve_log_entry")
+        self.assertEqual(result[0].summary, "Resolved through the API.")
+        self.assertIsNotNone(result[0].agent)
+        self.assertEqual(result[0].agent.summary, "AlertManager")
+
+        # Check second log entry (acknowledge)
+        self.assertEqual(result[1].id, "RONF3S8XQ8TVEA2DXQS6FRPBEV")
+        self.assertEqual(result[1].type, "acknowledge_log_entry")
+        self.assertEqual(result[1].summary, "Acknowledged by Test User.")
+        self.assertEqual(result[1].acknowledgement_timeout, 3600)
+
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/log_entries")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_log_entries_empty(self, mock_get_client):
+        """Test getting incident log entries with empty response."""
+        # Setup mock
+        mock_client = Mock()
+        mock_client.rget.return_value = []
+        mock_get_client.return_value = mock_client
+
+        # Test
+        result = get_incident_log_entries("PINCIDENT123")
+
+        # Assertions
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 0)
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/log_entries")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_log_entries_api_error(self, mock_get_client):
+        """Test get_incident_log_entries with API error."""
+        # Setup mock to raise exception
+        mock_client = Mock()
+        mock_client.rget.side_effect = Exception("API Error")
+        mock_get_client.return_value = mock_client
+
+        # Test that exception is raised
+        with self.assertRaises(Exception) as context:
+            get_incident_log_entries("PINCIDENT123")
 
         self.assertIn("API Error", str(context.exception))
 

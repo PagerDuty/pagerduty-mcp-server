@@ -52,7 +52,11 @@ from .teams import (
     remove_team_member,
     update_team,
 )
-from .users import get_user_data, list_users
+from .users import (
+    get_user_data,
+    list_users,
+    get_contact_methods,
+)
 
 # Read-only tools (safe, non-destructive operations)
 read_tools = [
@@ -72,6 +76,7 @@ read_tools = [
     # Users
     get_user_data,
     list_users,
+    get_contact_methods,
     # Schedules
     list_schedules,
     get_schedule,

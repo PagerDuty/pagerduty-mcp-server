@@ -197,45 +197,46 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 
 > **Important:** By default, the MCP server only exposes read-only tools. To enable tools that can modify your PagerDuty account (write-mode tools), you must explicitly start the server with the `--enable-write-tools` flag. This helps prevent accidental changes to your PagerDuty data.
 
-| Tool                   | Area               | Description                                         | Read-only |
-|------------------------|--------------------|-----------------------------------------------------|-----------|
-| create_alert_grouping_setting | Alert Grouping | Creates a new alert grouping setting                | ❌         |
-| delete_alert_grouping_setting | Alert Grouping | Deletes an alert grouping setting                   | ❌         |
-| get_alert_grouping_setting    | Alert Grouping | Retrieves a specific alert grouping setting         | ✅         |
-| list_alert_grouping_settings  | Alert Grouping | Lists alert grouping settings with filtering        | ✅         |
-| update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting          | ❌         |
-| get_event_orchestration | Event Orchestrations | Retrieves a specific event orchestration           | ✅         |
-| get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅         |
-| list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅         |
-| update_event_orchestration_router | Event Orchestrations | Updates the router configuration for an event orchestration | ❌         |
-| append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router | ❌         |
-| list_escalation_policies | Escalation Policy  | Lists escalation policies                           | ✅         |
-| get_escalation_policy    | Escalation Policy  | Retrieves a specific escalation policy              | ✅         |
-| add_note_to_incident     | Incidents          | Adds note to an incident                            | ❌         |
-| add_responders           | Incidents          | Adds responders to an incident                      | ❌         |
-| create_incident          | Incidents          | Creates a new incident                              | ❌         |
-| get_incident             | Incidents          | Retrieves a specific incident                       | ✅         |
-| list_incidents           | Incidents          | Lists incidents                                     | ✅         |
-| manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
-| add_team_member          | Teams              | Adds a user to a team with a specific role          | ❌         |
-| create_team              | Teams              | Creates a new team                                  | ❌         |
-| delete_team              | Teams              | Deletes a team                                      | ❌         |
-| get_team                 | Teams              | Retrieves a specific team                           | ✅         |
-| list_team_members        | Teams              | Lists members of a team                             | ✅         |
-| list_teams               | Teams              | Lists teams                                         | ✅         |
-| remove_team_member       | Teams              | Removes a user from a team                          | ❌         |
-| update_team              | Teams              | Updates an existing team                            | ❌         |
-| get_user_data            | Users              | Gets the current user's data                        | ✅         |
-| list_users               | Users              | Lists users in the PagerDuty account                | ✅         |
-| list_oncalls             | On-call            | Lists on-call schedules                             | ✅         |
-| create_schedule_override | Schedules          | Creates an override for a schedule                  | ❌         |
-| get_schedule             | Schedules          | Retrieves a specific schedule                       | ✅         |
-| list_schedule_users      | Schedules          | Lists users in a schedule                           | ✅         |
-| list_schedules           | Schedules          | Lists schedules                                     | ✅         |
-| create_service           | Services           | Creates a new service                               | ❌         |
-| get_service              | Services           | Retrieves a specific service                        | ✅         |
-| list_services            | Services           | Lists services                                      | ✅         |
-| update_service           | Services           | Updates an existing service                         | ❌         |
+| Tool                                   | Area               | Description                                                 | Read-only |
+|----------------------------------------|--------------------|-------------------------------------------------------------|-----------|
+| create_alert_grouping_setting          | Alert Grouping | Creates a new alert grouping setting                        | ❌         |
+| delete_alert_grouping_setting          | Alert Grouping | Deletes an alert grouping setting                           | ❌         |
+| get_alert_grouping_setting             | Alert Grouping | Retrieves a specific alert grouping setting                 | ✅         |
+| list_alert_grouping_settings           | Alert Grouping | Lists alert grouping settings with filtering                | ✅         |
+| update_alert_grouping_setting          | Alert Grouping | Updates an existing alert grouping setting                  | ❌         |
+| get_event_orchestration                | Event Orchestrations | Retrieves a specific event orchestration                    | ✅         |
+| get_event_orchestration_router         | Event Orchestrations | Gets the router configuration for an event orchestration    | ✅         |
+| list_event_orchestrations              | Event Orchestrations | Lists event orchestrations with optional filtering          | ✅         |
+| update_event_orchestration_router      | Event Orchestrations | Updates the router configuration for an event orchestration | ❌         |
+| append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router    | ❌         |
+| list_escalation_policies               | Escalation Policy  | Lists escalation policies                                   | ✅         |
+| get_escalation_policy                  | Escalation Policy  | Retrieves a specific escalation policy                      | ✅         |
+| add_note_to_incident                   | Incidents          | Adds note to an incident                                    | ❌         |
+| add_responders                         | Incidents          | Adds responders to an incident                              | ❌         |
+| create_incident                        | Incidents          | Creates a new incident                                      | ❌         |
+| get_incident                           | Incidents          | Retrieves a specific incident                               | ✅         |
+| list_incidents                         | Incidents          | Lists incidents                                             | ✅         |
+| manage_incidents                       | Incidents          | Updates status, urgency, assignment, or escalation level    | ❌     |
+| add_team_member                        | Teams              | Adds a user to a team with a specific role                  | ❌         |
+| create_team                            | Teams              | Creates a new team                                          | ❌         |
+| delete_team                            | Teams              | Deletes a team                                              | ❌         |
+| get_team                               | Teams              | Retrieves a specific team                                   | ✅         |
+| list_team_members                      | Teams              | Lists members of a team                                     | ✅         |
+| list_teams                             | Teams              | Lists teams                                                 | ✅         |
+| remove_team_member                     | Teams              | Removes a user from a team                                  | ❌         |
+| update_team                            | Teams              | Updates an existing team                                    | ❌         |
+| get_user_data                          | Users              | Gets the current user's data                                | ✅         |
+| list_users                             | Users              | Lists users in the PagerDuty account                        | ✅         |
+| get_contact_methods                    | Users              | Get contact methods for given user                          | ✅         |
+| list_oncalls                           | On-call            | Lists on-call schedules                                     | ✅         |
+| create_schedule_override               | Schedules          | Creates an override for a schedule                          | ❌         |
+| get_schedule                           | Schedules          | Retrieves a specific schedule                               | ✅         |
+| list_schedule_users                    | Schedules          | Lists users in a schedule                                   | ✅         |
+| list_schedules                         | Schedules          | Lists schedules                                             | ✅         |
+| create_service                         | Services           | Creates a new service                                       | ❌         |
+| get_service                            | Services           | Retrieves a specific service                                | ✅         |
+| list_services                          | Services           | Lists services                                              | ✅         |
+| update_service                         | Services           | Updates an existing service                                 | ❌         |
 
 
 ## Support

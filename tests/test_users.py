@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import TeamReference
 from pagerduty_mcp.models.users import User, UserQuery
-from pagerduty_mcp.tools.users import get_user_data, list_users
+from pagerduty_mcp.tools.users import get_user_data, list_users, get_contact_methods
 
 
 class TestUserTools(unittest.TestCase):
@@ -43,6 +43,33 @@ class TestUserTools(unittest.TestCase):
                 "teams": [{"id": "TEAM2", "summary": "DevOps Team", "type": "team_reference"}],
             },
         ]
+
+        cls.sample_contact_methods_response = {
+            "contact_methods": [
+                {
+                    "id": "CMID1ABCDE1",
+                    "summary": "Work Email",
+                    "type": "email_contact_method",
+                    "html_url":None,
+                    "label":"Work",
+                    "send_short_email": False,
+                    "send_html_email": True,
+                    "address": "user@example.com"
+                },
+                {
+                    "id": "CMID2ABCDE1",
+                    "summary": "Mobile Phone",
+                    "type": "phone_contact_method",
+                    "html_url": None,
+                    "label": "Mobile",
+                    "send_short_email": False,
+                    "send_html_email": False,
+                    "country_code": 91,
+                    "phone_number": "0123456789",
+                    "sms": True
+                }
+            ]
+        }
 
         cls.mock_client = MagicMock()
 
@@ -290,6 +317,33 @@ class TestUserTools(unittest.TestCase):
         # Verify result
         self.assertEqual(len(result.response), 2)
 
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_get_contact_methods_with_user_id(self, mock_get_client):
+        """Test getting contacts methods with user ID. """
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = self.sample_contact_methods_response
+
+        # Test the new approach using UserQuery model
+        user_id = "USER123"
+        result = get_contact_methods(user_id)
+
+        # Verify API call
+        mock_get_client.assert_called_once()
+        self.mock_client.rget.assert_called_once_with(f"/users/{user_id}/contact_methods")
+
+        # Verify result
+        self.assertEqual(len(result["contact_methods"]), 2)
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_get_contact_methods_client_error(self, mock_get_client):
+        """Test getting contacts methods when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.side_effect = ValueError("No user id provided")
+
+        with self.assertRaises(ValueError) as context:
+            get_contact_methods()
+
+        self.assertEqual(str(context.exception), "No user id provided")
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,8 +14,11 @@ from pagerduty_mcp.models import (
     IncidentResponderRequestResponse,
     ListResponseModel,
     MCPContext,
+    OutlierIncidentQuery,
     OutlierIncidentResponse,
+    PastIncidentsQuery,
     PastIncidentsResponse,
+    RelatedIncidentsQuery,
     RelatedIncidentsResponse,
     UserReference,
 )
@@ -218,11 +221,7 @@ def add_note_to_incident(incident_id: str, note: str) -> IncidentNote:
     return IncidentNote.model_validate(response)
 
 
-def get_outlier_incident(
-    incident_id: str,
-    since: datetime | None = None,
-    additional_details: list[str] | None = None,
-) -> OutlierIncidentResponse:
+def get_outlier_incident(query_model: OutlierIncidentQuery) -> OutlierIncidentResponse:
     """Get Outlier Incident information for a given Incident on its Service.
 
     Outlier Incident returns incident that deviates from the expected patterns
@@ -230,32 +229,17 @@ def get_outlier_incident(
     Event Intelligence package or Digital Operations plan only.
 
     Args:
-        incident_id: The ID of the incident to get outlier incident information for
-        since: The start of the date range over which you want to search
-        additional_details: Array of additional attributes to include in the response
+        query_model: Query parameters including incident ID, date range, and additional details
 
     Returns:
         Outlier incident information calculated over the same Service as the given Incident
     """
-    params = {}
-    if since:
-        params["since"] = since.isoformat()
-    if additional_details:
-        params["additional_details[]"] = additional_details
-
-    if params:
-        response = get_client().rget(f"/incidents/{incident_id}/outlier_incident", params=params)
-    else:
-        response = get_client().rget(f"/incidents/{incident_id}/outlier_incident")
+    params = query_model.to_params()
+    response = get_client().rget(f"/incidents/{query_model.incident_id}/outlier_incident", params=params)
     return OutlierIncidentResponse.model_validate(response)
 
 
-def get_past_incidents(
-    incident_id: str,
-    limit: int | None = None,
-    *,
-    total: bool | None = None,
-) -> PastIncidentsResponse:
+def get_past_incidents(query_model: PastIncidentsQuery) -> PastIncidentsResponse:
     """Get Past Incidents related to a specific incident ID.
 
     Past Incidents returns Incidents within the past 6 months that have similar
@@ -264,30 +248,17 @@ def get_past_incidents(
     as part of the Event Intelligence package or Digital Operations plan only.
 
     Args:
-        incident_id: The ID of the incident to get past incidents for
-        limit: The number of results to be returned in the response (default: 5, max: 999)
-        total: Set to true to include the total number of Past Incidents in the response
+        query_model: Query parameters including incident ID, limit, and total flag
 
     Returns:
         List of past incidents with similarity scores
     """
-    params = {}
-    if limit is not None:
-        params["limit"] = limit
-    if total is not None:
-        params["total"] = total
-
-    if params:
-        response = get_client().rget(f"/incidents/{incident_id}/past_incidents", params=params)
-    else:
-        response = get_client().rget(f"/incidents/{incident_id}/past_incidents")
+    params = query_model.to_params()
+    response = get_client().rget(f"/incidents/{query_model.incident_id}/past_incidents", params=params)
     return PastIncidentsResponse.model_validate(response)
 
 
-def get_related_incidents(
-    incident_id: str,
-    additional_details: list[str] | None = None,
-) -> RelatedIncidentsResponse:
+def get_related_incidents(query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
     """Get Related Incidents for a specific incident ID.
 
     Returns the 20 most recent Related Incidents that are impacting other Responders
@@ -295,18 +266,16 @@ def get_related_incidents(
     package or Digital Operations plan only.
 
     Args:
-        incident_id: The ID of the incident to get related incidents for
-        additional_details: Array of additional attributes to include in the response
+        query_model: Query parameters including incident ID and additional details
 
     Returns:
         List of related incidents and their relationships
     """
-    params = {}
-    if additional_details:
-        params["additional_details[]"] = additional_details
+    params = query_model.to_params()
+    response = get_client().rget(f"/incidents/{query_model.incident_id}/related_incidents", params=params)
 
-    if params:
-        response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
-    else:
-        response = get_client().rget(f"/incidents/{incident_id}/related_incidents")
+    # Handle edge case where API returns an empty list instead of expected dict structure
+    if isinstance(response, list) and len(response) == 0:
+        return RelatedIncidentsResponse(related_incidents=[])
+
     return RelatedIncidentsResponse.model_validate(response)

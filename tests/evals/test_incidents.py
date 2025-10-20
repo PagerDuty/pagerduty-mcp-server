@@ -103,31 +103,31 @@ INCIDENT_COMPETENCY_TESTS = [
         description="Acknowledge specific incident",
     ),
     IncidentCompetencyTest(
-        query="Find outlier incidents that deviate from expected patterns for incident 789",
+        query="Show me outlier analysis for incident 789",
         expected_tools=[
             {
                 "tool_name": "get_outlier_incident",
-                "parameters": {"incident_id": "789"},
+                "parameters": {"query_model": {"incident_id": "789"}},
             }
         ],
         description="Get outlier incident information using specialized tool",
     ),
     IncidentCompetencyTest(
-        query="Get past incidents from the last 6 months with similar metadata for incident ABC123",
+        query="Show me similar past incidents for incident ABC123",
         expected_tools=[
             {
                 "tool_name": "get_past_incidents",
-                "parameters": {"incident_id": "ABC123"},
+                "parameters": {"query_model": {"incident_id": "ABC123"}},
             }
         ],
         description="Get past incidents using specialized tool",
     ),
     IncidentCompetencyTest(
-        query="Get the 20 most recent related incidents impacting other responders for incident DEF456",
+        query="Show me related incidents for incident DEF456",
         expected_tools=[
             {
                 "tool_name": "get_related_incidents",
-                "parameters": {"incident_id": "DEF456"},
+                "parameters": {"query_model": {"incident_id": "DEF456"}},
             }
         ],
         description="Get related incidents using specialized tool",

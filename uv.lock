@@ -1,6 +1,6 @@
 version = 1
-revision = 3
-requires-python = "==3.12.*"
+revision = 2
+requires-python = ">=3.12.0, <3.13"
 
 [[package]]
 name = "annotated-types"
@@ -588,7 +588,7 @@ wheels = [
 
 [[package]]
 name = "pagerduty-mcp"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
@@ -610,21 +610,21 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mcp", extras = ["cli"], specifier = ">=1.8.0" },
-    { name = "pagerduty", specifier = ">=2.0.0" },
-    { name = "typer", specifier = ">=0.16.0" },
+    { name = "mcp", extras = ["cli"], specifier = "~=1.8" },
+    { name = "pagerduty", specifier = "~=2.0" },
+    { name = "typer", specifier = "~=0.16" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "boto3", specifier = ">=1.35.0" },
-    { name = "coverage", specifier = ">=7.8.2" },
-    { name = "deepdiff", specifier = ">=8.5.0" },
-    { name = "ipykernel", specifier = ">=6.29.5" },
-    { name = "openai", specifier = ">=1.84.0" },
-    { name = "pyright", specifier = ">=1.1.401" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "ruff", specifier = ">=0.12.1" },
+    { name = "boto3", specifier = "~=1.35" },
+    { name = "coverage", specifier = "~=7.8" },
+    { name = "deepdiff", specifier = "~=8.5" },
+    { name = "ipykernel", specifier = "~=6.29" },
+    { name = "openai", specifier = "~=1.84" },
+    { name = "pyright", specifier = "~=1.1" },
+    { name = "pytest", specifier = "~=8.3" },
+    { name = "ruff", specifier = "~=0.12" },
 ]
 
 [[package]]

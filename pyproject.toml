@@ -3,11 +3,11 @@ name = "pagerduty-mcp"
 version = "0.2.1"
 description = "PagerDuty's official local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account directly from your MCP-enabled client."
 readme = "README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = "~=3.12.0"
 dependencies = [
-    "mcp[cli]>=1.8.0",
-    "pagerduty>=2.0.0",
-    "typer>=0.16.0",
+    "mcp[cli]~=1.8",
+    "pagerduty~=2.0",
+    "typer~=0.16",
 ]
 
 [project.scripts]
@@ -97,12 +97,12 @@ where = ["."]
 
 [dependency-groups]
 dev = [
-    "boto3>=1.35.0",
-    "coverage>=7.8.2",
-    "deepdiff>=8.5.0",
-    "ipykernel>=6.29.5",
-    "openai>=1.84.0",
-    "pyright>=1.1.401",
-    "pytest>=8.3.5",
-    "ruff>=0.12.1",
+    "boto3~=1.35",
+    "coverage~=7.8",
+    "deepdiff~=8.5",
+    "ipykernel~=6.29",
+    "openai~=1.84",
+    "pyright~=1.1",
+    "pytest~=8.3",
+    "ruff~=0.12",
 ]

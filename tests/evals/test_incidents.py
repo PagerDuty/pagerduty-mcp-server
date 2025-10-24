@@ -14,6 +14,21 @@ class IncidentCompetencyTest(CompetencyTest):
         mcp.register_mock_response(
             "list_services", lambda params: True, {"response": [{"id": "SVC123", "name": "Web Service"}]}
         )
+        mcp.register_mock_response(
+            "get_outlier_incident",
+            lambda params: True,
+            {"response": {"outliers": [{"id": "OUT123", "similarity_score": 0.85}]}},
+        )
+        mcp.register_mock_response(
+            "get_past_incidents",
+            lambda params: True,
+            {"response": {"incidents": [{"id": "PAST123", "similarity_score": 0.92}]}},
+        )
+        mcp.register_mock_response(
+            "get_related_incidents",
+            lambda params: True,
+            {"response": {"incidents": [{"id": "REL123", "title": "Related incident"}]}},
+        )
 
 
 # Define the competency test cases
@@ -86,5 +101,35 @@ INCIDENT_COMPETENCY_TESTS = [
             }
         ],
         description="Acknowledge specific incident",
+    ),
+    IncidentCompetencyTest(
+        query="Show me outlier analysis for incident 789",
+        expected_tools=[
+            {
+                "tool_name": "get_outlier_incident",
+                "parameters": {"query_model": {"incident_id": "789"}},
+            }
+        ],
+        description="Get outlier incident information using specialized tool",
+    ),
+    IncidentCompetencyTest(
+        query="Show me similar past incidents for incident ABC123",
+        expected_tools=[
+            {
+                "tool_name": "get_past_incidents",
+                "parameters": {"query_model": {"incident_id": "ABC123"}},
+            }
+        ],
+        description="Get past incidents using specialized tool",
+    ),
+    IncidentCompetencyTest(
+        query="Show me related incidents for incident DEF456",
+        expected_tools=[
+            {
+                "tool_name": "get_related_incidents",
+                "parameters": {"query_model": {"incident_id": "DEF456"}},
+            }
+        ],
+        description="Get related incidents using specialized tool",
     ),
 ]

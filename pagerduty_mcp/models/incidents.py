@@ -98,6 +98,76 @@ class IncidentQuery(BaseModel):
         return params
 
 
+class OutlierIncidentQuery(BaseModel):
+    """Query model for retrieving outlier incident information."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    incident_id: str = Field(description="The ID of the incident to get outlier incident information for")
+    since: datetime | None = Field(
+        default=None,
+        description="The start of the date range over which you want to search. Maximum range is 6 months.",
+    )
+    additional_details: list[str] | None = Field(
+        default=None,
+        description="Array of additional attributes to any of the returned incidents for related incidents. "
+         "Allowed values are 'incident'",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.since:
+            params["since"] = self.since.isoformat()
+        if self.additional_details:
+            params["additional_details[]"] = self.additional_details
+        return params
+
+
+class PastIncidentsQuery(BaseModel):
+    """Query model for retrieving past incidents related to a specific incident."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    incident_id: str = Field(description="The ID of the incident to get past incidents for")
+    limit: int | None = Field(
+        default=None,
+        ge=1,
+        le=999,
+        description="The number of results to be returned in the response. Default is 5, maximum is 999.",
+    )
+    total: bool | None = Field(
+        default=None,
+        description="Set to true to include the total number of Past Incidents in the response",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.limit is not None:
+            params["limit"] = self.limit
+        if self.total is not None:
+            params["total"] = self.total
+        return params
+
+
+class RelatedIncidentsQuery(BaseModel):
+    """Query model for retrieving related incidents for a specific incident."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    incident_id: str = Field(description="The ID of the incident to get related incidents for")
+    additional_details: list[str] | None = Field(
+        default=None,
+        description="Array of additional attributes to any of the returned incidents for related incidents. "
+         "Allowed values are 'incident'",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.additional_details:
+            params["additional_details[]"] = self.additional_details
+        return params
+
+
 # TODO: This should be moved to its own file
 class Assignment(BaseModel):
     at: datetime = Field(description="Time at which the assignment was created.")
@@ -212,3 +282,39 @@ class IncidentNote(BaseModel):
     content: str = Field(description="The content of the note")
     created_at: datetime = Field(description="The time the note was created")
     user: UserReference = Field(description="The user who created the note")
+
+
+class OutlierIncident(BaseModel):
+    incident: Incident = Field(description="The outlier incident details")
+
+
+class OutlierIncidentResponse(BaseModel):
+    outlier_incident: OutlierIncident = Field(description="Outlier incident information")
+
+
+class PastIncidentReference(BaseModel):
+    id: str = Field(description="The globally unique identifier of the incident")
+    created_at: datetime = Field(description="The date/time the incident was first triggered")
+    self: str = Field(description="The URL at which the object is accessible")
+    title: str = Field(description="The description of the nature, symptoms, cause, or effect of the incident")
+
+
+class PastIncident(BaseModel):
+    incident: PastIncidentReference = Field(description="Past incident reference")
+    score: float = Field(description="The computed similarity score associated with the incident and parent incident")
+
+
+class PastIncidentsResponse(BaseModel):
+    past_incidents: list[PastIncident] = Field(description="List of past incidents")
+    total: int | None = Field(
+        default=None, description="The total number of Past Incidents if the total parameter was set"
+    )
+    limit: int = Field(description="The maximum number of Incidents requested")
+
+
+class RelatedIncident(BaseModel):
+    incident: Incident = Field(description="The related incident details")
+
+
+class RelatedIncidentsResponse(BaseModel):
+    related_incidents: list[RelatedIncident] = Field(description="List of related incidents")

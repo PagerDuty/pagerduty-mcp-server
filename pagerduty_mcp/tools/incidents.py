@@ -14,6 +14,12 @@ from pagerduty_mcp.models import (
     IncidentResponderRequestResponse,
     ListResponseModel,
     MCPContext,
+    OutlierIncidentQuery,
+    OutlierIncidentResponse,
+    PastIncidentsQuery,
+    PastIncidentsResponse,
+    RelatedIncidentsQuery,
+    RelatedIncidentsResponse,
     UserReference,
 )
 from pagerduty_mcp.tools.users import get_user_data
@@ -213,3 +219,63 @@ def add_note_to_incident(incident_id: str, note: str) -> IncidentNote:
         json={"note": {"content": note}},
     )
     return IncidentNote.model_validate(response)
+
+
+def get_outlier_incident(query_model: OutlierIncidentQuery) -> OutlierIncidentResponse:
+    """Get Outlier Incident information for a given Incident on its Service.
+
+    Outlier Incident returns incident that deviates from the expected patterns
+    for the same Service. This feature is currently available as part of the
+    Event Intelligence package or Digital Operations plan only.
+
+    Args:
+        query_model: Query parameters including incident ID, date range, and additional details
+
+    Returns:
+        Outlier incident information calculated over the same Service as the given Incident
+    """
+    params = query_model.to_params()
+    response = get_client().rget(f"/incidents/{query_model.incident_id}/outlier_incident", params=params)
+    return OutlierIncidentResponse.model_validate(response)
+
+
+def get_past_incidents(query_model: PastIncidentsQuery) -> PastIncidentsResponse:
+    """Get Past Incidents related to a specific incident ID.
+
+    Past Incidents returns Incidents within the past 6 months that have similar
+    metadata and were generated on the same Service as the parent Incident.
+    By default, 5 Past Incidents are returned. This feature is currently available
+    as part of the Event Intelligence package or Digital Operations plan only.
+
+    Args:
+        query_model: Query parameters including incident ID, limit, and total flag
+
+    Returns:
+        List of past incidents with similarity scores
+    """
+    params = query_model.to_params()
+    response = get_client().rget(f"/incidents/{query_model.incident_id}/past_incidents", params=params)
+    return PastIncidentsResponse.model_validate(response)
+
+
+def get_related_incidents(query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
+    """Get Related Incidents for a specific incident ID.
+
+    Returns the 20 most recent Related Incidents that are impacting other Responders
+    and Services. This feature is currently available as part of the Event Intelligence
+    package or Digital Operations plan only.
+
+    Args:
+        query_model: Query parameters including incident ID and additional details
+
+    Returns:
+        List of related incidents and their relationships
+    """
+    params = query_model.to_params()
+    response = get_client().rget(f"/incidents/{query_model.incident_id}/related_incidents", params=params)
+
+    # Handle edge case where API returns an empty list instead of expected dict structure
+    if isinstance(response, list) and len(response) == 0:
+        return RelatedIncidentsResponse(related_incidents=[])
+
+    return RelatedIncidentsResponse.model_validate(response)

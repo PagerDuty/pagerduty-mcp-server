@@ -95,7 +95,6 @@ class TestIncidentTools(unittest.TestCase):
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_all(self, mock_paginate, mock_get_user_data, mock_get_client):
         """Fetching all incidents shouldn't call sub-tools it doesn't need."""
-
         # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
 

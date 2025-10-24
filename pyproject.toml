@@ -104,5 +104,5 @@ dev = [
     "openai~=1.84",
     "pyright~=1.1",
     "pytest~=8.3",
-    "ruff~=0.12",
+    "ruff~=0.12.0",
 ]

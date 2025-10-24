@@ -1,6 +1,6 @@
 version = 1
-revision = 3
-requires-python = "==3.12.*"
+revision = 2
+requires-python = ">=3.12.0, <3.13"
 
 [[package]]
 name = "annotated-types"
@@ -582,21 +582,21 @@ wheels = [
 
 [[package]]
 name = "pagerduty"
-version = "2.3.0"
+version = "5.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
     { name = "requests" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8e/c0/62c2f54b3b8726b867885e46538726c3af24000fdb6a73b9f61c8dcc8614/pagerduty-2.3.0.tar.gz", hash = "sha256:63752ddda9b00cb91f7020b768104266b11fc3011be52ebbb8a8c40fa8ef92ae", size = 32023, upload-time = "2025-06-25T00:11:11.739Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d9/d9/ab70c16735390198a6601f25a8a1193618352d6a1a7f3dbc395eb32aae2e/pagerduty-5.3.0.tar.gz", hash = "sha256:00c902533b8beea9b8e37c2ca74d9d70ba93661d6080d4afb49ad4ca7908d895", size = 46815, upload-time = "2025-10-23T16:11:45.302Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c6/fa/6a867be034b0d8cfc08bf3e1c1542ba12842e520cceb7a012f83aaddf0f1/pagerduty-2.3.0-py3-none-any.whl", hash = "sha256:bca8e6cbbaec13fd758f42bd9aa29708832f021b46df77af00def80a24dde21b", size = 33829, upload-time = "2025-06-25T00:11:10.588Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/81/edf610ffc8a9d4449f76ab4ae5fe8489df745086248d0c8f323998665b2e/pagerduty-5.3.0-py3-none-any.whl", hash = "sha256:bcc0686b273d652b4499aba51af5836b5b2abebdf0b8e24a65c5518e0d502f5b", size = 54540, upload-time = "2025-10-23T16:11:44.066Z" },
 ]
 
 [[package]]
 name = "pagerduty-mcp"
-version = "0.3.0"
+version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
@@ -619,7 +619,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = "~=1.8" },
-    { name = "pagerduty", specifier = "~=2.0" },
+    { name = "pagerduty", specifier = "~=5.3" },
     { name = "typer", specifier = "~=0.16.0" },
 ]
 

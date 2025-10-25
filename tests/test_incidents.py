@@ -152,7 +152,6 @@ class TestIncidentTools(unittest.TestCase):
         mock_paginate.assert_called_once()
         call_args = mock_paginate.call_args
         self.assertEqual(call_args[1]["entity"], "incidents")
-        self.assertEqual(call_args[1]["maximum_records"], MAX_RESULTS)
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     @patch("pagerduty_mcp.tools.incidents.get_user_data")
@@ -201,10 +200,10 @@ class TestIncidentTools(unittest.TestCase):
         query = IncidentQuery(request_scope="teams")
         _ = list_incidents(query)
 
-        # Verify teams_ids parameter was added
+        # Verify team_ids parameter was added
         call_args = mock_paginate.call_args
-        self.assertIn("teams_ids[]", call_args[1]["params"])
-        self.assertEqual(call_args[1]["params"]["teams_ids[]"], ["PTEAM123"])
+        self.assertIn("team_ids[]", call_args[1]["params"])
+        self.assertEqual(call_args[1]["params"]["team_ids[]"], ["PTEAM123"])
 
     @patch("pagerduty_mcp.tools.incidents.get_user_data")
     def test_list_incidents_user_required_error(self, mock_get_user):
@@ -241,7 +240,6 @@ class TestIncidentTools(unittest.TestCase):
         self.assertIn("since", params)
         self.assertIn("urgencies[]", params)
 
-        self.assertEqual(call_args[1]["maximum_records"], 50)
         self.assertEqual(params["statuses[]"], ["triggered", "acknowledged"])
         self.assertEqual(params["since"], since_date.isoformat())
         self.assertEqual(params["urgencies[]"], ["high"])

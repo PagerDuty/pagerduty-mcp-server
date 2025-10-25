@@ -19,7 +19,12 @@ def list_event_orchestrations(query_model: EventOrchestrationQuery) -> ListRespo
     Returns:
         List of event orchestrations matching the query parameters
     """
-    response = paginate(client=get_client(), entity="event_orchestrations", params=query_model.to_params())
+    response = paginate(
+        client=get_client(),
+        entity="event_orchestrations",
+        params=query_model.to_params(),
+        maximum_records=query_model.limit or 1000,
+    )
     orchestrations = [EventOrchestration(**orchestration) for orchestration in response]
     return ListResponseModel[EventOrchestration](response=orchestrations)
 

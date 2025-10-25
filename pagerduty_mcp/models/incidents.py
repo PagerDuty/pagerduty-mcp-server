@@ -88,7 +88,7 @@ class IncidentQuery(BaseModel):
         if self.service_ids:
             params["service_ids[]"] = self.service_ids
         if self.teams_ids:
-            params["teams_ids[]"] = self.teams_ids
+            params["team_ids[]"] = self.teams_ids
         if self.user_ids:
             params["user_ids[]"] = self.user_ids
         if self.urgencies:

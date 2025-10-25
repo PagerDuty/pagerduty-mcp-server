@@ -39,7 +39,7 @@ class ServiceQuery(BaseModel):
         if self.limit:
             params["limit"] = self.limit
         if self.teams_ids:
-            params["teams_ids[]"] = self.teams_ids
+            params["team_ids[]"] = self.teams_ids
         return params
 
 

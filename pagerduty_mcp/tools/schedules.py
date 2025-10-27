@@ -15,7 +15,9 @@ def list_schedules(query_model: ScheduleQuery) -> ListResponseModel[Schedule]:
     Returns:
         List of schedules matching the query parameters
     """
-    response = paginate(client=get_client(), entity="schedules", params=query_model.to_params())
+    response = paginate(
+        client=get_client(), entity="schedules", params=query_model.to_params(), maximum_records=query_model.limit or 1000
+    )
     schedules = [Schedule(**schedule) for schedule in response]
     return ListResponseModel[Schedule](response=schedules)
 

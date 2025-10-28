@@ -682,9 +682,7 @@ class TestIncidentTools(unittest.TestCase):
         """Test getting outlier incident successfully."""
         # Setup mock
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.json.return_value = self.sample_outlier_incident_data
-        mock_client.get.return_value = mock_response
+        mock_client.rget.return_value = self.sample_outlier_incident_data
         mock_get_client.return_value = mock_client
 
         # Test
@@ -696,16 +694,14 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(result.outlier_incident.incident.id, "PINCIDENT123")
         self.assertEqual(result.outlier_incident.incident.occurrence.count, 10)
         self.assertEqual(result.outlier_incident.incident_template.id, "PTEMPLATE123")
-        mock_client.get.assert_called_once_with("/incidents/PINCIDENT123/outlier_incident", params={})
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/outlier_incident", params={})
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_outlier_incident_with_params(self, mock_get_client):
         """Test getting outlier incident with optional parameters."""
         # Setup mock
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.json.return_value = self.sample_outlier_incident_data
-        mock_client.get.return_value = mock_response
+        mock_client.rget.return_value = self.sample_outlier_incident_data
         mock_get_client.return_value = mock_client
 
         # Test with since parameter
@@ -717,7 +713,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Assertions
         self.assertIsInstance(result, OutlierIncidentResponse)
-        call_args = mock_client.get.call_args
+        call_args = mock_client.rget.call_args
         self.assertEqual(call_args[0][0], "/incidents/PINCIDENT123/outlier_incident")
         self.assertIn("params", call_args[1])
         params = call_args[1]["params"]
@@ -751,9 +747,7 @@ class TestIncidentTools(unittest.TestCase):
         }
 
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.json.return_value = outlier_data_no_title
-        mock_client.get.return_value = mock_response
+        mock_client.rget.return_value = outlier_data_no_title
         mock_get_client.return_value = mock_client
 
         # Test
@@ -771,9 +765,7 @@ class TestIncidentTools(unittest.TestCase):
         """Test getting past incidents successfully."""
         # Setup mock
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.json.return_value = self.sample_past_incidents_data
-        mock_client.get.return_value = mock_response
+        mock_client.rget.return_value = self.sample_past_incidents_data
         mock_get_client.return_value = mock_client
 
         # Test
@@ -787,16 +779,14 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(result.past_incidents[0].score, 46.8249)
         self.assertEqual(result.total, 2)
         self.assertEqual(result.limit, 5)
-        mock_client.get.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={})
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={})
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_past_incidents_with_params(self, mock_get_client):
         """Test getting past incidents with optional parameters."""
         # Setup mock
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.json.return_value = self.sample_past_incidents_data
-        mock_client.get.return_value = mock_response
+        mock_client.rget.return_value = self.sample_past_incidents_data
         mock_get_client.return_value = mock_client
 
         # Test with limit and total parameters
@@ -805,7 +795,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
-        call_args = mock_client.get.call_args
+        call_args = mock_client.rget.call_args
         self.assertEqual(call_args[0][0], "/incidents/PINCIDENT123/past_incidents")
         self.assertIn("params", call_args[1])
         params = call_args[1]["params"]
@@ -817,9 +807,7 @@ class TestIncidentTools(unittest.TestCase):
         """Test getting related incidents successfully."""
         # Setup mock
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.json.return_value = self.sample_related_incidents_data
-        mock_client.get.return_value = mock_response
+        mock_client.rget.return_value = self.sample_related_incidents_data
         mock_get_client.return_value = mock_client
 
         # Test
@@ -831,16 +819,14 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(len(result.related_incidents), 2)
         self.assertEqual(result.related_incidents[0].incident.id, "PINCIDENT123")
         self.assertEqual(result.related_incidents[1].incident.id, "PINCIDENT456")
-        mock_client.get.assert_called_once_with("/incidents/PINCIDENT123/related_incidents", params={})
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/related_incidents", params={})
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_related_incidents_with_params(self, mock_get_client):
         """Test getting related incidents with optional parameters."""
         # Setup mock
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.json.return_value = self.sample_related_incidents_data
-        mock_client.get.return_value = mock_response
+        mock_client.rget.return_value = self.sample_related_incidents_data
         mock_get_client.return_value = mock_client
 
         # Test with additional_details parameter
@@ -849,7 +835,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
-        call_args = mock_client.get.call_args
+        call_args = mock_client.rget.call_args
         self.assertEqual(call_args[0][0], "/incidents/PINCIDENT123/related_incidents")
         self.assertIn("params", call_args[1])
         params = call_args[1]["params"]
@@ -860,7 +846,7 @@ class TestIncidentTools(unittest.TestCase):
         """Test get_outlier_incident with API error."""
         # Setup mock to raise exception
         mock_client = Mock()
-        mock_client.get.side_effect = Exception("API Error")
+        mock_client.rget.side_effect = Exception("API Error")
         mock_get_client.return_value = mock_client
 
         # Test that exception is raised
@@ -875,7 +861,7 @@ class TestIncidentTools(unittest.TestCase):
         """Test get_past_incidents with API error."""
         # Setup mock to raise exception
         mock_client = Mock()
-        mock_client.get.side_effect = Exception("API Error")
+        mock_client.rget.side_effect = Exception("API Error")
         mock_get_client.return_value = mock_client
 
         # Test that exception is raised
@@ -890,7 +876,7 @@ class TestIncidentTools(unittest.TestCase):
         """Test get_related_incidents with API error."""
         # Setup mock to raise exception
         mock_client = Mock()
-        mock_client.get.side_effect = Exception("API Error")
+        mock_client.rget.side_effect = Exception("API Error")
         mock_get_client.return_value = mock_client
 
         # Test that exception is raised
@@ -905,9 +891,7 @@ class TestIncidentTools(unittest.TestCase):
         """Test get_related_incidents handles empty list response correctly."""
         # Setup mock to return empty list (edge case)
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.json.return_value = []
-        mock_client.get.return_value = mock_response
+        mock_client.rget.return_value = []
         mock_get_client.return_value = mock_client
 
         # Test
@@ -915,6 +899,133 @@ class TestIncidentTools(unittest.TestCase):
         result = get_related_incidents("PINCIDENT123", query)
 
         # Should return empty related incidents response
+        self.assertIsInstance(result, RelatedIncidentsResponse)
+        self.assertEqual(len(result.related_incidents), 0)
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_outlier_incident_direct_response(self, mock_get_client):
+        """Test get_outlier_incident with direct/unwrapped response format."""
+        # Setup mock to return direct format (unwrapped)
+        direct_response = {
+            "incident": {
+                "id": "PINCIDENT123",
+                "created_at": "2020-11-18T13:08:14Z",
+                "self": "https://api.pagerduty.com/incidents/PINCIDENT123",
+                "title": "Server is on fire",
+                "occurrence": {
+                    "count": 10,
+                    "frequency": 0.04,
+                    "category": "rare",
+                    "since": "2020-09-23T13:08:14Z",
+                    "until": "2021-01-18T13:08:14Z",
+                },
+            },
+            "incident_template": {
+                "id": "PTEMPLATE123",
+                "cluster_id": "PCLUSTER123",
+                "mined_text": "Test incident pattern <*>",
+            },
+        }
+        mock_client = Mock()
+        mock_client.rget.return_value = direct_response
+        mock_get_client.return_value = mock_client
+
+        # Test
+        query = OutlierIncidentQuery()
+        result = get_outlier_incident("PINCIDENT123", query)
+
+        # Assertions
+        self.assertIsInstance(result, OutlierIncidentResponse)
+        self.assertEqual(result.outlier_incident.incident.id, "PINCIDENT123")
+        self.assertEqual(result.outlier_incident.incident_template.id, "PTEMPLATE123")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_past_incidents_empty_list_response(self, mock_get_client):
+        """Test get_past_incidents handles empty list response correctly."""
+        # Setup mock to return empty list (edge case)
+        mock_client = Mock()
+        mock_client.rget.return_value = []
+        mock_get_client.return_value = mock_client
+
+        # Test
+        query = PastIncidentsQuery(limit=10)
+        result = get_past_incidents("PINCIDENT123", query)
+
+        # Should return empty past incidents response with correct default values
+        self.assertIsInstance(result, PastIncidentsResponse)
+        self.assertEqual(len(result.past_incidents), 0)
+        self.assertEqual(result.limit, 10)
+        self.assertEqual(result.total, 0)
+
+    def test_outlier_incident_response_from_api_response_wrapped(self):
+        """Test OutlierIncidentResponse.from_api_response with wrapped data."""
+        wrapped_data = {
+            "outlier_incident": {
+                "incident": {
+                    "id": "PINCIDENT123",
+                    "created_at": "2020-11-18T13:08:14Z",
+                    "self": "https://api.pagerduty.com/incidents/PINCIDENT123",
+                    "title": "Server is on fire",
+                    "occurrence": {
+                        "count": 10,
+                        "frequency": 0.04,
+                        "category": "rare",
+                        "since": "2020-09-23T13:08:14Z",
+                        "until": "2021-01-18T13:08:14Z",
+                    },
+                },
+                "incident_template": {
+                    "id": "PTEMPLATE123",
+                    "cluster_id": "PCLUSTER123",
+                    "mined_text": "Test incident pattern <*>",
+                },
+            }
+        }
+
+        result = OutlierIncidentResponse.from_api_response(wrapped_data)
+        self.assertIsInstance(result, OutlierIncidentResponse)
+        self.assertEqual(result.outlier_incident.incident.id, "PINCIDENT123")
+        self.assertEqual(result.outlier_incident.incident_template.id, "PTEMPLATE123")
+
+    def test_outlier_incident_response_from_api_response_direct(self):
+        """Test OutlierIncidentResponse.from_api_response with direct/unwrapped data."""
+        direct_data = {
+            "incident": {
+                "id": "PINCIDENT123",
+                "created_at": "2020-11-18T13:08:14Z",
+                "self": "https://api.pagerduty.com/incidents/PINCIDENT123",
+                "title": "Server is on fire",
+                "occurrence": {
+                    "count": 10,
+                    "frequency": 0.04,
+                    "category": "rare",
+                    "since": "2020-09-23T13:08:14Z",
+                    "until": "2021-01-18T13:08:14Z",
+                },
+            },
+            "incident_template": {
+                "id": "PTEMPLATE123",
+                "cluster_id": "PCLUSTER123",
+                "mined_text": "Test incident pattern <*>",
+            },
+        }
+
+        result = OutlierIncidentResponse.from_api_response(direct_data)
+        self.assertIsInstance(result, OutlierIncidentResponse)
+        self.assertEqual(result.outlier_incident.incident.id, "PINCIDENT123")
+        self.assertEqual(result.outlier_incident.incident_template.id, "PTEMPLATE123")
+
+    def test_past_incidents_response_from_api_response_empty_list(self):
+        """Test PastIncidentsResponse.from_api_response with empty list."""
+        result = PastIncidentsResponse.from_api_response([], default_limit=5)
+        self.assertIsInstance(result, PastIncidentsResponse)
+        self.assertEqual(len(result.past_incidents), 0)
+        self.assertEqual(result.limit, 5)
+        self.assertEqual(result.total, 0)
+
+    def test_related_incidents_response_from_api_response_empty_list(self):
+        """Test RelatedIncidentsResponse.from_api_response with empty list."""
+        result = RelatedIncidentsResponse.from_api_response([])
         self.assertIsInstance(result, RelatedIncidentsResponse)
         self.assertEqual(len(result.related_incidents), 0)
 

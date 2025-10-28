@@ -235,13 +235,10 @@ def get_outlier_incident(incident_id: str, query_model: OutlierIncidentQuery) ->
     Returns:
         Outlier incident information calculated over the same Service as the given Incident
     """
-    from pagerduty.common import try_decoding
-
     params = query_model.to_params()
-    # Use .get() instead of .rget() to avoid automatic entity unwrapping
-    raw_response = get_client().get(f"/incidents/{incident_id}/outlier_incident", params=params)
-    response = try_decoding(raw_response)
-    return OutlierIncidentResponse.model_validate(response)
+    response = get_client().rget(f"/incidents/{incident_id}/outlier_incident", params=params)
+
+    return OutlierIncidentResponse.from_api_response(response)
 
 
 def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> PastIncidentsResponse:
@@ -259,18 +256,10 @@ def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> Pas
     Returns:
         List of past incidents with similarity scores
     """
-    from pagerduty.common import try_decoding
-
     params = query_model.to_params()
-    # Use .get() instead of .rget() to avoid automatic entity unwrapping
-    raw_response = get_client().get(f"/incidents/{incident_id}/past_incidents", params=params)
-    response = try_decoding(raw_response)
+    response = get_client().rget(f"/incidents/{incident_id}/past_incidents", params=params)
 
-    # Handle edge case where API returns an empty list instead of expected dict structure
-    if isinstance(response, list) and len(response) == 0:
-        return PastIncidentsResponse(past_incidents=[], limit=query_model.limit or 5, total=0)
-
-    return PastIncidentsResponse.model_validate(response)
+    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit or 5)
 
 
 def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
@@ -287,15 +276,7 @@ def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) 
     Returns:
         List of related incidents and their relationships
     """
-    from pagerduty.common import try_decoding
-
     params = query_model.to_params()
-    # Use .get() instead of .rget() to avoid automatic entity unwrapping
-    raw_response = get_client().get(f"/incidents/{incident_id}/related_incidents", params=params)
-    response = try_decoding(raw_response)
+    response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
 
-    # Handle edge case where API returns an empty list instead of expected dict structure
-    if isinstance(response, list) and len(response) == 0:
-        return RelatedIncidentsResponse(related_incidents=[])
-
-    return RelatedIncidentsResponse.model_validate(response)
+    return RelatedIncidentsResponse.from_api_response(response)

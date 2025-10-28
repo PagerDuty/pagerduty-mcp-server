@@ -103,23 +103,15 @@ class OutlierIncidentQuery(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    incident_id: str = Field(description="The ID of the incident to get outlier incident information for")
     since: datetime | None = Field(
         default=None,
         description="The start of the date range over which you want to search. Maximum range is 6 months.",
-    )
-    additional_details: list[str] | None = Field(
-        default=None,
-        description="Array of additional attributes to any of the returned incidents for related incidents. "
-         "Allowed values are 'incident'",
     )
 
     def to_params(self) -> dict[str, Any]:
         params = {}
         if self.since:
             params["since"] = self.since.isoformat()
-        if self.additional_details:
-            params["additional_details[]"] = self.additional_details
         return params
 
 
@@ -128,7 +120,6 @@ class PastIncidentsQuery(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    incident_id: str = Field(description="The ID of the incident to get past incidents for")
     limit: int | None = Field(
         default=None,
         ge=1,
@@ -154,7 +145,6 @@ class RelatedIncidentsQuery(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    incident_id: str = Field(description="The ID of the incident to get related incidents for")
     additional_details: list[str] | None = Field(
         default=None,
         description="Array of additional attributes to any of the returned incidents for related incidents. "
@@ -284,12 +274,72 @@ class IncidentNote(BaseModel):
     user: UserReference = Field(description="The user who created the note")
 
 
+class Occurrence(BaseModel):
+    """Occurrence information for an outlier incident."""
+    count: int = Field(description="The number of times this incident pattern has occurred")
+    frequency: float = Field(description="The frequency of occurrence")
+    category: str = Field(description="The category of occurrence (e.g., 'rare')")
+    since: datetime = Field(description="The start of the occurrence time range")
+    until: datetime = Field(description="The end of the occurrence time range")
+
+
+class OutlierIncidentReference(BaseModel):
+    """Minimal incident reference returned by the outlier incident endpoint."""
+    id: str = Field(description="The globally unique identifier of the incident")
+    created_at: datetime = Field(description="The date/time the incident was first triggered")
+    self: str = Field(description="The URL at which the object is accessible")
+    title: str | None = Field(default=None,
+                              description="The description of the nature, symptoms, cause, "
+                              "or effect of the incident")
+    occurrence: Occurrence = Field(description="Occurrence information for this outlier incident")
+
+
+class IncidentTemplate(BaseModel):
+    """Template information for an outlier incident."""
+    id: str = Field(description="The ID of the incident template")
+    cluster_id: str = Field(description="The cluster ID")
+    mined_text: str = Field(description="The mined text pattern for this incident template")
+
+
 class OutlierIncident(BaseModel):
-    incident: Incident = Field(description="The outlier incident details")
+    incident: OutlierIncidentReference = Field(description="The outlier incident details")
+    incident_template: IncidentTemplate = Field(description="The incident template information")
 
 
 class OutlierIncidentResponse(BaseModel):
     outlier_incident: OutlierIncident = Field(description="Outlier incident information")
+
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any] | list) -> "OutlierIncidentResponse":
+        """Create OutlierIncidentResponse from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Wrapped: {"outlier_incident": {...}}
+        - Direct: {...} (outlier incident data directly)
+        - Edge case: [] (empty list, treated as error)
+
+        Args:
+            response_data: The API response data
+
+        Returns:
+            OutlierIncidentResponse instance
+
+        Raises:
+            ValueError: If response is an empty list or invalid format
+        """
+        # Handle edge case: empty list
+        if isinstance(response_data, list) and len(response_data) == 0:
+            raise ValueError("Empty response from outlier incident endpoint")
+
+        # Handle wrapped format: {"outlier_incident": {...}}
+        if isinstance(response_data, dict) and "outlier_incident" in response_data:
+            return cls.model_validate(response_data)
+
+        # Handle direct format: {...} (outlier incident data directly)
+        if isinstance(response_data, dict):
+            return cls(outlier_incident=OutlierIncident.model_validate(response_data))
+
+        raise ValueError(f"Unexpected response format: {type(response_data)}")
 
 
 class PastIncidentReference(BaseModel):
@@ -311,10 +361,68 @@ class PastIncidentsResponse(BaseModel):
     )
     limit: int = Field(description="The maximum number of Incidents requested")
 
+    @classmethod
+    def from_api_response(
+        cls, response_data: dict[str, Any] | list, default_limit: int = 5
+    ) -> "PastIncidentsResponse":
+        """Create PastIncidentsResponse from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Standard dict: {"past_incidents": [...], "limit": 5, "total": 10}
+        - Edge case: [] (empty list, returns default structure)
+
+        Args:
+            response_data: The API response data
+            default_limit: The default limit to use if not present in response (default: 5)
+
+        Returns:
+            PastIncidentsResponse instance
+        """
+        # Handle edge case: empty list
+        if isinstance(response_data, list) and len(response_data) == 0:
+            return cls(past_incidents=[], limit=default_limit, total=0)
+
+        # Handle normal dict response
+        if isinstance(response_data, dict):
+            return cls.model_validate(response_data)
+
+        raise ValueError(f"Unexpected response format: {type(response_data)}")
+
+
+class Relationship(BaseModel):
+    """Relationship information for a related incident."""
+    type: str = Field(description="The type of relationship (e.g., 'machine_learning_inferred', 'service_dependency')")
+    metadata: dict[str, Any] = Field(description="Metadata about the relationship, structure varies by type")
+
 
 class RelatedIncident(BaseModel):
-    incident: Incident = Field(description="The related incident details")
+    incident: PastIncidentReference = Field(description="The related incident reference")
+    relationships: list[Relationship] = Field(description="List of relationships to the parent incident")
 
 
 class RelatedIncidentsResponse(BaseModel):
     related_incidents: list[RelatedIncident] = Field(description="List of related incidents")
+
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any] | list) -> "RelatedIncidentsResponse":
+        """Create RelatedIncidentsResponse from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Standard dict: {"related_incidents": [...]}
+        - Edge case: [] (empty list, returns default structure)
+
+        Args:
+            response_data: The API response data
+
+        Returns:
+            RelatedIncidentsResponse instance
+        """
+        # Handle edge case: empty list
+        if isinstance(response_data, list) and len(response_data) == 0:
+            return cls(related_incidents=[])
+
+        # Handle normal dict response
+        if isinstance(response_data, dict):
+            return cls.model_validate(response_data)
+
+        raise ValueError(f"Unexpected response format: {type(response_data)}")

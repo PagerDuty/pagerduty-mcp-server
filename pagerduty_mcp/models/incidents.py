@@ -369,6 +369,7 @@ class PastIncidentsResponse(BaseModel):
 
         Handles both wrapped and direct response formats:
         - Standard dict: {"past_incidents": [...], "limit": 5, "total": 10}
+        - Direct list: [...] (list of past incident objects, unwrapped)
         - Edge case: [] (empty list, returns default structure)
 
         Args:
@@ -378,9 +379,16 @@ class PastIncidentsResponse(BaseModel):
         Returns:
             PastIncidentsResponse instance
         """
-        # Handle edge case: empty list
-        if isinstance(response_data, list) and len(response_data) == 0:
-            return cls(past_incidents=[], limit=default_limit, total=0)
+        # Handle list responses (both empty and non-empty)
+        if isinstance(response_data, list):
+            if len(response_data) == 0:
+                return cls(past_incidents=[], limit=default_limit, total=0)
+            # Non-empty list: API returned unwrapped list of past incidents
+            return cls(
+                past_incidents=[PastIncident.model_validate(item) for item in response_data],
+                limit=default_limit,
+                total=len(response_data),
+            )
 
         # Handle normal dict response
         if isinstance(response_data, dict):
@@ -409,6 +417,7 @@ class RelatedIncidentsResponse(BaseModel):
 
         Handles both wrapped and direct response formats:
         - Standard dict: {"related_incidents": [...]}
+        - Direct list: [...] (list of related incident objects, unwrapped)
         - Edge case: [] (empty list, returns default structure)
 
         Args:
@@ -417,9 +426,12 @@ class RelatedIncidentsResponse(BaseModel):
         Returns:
             RelatedIncidentsResponse instance
         """
-        # Handle edge case: empty list
-        if isinstance(response_data, list) and len(response_data) == 0:
-            return cls(related_incidents=[])
+        # Handle list responses (both empty and non-empty)
+        if isinstance(response_data, list):
+            if len(response_data) == 0:
+                return cls(related_incidents=[])
+            # Non-empty list: API returned unwrapped list of related incidents
+            return cls(related_incidents=[RelatedIncident.model_validate(item) for item in response_data])
 
         # Handle normal dict response
         if isinstance(response_data, dict):

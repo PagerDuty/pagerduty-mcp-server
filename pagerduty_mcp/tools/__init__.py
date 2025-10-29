@@ -17,7 +17,9 @@ from .escalation_policies import (
 from .event_orchestrations import (
     append_event_orchestration_router_rule,
     get_event_orchestration,
+    get_event_orchestration_global,
     get_event_orchestration_router,
+    get_event_orchestration_service,
     list_event_orchestrations,
     update_event_orchestration_router,
 )
@@ -91,6 +93,8 @@ read_tools = [
     list_event_orchestrations,
     get_event_orchestration,
     get_event_orchestration_router,
+    get_event_orchestration_service,
+    get_event_orchestration_global,
 ]
 
 # Write tools (potentially dangerous operations that modify state)

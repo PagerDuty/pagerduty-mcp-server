@@ -15,6 +15,7 @@ from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
 from .event_orchestrations import (
     EventOrchestration,
     EventOrchestrationCatchAll,
+    EventOrchestrationGlobal,
     EventOrchestrationIntegration,
     EventOrchestrationPath,
     EventOrchestrationPathUpdateRequest,
@@ -26,6 +27,7 @@ from .event_orchestrations import (
     EventOrchestrationRuleCondition,
     EventOrchestrationRuleCreateRequest,
     EventOrchestrationRuleSet,
+    EventOrchestrationService,
 )
 from .incidents import (
     Incident,
@@ -71,6 +73,7 @@ __all__ = [
     "EscalationPolicyQuery",
     "EventOrchestration",
     "EventOrchestrationCatchAll",
+    "EventOrchestrationGlobal",
     "EventOrchestrationIntegration",
     "EventOrchestrationPath",
     "EventOrchestrationPathUpdateRequest",
@@ -82,6 +85,7 @@ __all__ = [
     "EventOrchestrationRuleCondition",
     "EventOrchestrationRuleCreateRequest",
     "EventOrchestrationRuleSet",
+    "EventOrchestrationService",
     "Incident",
     "IncidentCreate",
     "IncidentCreateRequest",

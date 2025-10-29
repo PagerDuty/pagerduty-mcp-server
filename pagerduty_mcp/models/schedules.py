@@ -141,10 +141,25 @@ class ScheduleLayerCreate(BaseModel):
 
 
 class ScheduleCreateData(BaseModel):
-    name: str = Field(description="The name of the schedule")
-    time_zone: str = Field(description="The time zone of the schedule (e.g., America/New_York)")
-    description: str | None = Field(default=None, description="The description of the schedule")
-    schedule_layers: list[ScheduleLayerCreate] = Field(description="A list of schedule layers")
+    """Schedule data for create/update operations.
+
+    Required fields:
+    - name: Schedule name
+    - time_zone: IANA timezone name (e.g., 'America/New_York', 'Europe/London')
+    - schedule_layers: List of rotation layers (can be empty list to preserve existing layers during update)
+
+    Optional fields:
+    - description: Human-readable description
+    """
+
+    name: str = Field(description="The name of the schedule. REQUIRED.")
+    time_zone: str = Field(
+        description="The time zone of the schedule using IANA timezone format (e.g., 'America/New_York'). REQUIRED."
+    )
+    description: str | None = Field(default=None, description="The description of the schedule. OPTIONAL.")
+    schedule_layers: list[ScheduleLayerCreate] = Field(
+        description="A list of schedule layers. REQUIRED. Use empty list [] to preserve existing layers during update."
+    )
     type: Literal["schedule"] = "schedule"
 
 
@@ -155,8 +170,19 @@ class ScheduleCreateRequest(BaseModel):
 
 
 class ScheduleUpdateRequest(BaseModel):
+    """Request model for updating a PagerDuty schedule.
+
+    The schedule field is required and must contain at minimum:
+    - name: The schedule name
+    - time_zone: The schedule timezone (e.g., 'America/New_York')
+    - schedule_layers: List of schedule layers (can be empty to preserve existing layers)
+
+    Example minimal update (preserving layers):
+        {"schedule": {"name": "My Schedule", "time_zone": "America/New_York", "schedule_layers": []}}
+    """
+
     schedule: ScheduleCreateData = Field(
-        description="The updated schedule data",
+        description="The updated schedule data. REQUIRED. Must include name, time_zone, and schedule_layers fields.",
     )
     id: str | None = Field(
         default=None,

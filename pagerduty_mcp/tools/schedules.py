@@ -112,11 +112,29 @@ def update_schedule(schedule_id: str, update_model: ScheduleUpdateRequest) -> Sc
     that should be preserved, as the PagerDuty API replaces all layers with those provided.
 
     Args:
-        schedule_id: The ID of the schedule to update
-        update_model: The updated schedule data
+        schedule_id: The ID of the schedule to update (e.g., 'P5V4UJK')
+        update_model: The updated schedule data. Must be a ScheduleUpdateRequest object containing:
+            - schedule: (REQUIRED) ScheduleCreateData with:
+                - name: (REQUIRED) Schedule name
+                - time_zone: (REQUIRED) IANA timezone (e.g., 'America/New_York')
+                - schedule_layers: (REQUIRED) List of layers or empty list []
+                - description: (OPTIONAL) Schedule description
 
     Returns:
         The updated schedule
+
+    Raises:
+        Exception: If the API request fails with a detailed error message including the schedule_id
+
+    Example:
+        >>> from pagerduty_mcp.models import ScheduleUpdateRequest, ScheduleCreateData
+        >>> update_data = ScheduleCreateData(
+        ...     name="Updated Schedule",
+        ...     time_zone="America/New_York",
+        ...     schedule_layers=[]  # Empty to preserve existing layers
+        ... )
+        >>> request = ScheduleUpdateRequest(schedule=update_data)
+        >>> result = update_schedule("P5V4UJK", request)
     """
     # Start by getting current schedule if we need to handle empty layers
     request_data = update_model.model_dump()
@@ -141,14 +159,19 @@ def update_schedule(schedule_id: str, update_model: ScheduleUpdateRequest) -> Sc
                     if "start_day_of_week" not in restriction or restriction["start_day_of_week"] is None:
                         restriction["start_day_of_week"] = 1  # Default to Monday
 
-    # Send request to PagerDuty API
-    response = get_client().rput(f"/schedules/{schedule_id}", json=request_data)
+    try:
+        # Send request to PagerDuty API
+        response = get_client().rput(f"/schedules/{schedule_id}", json=request_data)
 
-    # Handle different response formats
-    if isinstance(response, dict) and "schedule" in response:
-        return Schedule.model_validate(response["schedule"])
+        # Handle different response formats
+        if isinstance(response, dict) and "schedule" in response:
+            return Schedule.model_validate(response["schedule"])
 
-    return Schedule.model_validate(response)
+        return Schedule.model_validate(response)
+    except Exception as e:
+        # Re-raise with more detailed error message
+        error_msg = str(e)
+        raise Exception(f"Failed to update schedule {schedule_id}: {error_msg}") from e
 
 
 def get_layer_differences(existing_schedule: Schedule, new_layers: list) -> dict:

@@ -826,7 +826,7 @@ class TestScheduleTools(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             update_schedule("SCHED123", request)
 
-        self.assertEqual(str(context.exception), "API Error")
+        self.assertEqual(str(context.exception), "Failed to update schedule SCHED123: API Error")
         mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once()
 

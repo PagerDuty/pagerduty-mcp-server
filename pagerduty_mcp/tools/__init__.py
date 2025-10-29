@@ -122,6 +122,7 @@ write_tools = [
     # Schedules
     create_schedule,
     create_schedule_override,
+    update_schedule,
     # Event Orchestrations
     update_event_orchestration_router,
     append_event_orchestration_router_rule,

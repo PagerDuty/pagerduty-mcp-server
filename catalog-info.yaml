@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: pagerduty-mcp-server
+  annotations:
+    pagerduty.com/service-id: PTFISQ5
+spec:
+  type: service
+  owner: pd-advance
+  lifecycle: production

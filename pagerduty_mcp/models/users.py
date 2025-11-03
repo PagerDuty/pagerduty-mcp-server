@@ -21,12 +21,11 @@ class ContactMethod(BaseModel):
     """Contact method for a user."""
 
     id: str = Field(description="The ID of the contact method")
-    type: str = Field(description="The type of contact method (email_contact_method, phone_contact_method, etc.)")
+    type: str = Field(description="The type of contact method (email_contact_method, phone_contact_method, sms_contact_method, push_notification_contact_method)")
     summary: str | None = Field(default=None, description="A short-form summary of the contact method")
     label: str | None = Field(default=None, description="The label (e.g., 'Work', 'Mobile')")
-    address: str | None = Field(default=None, description="The email address (for email contact methods)")
-    phone_number: str | None = Field(default=None, description="The phone number (for phone contact methods)")
-    country_code: int | None = Field(default=None, description="The country code for phone contact methods")
+    address: str | None = Field(default=None, description="The contact address (email for email_contact_method, phone number for phone/sms_contact_method)")
+    country_code: int | None = Field(default=None, description="The country code for phone/sms contact methods")
     enabled: bool | None = Field(default=None, description="Whether this contact method is enabled")
     blacklisted: bool | None = Field(default=None, description="Whether this contact method is blacklisted")
     send_short_email: bool | None = Field(default=None, description="Send short emails for email contact methods")

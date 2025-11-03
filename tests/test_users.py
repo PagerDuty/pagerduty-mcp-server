@@ -98,7 +98,7 @@ class TestUserTools(unittest.TestCase):
                     "type": "phone_contact_method",
                     "summary": "Mobile",
                     "label": "Mobile",
-                    "phone_number": "5551234567",
+                    "address": "5551234567",
                     "country_code": 1,
                     "enabled": True,
                 },
@@ -122,7 +122,7 @@ class TestUserTools(unittest.TestCase):
         self.assertEqual(result.contact_methods[0].address, "john.doe@example.com")
         self.assertEqual(result.contact_methods[1].id, "CMID2")
         self.assertEqual(result.contact_methods[1].type, "phone_contact_method")
-        self.assertEqual(result.contact_methods[1].phone_number, "5551234567")
+        self.assertEqual(result.contact_methods[1].address, "5551234567")
 
     @patch("pagerduty_mcp.tools.users.get_client")
     def test_get_user_data_client_error(self, mock_get_client):

@@ -186,12 +186,9 @@ def get_layer_differences(existing_schedule: Schedule, new_layers: list) -> dict
     """
     existing_layers = existing_schedule.schedule_layers or []
 
-    # Track layers by ID or by name if no ID
+    # Track layers by ID
     existing_by_id = {layer.id: layer for layer in existing_layers if layer.id}
-    existing_by_name = {layer.name: layer for layer in existing_layers}
-
     new_by_id = {layer.get("id"): layer for layer in new_layers if layer.get("id")}
-    new_by_name = {layer.get("name"): layer for layer in new_layers if layer.get("name")}
 
     # Find added, modified, and removed layers
     added = []

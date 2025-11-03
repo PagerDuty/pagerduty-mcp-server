@@ -58,7 +58,7 @@ from .schedules import (
 )
 from .services import Service, ServiceCreate, ServiceQuery
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
-from .users import User, UserQuery
+from .users import ContactMethod, User, UserQuery
 
 __all__ = [
     "MAX_RESULTS",
@@ -67,6 +67,7 @@ __all__ = [
     "AlertGroupingSettingCreateRequest",
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
+    "ContactMethod",
     "ContentBasedConfig",
     "ContentBasedIntelligentConfig",
     "EscalationPolicy",

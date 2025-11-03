@@ -2,13 +2,20 @@ from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import ListResponseModel, User, UserQuery
 
 
-def get_user_data() -> User:
+def get_user_data(*, include: list[str] | None = None) -> User:
     """Get the current user's data.
 
+    Args:
+        include: Optional list of additional details to include (e.g., ['contact_methods'])
+
     Returns:
-        User: User name, role, id, and summary and teams
+        User: User name, role, id, summary, teams, and optionally contact methods
     """
-    response = get_client().rget("/users/me")
+    params = {}
+    if include:
+        params["include[]"] = include
+
+    response = get_client().rget("/users/me", params=params if params else None)
     return User.model_validate(response)
 
 

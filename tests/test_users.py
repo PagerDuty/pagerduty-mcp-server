@@ -62,7 +62,7 @@ class TestUserTools(unittest.TestCase):
 
         # Verify API call
         mock_get_client.assert_called_once()
-        self.mock_client.rget.assert_called_once_with("/users/me")
+        self.mock_client.rget.assert_called_once_with("/users/me", params=None)
 
         # Verify result
         self.assertIsInstance(result, User)
@@ -78,6 +78,52 @@ class TestUserTools(unittest.TestCase):
         self.assertEqual(result.type, "user")
 
     @patch("pagerduty_mcp.tools.users.get_client")
+    def test_get_user_data_with_contact_methods(self, mock_get_client):
+        """Test successful retrieval of current user data with contact methods."""
+        mock_get_client.return_value = self.mock_client
+        user_response_with_contacts = {
+            **self.sample_user_response,
+            "contact_methods": [
+                {
+                    "id": "CMID1",
+                    "type": "email_contact_method",
+                    "summary": "Work Email",
+                    "label": "Work",
+                    "address": "john.doe@example.com",
+                    "enabled": True,
+                },
+                {
+                    "id": "CMID2",
+                    "type": "phone_contact_method",
+                    "summary": "Mobile",
+                    "label": "Mobile",
+                    "phone_number": "5551234567",
+                    "country_code": 1,
+                    "enabled": True,
+                },
+            ],
+        }
+        self.mock_client.rget.return_value = user_response_with_contacts
+
+        result = get_user_data(include=["contact_methods"])
+
+        # Verify API call with include parameter
+        mock_get_client.assert_called_once()
+        self.mock_client.rget.assert_called_once_with("/users/me", params={"include[]": ["contact_methods"]})
+
+        # Verify result includes contact methods
+        self.assertIsInstance(result, User)
+        self.assertEqual(result.id, "USER123")
+        self.assertIsNotNone(result.contact_methods)
+        self.assertEqual(len(result.contact_methods), 2)
+        self.assertEqual(result.contact_methods[0].id, "CMID1")
+        self.assertEqual(result.contact_methods[0].type, "email_contact_method")
+        self.assertEqual(result.contact_methods[0].address, "john.doe@example.com")
+        self.assertEqual(result.contact_methods[1].id, "CMID2")
+        self.assertEqual(result.contact_methods[1].type, "phone_contact_method")
+        self.assertEqual(result.contact_methods[1].phone_number, "5551234567")
+
+    @patch("pagerduty_mcp.tools.users.get_client")
     def test_get_user_data_client_error(self, mock_get_client):
         """Test get_user_data when client raises an exception."""
         mock_get_client.return_value = self.mock_client
@@ -88,7 +134,7 @@ class TestUserTools(unittest.TestCase):
 
         self.assertEqual(str(context.exception), "API Error")
         mock_get_client.assert_called_once()
-        self.mock_client.rget.assert_called_once_with("/users/me")
+        self.mock_client.rget.assert_called_once_with("/users/me", params=None)
 
     @patch("pagerduty_mcp.tools.users.get_client")
     def test_list_users_no_filters(self, mock_get_client):
@@ -209,13 +255,57 @@ class TestUserTools(unittest.TestCase):
         self.assertEqual(str(context.exception), "API Error")
         mock_get_client.assert_called_once()
 
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_list_users_with_contact_methods(self, mock_get_client):
+        """Test listing users with contact methods included."""
+        mock_get_client.return_value = self.mock_client
+
+        users_with_contacts = [
+            {
+                **self.sample_users_list_response[0],
+                "contact_methods": [
+                    {
+                        "id": "CMID1",
+                        "type": "email_contact_method",
+                        "summary": "Work Email",
+                        "label": "Work",
+                        "address": "john.doe@example.com",
+                        "enabled": True,
+                    }
+                ],
+            }
+        ]
+        self.mock_client.rget.return_value = users_with_contacts
+
+        result = list_users(UserQuery(include=["contact_methods"]))
+
+        # Verify API call
+        mock_get_client.assert_called_once()
+        expected_params = {
+            "include[]": ["contact_methods"],
+            "limit": DEFAULT_PAGINATION_LIMIT,
+        }
+        self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
+
+        # Verify result
+        self.assertEqual(len(result.response), 1)
+        self.assertIsNotNone(result.response[0].contact_methods)
+        self.assertEqual(len(result.response[0].contact_methods), 1)
+        self.assertEqual(result.response[0].contact_methods[0].id, "CMID1")
+        self.assertEqual(result.response[0].contact_methods[0].type, "email_contact_method")
+
     def test_user_query_to_params_all_fields(self):
         """Test UserQuery.to_params() with all fields set."""
-        query = UserQuery(query="test query", teams_ids=["TEAM1", "TEAM2"], limit=25)
+        query = UserQuery(query="test query", teams_ids=["TEAM1", "TEAM2"], limit=25, include=["contact_methods"])
 
         params = query.to_params()
 
-        expected_params = {"query": "test query", "teams_ids[]": ["TEAM1", "TEAM2"], "limit": 25}
+        expected_params = {
+            "query": "test query",
+            "teams_ids[]": ["TEAM1", "TEAM2"],
+            "include[]": ["contact_methods"],
+            "limit": 25,
+        }
         self.assertEqual(params, expected_params)
 
     def test_user_query_to_params_partial_fields(self):
@@ -234,6 +324,18 @@ class TestUserTools(unittest.TestCase):
         params = query.to_params()
 
         expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
+        self.assertEqual(params, expected_params)
+
+    def test_user_query_to_params_with_include(self):
+        """Test UserQuery.to_params() with include parameter."""
+        query = UserQuery(include=["contact_methods"])
+
+        params = query.to_params()
+
+        expected_params = {
+            "include[]": ["contact_methods"],
+            "limit": DEFAULT_PAGINATION_LIMIT,
+        }
         self.assertEqual(params, expected_params)
 
     def test_user_query_validation_limit_bounds(self):

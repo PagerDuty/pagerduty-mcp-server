@@ -148,7 +148,7 @@ class RelatedIncidentsQuery(BaseModel):
     additional_details: list[str] | None = Field(
         default=None,
         description="Array of additional attributes to any of the returned incidents for related incidents. "
-         "Allowed values are 'incident'",
+        "Allowed values are 'incident'",
     )
 
     def to_params(self) -> dict[str, Any]:
@@ -276,6 +276,7 @@ class IncidentNote(BaseModel):
 
 class Occurrence(BaseModel):
     """Occurrence information for an outlier incident."""
+
     count: int = Field(description="The number of times this incident pattern has occurred")
     frequency: float = Field(description="The frequency of occurrence")
     category: str = Field(description="The category of occurrence (e.g., 'rare')")
@@ -285,17 +286,19 @@ class Occurrence(BaseModel):
 
 class OutlierIncidentReference(BaseModel):
     """Minimal incident reference returned by the outlier incident endpoint."""
+
     id: str = Field(description="The globally unique identifier of the incident")
     created_at: datetime = Field(description="The date/time the incident was first triggered")
     self: str = Field(description="The URL at which the object is accessible")
-    title: str | None = Field(default=None,
-                              description="The description of the nature, symptoms, cause, "
-                              "or effect of the incident")
+    title: str | None = Field(
+        default=None, description="The description of the nature, symptoms, cause, or effect of the incident"
+    )
     occurrence: Occurrence = Field(description="Occurrence information for this outlier incident")
 
 
 class IncidentTemplate(BaseModel):
     """Template information for an outlier incident."""
+
     id: str = Field(description="The ID of the incident template")
     cluster_id: str = Field(description="The cluster ID")
     mined_text: str = Field(description="The mined text pattern for this incident template")
@@ -362,9 +365,7 @@ class PastIncidentsResponse(BaseModel):
     limit: int = Field(description="The maximum number of Incidents requested")
 
     @classmethod
-    def from_api_response(
-        cls, response_data: dict[str, Any] | list, default_limit: int = 5
-    ) -> "PastIncidentsResponse":
+    def from_api_response(cls, response_data: dict[str, Any] | list, default_limit: int = 5) -> "PastIncidentsResponse":
         """Create PastIncidentsResponse from PagerDuty API response.
 
         Handles both wrapped and direct response formats:
@@ -391,6 +392,7 @@ class PastIncidentsResponse(BaseModel):
 
 class Relationship(BaseModel):
     """Relationship information for a related incident."""
+
     type: str = Field(description="The type of relationship (e.g., 'machine_learning_inferred', 'service_dependency')")
     metadata: dict[str, Any] = Field(description="Metadata about the relationship, structure varies by type")
 

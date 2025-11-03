@@ -230,8 +230,8 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | list_teams               | Teams              | Lists teams                                         | ✅         |
 | remove_team_member       | Teams              | Removes a user from a team                          | ❌         |
 | update_team              | Teams              | Updates an existing team                            | ❌         |
-| get_user_data            | Users              | Gets the current user's data                        | ✅         |
-| list_users               | Users              | Lists users in the PagerDuty account                | ✅         |
+| get_user_data            | Users              | Gets the current user's data (with optional contact methods) | ✅         |
+| list_users               | Users              | Lists users with optional filtering and contact methods | ✅         |
 | list_oncalls             | On-call            | Lists on-call schedules                             | ✅         |
 | create_schedule_override | Schedules          | Creates an override for a schedule                  | ❌         |
 | get_schedule             | Schedules          | Retrieves a specific schedule                       | ✅         |

@@ -11,6 +11,12 @@ dependencies = [
 ]
 
 [project.scripts]
+# v2.0 - Independent servers per product category
+pagerduty-incidents = "pagerduty_mcp.servers.incidents.__main__:main"
+pagerduty-services = "pagerduty_mcp.servers.services.__main__:main"
+pagerduty-people = "pagerduty_mcp.servers.people.__main__:main"
+pagerduty-aiops = "pagerduty_mcp.servers.aiops.__main__:main"
+# v1.x - Deprecated monolithic server (will be removed in v2.1)
 pagerduty-mcp = "pagerduty_mcp.__main__:main"
 
 [tool.pyright]

@@ -4,6 +4,23 @@
 
 PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
+## 🎉 v2.0 - Multi-Server Architecture
+
+**New in v2.0**: PagerDuty MCP now provides **4 independent servers**, one per product category, for better organization and smaller LLM contexts:
+
+- **`pagerduty-incidents`** - Incident management (9 tools)
+- **`pagerduty-services`** - Service configuration (4 tools)
+- **`pagerduty-people`** - Teams, users, schedules, on-calls (17 tools)
+- **`pagerduty-aiops`** - Alert grouping and event orchestrations (12 tools)
+
+**Benefits:**
+- ✅ Smaller, focused tool sets per server
+- ✅ Granular control over which capabilities you need
+- ✅ Better LLM performance with reduced context
+- ✅ Independent write permissions per server
+
+**Note:** The monolithic `pagerduty-mcp` command is still available for backward compatibility but will be removed in v2.1.
+
 ## Prerequisites
 
 *   [asdf-vm](https://asdf-vm.com/) installed.
@@ -20,6 +37,68 @@ PagerDuty's local MCP (Model Context Protocol) server which provides tools to in
     > Use of the PagerDuty User API Token is subject to the [PagerDuty Developer Agreement](https://developer.pagerduty.com/docs/pagerduty-developer-agreement).
 
 ## Using with MCP Clients
+
+### v2.0 Multi-Server Configuration (Recommended)
+
+Configure multiple independent servers to use only the capabilities you need. Here's an example with all 4 servers:
+
+```json
+{
+  "mcpServers": {
+    "pagerduty-incidents": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["pagerduty-incidents", "--enable-write-tools"],
+      "env": {
+        "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+      }
+    },
+    "pagerduty-people": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["pagerduty-people"],
+      "env": {
+        "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+      }
+    },
+    "pagerduty-aiops": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["pagerduty-aiops", "--enable-write-tools"],
+      "env": {
+        "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+      }
+    },
+    "pagerduty-services": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["pagerduty-services"],
+      "env": {
+        "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+      }
+    }
+  }
+}
+```
+
+**You can configure just the servers you need!** For example, if you only need incident management:
+
+```json
+{
+  "mcpServers": {
+    "pagerduty-incidents": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["pagerduty-incidents", "--enable-write-tools"],
+      "env": {
+        "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+      }
+    }
+  }
+}
+```
+
+### v1.x Monolithic Configuration (Deprecated)
 
 ### Cursor Integration
 

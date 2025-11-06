@@ -245,81 +245,357 @@ You can configure this MCP server to work with Claude Desktop by adding it to Cl
 
 6. Run it locally
 
-    To run your cloned PagerDuty MCP Server you need to update your configuration to use `uv` instead of `uvx`. 
+    To run your cloned PagerDuty MCP Server locally, you need to update your configuration to use `uv run` with the `--directory` flag pointing to your local clone.
+
+    **For v2.0 Multi-Server Architecture (Recommended):**
+
+    Configure each server independently, pointing to your local directory:
 
     ```json
-    "pagerduty-mcp": { 
+    {
+      "mcpServers": {
+        "pagerduty-incidents-dev": {
+          "type": "stdio",
+          "command": "uv",
+          "args": [
+            "run",
+            "--directory",
+            "/path/to/your/pagerduty-mcp-server",
+            // Replace with the full path to your cloned repository
+            "python",
+            "-m",
+            "pagerduty_mcp.servers.incidents",
+            "--enable-write-tools"
+          ],
+          "env": {
+            "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}",
+            "PAGERDUTY_API_HOST": "https://api.pagerduty.com"
+          }
+        },
+        "pagerduty-services-dev": {
+          "type": "stdio",
+          "command": "uv",
+          "args": [
+            "run",
+            "--directory",
+            "/path/to/your/pagerduty-mcp-server",
+            "python",
+            "-m",
+            "pagerduty_mcp.servers.services"
+          ],
+          "env": {
+            "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+          }
+        },
+        "pagerduty-people-dev": {
+          "type": "stdio",
+          "command": "uv",
+          "args": [
+            "run",
+            "--directory",
+            "/path/to/your/pagerduty-mcp-server",
+            "python",
+            "-m",
+            "pagerduty_mcp.servers.people",
+            "--enable-write-tools"
+          ],
+          "env": {
+            "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+          }
+        },
+        "pagerduty-aiops-dev": {
+          "type": "stdio",
+          "command": "uv",
+          "args": [
+            "run",
+            "--directory",
+            "/path/to/your/pagerduty-mcp-server",
+            "python",
+            "-m",
+            "pagerduty_mcp.servers.aiops",
+            "--enable-write-tools"
+          ],
+          "env": {
+            "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+          }
+        }
+      }
+    }
+    ```
+
+    **For v1.x Monolithic Server (Deprecated):**
+
+    ```json
+    "pagerduty-mcp-dev": {
         "type": "stdio",
         "command": "uv",
         "args": [
             "run",
             "--directory",
-            "/path/to/your/mcp-server-directory",
-            // Replace with the full path to the directory where you cloned the MCP server, e.g. "/Users/yourname/code/mcp-server",     
+            "/path/to/your/pagerduty-mcp-server",
             "python",
             "-m",
             "pagerduty_mcp",
             "--enable-write-tools"
-            // This flag enables write operations on the MCP Server enabling you to creating incidents, schedule overrides and much more
         ],
         "env": {
             "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}",
             "PAGERDUTY_API_HOST": "https://api.pagerduty.com"
-            // If your PagerDuty account is located in EU update your API host to https://api.eu.pagerduty.com
         }
     }
     ```
 
+    **Using MCP Inspector for Interactive Testing:**
+
+    The MCP Inspector provides a web UI for testing servers during development:
+
+    ```bash
+    # Test individual servers
+    npx @modelcontextprotocol/inspector uv run python -m pagerduty_mcp.servers.incidents --enable-write-tools
+    npx @modelcontextprotocol/inspector uv run python -m pagerduty_mcp.servers.services
+    npx @modelcontextprotocol/inspector uv run python -m pagerduty_mcp.servers.people
+    npx @modelcontextprotocol/inspector uv run python -m pagerduty_mcp.servers.aiops --enable-write-tools
+
+    # Or use the make command (see Development section)
+    make debug SERVER=incidents
+    ```
+
+## Development
+
+### Adding a New Server
+
+To add a new server to the multi-server architecture, follow this pattern:
+
+1. **Create the server directory structure:**
+
+   ```bash
+   mkdir -p pagerduty_mcp/servers/your-server
+   cd pagerduty_mcp/servers/your-server
+   ```
+
+2. **Create the required files:**
+
+   - `__init__.py` - Package initialization with exports
+   - `__main__.py` - Entry point for the CLI command
+   - `models.py` - Pydantic models for your domain
+   - `tools.py` - Tool functions and tool lists (READ_TOOLS, WRITE_TOOLS)
+   - `server.py` - FastMCP server configuration
+
+3. **Implement `models.py`:**
+
+   ```python
+   """Models for Your Server."""
+   from pydantic import BaseModel, Field
+   # Add your Pydantic models here
+   ```
+
+4. **Implement `tools.py`:**
+
+   ```python
+   """Tools for Your Server MCP Server."""
+   from pagerduty_mcp.common import get_client, paginate
+   from pagerduty_mcp.models import ListResponseModel
+   from .models import YourModel
+
+   def your_read_tool(param: str) -> YourModel:
+       """Tool description for LLM."""
+       # Implementation
+       pass
+
+   def your_write_tool(param: str) -> YourModel:
+       """Tool description for LLM."""
+       # Implementation
+       pass
+
+   # Tool lists for registration
+   READ_TOOLS = [your_read_tool]
+   WRITE_TOOLS = [your_write_tool]
+   ```
+
+5. **Implement `server.py`:**
+
+   ```python
+   """Your Server MCP Server."""
+   import typer
+   from pagerduty_mcp.common import (
+       create_pagerduty_server,
+       register_read_tools,
+       register_write_tools,
+   )
+   from .tools import READ_TOOLS, WRITE_TOOLS
+
+   INSTRUCTIONS = """
+   # Your Server MCP Server
+
+   Description of what this server does...
+   """
+
+   app = typer.Typer()
+
+   @app.command()
+   def run(*, enable_write_tools: bool = False):
+       """Run Your Server MCP Server."""
+       mcp = create_pagerduty_server(
+           name="Your Server MCP Server",
+           instructions=INSTRUCTIONS,
+       )
+       register_read_tools(mcp, READ_TOOLS)
+       if enable_write_tools:
+           register_write_tools(mcp, WRITE_TOOLS)
+       mcp.run()
+
+   if __name__ == "__main__":
+       app()
+   ```
+
+6. **Implement `__main__.py`:**
+
+   ```python
+   """Entry point for Your Server MCP Server."""
+   from .server import app
+
+   def main():
+       """Main entry point for pagerduty-your-server command."""
+       print("Starting Your Server MCP Server...")
+       print("Note: Use --enable-write-tools to enable modifications.")
+       app()
+
+   if __name__ == "__main__":
+       main()
+   ```
+
+7. **Implement `__init__.py`:**
+
+   ```python
+   """Your Server MCP Server."""
+   from .server import app
+   __all__ = ["app"]
+   ```
+
+8. **Add entry point to `pyproject.toml`:**
+
+   ```toml
+   [project.scripts]
+   pagerduty-your-server = "pagerduty_mcp.servers.your_server.__main__:main"
+   ```
+
+9. **Install and test:**
+
+   ```bash
+   uv sync
+   uv run pagerduty-your-server --help
+   npx @modelcontextprotocol/inspector uv run python -m pagerduty_mcp.servers.your_server
+   ```
+
+10. **Add tests** in `tests/servers/your_server/` following the pattern of existing server tests.
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# Run tests with coverage
+make test-coverage
+
+# Run linting
+make lint
+
+# Format code
+make format
+```
+
 ## Available Tools and Resources
 
-This section describes the tools provided by the PagerDuty MCP server. They are categorized based on whether they only read data or can modify data in your PagerDuty account.
+This section describes the tools provided by the PagerDuty MCP servers. In v2.0, tools are organized into independent servers by product area.
 
-> **Important:** By default, the MCP server only exposes read-only tools. To enable tools that can modify your PagerDuty account (write-mode tools), you must explicitly start the server with the `--enable-write-tools` flag. This helps prevent accidental changes to your PagerDuty data.
+> **Important:** By default, all MCP servers only expose read-only tools. To enable tools that can modify your PagerDuty account (write-mode tools), you must explicitly start each server with the `--enable-write-tools` flag. This helps prevent accidental changes to your PagerDuty data.
 
-| Tool                   | Area               | Description                                         | Read-only |
-|------------------------|--------------------|-----------------------------------------------------|-----------|
-| create_alert_grouping_setting | Alert Grouping | Creates a new alert grouping setting                | ❌         |
-| delete_alert_grouping_setting | Alert Grouping | Deletes an alert grouping setting                   | ❌         |
-| get_alert_grouping_setting    | Alert Grouping | Retrieves a specific alert grouping setting         | ✅         |
-| list_alert_grouping_settings  | Alert Grouping | Lists alert grouping settings with filtering        | ✅         |
-| update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting          | ❌         |
-| get_event_orchestration | Event Orchestrations | Retrieves a specific event orchestration           | ✅         |
-| get_event_orchestration_global | Event Orchestrations | Gets the global orchestration configuration for an event orchestration | ✅         |
-| get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅         |
-| get_event_orchestration_service | Event Orchestrations | Gets the service orchestration configuration for a specific service | ✅         |
-| list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅         |
-| update_event_orchestration_router | Event Orchestrations | Updates the router configuration for an event orchestration | ❌         |
-| append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router | ❌         |
-| list_escalation_policies | Escalation Policy  | Lists escalation policies                           | ✅         |
-| get_escalation_policy    | Escalation Policy  | Retrieves a specific escalation policy              | ✅         |
-| add_note_to_incident     | Incidents          | Adds note to an incident                            | ❌         |
-| add_responders           | Incidents          | Adds responders to an incident                      | ❌         |
-| create_incident          | Incidents          | Creates a new incident                              | ❌         |
-| get_incident             | Incidents          | Retrieves a specific incident                       | ✅         |
-| get_outlier_incident     | Incidents          | Retrieves outlier incident information for a specific incident | ✅         |
-| get_past_incidents       | Incidents          | Retrieves past incidents related to a specific incident | ✅         |
-| get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |
-| list_incidents           | Incidents          | Lists incidents                                     | ✅         |
-| manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
-| add_team_member          | Teams              | Adds a user to a team with a specific role          | ❌         |
-| create_team              | Teams              | Creates a new team                                  | ❌         |
-| delete_team              | Teams              | Deletes a team                                      | ❌         |
-| get_team                 | Teams              | Retrieves a specific team                           | ✅         |
-| list_team_members        | Teams              | Lists members of a team                             | ✅         |
-| list_teams               | Teams              | Lists teams                                         | ✅         |
-| remove_team_member       | Teams              | Removes a user from a team                          | ❌         |
-| update_team              | Teams              | Updates an existing team                            | ❌         |
-| get_user_data            | Users              | Gets the current user's data                        | ✅         |
-| list_users               | Users              | Lists users in the PagerDuty account                | ✅         |
-| list_oncalls             | On-call            | Lists on-call schedules                             | ✅         |
-| create_schedule_override | Schedules          | Creates an override for a schedule                  | ❌         |
-| get_schedule             | Schedules          | Retrieves a specific schedule                       | ✅         |
-| list_schedule_users      | Schedules          | Lists users in a schedule                           | ✅         |
-| list_schedules           | Schedules          | Lists schedules                                     | ✅         |
-| create_service           | Services           | Creates a new service                               | ❌         |
-| get_service              | Services           | Retrieves a specific service                        | ✅         |
-| list_services            | Services           | Lists services                                      | ✅         |
-| update_service           | Services           | Updates an existing service                         | ❌         |
+### Server Distribution by Area
+
+The following table shows which server provides tools for each PagerDuty area:
+
+| Server | Area | Description |
+|--------|------|-------------|
+| **pagerduty-aiops** | AIOps - Alert Grouping | Noise reduction through intelligent alert grouping settings |
+| **pagerduty-aiops** | AIOps - Event Orchestrations | Event routing and orchestration rules configuration |
+| **pagerduty-people** | Escalation Policies | Escalation policy management and configuration |
+| **pagerduty-incidents** | Incidents | Incident management, creation, updates, and analysis |
+| **pagerduty-incidents** | Incidents - Insights | Outlier detection, past incidents, and related incidents analysis |
+| **pagerduty-incidents** | Incidents - Response | Responder management and incident notes |
+| **pagerduty-people** | On-call | On-call schedule viewing and management |
+| **pagerduty-people** | Schedules | Schedule management, users, and overrides |
+| **pagerduty-services** | Services | Service directory, creation, and configuration |
+| **pagerduty-people** | Teams | Team management, members, and roles |
+| **pagerduty-people** | Users | User information and directory |
+
+### Tool Details by Server
+
+#### pagerduty-aiops (12 tools)
+**Areas:** AIOps - Alert Grouping, Event Orchestrations
+
+| Tool | Area | Description | Read-only |
+|------|------|-------------|-----------|
+| list_alert_grouping_settings | Alert Grouping | Lists alert grouping settings with filtering | ✅ |
+| get_alert_grouping_setting | Alert Grouping | Retrieves a specific alert grouping setting | ✅ |
+| create_alert_grouping_setting | Alert Grouping | Creates a new alert grouping setting | ❌ |
+| update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting | ❌ |
+| delete_alert_grouping_setting | Alert Grouping | Deletes an alert grouping setting | ❌ |
+| list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅ |
+| get_event_orchestration | Event Orchestrations | Retrieves a specific event orchestration | ✅ |
+| get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅ |
+| get_event_orchestration_service | Event Orchestrations | Gets the service orchestration configuration for a specific service | ✅ |
+| get_event_orchestration_global | Event Orchestrations | Gets the global orchestration configuration | ✅ |
+| update_event_orchestration_router | Event Orchestrations | Updates the router configuration for an event orchestration | ❌ |
+| append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router | ❌ |
+
+#### pagerduty-incidents (9 tools)
+**Areas:** Incidents, Incident Insights, Incident Response
+
+| Tool | Area | Description | Read-only |
+|------|------|-------------|-----------|
+| list_incidents | Incidents | Lists incidents with filtering options | ✅ |
+| get_incident | Incidents | Retrieves a specific incident | ✅ |
+| get_outlier_incident | Incidents | Retrieves outlier incident information | ✅ |
+| get_past_incidents | Incidents | Retrieves past incidents related to a specific incident | ✅ |
+| get_related_incidents | Incidents | Retrieves related incidents for a specific incident | ✅ |
+| create_incident | Incidents | Creates a new incident | ❌ |
+| manage_incidents | Incidents | Updates status, urgency, assignment, or escalation level | ❌ |
+| add_responders | Incidents | Adds responders to an incident | ❌ |
+| add_note_to_incident | Incidents | Adds note to an incident | ❌ |
+
+#### pagerduty-people (17 tools)
+**Areas:** Users, Teams, Schedules, On-call, Escalation Policies
+
+| Tool | Area | Description | Read-only |
+|------|------|-------------|-----------|
+| get_user_data | Users | Gets the current user's data | ✅ |
+| list_users | Users | Lists users in the PagerDuty account | ✅ |
+| list_teams | Teams | Lists teams | ✅ |
+| get_team | Teams | Retrieves a specific team | ✅ |
+| list_team_members | Teams | Lists members of a team | ✅ |
+| create_team | Teams | Creates a new team | ❌ |
+| update_team | Teams | Updates an existing team | ❌ |
+| delete_team | Teams | Deletes a team | ❌ |
+| add_team_member | Teams | Adds a user to a team with a specific role | ❌ |
+| remove_team_member | Teams | Removes a user from a team | ❌ |
+| list_schedules | Schedules | Lists schedules | ✅ |
+| get_schedule | Schedules | Retrieves a specific schedule | ✅ |
+| list_schedule_users | Schedules | Lists users in a schedule | ✅ |
+| create_schedule_override | Schedules | Creates an override for a schedule | ❌ |
+| list_oncalls | On-call | Lists on-call schedules | ✅ |
+| list_escalation_policies | Escalation Policies | Lists escalation policies | ✅ |
+| get_escalation_policy | Escalation Policies | Retrieves a specific escalation policy | ✅ |
+
+#### pagerduty-services (4 tools)
+**Areas:** Services
+
+| Tool | Area | Description | Read-only |
+|------|------|-------------|-----------|
+| list_services | Services | Lists services | ✅ |
+| get_service | Services | Retrieves a specific service | ✅ |
+| create_service | Services | Creates a new service | ❌ |
+| update_service | Services | Updates an existing service | ❌ |
 
 
 ## Support

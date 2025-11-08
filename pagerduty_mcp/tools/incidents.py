@@ -5,6 +5,7 @@ from mcp.server.fastmcp import Context
 
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
+    GetIncidentQuery,
     Incident,
     IncidentCreateRequest,
     IncidentManageRequest,
@@ -65,16 +66,18 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     return ListResponseModel[Incident](response=incidents)
 
 
-def get_incident(incident_id: str) -> Incident:
+def get_incident(incident_id: str, query_model: GetIncidentQuery | None = None) -> Incident:
     """Get a specific incident.
 
     Args:
         incident_id: The ID or number of the incident to retrieve.
+        query_model: Optional query parameters for additional information to include
 
     Returns:
         Incident details
     """
-    response = get_client().rget(f"/incidents/{incident_id}")
+    params = query_model.to_params() if query_model else {}
+    response = get_client().rget(f"/incidents/{incident_id}", params=params)
     return Incident.model_validate(response)
 
 

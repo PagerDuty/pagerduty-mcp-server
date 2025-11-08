@@ -30,6 +30,7 @@ from .event_orchestrations import (
     EventOrchestrationService,
 )
 from .incidents import (
+    GetIncidentQuery,
     Incident,
     IncidentCreate,
     IncidentCreateRequest,
@@ -86,6 +87,7 @@ __all__ = [
     "EventOrchestrationRuleCreateRequest",
     "EventOrchestrationRuleSet",
     "EventOrchestrationService",
+    "GetIncidentQuery",
     "Incident",
     "IncidentCreate",
     "IncidentCreateRequest",

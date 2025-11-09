@@ -35,6 +35,11 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     Returns:
         List of Incident objects matching the query parameters
 
+    Note:
+        The PagerDuty API returns empty assignment lists for resolved incidents,
+        even if users were previously assigned. This is by design - to see who
+        was assigned to an incident, query it before it reaches 'resolved' status.
+
     Examples:
         Basic usage filtering by status:
 
@@ -58,6 +63,9 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             user_team_ids = [team.id for team in user_data.teams]
             params["teams_ids[]"] = user_team_ids
 
+    # Include assignees in the response to get assignment information
+    params["include[]"] = ["assignees"]
+
     response = paginate(
         client=get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
     )
@@ -73,8 +81,14 @@ def get_incident(incident_id: str) -> Incident:
 
     Returns:
         Incident details
+
+    Note:
+        The PagerDuty API returns empty assignment lists for resolved incidents,
+        even if users were previously assigned. This is by design - to see who
+        was assigned to an incident, query it before it reaches 'resolved' status.
     """
-    response = get_client().rget(f"/incidents/{incident_id}")
+    # Include assignees in the response to get assignment information
+    response = get_client().rget(f"/incidents/{incident_id}", params={"include[]": ["assignees"]})
     return Incident.model_validate(response)
 
 

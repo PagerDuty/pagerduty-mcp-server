@@ -179,7 +179,12 @@ class Incident(BaseModel):
     service: ServiceReference = Field(description="The service the incident is on")
     assignments: list[Assignment] | None = Field(
         default=None,
-        description="The users assigned to the incident",
+        description=(
+            "The users assigned to the incident. "
+            "Note: This list will be empty if the incident status is 'resolved', "
+            "even if users were previously assigned. To see historical assignments "
+            "for resolved incidents, you must query them before they are resolved."
+        ),
     )
 
     @computed_field

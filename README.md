@@ -222,6 +222,9 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |
 | list_incidents           | Incidents          | Lists incidents                                     | ✅         |
 | manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
+| get_log_entry            | Log Entries        | Retrieves a specific log entry by ID                | ✅         |
+| list_incident_log_entries | Log Entries       | Lists all log entries for a specific incident (best way to track who handled resolved incidents) | ✅         |
+| list_log_entries         | Log Entries        | Lists log entries across all incidents with filtering | ✅         |
 | add_team_member          | Teams              | Adds a user to a team with a specific role          | ❌         |
 | create_team              | Teams              | Creates a new team                                  | ❌         |
 | delete_team              | Teams              | Deletes a team                                      | ❌         |

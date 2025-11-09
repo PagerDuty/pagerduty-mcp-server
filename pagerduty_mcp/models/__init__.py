@@ -47,6 +47,11 @@ from .incidents import (
     ResponderRequest,
     ResponderRequestTarget,
 )
+from .log_entries import (
+    IncidentLogEntryQuery,
+    LogEntry,
+    LogEntryQuery,
+)
 from .oncalls import Oncall, OncallQuery
 from .references import IncidentReference, ScheduleReference, ServiceReference, TeamReference, UserReference
 from .schedules import (
@@ -90,6 +95,7 @@ __all__ = [
     "IncidentCreate",
     "IncidentCreateRequest",
     "IncidentManageRequest",
+    "IncidentLogEntryQuery",
     "IncidentNote",
     "IncidentQuery",
     "IncidentReference",
@@ -97,6 +103,8 @@ __all__ = [
     "IncidentResponderRequestResponse",
     "IntelligentGroupingConfig",
     "ListResponseModel",
+    "LogEntry",
+    "LogEntryQuery",
     "MCPContext",
     "Oncall",
     "OncallQuery",

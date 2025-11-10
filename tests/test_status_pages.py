@@ -305,9 +305,7 @@ class TestStatusPageTools(unittest.TestCase):
         query = StatusPageImpactQuery()
         result = list_status_page_impacts("PR5LMML", query)
 
-        mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="status_pages/PR5LMML/impacts", params={}
-        )
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="status_pages/PR5LMML/impacts", params={})
 
         self.assertEqual(len(result.response), 2)
         self.assertIsInstance(result.response[0], StatusPageImpact)

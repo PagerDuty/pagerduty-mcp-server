@@ -101,17 +101,13 @@ class StatusPagePostUpdate(BaseModel):
     id: str = Field(description="An unique identifier within Status Page scope")
     self: str = Field(description="The API resource URL of the Post Update")
     message: str = Field(description="The message content of the Post Update")
-    notify_subscribers: bool = Field(
-        default=False, description="Whether to notify subscribers of this update"
-    )
+    notify_subscribers: bool = Field(default=False, description="Whether to notify subscribers of this update")
     post: StatusPagePostReference
     reported_at: datetime = Field(description="The date and time the Post Update was reported")
     reviewed_status: str | None = Field(default=None, description="The review status of the update")
     severity: StatusPageSeverityReference
     status: StatusPageStatusReference
-    impacted_services: list[ImpactedService] | None = Field(
-        default=None, description="List of impacted services"
-    )
+    impacted_services: list[ImpactedService] | None = Field(default=None, description="List of impacted services")
     type: Literal["status_page_post_update"] = Field(default="status_page_post_update")
 
 
@@ -120,12 +116,8 @@ class StatusPagePost(BaseModel):
     self: str = Field(description="The API resource URL of the Post")
     title: str = Field(description="The title given to a Post")
     post_type: PostType = Field(description="The type of the Post")
-    starts_at: datetime | None = Field(
-        default=None, description="The date and time the Post intent becomes effective"
-    )
-    ends_at: datetime | None = Field(
-        default=None, description="The date and time the Post intent is concluded"
-    )
+    starts_at: datetime | None = Field(default=None, description="The date and time the Post intent becomes effective")
+    ends_at: datetime | None = Field(default=None, description="The date and time the Post intent is concluded")
     status_page: StatusPageReference
     postmortem: StatusPagePostmortemReference | None = Field(
         default=None, description="The postmortem associated with the post"
@@ -152,12 +144,8 @@ class StatusPagePostUpdateRequest(BaseModel):
     message: str = Field(description="The message content of the Post Update")
     severity: StatusPageSeverityReference = Field(description="The severity of the update")
     status: StatusPageStatusReference = Field(description="The status of the update")
-    impacted_services: list[ImpactedService] | None = Field(
-        default=None, description="List of impacted services"
-    )
-    notify_subscribers: bool = Field(
-        default=False, description="Whether to notify subscribers of this update"
-    )
+    impacted_services: list[ImpactedService] | None = Field(default=None, description="List of impacted services")
+    notify_subscribers: bool = Field(default=False, description="Whether to notify subscribers of this update")
     type: Literal["status_page_post_update"] = Field(default="status_page_post_update")
 
 
@@ -169,12 +157,8 @@ class StatusPagePostCreate(BaseModel):
     type: Literal["status_page_post"] = Field(default="status_page_post")
     title: str = Field(description="The title given to a Post", min_length=1, max_length=128)
     post_type: PostType = Field(description="The type of the Post")
-    starts_at: datetime | None = Field(
-        default=None, description="The date and time the Post intent becomes effective"
-    )
-    ends_at: datetime | None = Field(
-        default=None, description="The date and time the Post intent is concluded"
-    )
+    starts_at: datetime | None = Field(default=None, description="The date and time the Post intent becomes effective")
+    ends_at: datetime | None = Field(default=None, description="The date and time the Post intent is concluded")
     updates: list[StatusPagePostUpdateRequest] | None = Field(
         default=None, description="Post Updates to be associated with a Post"
     )

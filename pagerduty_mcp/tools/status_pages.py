@@ -158,9 +158,7 @@ def create_status_page_post(status_page_id: str, post_data: StatusPagePostCreate
         >>> request = StatusPagePostCreateRequest(post=post)
         >>> result = create_status_page_post("PT4KHLK", request)
     """
-    response = get_client().rpost(
-        f"/status_pages/{status_page_id}/posts", json=post_data.model_dump(exclude_none=True)
-    )
+    response = get_client().rpost(f"/status_pages/{status_page_id}/posts", json=post_data.model_dump(exclude_none=True))
     return StatusPagePost.from_api_response(response)
 
 
@@ -226,9 +224,7 @@ def create_status_page_post_update(
     return StatusPagePostUpdate.model_validate(response)
 
 
-def list_status_page_post_updates(
-    status_page_id: str, post_id: str
-) -> ListResponseModel[StatusPagePostUpdate]:
+def list_status_page_post_updates(status_page_id: str, post_id: str) -> ListResponseModel[StatusPagePostUpdate]:
     """List Post Updates for a Status Page Post.
 
     Args:

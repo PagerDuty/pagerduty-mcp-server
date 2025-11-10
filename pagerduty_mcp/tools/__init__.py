@@ -47,6 +47,16 @@ from .services import (
     list_services,
     update_service,
 )
+from .status_pages import (
+    create_status_page_post,
+    create_status_page_post_update,
+    get_status_page_post,
+    list_status_page_impacts,
+    list_status_page_post_updates,
+    list_status_page_severities,
+    list_status_page_statuses,
+    list_status_pages,
+)
 from .teams import (
     add_team_member,
     create_team,
@@ -95,6 +105,13 @@ read_tools = [
     get_event_orchestration_router,
     get_event_orchestration_service,
     get_event_orchestration_global,
+    # Status Pages
+    list_status_pages,
+    list_status_page_severities,
+    list_status_page_impacts,
+    list_status_page_statuses,
+    get_status_page_post,
+    list_status_page_post_updates,
 ]
 
 # Write tools (potentially dangerous operations that modify state)
@@ -122,6 +139,9 @@ write_tools = [
     # Event Orchestrations
     update_event_orchestration_router,
     append_event_orchestration_router_rule,
+    # Status Pages
+    create_status_page_post,
+    create_status_page_post_update,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

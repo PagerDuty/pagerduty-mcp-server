@@ -203,7 +203,10 @@ STATUS_PAGES_COMPETENCY_TESTS = [
         description="List post updates filtered by reviewed status",
     ),
     StatusPagesCompetencyTest(
-        query="Create a maintenance post on status page PT4KHLK titled 'Database Upgrade' scheduled from 2023-12-12 11:00 to 12:00",
+        query=(
+            "Create a maintenance post on status page PT4KHLK titled 'Database Upgrade' "
+            "scheduled from 2023-12-12 11:00 to 12:00"
+        ),
         expected_tools=[
             {
                 "tool_name": "create_status_page_post",

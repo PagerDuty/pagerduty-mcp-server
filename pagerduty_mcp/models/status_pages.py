@@ -62,9 +62,7 @@ class StatusPageSeverity(BaseModel):
 
 
 class StatusPageSeverityQuery(BaseModel):
-    post_type: Literal["incident", "maintenance"] | None = Field(
-        default=None, description="Filter by Post type"
-    )
+    post_type: Literal["incident", "maintenance"] | None = Field(default=None, description="Filter by Post type")
     limit: int | None = Field(
         ge=1,
         le=MAXIMUM_PAGINATION_LIMIT,
@@ -95,9 +93,7 @@ class StatusPageImpact(BaseModel):
 
 
 class StatusPageImpactQuery(BaseModel):
-    post_type: Literal["incident", "maintenance"] | None = Field(
-        default=None, description="Filter by Post type"
-    )
+    post_type: Literal["incident", "maintenance"] | None = Field(default=None, description="Filter by Post type")
     limit: int | None = Field(
         ge=1,
         le=MAXIMUM_PAGINATION_LIMIT,
@@ -117,9 +113,7 @@ class StatusPageImpactQuery(BaseModel):
 class StatusPageStatus(BaseModel):
     id: str = Field(description="An unique identifier within Status Page scope that defines a Status entry")
     self_: str | None = Field(default=None, alias="self", description="The API resource URL of the Status")
-    description: str = Field(
-        description="The description is a human-readable text that describes the Status level"
-    )
+    description: str = Field(description="The description is a human-readable text that describes the Status level")
     post_type: Literal["incident", "maintenance"] = Field(description="The type of the Post")
     status_page: StatusPageReference = Field(description="Status Page reference")
 
@@ -130,9 +124,7 @@ class StatusPageStatus(BaseModel):
 
 
 class StatusPageStatusQuery(BaseModel):
-    post_type: Literal["incident", "maintenance"] | None = Field(
-        default=None, description="Filter by Post type"
-    )
+    post_type: Literal["incident", "maintenance"] | None = Field(default=None, description="Filter by Post type")
     limit: int | None = Field(
         ge=1,
         le=MAXIMUM_PAGINATION_LIMIT,
@@ -151,22 +143,30 @@ class StatusPageStatusQuery(BaseModel):
 
 class StatusPagePostReference(BaseModel):
     id: str = Field(description="Status page post unique identifier")
-    type: str | None = Field(default="status_page_post", description="A string that determines the schema of the object")
+    type: str | None = Field(
+        default="status_page_post", description="A string that determines the schema of the object"
+    )
 
 
 class StatusPageStatusReference(BaseModel):
     id: str = Field(description="Status page Status unique identifier")
-    type: str | None = Field(default="status_page_status", description="A string that determines the schema of the object")
+    type: str | None = Field(
+        default="status_page_status", description="A string that determines the schema of the object"
+    )
 
 
 class StatusPageSeverityReference(BaseModel):
     id: str = Field(description="Status page Severity unique identifier")
-    type: str | None = Field(default="status_page_severity", description="A string that determines the schema of the object")
+    type: str | None = Field(
+        default="status_page_severity", description="A string that determines the schema of the object"
+    )
 
 
 class StatusPageImpactReference(BaseModel):
     id: str = Field(description="Status page Impact unique identifier")
-    type: str | None = Field(default="status_page_impact", description="A string that determines the schema of the object")
+    type: str | None = Field(
+        default="status_page_impact", description="A string that determines the schema of the object"
+    )
 
 
 class StatusPageServiceReference(BaseModel):
@@ -181,7 +181,9 @@ class StatusPagePostUpdateImpact(BaseModel):
 
 class StatusPagePostUpdate(BaseModel):
     id: str | None = Field(default=None, description="The ID of the Post Update")
-    self_: str | None = Field(default=None, alias="self", description="The path to which the Post Update resource is accessible")
+    self_: str | None = Field(
+        default=None, alias="self", description="The path to which the Post Update resource is accessible"
+    )
     post: StatusPagePostReference | None = Field(default=None, description="Status Page Post reference")
     message: str | None = Field(default=None, description="The message of the Post Update")
     reviewed_status: Literal["approved", "not_reviewed"] | None = Field(
@@ -195,7 +197,9 @@ class StatusPagePostUpdate(BaseModel):
     update_frequency_ms: int | None = Field(
         default=None, description="The frequency of the next Post Update in milliseconds"
     )
-    notify_subscribers: bool | None = Field(default=None, description="Determines if the subscribers should be notified of the Post Update")
+    notify_subscribers: bool | None = Field(
+        default=None, description="Determines if the subscribers should be notified of the Post Update"
+    )
     reported_at: datetime | None = Field(default=None, description="The date and time the Post Update was reported")
 
     @computed_field
@@ -222,7 +226,10 @@ class PostmortemReference(BaseModel):
 
 
 class StatusPagePost(BaseModel):
-    id: str | None = Field(default=None, description="An unique identifier within Status Page scope that defines a single Post resource")
+    id: str | None = Field(
+        default=None,
+        description="An unique identifier within Status Page scope that defines a single Post resource",
+    )
     self_: str | None = Field(default=None, alias="self", description="The API resource URL of the Post")
     post_type: Literal["incident", "maintenance"] = Field(description="The type of the Post")
     status_page: StatusPageReference = Field(description="Status Page reference")
@@ -254,16 +261,24 @@ class StatusPagePost(BaseModel):
 
 class StatusPagePostUpdateRequest(BaseModel):
     message: str = Field(description="The message of the Post Update")
-    status: StatusPageStatusReference = Field(description="Status Page Status reference")
-    severity: StatusPageSeverityReference = Field(description="Status Page Severity reference")
-    impacted_services: list[StatusPagePostUpdateImpact] = Field(
-        description="Impacted services represent the status page services affected by a post update"
+    status: StatusPageStatusReference | None = Field(
+        default=None, description="Status Page Status reference (optional for simple updates)"
+    )
+    severity: StatusPageSeverityReference | None = Field(
+        default=None, description="Status Page Severity reference (optional for simple updates)"
+    )
+    impacted_services: list[StatusPagePostUpdateImpact] | None = Field(
+        default=None,
+        description=(
+            "Impacted services represent the status page services affected by a post update "
+            "(optional for simple updates)"
+        ),
     )
     update_frequency_ms: int | None = Field(
         default=None, description="The frequency of the next Post Update in milliseconds"
     )
-    notify_subscribers: bool = Field(
-        default=False, description="Determines if the subscribers should be notified of the Post Update"
+    notify_subscribers: bool | None = Field(
+        default=None, description="Determines if the subscribers should be notified of the Post Update"
     )
     reported_at: datetime | None = Field(default=None, description="The date and time the Post Update was reported")
     post: StatusPagePostReference | None = Field(default=None, description="Status Page Post reference")
@@ -287,10 +302,16 @@ class StatusPagePostCreateRequest(BaseModel):
     ends_at: datetime | None = Field(
         default=None, description="The date and time the Post intent is concluded - only for maintenance post type"
     )
-    updates: list[StatusPagePostUpdateRequest] = Field(
-        description="Post Updates to be associated with a Post"
+    updates: list[StatusPagePostUpdateRequest] | None = Field(
+        default=None,
+        description=(
+            "Post Updates to be associated with a Post "
+            "(optional - can be added later via create_status_page_post_update)"
+        ),
     )
-    status_page: StatusPageReference = Field(description="Status Page reference")
+    status_page: StatusPageReference | None = Field(
+        default=None, description="Status Page reference (optional - inferred from status_page_id parameter)"
+    )
 
     @computed_field
     @property

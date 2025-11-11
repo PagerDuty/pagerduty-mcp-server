@@ -420,6 +420,59 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].reviewed_status, "approved")
 
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_simple_maintenance(self, mock_get_client):
+        """Test creating a simple maintenance post without updates."""
+        mock_client = Mock()
+        mock_client.rpost.return_value = {"post": self.sample_post_data}
+        mock_get_client.return_value = mock_client
+
+        post_request = StatusPagePostCreateRequest(
+            title="Database Upgrade",
+            post_type="maintenance",
+            starts_at=datetime(2023, 12, 12, 11, 0, 0),
+            ends_at=datetime(2023, 12, 12, 12, 0, 0),
+        )
+
+        wrapper = StatusPagePostCreateRequestWrapper(post=post_request)
+        result = create_status_page_post("PR5LMML", wrapper)
+
+        self.assertIsInstance(result, StatusPagePost)
+        self.assertEqual(result.id, "PIJ90N7")
+        self.assertEqual(result.title, "maintenance window for database upgrade")
+        mock_client.rpost.assert_called_once()
+
+        call_args = mock_client.rpost.call_args
+        json_data = call_args.kwargs["json"]
+        self.assertEqual(json_data["post"]["title"], "Database Upgrade")
+        self.assertEqual(json_data["post"]["post_type"], "maintenance")
+        self.assertNotIn("updates", json_data["post"])
+        self.assertNotIn("status_page", json_data["post"])
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_update_simple_message(self, mock_get_client):
+        """Test creating a simple post update with only a message."""
+        mock_client = Mock()
+        mock_client.rpost.return_value = {"post_update": self.sample_post_update_data}
+        mock_get_client.return_value = mock_client
+
+        update_request = StatusPagePostUpdateRequest(message="Work in progress")
+
+        wrapper = StatusPagePostUpdateRequestWrapper(post_update=update_request)
+        result = create_status_page_post_update("PR5LMML", "P6F2CJ3", wrapper)
+
+        self.assertIsInstance(result, StatusPagePostUpdate)
+        self.assertEqual(result.id, "PXSOCH0")
+        mock_client.rpost.assert_called_once()
+
+        call_args = mock_client.rpost.call_args
+        json_data = call_args.kwargs["json"]
+        self.assertEqual(json_data["post_update"]["message"], "Work in progress")
+        self.assertNotIn("status", json_data["post_update"])
+        self.assertNotIn("severity", json_data["post_update"])
+        self.assertNotIn("impacted_services", json_data["post_update"])
+        self.assertNotIn("notify_subscribers", json_data["post_update"])
+
 
 if __name__ == "__main__":
     unittest.main()

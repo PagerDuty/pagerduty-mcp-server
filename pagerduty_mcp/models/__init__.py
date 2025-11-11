@@ -47,6 +47,18 @@ from .incidents import (
     ResponderRequest,
     ResponderRequestTarget,
 )
+from .incident_workflows import (
+    ActionConfiguration,
+    ActionInput,
+    ActionOutput,
+    IncidentWorkflow,
+    IncidentWorkflowInstance,
+    IncidentWorkflowInstanceCreate,
+    IncidentWorkflowInstanceRequest,
+    IncidentWorkflowQuery,
+    InlineStepInput,
+    Step,
+)
 from .oncalls import Oncall, OncallQuery
 from .references import IncidentReference, ScheduleReference, ServiceReference, TeamReference, UserReference
 from .schedules import (
@@ -62,6 +74,9 @@ from .users import User, UserQuery
 
 __all__ = [
     "MAX_RESULTS",
+    "ActionConfiguration",
+    "ActionInput",
+    "ActionOutput",
     "AlertGroupingSetting",
     "AlertGroupingSettingCreate",
     "AlertGroupingSettingCreateRequest",
@@ -95,6 +110,12 @@ __all__ = [
     "IncidentReference",
     "IncidentResponderRequest",
     "IncidentResponderRequestResponse",
+    "IncidentWorkflow",
+    "IncidentWorkflowInstance",
+    "IncidentWorkflowInstanceCreate",
+    "IncidentWorkflowInstanceRequest",
+    "IncidentWorkflowQuery",
+    "InlineStepInput",
     "IntelligentGroupingConfig",
     "ListResponseModel",
     "MCPContext",
@@ -118,6 +139,7 @@ __all__ = [
     "ServiceCreate",
     "ServiceQuery",
     "ServiceReference",
+    "Step",
     "Team",
     "TeamCreateRequest",
     "TeamMemberAdd",

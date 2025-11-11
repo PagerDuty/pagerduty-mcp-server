@@ -34,6 +34,11 @@ from .incidents import (
     list_incidents,
     manage_incidents,
 )
+from .incident_workflows import (
+    get_incident_workflow,
+    list_incident_workflows,
+    start_incident_workflow,
+)
 from .oncalls import list_oncalls
 from .schedules import (
     create_schedule_override,
@@ -70,6 +75,9 @@ read_tools = [
     get_outlier_incident,
     get_past_incidents,
     get_related_incidents,
+    # Incident Workflows
+    list_incident_workflows,
+    get_incident_workflow,
     # Services
     list_services,
     get_service,
@@ -108,6 +116,8 @@ write_tools = [
     manage_incidents,
     add_responders,
     add_note_to_incident,
+    # Incident Workflows
+    start_incident_workflow,
     # Services
     create_service,
     update_service,

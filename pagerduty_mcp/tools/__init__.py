@@ -23,6 +23,11 @@ from .event_orchestrations import (
     list_event_orchestrations,
     update_event_orchestration_router,
 )
+from .incident_workflows import (
+    get_incident_workflow,
+    list_incident_workflows,
+    start_incident_workflow,
+)
 from .incidents import (
     add_note_to_incident,
     add_responders,
@@ -33,11 +38,6 @@ from .incidents import (
     get_related_incidents,
     list_incidents,
     manage_incidents,
-)
-from .incident_workflows import (
-    get_incident_workflow,
-    list_incident_workflows,
-    start_incident_workflow,
 )
 from .oncalls import list_oncalls
 from .schedules import (

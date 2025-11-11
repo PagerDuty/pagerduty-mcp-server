@@ -1,6 +1,7 @@
 """Bedrock client implementation for evaluation testing."""
 
 import json
+import time
 import uuid
 from typing import Any
 
@@ -40,6 +41,70 @@ class BedrockClient(LLMClient):
             ) from e
 
         self.region_name = region_name
+
+    def _retry_with_exponential_backoff(
+        self,
+        func,
+        *args,
+        max_retries: int = 5,
+        initial_delay: float = 1.0,
+        backoff_factor: float = 2.0,
+        **kwargs,
+    ):
+        """Retry a function with exponential backoff on ThrottlingException.
+
+        Args:
+            func: The function to retry
+            *args: Positional arguments to pass to the function
+            max_retries: Maximum number of retry attempts (default: 5)
+            initial_delay: Initial delay in seconds before first retry (default: 1.0)
+            backoff_factor: Multiplier for delay between retries (default: 2.0)
+            **kwargs: Keyword arguments to pass to the function
+
+        Returns:
+            The result of the function call
+
+        Raises:
+            Exception: If all retries are exhausted or a non-throttling error occurs
+        """
+        delay = initial_delay
+        last_exception = None
+
+        for attempt in range(max_retries + 1):
+            try:
+                return func(*args, **kwargs)
+            except ClientError as e:
+                error_code = e.response.get("Error", {}).get("Code", "Unknown")
+
+                # Only retry on ThrottlingException
+                if error_code == "ThrottlingException":
+                    last_exception = e
+
+                    if attempt < max_retries:
+                        print(
+                            f"ThrottlingException encountered (attempt {attempt + 1}/{max_retries + 1}). "
+                            f"Retrying in {delay:.1f} seconds..."
+                        )
+                        time.sleep(delay)
+                        delay *= backoff_factor
+                        continue
+
+                    # Max retries exhausted
+                    print(f"Max retries ({max_retries}) exhausted for ThrottlingException.")
+                    error_message = e.response.get("Error", {}).get("Message", str(e))
+                    raise Exception(
+                        f"Bedrock API error ({error_code}): {error_message} "
+                        f"(Failed after {max_retries} retries)"
+                    ) from e
+
+                # Non-throttling error - raise immediately
+                error_message = e.response.get("Error", {}).get("Message", str(e))
+                raise Exception(f"Bedrock API error ({error_code}): {error_message}") from e
+
+        # Should never reach here, but just in case
+        if last_exception:
+            raise last_exception
+        raise Exception("Retry logic failed unexpectedly")
 
     def chat_completion(
         self,
@@ -89,17 +154,20 @@ class BedrockClient(LLMClient):
         # Add any additional parameters from kwargs
         request_payload.update(kwargs)
 
+        # Wrap the API call with retry logic for ThrottlingException
+        def _make_api_call():
+            return self.client.converse(modelId=model, **request_payload)
+
         try:
-            # Make the API call to Bedrock
-            response = self.client.converse(modelId=model, **request_payload)
+            # Make the API call to Bedrock with retry logic
+            response = self._retry_with_exponential_backoff(_make_api_call)
 
             # Convert response back to our standard format
             return self._convert_response_from_bedrock(response)
 
-        except ClientError as e:
-            error_code = e.response.get("Error", {}).get("Code", "Unknown")
-            error_message = e.response.get("Error", {}).get("Message", str(e))
-            raise Exception(f"Bedrock API error ({error_code}): {error_message}") from e
+        except Exception:
+            # Re-raise exceptions that have already been wrapped by retry logic
+            raise
 
     def supports_model(self, model: str) -> bool:
         """Check if this is a Bedrock model.

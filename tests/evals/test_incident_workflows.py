@@ -74,12 +74,12 @@ class IncidentWorkflowCompetencyTest(CompetencyTest):
 INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
     IncidentWorkflowCompetencyTest(
         query="List all incident workflows",
-        expected_tools=[{"tool_name": "list_incident_workflows", "parameters": {}}],
+        expected_tools=[{"tool_name": "list_incident_workflows", "parameters": {"query_model": None}}],
         description="Basic workflow listing",
     ),
     IncidentWorkflowCompetencyTest(
         query="Show me all incident workflows",
-        expected_tools=[{"tool_name": "list_incident_workflows", "parameters": {}}],
+        expected_tools=[{"tool_name": "list_incident_workflows", "parameters": {"query_model": None}}],
         description="Basic workflow listing with natural language",
     ),
     IncidentWorkflowCompetencyTest(

@@ -3,7 +3,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from pagerduty_mcp.models.base import MAX_RESULTS
 from pagerduty_mcp.models.references import IncidentReference, TeamReference
 
 
@@ -14,9 +13,9 @@ class IncidentWorkflowQuery(BaseModel):
 
     limit: int | None = Field(
         ge=1,
-        le=MAX_RESULTS,
-        default=MAX_RESULTS,
-        description="Maximum number of results to return. The maximum is 1000",
+        le=100,
+        default=100,
+        description="Maximum number of results to return. The maximum is 100",
     )
     query: str | None = Field(
         description="Filters the result, showing only the records whose name matches the query",

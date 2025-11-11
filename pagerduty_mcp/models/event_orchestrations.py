@@ -305,8 +305,7 @@ class EventOrchestrationPathActionsBase(BaseModel):
 
     route_to: str | None = Field(
         description=(
-            "The ID of a Set from this Orchestration whose rules you also want to use "
-            "with events that match this rule."
+            "The ID of a Set from this Orchestration whose rules you also want to use with events that match this rule."
         ),
         default=None,
     )
@@ -372,8 +371,7 @@ class EventOrchestrationGlobalActions(EventOrchestrationPathActionsBase):
 
     drop_event: bool | None = Field(
         description=(
-            "If true, this event will be dropped. Dropped events will not trigger or resolve "
-            "an alert or an incident."
+            "If true, this event will be dropped. Dropped events will not trigger or resolve an alert or an incident."
         ),
         default=None,
     )
@@ -531,8 +529,7 @@ class EventOrchestrationGlobalPath(BaseModel):
     )
     catch_all: EventOrchestrationGlobalCatchAll = Field(
         description=(
-            "When none of the rules match an event, the event will be routed according to "
-            "the catch_all settings."
+            "When none of the rules match an event, the event will be routed according to the catch_all settings."
         )
     )
     created_at: datetime | None = Field(

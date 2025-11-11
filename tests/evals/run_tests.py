@@ -22,6 +22,7 @@ from tests.evals.test_alert_grouping_settings import ALERT_GROUPING_SETTINGS_COM
 from tests.evals.test_event_orchestrations import EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
 from tests.evals.test_incident_workflows import INCIDENT_WORKFLOW_COMPETENCY_TESTS
 from tests.evals.test_incidents import INCIDENT_COMPETENCY_TESTS
+from tests.evals.test_status_pages import STATUS_PAGES_COMPETENCY_TESTS
 from tests.evals.test_teams import TEAMS_COMPETENCY_TESTS
 
 test_mapping = {
@@ -30,12 +31,14 @@ test_mapping = {
     "incident-workflows": INCIDENT_WORKFLOW_COMPETENCY_TESTS,
     "teams": TEAMS_COMPETENCY_TESTS,
     "event-orchestrations": EVENT_ORCHESTRATIONS_COMPETENCY_TESTS,
+    "status-pages": STATUS_PAGES_COMPETENCY_TESTS,
     "all": (
         INCIDENT_COMPETENCY_TESTS
         + TEAMS_COMPETENCY_TESTS
         + ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
         + EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
         + INCIDENT_WORKFLOW_COMPETENCY_TESTS
+        + STATUS_PAGES_COMPETENCY_TESTS
     ),
 }
 
@@ -74,27 +77,42 @@ class TestAgent:
     the right parameters.
     """
 
-    def __init__(self, llm_type: str = "gpt", aws_region: str = "us-west-2", test_delay: float = 0.0):
+    def __init__(
+        self,
+        llm_type: str = "gpt",
+        aws_region: str = "us-west-2",
+        delay_between_tests: float = 0.0,
+        max_retries: int = 3,
+        initial_retry_delay: float = 1.0,
+    ):
         """Initialize the test agent.
 
         Args:
             llm_type: The type of LLM to test ("gpt", "bedrock")
             aws_region: AWS region for Bedrock (only used when llm_type="bedrock")
-            test_delay: Delay in seconds between tests (default: 0.0, recommended: 0.5-2.0 for rate limiting)
+            delay_between_tests: Delay in seconds between test executions (default: 0.0)
+            max_retries: Maximum retry attempts for throttled requests (default: 3)
+            initial_retry_delay: Initial delay for exponential backoff in seconds (default: 1.0)
         """
         self.llm_type = llm_type
         self.aws_region = aws_region
-        self.test_delay = test_delay
+        self.delay_between_tests = delay_between_tests
+        self.max_retries = max_retries
+        self.initial_retry_delay = initial_retry_delay
         self.results = []
         self.mocked_mcp = MockedMCPServer()
-        self.llm = self._initialize_llm(llm_type, aws_region)
+        self.llm = self._initialize_llm(llm_type, aws_region, max_retries, initial_retry_delay)
 
-    def _initialize_llm(self, llm_type: str, aws_region: str) -> LLMClient:
+    def _initialize_llm(
+        self, llm_type: str, aws_region: str, max_retries: int, initial_retry_delay: float
+    ) -> LLMClient:
         """Initialize the specified LLM client.
 
         Args:
             llm_type: The type of LLM to initialize
             aws_region: AWS region for Bedrock
+            max_retries: Maximum retry attempts for throttled requests
+            initial_retry_delay: Initial delay for exponential backoff
 
         Returns:
             Initialized LLM client
@@ -102,7 +120,11 @@ class TestAgent:
         if llm_type == "gpt":
             return OpenAIClient()
         if llm_type == "bedrock":
-            return BedrockClient(region_name=aws_region)
+            return BedrockClient(
+                region_name=aws_region,
+                max_retries=max_retries,
+                initial_retry_delay=initial_retry_delay,
+            )
         raise ValueError(f"LLM type {llm_type} is not supported. Choose from: gpt, bedrock")
 
     def _get_available_tools(self) -> list[dict[str, Any]]:
@@ -265,15 +287,15 @@ class TestAgent:
             List of test results
         """
         results = []
-        for idx, test_case in enumerate(test_cases):
+        for i, test_case in enumerate(test_cases):
             result = self.test_competency(test_case)
             if result:
                 results.append(result)
 
-            # Add delay between tests to avoid rate limiting (skip delay after last test)
-            if self.test_delay > 0 and idx < len(test_cases) - 1:
-                print(f"Waiting {self.test_delay} seconds before next test to avoid rate limiting...")
-                time.sleep(self.test_delay)
+            # Add delay between tests if configured (except after last test)
+            if self.delay_between_tests > 0 and i < len(test_cases) - 1:
+                print(f"Waiting {self.delay_between_tests:.2f} seconds before next test...")
+                time.sleep(self.delay_between_tests)
 
         self.results = results
         return results
@@ -323,6 +345,7 @@ def main():
             "incident-workflows",
             "incidents",
             "services",
+            "status-pages",
             "teams",
         ],
         default="all",
@@ -337,10 +360,22 @@ def main():
         help="AWS region for Bedrock (only used when --llm=bedrock)",
     )
     parser.add_argument(
-        "--delay",
+        "--delay-between-tests",
         type=float,
-        default=0.5,
-        help="Delay in seconds between tests to avoid rate limiting (default: 0.5, set to 0 to disable)",
+        default=0.0,
+        help="Delay in seconds between test executions to avoid rate limiting (default: 0.0)",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=3,
+        help="Maximum retry attempts for throttled requests (default: 3)",
+    )
+    parser.add_argument(
+        "--initial-retry-delay",
+        type=float,
+        default=1.0,
+        help="Initial delay in seconds for exponential backoff (default: 1.0)",
     )
 
     args = parser.parse_args()
@@ -359,7 +394,13 @@ def main():
             tc.model = args.model
 
     # Create and run the test agent
-    agent = TestAgent(llm_type=args.llm, aws_region=args.aws_region, test_delay=args.delay)
+    agent = TestAgent(
+        llm_type=args.llm,
+        aws_region=args.aws_region,
+        delay_between_tests=args.delay_between_tests,
+        max_retries=args.max_retries,
+        initial_retry_delay=args.initial_retry_delay,
+    )
     agent.run_tests(test_cases)
 
     # Generate report

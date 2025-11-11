@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import logging
+import time
 from collections.abc import Sequence
 from contextlib import suppress
 from typing import Any
@@ -19,12 +20,14 @@ from tests.evals.llm_clients import BedrockClient, LLMClient, OpenAIClient
 from tests.evals.mcp_tool_tracer import MockedMCPServer
 from tests.evals.test_alert_grouping_settings import ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
 from tests.evals.test_event_orchestrations import EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
+from tests.evals.test_incident_workflows import INCIDENT_WORKFLOW_COMPETENCY_TESTS
 from tests.evals.test_incidents import INCIDENT_COMPETENCY_TESTS
 from tests.evals.test_teams import TEAMS_COMPETENCY_TESTS
 
 test_mapping = {
     "alert-grouping-settings": ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
     "incidents": INCIDENT_COMPETENCY_TESTS,
+    "incident-workflows": INCIDENT_WORKFLOW_COMPETENCY_TESTS,
     "teams": TEAMS_COMPETENCY_TESTS,
     "event-orchestrations": EVENT_ORCHESTRATIONS_COMPETENCY_TESTS,
     "all": (
@@ -32,6 +35,7 @@ test_mapping = {
         + TEAMS_COMPETENCY_TESTS
         + ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
         + EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
+        + INCIDENT_WORKFLOW_COMPETENCY_TESTS
     ),
 }
 
@@ -70,15 +74,17 @@ class TestAgent:
     the right parameters.
     """
 
-    def __init__(self, llm_type: str = "gpt", aws_region: str = "us-west-2"):
+    def __init__(self, llm_type: str = "gpt", aws_region: str = "us-west-2", test_delay: float = 0.0):
         """Initialize the test agent.
 
         Args:
             llm_type: The type of LLM to test ("gpt", "bedrock")
             aws_region: AWS region for Bedrock (only used when llm_type="bedrock")
+            test_delay: Delay in seconds between tests (default: 0.0, recommended: 0.5-2.0 for rate limiting)
         """
         self.llm_type = llm_type
         self.aws_region = aws_region
+        self.test_delay = test_delay
         self.results = []
         self.mocked_mcp = MockedMCPServer()
         self.llm = self._initialize_llm(llm_type, aws_region)
@@ -259,10 +265,15 @@ class TestAgent:
             List of test results
         """
         results = []
-        for test_case in test_cases:
+        for idx, test_case in enumerate(test_cases):
             result = self.test_competency(test_case)
             if result:
                 results.append(result)
+
+            # Add delay between tests to avoid rate limiting (skip delay after last test)
+            if self.test_delay > 0 and idx < len(test_cases) - 1:
+                print(f"Waiting {self.test_delay} seconds before next test to avoid rate limiting...")
+                time.sleep(self.test_delay)
 
         self.results = results
         return results
@@ -305,7 +316,15 @@ def main():
     parser.add_argument("--llm", choices=["gpt", "bedrock"], default="gpt", help="LLM provider to use for testing")
     parser.add_argument(
         "--domain",
-        choices=["all", "alert-grouping-settings", "incidents", "teams", "event-orchestrations", "services"],
+        choices=[
+            "all",
+            "alert-grouping-settings",
+            "event-orchestrations",
+            "incident-workflows",
+            "incidents",
+            "services",
+            "teams",
+        ],
         default="all",
         help="Domain to test",
     )
@@ -316,6 +335,12 @@ def main():
         type=str,
         default="us-west-2",
         help="AWS region for Bedrock (only used when --llm=bedrock)",
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=0.5,
+        help="Delay in seconds between tests to avoid rate limiting (default: 0.5, set to 0 to disable)",
     )
 
     args = parser.parse_args()
@@ -334,7 +359,7 @@ def main():
             tc.model = args.model
 
     # Create and run the test agent
-    agent = TestAgent(llm_type=args.llm, aws_region=args.aws_region)
+    agent = TestAgent(llm_type=args.llm, aws_region=args.aws_region, test_delay=args.delay)
     agent.run_tests(test_cases)
 
     # Generate report

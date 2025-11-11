@@ -86,6 +86,7 @@ class CompetencyTest(ABC):
         1. All expected fields are present with correct values
         2. Additional fields in actual are allowed (flexible)
         3. Nested objects are checked
+        4. None and {} are considered equivalent for optional model parameters
 
         Args:
             expected: Expected parameter structure
@@ -101,8 +102,12 @@ class CompetencyTest(ABC):
         if self._is_alert_grouping_tool_call(expected, actual):
             return self._validate_alert_grouping_params(expected, actual)
 
+        # Normalize parameters before comparison (treat None and {} as equivalent)
+        normalized_expected = self._normalize_optional_models(expected)
+        normalized_actual = self._normalize_optional_models(actual)
+
         # Default to strict validation for other domains
-        diff = DeepDiff(expected, actual, ignore_order=True)
+        diff = DeepDiff(normalized_expected, normalized_actual, ignore_order=True)
 
         compatibility_issues = []
 
@@ -122,6 +127,34 @@ class CompetencyTest(ABC):
             )
 
         return len(compatibility_issues) == 0
+
+    def _normalize_optional_models(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Normalize optional model parameters by treating None and {} as equivalent.
+
+        This handles the case where LLMs may pass either:
+        - {"query_model": null} (explicit None)
+        - {"query_model": {}} (empty object)
+
+        Both are functionally equivalent for optional Pydantic model parameters,
+        as they result in the same default behavior in the tool implementation.
+
+        Args:
+            params: Parameter dictionary to normalize
+
+        Returns:
+            Normalized parameter dictionary
+        """
+        normalized = {}
+        for key, value in params.items():
+            # Treat empty dict as None for consistency
+            if isinstance(value, dict) and len(value) == 0:
+                normalized[key] = None
+            elif isinstance(value, dict):
+                # Recursively normalize nested dicts
+                normalized[key] = self._normalize_optional_models(value)
+            else:
+                normalized[key] = value
+        return normalized
 
     def _has_required_structure(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
         """Check if actual has the basic required structure."""

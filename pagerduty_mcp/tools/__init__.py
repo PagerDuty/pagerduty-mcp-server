@@ -23,6 +23,11 @@ from .event_orchestrations import (
     list_event_orchestrations,
     update_event_orchestration_router,
 )
+from .incident_workflows import (
+    get_incident_workflow,
+    list_incident_workflows,
+    start_incident_workflow,
+)
 from .incidents import (
     add_note_to_incident,
     add_responders,
@@ -70,6 +75,9 @@ read_tools = [
     get_outlier_incident,
     get_past_incidents,
     get_related_incidents,
+    # Incident Workflows
+    list_incident_workflows,
+    get_incident_workflow,
     # Services
     list_services,
     get_service,
@@ -108,6 +116,8 @@ write_tools = [
     manage_incidents,
     add_responders,
     add_note_to_incident,
+    # Incident Workflows
+    start_incident_workflow,
     # Services
     create_service,
     update_service,

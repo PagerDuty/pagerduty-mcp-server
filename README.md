@@ -244,6 +244,14 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_service              | Services           | Retrieves a specific service                        | ✅         |
 | list_services            | Services           | Lists services                                      | ✅         |
 | update_service           | Services           | Updates an existing service                         | ❌         |
+| create_status_page_post  | Status Pages       | Creates a new post (incident or maintenance) on a status page | ❌         |
+| create_status_page_post_update | Status Pages | Adds a new update to an existing status page post   | ❌         |
+| get_status_page_post     | Status Pages       | Retrieves details of a specific status page post    | ✅         |
+| list_status_page_impacts | Status Pages       | Lists available impact levels for a status page     | ✅         |
+| list_status_page_post_updates | Status Pages  | Lists all updates for a specific status page post   | ✅         |
+| list_status_page_severities | Status Pages    | Lists available severity levels for a status page   | ✅         |
+| list_status_page_statuses | Status Pages      | Lists available statuses for a status page          | ✅         |
+| list_status_pages        | Status Pages       | Lists all status pages with optional filtering      | ✅         |
 
 
 ## Support

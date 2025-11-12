@@ -55,7 +55,7 @@ class UserQuery(BaseModel):
         if self.query:
             params["query"] = self.query
         if self.teams_ids:
-            params["teams_ids[]"] = self.teams_ids
+            params["team_ids[]"] = self.teams_ids
         if self.limit:
             params["limit"] = self.limit
         return params

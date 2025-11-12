@@ -11,7 +11,12 @@ def list_escalation_policies(
     Returns:
         List of escalation policies matching the query parameters
     """
-    response = paginate(client=get_client(), entity="escalation_policies", params=query_model.to_params())
+    response = paginate(
+        client=get_client(),
+        entity="escalation_policies",
+        params=query_model.to_params(),
+        maximum_records=query_model.limit or 1000,
+    )
     policies = [EscalationPolicy(**policy) for policy in response]
     return ListResponseModel[EscalationPolicy](response=policies)
 

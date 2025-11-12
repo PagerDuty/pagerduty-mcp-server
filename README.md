@@ -205,7 +205,9 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | list_alert_grouping_settings  | Alert Grouping | Lists alert grouping settings with filtering        | ✅         |
 | update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting          | ❌         |
 | get_event_orchestration | Event Orchestrations | Retrieves a specific event orchestration           | ✅         |
+| get_event_orchestration_global | Event Orchestrations | Gets the global orchestration configuration for an event orchestration | ✅         |
 | get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅         |
+| get_event_orchestration_service | Event Orchestrations | Gets the service orchestration configuration for a specific service | ✅         |
 | list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅         |
 | update_event_orchestration_router | Event Orchestrations | Updates the router configuration for an event orchestration | ❌         |
 | append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router | ❌         |
@@ -220,6 +222,9 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |
 | list_incidents           | Incidents          | Lists incidents                                     | ✅         |
 | manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
+| get_incident_workflow    | Incident Workflows | Retrieves a specific incident workflow              | ✅         |
+| list_incident_workflows  | Incident Workflows | Lists incident workflows with optional filtering    | ✅         |
+| start_incident_workflow  | Incident Workflows | Starts a workflow instance for an incident          | ❌         |
 | add_team_member          | Teams              | Adds a user to a team with a specific role          | ❌         |
 | create_team              | Teams              | Creates a new team                                  | ❌         |
 | delete_team              | Teams              | Deletes a team                                      | ❌         |
@@ -239,6 +244,14 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_service              | Services           | Retrieves a specific service                        | ✅         |
 | list_services            | Services           | Lists services                                      | ✅         |
 | update_service           | Services           | Updates an existing service                         | ❌         |
+| create_status_page_post  | Status Pages       | Creates a new post (incident or maintenance) on a status page | ❌         |
+| create_status_page_post_update | Status Pages | Adds a new update to an existing status page post   | ❌         |
+| get_status_page_post     | Status Pages       | Retrieves details of a specific status page post    | ✅         |
+| list_status_page_impacts | Status Pages       | Lists available impact levels for a status page     | ✅         |
+| list_status_page_post_updates | Status Pages  | Lists all updates for a specific status page post   | ✅         |
+| list_status_page_severities | Status Pages    | Lists available severity levels for a status page   | ✅         |
+| list_status_page_statuses | Status Pages      | Lists available statuses for a status page          | ✅         |
+| list_status_pages        | Status Pages       | Lists all status pages with optional filtering      | ✅         |
 
 
 ## Support

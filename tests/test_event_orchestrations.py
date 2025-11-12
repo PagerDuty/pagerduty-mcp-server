@@ -5,17 +5,21 @@ from unittest.mock import MagicMock, patch
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.event_orchestrations import (
     EventOrchestration,
+    EventOrchestrationGlobal,
     EventOrchestrationQuery,
     EventOrchestrationRouter,
     EventOrchestrationRouterUpdateRequest,
     EventOrchestrationRuleActions,
     EventOrchestrationRuleCondition,
     EventOrchestrationRuleCreateRequest,
+    EventOrchestrationService,
 )
 from pagerduty_mcp.tools.event_orchestrations import (
     append_event_orchestration_router_rule,
     get_event_orchestration,
+    get_event_orchestration_global,
     get_event_orchestration_router,
+    get_event_orchestration_service,
     list_event_orchestrations,
     update_event_orchestration_router,
 )
@@ -838,6 +842,373 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
         # But the original issue is that in append_event_orchestration_router_rule,
         # we're mixing objects and dicts before model validation
+
+    # Tests for Service Orchestration
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_get_event_orchestration_service_success(self, mock_get_client):
+        """Test successful get_event_orchestration_service call with wrapped response."""
+        sample_service_orchestration_response = {
+            "orchestration_path": {
+                "type": "service",
+                "parent": {
+                    "id": "PC2D9ML",
+                    "self": "https://api.pagerduty.com/service/PC2D9ML",
+                    "type": "service_reference",
+                },
+                "self": "https://api.pagerduty.com/event_orchestrations/service/PC2D9ML",
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "label": "Always apply some consistent event transformations",
+                                "id": "c91f72f3",
+                                "conditions": [],
+                                "actions": {
+                                    "variables": [
+                                        {
+                                            "name": "hostname",
+                                            "path": "event.component",
+                                            "value": "hostname: (.*)",
+                                            "type": "regex",
+                                        }
+                                    ],
+                                    "route_to": "step-two",
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "catch_all": {"actions": {"suppress": True}},
+                "created_at": "2021-11-18T16:42:01Z",
+                "created_by": self.sample_user,
+                "updated_at": "2021-11-18T16:42:01Z",
+                "updated_by": self.sample_user,
+                "version": "rn1Mja13T1HBdmPChqFilSQXUW2fWXM_",
+            }
+        }
+
+        mock_client = MagicMock()
+        mock_client.jget.return_value = sample_service_orchestration_response
+        mock_get_client.return_value = mock_client
+
+        result = get_event_orchestration_service("PC2D9ML")
+
+        mock_client.jget.assert_called_once_with("/event_orchestrations/services/PC2D9ML")
+
+        self.assertIsInstance(result, EventOrchestrationService)
+        self.assertIsNotNone(result.orchestration_path)
+        self.assertEqual(result.orchestration_path.type, "service")
+        self.assertEqual(result.orchestration_path.parent.id, "PC2D9ML")
+        self.assertEqual(result.orchestration_path.parent.type, "service_reference")
+        self.assertEqual(len(result.orchestration_path.sets), 1)
+        self.assertEqual(result.orchestration_path.sets[0].id, "start")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_get_event_orchestration_service_direct_response(self, mock_get_client):
+        """Test get_event_orchestration_service with direct response (no wrapper)."""
+        sample_direct_response = {
+            "type": "service",
+            "parent": {
+                "id": "PC2D9ML",
+                "self": "https://api.pagerduty.com/service/PC2D9ML",
+                "type": "service_reference",
+            },
+            "self": "https://api.pagerduty.com/event_orchestrations/service/PC2D9ML",
+            "sets": [
+                {
+                    "id": "start",
+                    "rules": [
+                        {
+                            "label": "Test rule",
+                            "id": "test123",
+                            "conditions": [],
+                            "actions": {"suppress": False},
+                        }
+                    ],
+                }
+            ],
+            "catch_all": {"actions": {"suppress": True}},
+            "created_at": "2021-11-18T16:42:01Z",
+            "created_by": self.sample_user,
+            "updated_at": "2021-11-18T16:42:01Z",
+            "updated_by": self.sample_user,
+            "version": "version123",
+        }
+
+        mock_client = MagicMock()
+        mock_client.jget.return_value = sample_direct_response
+        mock_get_client.return_value = mock_client
+
+        result = get_event_orchestration_service("PC2D9ML")
+
+        self.assertIsInstance(result, EventOrchestrationService)
+        self.assertEqual(result.orchestration_path.type, "service")
+        self.assertEqual(result.orchestration_path.parent.id, "PC2D9ML")
+
+    def test_event_orchestration_service_model_validation(self):
+        """Test EventOrchestrationService model validation."""
+        test_data = {
+            "orchestration_path": {
+                "type": "service",
+                "parent": {
+                    "id": "SERVICE123",
+                    "self": "https://api.pagerduty.com/service/SERVICE123",
+                    "type": "service_reference",
+                },
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "id": "rule1",
+                                "label": "Test Rule",
+                                "conditions": [{"expression": "event.severity matches 'critical'"}],
+                                "actions": {"priority": "P0IN2KQ", "suppress": False},
+                            }
+                        ],
+                    }
+                ],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        service_orch = EventOrchestrationService.model_validate(test_data)
+
+        self.assertEqual(service_orch.orchestration_path.type, "service")
+        self.assertEqual(service_orch.orchestration_path.parent.id, "SERVICE123")
+        self.assertEqual(len(service_orch.orchestration_path.sets), 1)
+        self.assertEqual(service_orch.orchestration_path.sets[0].rules[0].id, "rule1")
+
+    def test_event_orchestration_service_from_api_response_wrapped(self):
+        """Test EventOrchestrationService.from_api_response with wrapped response."""
+        wrapped_response = {
+            "orchestration_path": {
+                "type": "service",
+                "parent": {
+                    "id": "SERVICE123",
+                    "self": "https://api.pagerduty.com/service/SERVICE123",
+                    "type": "service_reference",
+                },
+                "sets": [{"id": "start", "rules": []}],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        service_orch = EventOrchestrationService.from_api_response(wrapped_response)
+
+        self.assertIsInstance(service_orch, EventOrchestrationService)
+        self.assertEqual(service_orch.orchestration_path.type, "service")
+        self.assertEqual(service_orch.orchestration_path.parent.id, "SERVICE123")
+
+    def test_event_orchestration_service_from_api_response_direct(self):
+        """Test EventOrchestrationService.from_api_response with direct response."""
+        direct_response = {
+            "type": "service",
+            "parent": {
+                "id": "SERVICE123",
+                "self": "https://api.pagerduty.com/service/SERVICE123",
+                "type": "service_reference",
+            },
+            "sets": [{"id": "start", "rules": []}],
+            "catch_all": {"actions": {"suppress": True}},
+        }
+
+        service_orch = EventOrchestrationService.from_api_response(direct_response)
+
+        self.assertIsInstance(service_orch, EventOrchestrationService)
+        self.assertEqual(service_orch.orchestration_path.type, "service")
+        self.assertEqual(service_orch.orchestration_path.parent.id, "SERVICE123")
+
+    # Tests for Global Orchestration
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_get_event_orchestration_global_success(self, mock_get_client):
+        """Test successful get_event_orchestration_global call with wrapped response."""
+        sample_global_orchestration_response = {
+            "orchestration_path": {
+                "type": "global",
+                "parent": {
+                    "id": "b02e973d-9620-4e0a-9edc-00fedf7d4694",
+                    "self": "https://api.pagerduty.com/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694",
+                    "type": "event_orchestration_reference",
+                },
+                "self": "https://api.pagerduty.com/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/global",
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "label": "Always apply some consistent event transformations",
+                                "id": "c91f72f3",
+                                "conditions": [],
+                                "actions": {
+                                    "variables": [
+                                        {
+                                            "name": "hostname",
+                                            "path": "event.component",
+                                            "value": "hostname: (.*)",
+                                            "type": "regex",
+                                        }
+                                    ],
+                                    "route_to": "step-two",
+                                },
+                            },
+                            {
+                                "label": "Drop all events from the very-noisy monitoring tool",
+                                "id": "1f6d9a33",
+                                "conditions": [{"expression": "event.source matches part 'very-noisy'"}],
+                                "actions": {"drop_event": True},
+                            },
+                        ],
+                    }
+                ],
+                "catch_all": {"actions": {"suppress": True}},
+                "created_at": "2021-11-18T16:42:01Z",
+                "created_by": self.sample_user,
+                "updated_at": "2021-11-18T16:42:01Z",
+                "updated_by": self.sample_user,
+                "version": "rn1Mja13T1HBdmPChqFilSQXUW2fWXM_",
+            }
+        }
+
+        mock_client = MagicMock()
+        mock_client.rget.return_value = sample_global_orchestration_response
+        mock_get_client.return_value = mock_client
+
+        result = get_event_orchestration_global("b02e973d-9620-4e0a-9edc-00fedf7d4694")
+
+        mock_client.rget.assert_called_once_with("/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/global")
+
+        self.assertIsInstance(result, EventOrchestrationGlobal)
+        self.assertIsNotNone(result.orchestration_path)
+        self.assertEqual(result.orchestration_path.type, "global")
+        self.assertEqual(result.orchestration_path.parent.id, "b02e973d-9620-4e0a-9edc-00fedf7d4694")
+        self.assertEqual(result.orchestration_path.parent.type, "event_orchestration_reference")
+        self.assertEqual(len(result.orchestration_path.sets), 1)
+        self.assertEqual(result.orchestration_path.sets[0].id, "start")
+        self.assertEqual(len(result.orchestration_path.sets[0].rules), 2)
+
+        # Test drop_event action which is unique to global orchestrations
+        drop_rule = result.orchestration_path.sets[0].rules[1]
+        self.assertEqual(drop_rule.label, "Drop all events from the very-noisy monitoring tool")
+        self.assertTrue(drop_rule.actions.drop_event)
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_get_event_orchestration_global_direct_response(self, mock_get_client):
+        """Test get_event_orchestration_global with direct response (no wrapper)."""
+        sample_direct_response = {
+            "type": "global",
+            "parent": {
+                "id": "GLOBAL123",
+                "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123",
+                "type": "event_orchestration_reference",
+            },
+            "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123/global",
+            "sets": [
+                {
+                    "id": "start",
+                    "rules": [
+                        {
+                            "label": "Test rule with drop_event",
+                            "id": "drop_rule",
+                            "conditions": [{"expression": "event.source matches 'spam'"}],
+                            "actions": {"drop_event": True},
+                        }
+                    ],
+                }
+            ],
+            "catch_all": {"actions": {"suppress": False}},
+            "created_at": "2021-11-18T16:42:01Z",
+            "updated_at": "2021-11-18T16:42:01Z",
+            "version": "version456",
+        }
+
+        mock_client = MagicMock()
+        mock_client.rget.return_value = sample_direct_response
+        mock_get_client.return_value = mock_client
+
+        result = get_event_orchestration_global("GLOBAL123")
+
+        self.assertIsInstance(result, EventOrchestrationGlobal)
+        self.assertEqual(result.orchestration_path.type, "global")
+        self.assertEqual(result.orchestration_path.parent.id, "GLOBAL123")
+
+    def test_event_orchestration_global_model_validation(self):
+        """Test EventOrchestrationGlobal model validation."""
+        test_data = {
+            "orchestration_path": {
+                "type": "global",
+                "parent": {
+                    "id": "GLOBAL123",
+                    "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "id": "rule1",
+                                "label": "Drop noisy events",
+                                "conditions": [{"expression": "event.source matches 'noisy'"}],
+                                "actions": {"drop_event": True},
+                            }
+                        ],
+                    }
+                ],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        global_orch = EventOrchestrationGlobal.model_validate(test_data)
+
+        self.assertEqual(global_orch.orchestration_path.type, "global")
+        self.assertEqual(global_orch.orchestration_path.parent.id, "GLOBAL123")
+        self.assertEqual(len(global_orch.orchestration_path.sets), 1)
+        self.assertEqual(global_orch.orchestration_path.sets[0].rules[0].id, "rule1")
+        self.assertTrue(global_orch.orchestration_path.sets[0].rules[0].actions.drop_event)
+
+    def test_event_orchestration_global_from_api_response_wrapped(self):
+        """Test EventOrchestrationGlobal.from_api_response with wrapped response."""
+        wrapped_response = {
+            "orchestration_path": {
+                "type": "global",
+                "parent": {
+                    "id": "GLOBAL123",
+                    "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [{"id": "start", "rules": []}],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        global_orch = EventOrchestrationGlobal.from_api_response(wrapped_response)
+
+        self.assertIsInstance(global_orch, EventOrchestrationGlobal)
+        self.assertEqual(global_orch.orchestration_path.type, "global")
+        self.assertEqual(global_orch.orchestration_path.parent.id, "GLOBAL123")
+
+    def test_event_orchestration_global_from_api_response_direct(self):
+        """Test EventOrchestrationGlobal.from_api_response with direct response."""
+        direct_response = {
+            "type": "global",
+            "parent": {
+                "id": "GLOBAL123",
+                "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123",
+                "type": "event_orchestration_reference",
+            },
+            "sets": [{"id": "start", "rules": []}],
+            "catch_all": {"actions": {"suppress": True}},
+        }
+
+        global_orch = EventOrchestrationGlobal.from_api_response(direct_response)
+
+        self.assertIsInstance(global_orch, EventOrchestrationGlobal)
+        self.assertEqual(global_orch.orchestration_path.type, "global")
+        self.assertEqual(global_orch.orchestration_path.parent.id, "GLOBAL123")
 
 
 if __name__ == "__main__":

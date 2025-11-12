@@ -17,9 +17,16 @@ from .escalation_policies import (
 from .event_orchestrations import (
     append_event_orchestration_router_rule,
     get_event_orchestration,
+    get_event_orchestration_global,
     get_event_orchestration_router,
+    get_event_orchestration_service,
     list_event_orchestrations,
     update_event_orchestration_router,
+)
+from .incident_workflows import (
+    get_incident_workflow,
+    list_incident_workflows,
+    start_incident_workflow,
 )
 from .incidents import (
     add_note_to_incident,
@@ -45,6 +52,16 @@ from .services import (
     list_services,
     update_service,
 )
+from .status_pages import (
+    create_status_page_post,
+    create_status_page_post_update,
+    get_status_page_post,
+    list_status_page_impacts,
+    list_status_page_post_updates,
+    list_status_page_severities,
+    list_status_page_statuses,
+    list_status_pages,
+)
 from .teams import (
     add_team_member,
     create_team,
@@ -68,6 +85,9 @@ read_tools = [
     get_outlier_incident,
     get_past_incidents,
     get_related_incidents,
+    # Incident Workflows
+    list_incident_workflows,
+    get_incident_workflow,
     # Services
     list_services,
     get_service,
@@ -91,6 +111,15 @@ read_tools = [
     list_event_orchestrations,
     get_event_orchestration,
     get_event_orchestration_router,
+    get_event_orchestration_service,
+    get_event_orchestration_global,
+    # Status Pages
+    list_status_pages,
+    list_status_page_severities,
+    list_status_page_impacts,
+    list_status_page_statuses,
+    get_status_page_post,
+    list_status_page_post_updates,
 ]
 
 # Write tools (potentially dangerous operations that modify state)
@@ -104,6 +133,8 @@ write_tools = [
     manage_incidents,
     add_responders,
     add_note_to_incident,
+    # Incident Workflows
+    start_incident_workflow,
     # Services
     create_service,
     update_service,
@@ -118,6 +149,9 @@ write_tools = [
     # Event Orchestrations
     update_event_orchestration_router,
     append_event_orchestration_router_rule,
+    # Status Pages
+    create_status_page_post,
+    create_status_page_post_update,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

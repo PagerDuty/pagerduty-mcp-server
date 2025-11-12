@@ -17,8 +17,8 @@ class StatusPage(BaseModel):
     published_at: datetime | None = Field(
         default=None, description="The date time moment when a Status Page was published to be publicly available"
     )
-    status_page_type: Literal["public", "private"] = Field(
-        description="The type of Status Pages - public is accessible to everyone or private requiring authentication"
+    status_page_type: Literal["public", "private", "audience_specific"] = Field(
+        description="The type of Status Pages - public is accessible to everyone, private requiring authentication, or audience_specific for targeted audiences"
     )
     url: str = Field(description="The URL from which the Status Page can be accessed on the internet")
 
@@ -29,7 +29,7 @@ class StatusPage(BaseModel):
 
 
 class StatusPageQuery(BaseModel):
-    status_page_type: Literal["public", "private"] | None = Field(
+    status_page_type: Literal["public", "private", "audience_specific"] | None = Field(
         default=None, description="Filter by the type of the Status Page"
     )
     limit: int | None = Field(
@@ -296,17 +296,15 @@ class StatusPagePostUpdateRequestWrapper(BaseModel):
 class StatusPagePostCreateRequest(BaseModel):
     title: str = Field(description="The title given to a Post")
     post_type: Literal["incident", "maintenance"] = Field(description="The type of the Post")
-    starts_at: datetime | None = Field(
-        default=None, description="The date and time the Post intent becomes effective - only for maintenance post type"
+    starts_at: datetime = Field(
+        description="The date and time the Post intent becomes effective (required for both incident and maintenance posts)"
     )
-    ends_at: datetime | None = Field(
-        default=None, description="The date and time the Post intent is concluded - only for maintenance post type"
+    ends_at: datetime = Field(
+        description="The date and time the Post intent is concluded (required for both incident and maintenance posts)"
     )
-    updates: list[StatusPagePostUpdateRequest] | None = Field(
-        default=None,
+    updates: list[StatusPagePostUpdateRequest] = Field(
         description=(
-            "Post Updates to be associated with a Post "
-            "(optional - can be added later via create_status_page_post_update)"
+            "Post Updates to be associated with a Post. At least one update is required when creating a post."
         ),
     )
     status_page: StatusPageReference | None = Field(

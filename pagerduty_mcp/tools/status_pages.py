@@ -57,10 +57,9 @@ def list_status_page_severities(
 
     response = paginate(
         client=get_client(),
-        entity="severities",
+        entity=f"/status_pages/{status_page_id}/severities",
         params=params,
         maximum_records=query_model.limit or 100,
-        base_url=f"/status_pages/{status_page_id}",
     )
 
     severities = [StatusPageSeverity(**item) for item in response]
@@ -83,10 +82,9 @@ def list_status_page_impacts(
 
     response = paginate(
         client=get_client(),
-        entity="impacts",
+        entity=f"/status_pages/{status_page_id}/impacts",
         params=params,
         maximum_records=query_model.limit or 100,
-        base_url=f"/status_pages/{status_page_id}",
     )
 
     impacts = [StatusPageImpact(**item) for item in response]
@@ -109,10 +107,9 @@ def list_status_page_statuses(
 
     response = paginate(
         client=get_client(),
-        entity="statuses",
+        entity=f"/status_pages/{status_page_id}/statuses",
         params=params,
         maximum_records=query_model.limit or 100,
-        base_url=f"/status_pages/{status_page_id}",
     )
 
     statuses = [StatusPageStatus(**item) for item in response]
@@ -123,22 +120,22 @@ def create_status_page_post(status_page_id: str, create_model: StatusPagePostCre
     """Create a Post for a Status Page by Status Page ID.
 
     This tool creates a new post (incident or maintenance) on a status page.
-    For maintenance posts, you can specify a simple post with just title, post_type,
-    starts_at, and ends_at. Updates can be added later using create_status_page_post_update.
+    According to the PagerDuty API, all posts require starts_at, ends_at, and at least one update.
 
     Args:
         status_page_id: The ID of the Status Page
-        create_model: The post creation request. At minimum, must include:
+        create_model: The post creation request. Must include:
             - post.title: The title of the post
             - post.post_type: Either "incident" or "maintenance"
-            - post.starts_at: Start time (for maintenance posts)
-            - post.ends_at: End time (for maintenance posts)
+            - post.starts_at: When the post becomes effective (required)
+            - post.ends_at: When the post is concluded (required)
+            - post.updates: List of at least one post update with message, status, severity, etc.
 
     Returns:
         The created StatusPagePost
     """
     response = get_client().rpost(
-        f"/status_pages/{status_page_id}/posts", json=create_model.model_dump(exclude_none=True)
+        f"/status_pages/{status_page_id}/posts", json=create_model.model_dump(mode="json", exclude_none=True)
     )
 
     return StatusPagePost.from_api_response(response)
@@ -185,7 +182,7 @@ def create_status_page_post_update(
     """
     response = get_client().rpost(
         f"/status_pages/{status_page_id}/posts/{post_id}/post_updates",
-        json=create_model.model_dump(exclude_none=True),
+        json=create_model.model_dump(mode="json", exclude_none=True),
     )
 
     return StatusPagePostUpdate.from_api_response(response)
@@ -208,10 +205,9 @@ def list_status_page_post_updates(
 
     response = paginate(
         client=get_client(),
-        entity="post_updates",
+        entity=f"/status_pages/{status_page_id}/posts/{post_id}/post_updates",
         params=params,
         maximum_records=query_model.limit or 100,
-        base_url=f"/status_pages/{status_page_id}/posts/{post_id}",
     )
 
     post_updates = [StatusPagePostUpdate(**item) for item in response]

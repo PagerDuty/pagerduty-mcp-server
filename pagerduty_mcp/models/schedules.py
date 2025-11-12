@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import TeamReference, UserReference
@@ -60,8 +60,29 @@ class Schedule(BaseModel):
     def type(self) -> Literal["schedule"]:
         return "schedule"
 
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any]) -> "Schedule":
+        """Create Schedule from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Wrapped: {"schedule": {...}}
+        - Direct: {...} (schedule data directly)
+
+        Args:
+            response_data: The API response data
+
+        Returns:
+            Schedule instance
+        """
+        if isinstance(response_data, dict) and "schedule" in response_data:
+            return cls.model_validate(response_data["schedule"])
+
+        return cls.model_validate(response_data)
+
 
 class ScheduleQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     query: str | None = Field(description="Filter schedules by name or description", default=None)
     team_ids: list[str] | None = Field(description="Filter schedules by team IDs", default=None)
     user_ids: list[str] | None = Field(description="Filter schedules by user IDs", default=None)
@@ -102,19 +123,12 @@ class ScheduleOverrideCreate(BaseModel):
 
 
 class ScheduleLayerRestriction(BaseModel):
-    """Represents a restriction on a schedule layer.
-
-    Note: The PagerDuty API requires a start_day_of_week value for ALL restrictions,
-    even for daily_restriction type. We default to 1 (Monday) when not specified.
-    Values follow ISO-8601 convention: 1=Monday through 7=Sunday.
-    """
-
     type: str = Field(description="The type of restriction (daily_restriction or weekly_restriction)")
     start_time_of_day: str = Field(description="The time of day when the restriction starts (HH:MM:SS)")
     duration_seconds: int = Field(description="The duration of the restriction in seconds")
     start_day_of_week: int = Field(
-        default=1,  # Default to Monday (1)
-        description="The day of week the restriction starts (1=Monday, 7=Sunday, ISO-8601). Required for all types.",
+        default=1,
+        description="The day of week the restriction starts (1=Monday, 7=Sunday, ISO-8601)",
     )
 
 
@@ -141,25 +155,12 @@ class ScheduleLayerCreate(BaseModel):
 
 
 class ScheduleCreateData(BaseModel):
-    """Schedule data for create/update operations.
-
-    Required fields:
-    - name: Schedule name
-    - time_zone: IANA timezone name (e.g., 'America/New_York', 'Europe/London')
-    - schedule_layers: List of rotation layers (can be empty list to preserve existing layers during update)
-
-    Optional fields:
-    - description: Human-readable description
-    """
-
-    name: str = Field(description="The name of the schedule. REQUIRED.")
+    name: str = Field(description="The name of the schedule")
     time_zone: str = Field(
-        description="The time zone of the schedule using IANA timezone format (e.g., 'America/New_York'). REQUIRED."
+        description="The time zone of the schedule using IANA timezone format (e.g., 'America/New_York')"
     )
-    description: str | None = Field(default=None, description="The description of the schedule. OPTIONAL.")
-    schedule_layers: list[ScheduleLayerCreate] = Field(
-        description="A list of schedule layers. REQUIRED. Use empty list [] to preserve existing layers during update."
-    )
+    description: str | None = Field(default=None, description="The description of the schedule")
+    schedule_layers: list[ScheduleLayerCreate] = Field(description="A list of schedule layers")
     type: Literal["schedule"] = "schedule"
 
 
@@ -170,21 +171,5 @@ class ScheduleCreateRequest(BaseModel):
 
 
 class ScheduleUpdateRequest(BaseModel):
-    """Request model for updating a PagerDuty schedule.
-
-    The schedule field is required and must contain at minimum:
-    - name: The schedule name
-    - time_zone: The schedule timezone (e.g., 'America/New_York')
-    - schedule_layers: List of schedule layers (can be empty to preserve existing layers)
-
-    Example minimal update (preserving layers):
-        {"schedule": {"name": "My Schedule", "time_zone": "America/New_York", "schedule_layers": []}}
-    """
-
-    schedule: ScheduleCreateData = Field(
-        description="The updated schedule data. REQUIRED. Must include name, time_zone, and schedule_layers fields.",
-    )
-    id: str | None = Field(
-        default=None,
-        description="The ID of the schedule to update (optional if provided in path)",
-    )
+    schedule: ScheduleCreateData = Field(description="The updated schedule data")
+    id: str | None = Field(default=None, description="The ID of the schedule to update (optional if provided in path)")

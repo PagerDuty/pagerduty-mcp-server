@@ -18,7 +18,10 @@ class StatusPage(BaseModel):
         default=None, description="The date time moment when a Status Page was published to be publicly available"
     )
     status_page_type: Literal["public", "private", "audience_specific"] = Field(
-        description="The type of Status Pages - public is accessible to everyone, private requiring authentication, or audience_specific for targeted audiences"
+        description=(
+            "The type of Status Pages - public is accessible to everyone, "
+            "private requiring authentication, or audience_specific for targeted audiences"
+        )
     )
     url: str = Field(description="The URL from which the Status Page can be accessed on the internet")
 
@@ -261,24 +264,24 @@ class StatusPagePost(BaseModel):
 
 class StatusPagePostUpdateRequest(BaseModel):
     message: str = Field(description="The message of the Post Update")
-    status: StatusPageStatusReference | None = Field(
-        default=None, description="Status Page Status reference (optional for simple updates)"
+    status: StatusPageStatusReference = Field(
+        description="Status Page Status reference (required when creating posts)"
     )
-    severity: StatusPageSeverityReference | None = Field(
-        default=None, description="Status Page Severity reference (optional for simple updates)"
+    severity: StatusPageSeverityReference = Field(
+        description="Status Page Severity reference (required when creating posts)"
     )
-    impacted_services: list[StatusPagePostUpdateImpact] | None = Field(
-        default=None,
+    impacted_services: list[StatusPagePostUpdateImpact] = Field(
+        default_factory=list,
         description=(
-            "Impacted services represent the status page services affected by a post update "
-            "(optional for simple updates)"
+            "Impacted services represent the status page services affected by a post update. "
+            "Can be empty list if no services are impacted."
         ),
     )
     update_frequency_ms: int | None = Field(
-        default=None, description="The frequency of the next Post Update in milliseconds"
+        default=None, description="The frequency of the next Post Update in milliseconds. Use null for no frequency."
     )
-    notify_subscribers: bool | None = Field(
-        default=None, description="Determines if the subscribers should be notified of the Post Update"
+    notify_subscribers: bool = Field(
+        default=False, description="Determines if the subscribers should be notified of the Post Update"
     )
     reported_at: datetime | None = Field(default=None, description="The date and time the Post Update was reported")
     post: StatusPagePostReference | None = Field(default=None, description="Status Page Post reference")
@@ -297,7 +300,10 @@ class StatusPagePostCreateRequest(BaseModel):
     title: str = Field(description="The title given to a Post")
     post_type: Literal["incident", "maintenance"] = Field(description="The type of the Post")
     starts_at: datetime = Field(
-        description="The date and time the Post intent becomes effective (required for both incident and maintenance posts)"
+        description=(
+            "The date and time the Post intent becomes effective "
+            "(required for both incident and maintenance posts)"
+        )
     )
     ends_at: datetime = Field(
         description="The date and time the Post intent is concluded (required for both incident and maintenance posts)"
@@ -307,8 +313,8 @@ class StatusPagePostCreateRequest(BaseModel):
             "Post Updates to be associated with a Post. At least one update is required when creating a post."
         ),
     )
-    status_page: StatusPageReference | None = Field(
-        default=None, description="Status Page reference (optional - inferred from status_page_id parameter)"
+    status_page: StatusPageReference = Field(
+        description="Status Page reference"
     )
 
     @computed_field

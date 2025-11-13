@@ -1,6 +1,6 @@
 [project]
 name = "pagerduty-mcp"
-version = "0.9.1"
+version = "0.9.2"
 description = "PagerDuty's official local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account directly from your MCP-enabled client."
 readme = "README.md"
 requires-python = "~=3.12.0"

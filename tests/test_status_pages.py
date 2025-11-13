@@ -455,6 +455,7 @@ class TestStatusPagesTools(unittest.TestCase):
             starts_at=datetime(2023, 12, 12, 11, 0, 0),
             ends_at=datetime(2023, 12, 12, 12, 0, 0),
             updates=[update],
+            status_page=StatusPageReference(id="P3E5S5D"),
         )
 
         wrapper = StatusPagePostCreateRequestWrapper(post=post_request)
@@ -473,7 +474,7 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIn("updates", json_data["post"])
         self.assertIn("starts_at", json_data["post"])
         self.assertIn("ends_at", json_data["post"])
-        self.assertNotIn("status_page", json_data["post"])
+        self.assertIn("status_page", json_data["post"])
 
         # Verify datetime fields are serialized as strings (not datetime objects)
         self.assertIsInstance(json_data["post"]["starts_at"], str, "starts_at must be serialized as ISO string")
@@ -483,12 +484,17 @@ class TestStatusPagesTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.status_pages.get_client")
     def test_create_status_page_post_update_simple_message(self, mock_get_client):
-        """Test creating a simple post update with only a message."""
+        """Test creating a post update with required fields and minimal optional fields."""
         mock_client = Mock()
         mock_client.rpost.return_value = {"post_update": self.sample_post_update_data}
         mock_get_client.return_value = mock_client
 
-        update_request = StatusPagePostUpdateRequest(message="Work in progress")
+        update_request = StatusPagePostUpdateRequest(
+            message="Work in progress",
+            status=StatusPageStatusReference(id="P0400H4"),
+            severity=StatusPageSeverityReference(id="PY5OM08"),
+            post=StatusPagePostReference(id="P6F2CJ3"),
+        )
 
         wrapper = StatusPagePostUpdateRequestWrapper(post_update=update_request)
         result = create_status_page_post_update("PR5LMML", "P6F2CJ3", wrapper)
@@ -500,10 +506,10 @@ class TestStatusPagesTools(unittest.TestCase):
         call_args = mock_client.rpost.call_args
         json_data = call_args.kwargs["json"]
         self.assertEqual(json_data["post_update"]["message"], "Work in progress")
-        self.assertNotIn("status", json_data["post_update"])
-        self.assertNotIn("severity", json_data["post_update"])
-        self.assertNotIn("impacted_services", json_data["post_update"])
-        self.assertNotIn("notify_subscribers", json_data["post_update"])
+        self.assertIn("status", json_data["post_update"])
+        self.assertIn("severity", json_data["post_update"])
+        self.assertEqual(json_data["post_update"]["notify_subscribers"], False)
+        self.assertEqual(json_data["post_update"]["impacted_services"], [])
 
     @patch("pagerduty_mcp.tools.status_pages.get_client")
     def test_create_status_page_post_update_with_reported_at(self, mock_get_client):
@@ -514,7 +520,11 @@ class TestStatusPagesTools(unittest.TestCase):
 
         reported_time = datetime(2023, 12, 12, 14, 30, 0)
         update_request = StatusPagePostUpdateRequest(
-            message="Issue has been resolved", reported_at=reported_time
+            message="Issue has been resolved",
+            status=StatusPageStatusReference(id="P0400H4"),
+            severity=StatusPageSeverityReference(id="PY5OM08"),
+            post=StatusPagePostReference(id="P6F2CJ3"),
+            reported_at=reported_time,
         )
 
         wrapper = StatusPagePostUpdateRequestWrapper(post_update=update_request)

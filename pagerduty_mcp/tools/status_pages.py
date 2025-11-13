@@ -135,7 +135,7 @@ def create_status_page_post(status_page_id: str, create_model: StatusPagePostCre
         The created StatusPagePost
     """
     response = get_client().rpost(
-        f"/status_pages/{status_page_id}/posts", json=create_model.model_dump(mode="json", exclude_none=True)
+        f"/status_pages/{status_page_id}/posts", json=create_model.model_dump(mode="json")
     )
 
     return StatusPagePost.from_api_response(response)
@@ -163,26 +163,27 @@ def create_status_page_post_update(
 ) -> StatusPagePostUpdate:
     """Create a Post Update for a Post by Post ID.
 
-    This tool adds a new update to an existing status page post. You can create
-    simple text updates with just a message, or more detailed updates that include
-    status, severity, and impacted services information.
+    This tool adds a new update to an existing status page post.
 
     Args:
         status_page_id: The ID of the Status Page
         post_id: The ID of the Status Page Post
-        create_model: The post update creation request. At minimum, must include:
+        create_model: The post update creation request. Must include:
             - post_update.message: The message text for the update
-            Optional fields for detailed updates:
-            - post_update.status: Status reference (e.g., "investigating", "resolved")
-            - post_update.severity: Severity reference (e.g., "minor", "major")
-            - post_update.impacted_services: List of impacted services and their impact levels
+            - post_update.status: Status reference (required)
+            - post_update.severity: Severity reference (required)
+            - post_update.post: Post reference (required)
+            Optional fields with defaults:
+            - post_update.impacted_services: List of impacted services (defaults to empty list)
+            - post_update.notify_subscribers: Whether to notify subscribers (defaults to False)
+            - post_update.update_frequency_ms: Update frequency in milliseconds (defaults to null)
 
     Returns:
         The created StatusPagePostUpdate
     """
     response = get_client().rpost(
         f"/status_pages/{status_page_id}/posts/{post_id}/post_updates",
-        json=create_model.model_dump(mode="json", exclude_none=True),
+        json=create_model.model_dump(mode="json"),
     )
 
     return StatusPagePostUpdate.from_api_response(response)

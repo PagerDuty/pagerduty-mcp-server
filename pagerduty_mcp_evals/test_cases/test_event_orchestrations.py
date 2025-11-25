@@ -1,6 +1,6 @@
 """Tests for event-orchestrations-related competency questions."""
 
-from .competency_test import CompetencyTest, MockedMCPServer
+from pagerduty_mcp_evals.test_cases.competency_test import CompetencyTest
 
 
 class EventOrchestrationsCompetencyTest(CompetencyTest):
@@ -19,14 +19,18 @@ class EventOrchestrationsCompetencyTest(CompetencyTest):
                         "name": "Main Event Orchestration",
                         "description": "Primary orchestration for routing events",
                         "team": {"id": "TEAM123", "name": "Platform Team"},
-                        "integrations": [{"id": "INTG123", "name": "Datadog Integration"}],
+                        "integrations": [
+                            {"id": "INTG123", "name": "Datadog Integration"}
+                        ],
                     },
                     {
                         "id": "ORCH456",
                         "name": "Critical Services Orchestration",
                         "description": "Orchestration for critical service events",
                         "team": {"id": "TEAM456", "name": "SRE Team"},
-                        "integrations": [{"id": "INTG456", "name": "Nagios Integration"}],
+                        "integrations": [
+                            {"id": "INTG456", "name": "Nagios Integration"}
+                        ],
                     },
                 ]
             },
@@ -61,13 +65,21 @@ class EventOrchestrationsCompetencyTest(CompetencyTest):
                                 {
                                     "id": "RULE001",
                                     "label": "Critical Events",
-                                    "conditions": [{"expression": "event.severity matches 'critical'"}],
+                                    "conditions": [
+                                        {
+                                            "expression": "event.severity matches 'critical'"
+                                        }
+                                    ],
                                     "actions": {"route_to": "SVCORCH001"},
                                 },
                                 {
                                     "id": "RULE002",
                                     "label": "Warning Events",
-                                    "conditions": [{"expression": "event.severity matches 'warning'"}],
+                                    "conditions": [
+                                        {
+                                            "expression": "event.severity matches 'warning'"
+                                        }
+                                    ],
                                     "actions": {"route_to": "SVCORCH002"},
                                 },
                             ],
@@ -92,7 +104,9 @@ class EventOrchestrationsCompetencyTest(CompetencyTest):
                                 {
                                     "id": "RULE003",
                                     "label": "High Severity Events",
-                                    "conditions": [{"expression": "event.severity matches 'high'"}],
+                                    "conditions": [
+                                        {"expression": "event.severity matches 'high'"}
+                                    ],
                                     "actions": {"route_to": "SVCORCH003"},
                                 }
                             ],
@@ -117,7 +131,11 @@ class EventOrchestrationsCompetencyTest(CompetencyTest):
                                 {
                                     "id": "RULE001",
                                     "label": "Critical Events",
-                                    "conditions": [{"expression": "event.severity matches 'critical'"}],
+                                    "conditions": [
+                                        {
+                                            "expression": "event.severity matches 'critical'"
+                                        }
+                                    ],
                                     "actions": {
                                         "route_to": "SVCORCH999"  # Updated to match the expected change
                                     },
@@ -144,13 +162,21 @@ class EventOrchestrationsCompetencyTest(CompetencyTest):
                                 {
                                     "id": "RULE001",
                                     "label": "Critical Events",
-                                    "conditions": [{"expression": "event.severity matches 'critical'"}],
+                                    "conditions": [
+                                        {
+                                            "expression": "event.severity matches 'critical'"
+                                        }
+                                    ],
                                     "actions": {"route_to": "SVCORCH001"},
                                 },
                                 {
                                     "id": "RULE003",
                                     "label": "New Rule",
-                                    "conditions": [{"expression": "event.component matches 'database'"}],
+                                    "conditions": [
+                                        {
+                                            "expression": "event.component matches 'database'"
+                                        }
+                                    ],
                                     "actions": {"route_to": "SVCORCH003"},
                                 },
                             ],
@@ -167,7 +193,12 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
     # Basic listing tests
     EventOrchestrationsCompetencyTest(
         query="Show all event orchestrations in PagerDuty",
-        expected_tools=[{"tool_name": "list_event_orchestrations", "parameters": {"query_model": {}}}],
+        expected_tools=[
+            {
+                "tool_name": "list_event_orchestrations",
+                "parameters": {"query_model": {}},
+            }
+        ],
         description="Basic event orchestrations listing",
     ),
     EventOrchestrationsCompetencyTest(
@@ -193,28 +224,50 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
     # Get specific event orchestration tests
     EventOrchestrationsCompetencyTest(
         query="Get details for event orchestration ORCH123",
-        expected_tools=[{"tool_name": "get_event_orchestration", "parameters": {"orchestration_id": "ORCH123"}}],
+        expected_tools=[
+            {
+                "tool_name": "get_event_orchestration",
+                "parameters": {"orchestration_id": "ORCH123"},
+            }
+        ],
         description="Get specific event orchestration by ID",
     ),
     EventOrchestrationsCompetencyTest(
         query="Tell me about the Main Event Orchestration",
         expected_tools=[
-            {"tool_name": "list_event_orchestrations", "parameters": {"query_model": {}}},
-            {"tool_name": "get_event_orchestration", "parameters": {"orchestration_id": "ORCH123"}},
+            {
+                "tool_name": "list_event_orchestrations",
+                "parameters": {"query_model": {}},
+            },
+            {
+                "tool_name": "get_event_orchestration",
+                "parameters": {"orchestration_id": "ORCH123"},
+            },
         ],
         description="Get event orchestration by name (requires lookup)",
     ),
     # Router configuration tests
     EventOrchestrationsCompetencyTest(
         query="Show me the router configuration for event orchestration ORCH123",
-        expected_tools=[{"tool_name": "get_event_orchestration_router", "parameters": {"orchestration_id": "ORCH123"}}],
+        expected_tools=[
+            {
+                "tool_name": "get_event_orchestration_router",
+                "parameters": {"orchestration_id": "ORCH123"},
+            }
+        ],
         description="Get event orchestration router configuration",
     ),
     EventOrchestrationsCompetencyTest(
         query="What are the routing rules for the Main Event Orchestration?",
         expected_tools=[
-            {"tool_name": "list_event_orchestrations", "parameters": {"query_model": {}}},
-            {"tool_name": "get_event_orchestration_router", "parameters": {"orchestration_id": "ORCH123"}},
+            {
+                "tool_name": "list_event_orchestrations",
+                "parameters": {"query_model": {}},
+            },
+            {
+                "tool_name": "get_event_orchestration_router",
+                "parameters": {"orchestration_id": "ORCH123"},
+            },
         ],
         description="Get router configuration by orchestration name (requires lookup)",
     ),
@@ -225,7 +278,10 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
             "service orchestration SVCORCH999"
         ),
         expected_tools=[
-            {"tool_name": "get_event_orchestration_router", "parameters": {"orchestration_id": "ORCH123"}},
+            {
+                "tool_name": "get_event_orchestration_router",
+                "parameters": {"orchestration_id": "ORCH123"},
+            },
             {
                 "tool_name": "update_event_orchestration_router",
                 "parameters": {
@@ -240,13 +296,21 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
                                         {
                                             "id": "RULE001",
                                             "label": "Critical Events",
-                                            "conditions": [{"expression": "event.severity matches 'critical'"}],
+                                            "conditions": [
+                                                {
+                                                    "expression": "event.severity matches 'critical'"
+                                                }
+                                            ],
                                             "actions": {"route_to": "SVCORCH999"},
                                         },
                                         {
                                             "id": "RULE002",
                                             "label": "Warning Events",
-                                            "conditions": [{"expression": "event.severity matches 'warning'"}],
+                                            "conditions": [
+                                                {
+                                                    "expression": "event.severity matches 'warning'"
+                                                }
+                                            ],
                                             "actions": {"route_to": "SVCORCH002"},
                                         },
                                     ],
@@ -282,7 +346,10 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
             "and route them to SVCORCH999"
         ),
         expected_tools=[
-            {"tool_name": "list_event_orchestrations", "parameters": {"query_model": {}}},
+            {
+                "tool_name": "list_event_orchestrations",
+                "parameters": {"query_model": {}},
+            },
             {
                 "tool_name": "append_event_orchestration_router_rule",
                 "parameters": {
@@ -296,37 +363,68 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
     EventOrchestrationsCompetencyTest(
         query="Show me all event orchestrations and then get the router configuration for the first one",
         expected_tools=[
-            {"tool_name": "list_event_orchestrations", "parameters": {"query_model": {}}},
-            {"tool_name": "get_event_orchestration_router", "parameters": {"orchestration_id": "ORCH123"}},
+            {
+                "tool_name": "list_event_orchestrations",
+                "parameters": {"query_model": {}},
+            },
+            {
+                "tool_name": "get_event_orchestration_router",
+                "parameters": {"orchestration_id": "ORCH123"},
+            },
         ],
         description="Multi-step workflow: list orchestrations then get router config",
     ),
     EventOrchestrationsCompetencyTest(
         query="Find the Critical Services Orchestration and show me its routing rules",
         expected_tools=[
-            {"tool_name": "list_event_orchestrations", "parameters": {"query_model": {}}},
-            {"tool_name": "get_event_orchestration_router", "parameters": {"orchestration_id": "ORCH456"}},
+            {
+                "tool_name": "list_event_orchestrations",
+                "parameters": {"query_model": {}},
+            },
+            {
+                "tool_name": "get_event_orchestration_router",
+                "parameters": {"orchestration_id": "ORCH456"},
+            },
         ],
         description="Complex workflow: find orchestration by name and get its router config",
     ),
     # Error handling scenarios
     EventOrchestrationsCompetencyTest(
         query="Get event orchestration with ID NONEXISTENT123",
-        expected_tools=[{"tool_name": "get_event_orchestration", "parameters": {"orchestration_id": "NONEXISTENT123"}}],
+        expected_tools=[
+            {
+                "tool_name": "get_event_orchestration",
+                "parameters": {"orchestration_id": "NONEXISTENT123"},
+            }
+        ],
         description="Handle non-existent event orchestration ID",
     ),
     # Edge cases
     EventOrchestrationsCompetencyTest(
         query="How many event orchestrations do we have?",
-        expected_tools=[{"tool_name": "list_event_orchestrations", "parameters": {"query_model": {}}}],
+        expected_tools=[
+            {
+                "tool_name": "list_event_orchestrations",
+                "parameters": {"query_model": {}},
+            }
+        ],
         description="Count event orchestrations (requires listing all)",
     ),
     EventOrchestrationsCompetencyTest(
         query="Which event orchestration has the most routing rules?",
         expected_tools=[
-            {"tool_name": "list_event_orchestrations", "parameters": {"query_model": {}}},
-            {"tool_name": "get_event_orchestration_router", "parameters": {"orchestration_id": "ORCH123"}},
-            {"tool_name": "get_event_orchestration_router", "parameters": {"orchestration_id": "ORCH456"}},
+            {
+                "tool_name": "list_event_orchestrations",
+                "parameters": {"query_model": {}},
+            },
+            {
+                "tool_name": "get_event_orchestration_router",
+                "parameters": {"orchestration_id": "ORCH123"},
+            },
+            {
+                "tool_name": "get_event_orchestration_router",
+                "parameters": {"orchestration_id": "ORCH456"},
+            },
         ],
         description="Complex analysis requiring multiple router config lookups",
     ),

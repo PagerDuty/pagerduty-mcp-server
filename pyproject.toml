@@ -12,6 +12,7 @@ dependencies = [
 
 [project.scripts]
 pagerduty-mcp = "pagerduty_mcp.__main__:main"
+pagerduty-mcp-evals = "pagerduty_mcp_evals.__main__:main"
 
 [tool.pyright]
 include = ["app"]

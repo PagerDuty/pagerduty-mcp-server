@@ -1,11 +1,20 @@
 """Common test fixtures for MCP tool call evaluation."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from typing import Any
 
+from attr import dataclass
 from deepdiff import DeepDiff
 
 from .mcp_tool_tracer import MockedMCPServer
+
+
+@dataclass
+class MockMCPToolInvokationResponse:
+    tool_name: str
+    parameters: dict[str, Any] | Callable
+    response: Any
 
 
 class CompetencyTest(ABC):
@@ -71,15 +80,22 @@ class CompetencyTest(ABC):
                     return False
         return True
 
-    def _verify_tool_called(self, mcp: MockedMCPServer, tool_name: str, expected_params: dict[str, Any]) -> bool:
+    def _verify_tool_called(
+        self, mcp: MockedMCPServer, tool_name: str, expected_params: dict[str, Any]
+    ) -> bool:
         """Verify a tool was called with expected parameters."""
         actual_calls = mcp.get_calls_for_tool(tool_name)
         if not actual_calls:
             return False
 
-        return any(self._params_are_compatible(expected_params, call["parameters"]) for call in actual_calls)
+        return any(
+            self._params_are_compatible(expected_params, call["parameters"])
+            for call in actual_calls
+        )
 
-    def _params_are_compatible(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _params_are_compatible(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Check if actual parameters are compatible with expected ones.
 
         Compatible means:
@@ -119,11 +135,17 @@ class CompetencyTest(ABC):
             compatibility_issues.extend(diff["iterable_item_removed"])
         if "values_changed" in diff:
             compatibility_issues.extend(
-                [f"{k}: {v['old_value']} -> {v['new_value']}" for k, v in diff["values_changed"].items()]
+                [
+                    f"{k}: {v['old_value']} -> {v['new_value']}"
+                    for k, v in diff["values_changed"].items()
+                ]
             )
         if "type_changes" in diff:
             compatibility_issues.extend(
-                [f"{k}: {v['old_type']} -> {v['new_type']}" for k, v in diff["type_changes"].items()]
+                [
+                    f"{k}: {v['old_type']} -> {v['new_type']}"
+                    for k, v in diff["type_changes"].items()
+                ]
             )
 
         return len(compatibility_issues) == 0
@@ -156,7 +178,9 @@ class CompetencyTest(ABC):
                 normalized[key] = value
         return normalized
 
-    def _has_required_structure(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _has_required_structure(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Check if actual has the basic required structure."""
 
         def check_structure(exp_item: Any, act_item: Any) -> bool:
@@ -173,7 +197,9 @@ class CompetencyTest(ABC):
 
         return check_structure(expected, actual)
 
-    def _is_alert_grouping_tool_call(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _is_alert_grouping_tool_call(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Check if this is an Alert Grouping Settings tool call."""
         # Look for alert grouping setting creation/update patterns
         create_model = expected.get("create_model") or actual.get("create_model")
@@ -183,7 +209,9 @@ class CompetencyTest(ABC):
             update_model and "alert_grouping_setting" in update_model
         )
 
-    def _validate_alert_grouping_params(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _validate_alert_grouping_params(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Specialized validation for Alert Grouping Settings parameters."""
         # Extract alert grouping setting from expected and actual
         exp_setting = self._extract_alert_grouping_setting(expected)
@@ -199,14 +227,18 @@ class CompetencyTest(ABC):
         # Validate type-specific configuration
         return self._validate_alert_grouping_config(exp_setting, act_setting)
 
-    def _extract_alert_grouping_setting(self, params: dict[str, Any]) -> dict[str, Any] | None:
+    def _extract_alert_grouping_setting(
+        self, params: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Extract alert grouping setting from parameters."""
         for model_key in ["create_model", "update_model"]:
             if model_key in params and "alert_grouping_setting" in params[model_key]:
                 return params[model_key]["alert_grouping_setting"]
         return None
 
-    def _validate_core_alert_grouping_fields(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _validate_core_alert_grouping_fields(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Validate core Alert Grouping Settings fields."""
         # Type must match exactly
         if expected.get("type") != actual.get("type"):
@@ -225,7 +257,9 @@ class CompetencyTest(ABC):
 
         return exp_service_ids == act_service_ids
 
-    def _validate_alert_grouping_config(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _validate_alert_grouping_config(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Validate Alert Grouping Settings configuration with flexible value acceptance."""
         exp_config = expected.get("config", {})
         act_config = actual.get("config", {})
@@ -235,7 +269,9 @@ class CompetencyTest(ABC):
         if setting_type == "content_based":
             return self._validate_content_based_config(exp_config, act_config)
         if setting_type == "content_based_intelligent":
-            return self._validate_content_based_intelligent_config(exp_config, act_config)
+            return self._validate_content_based_intelligent_config(
+                exp_config, act_config
+            )
         if setting_type == "time":
             return self._validate_time_config(exp_config, act_config)
         if setting_type == "intelligent":
@@ -243,7 +279,9 @@ class CompetencyTest(ABC):
 
         return False
 
-    def _validate_content_based_config(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _validate_content_based_config(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Validate content-based configuration with flexible values."""
         # Aggregate must be valid (allow any valid choice)
         act_aggregate = actual.get("aggregate")
@@ -259,16 +297,24 @@ class CompetencyTest(ABC):
         act_time_window = actual.get("time_window")
         return isinstance(act_time_window, int) and act_time_window >= 0
 
-    def _validate_content_based_intelligent_config(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _validate_content_based_intelligent_config(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Validate content-based intelligent configuration."""
-        return self._validate_content_based_config(expected, actual)  # Same validation rules
+        return self._validate_content_based_config(
+            expected, actual
+        )  # Same validation rules
 
-    def _validate_time_config(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _validate_time_config(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Validate time-based configuration."""
         act_timeout = actual.get("timeout")
         return isinstance(act_timeout, int) and act_timeout >= 0
 
-    def _validate_intelligent_config(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    def _validate_intelligent_config(
+        self, expected: dict[str, Any], actual: dict[str, Any]
+    ) -> bool:
         """Validate intelligent configuration with flexible values."""
         # Time window must be valid
         act_time_window = actual.get("time_window")
@@ -277,4 +323,6 @@ class CompetencyTest(ABC):
 
         # iag_fields is optional but if present, must be valid
         act_iag_fields = actual.get("iag_fields")
-        return act_iag_fields is None or (isinstance(act_iag_fields, list) and act_iag_fields)
+        return act_iag_fields is None or (
+            isinstance(act_iag_fields, list) and act_iag_fields
+        )

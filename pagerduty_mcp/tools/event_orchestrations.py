@@ -1,10 +1,12 @@
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
     EventOrchestration,
+    EventOrchestrationGlobal,
     EventOrchestrationQuery,
     EventOrchestrationRouter,
     EventOrchestrationRouterUpdateRequest,
     EventOrchestrationRuleCreateRequest,
+    EventOrchestrationService,
     ListResponseModel,
 )
 from pagerduty_mcp.utils import paginate
@@ -112,3 +114,31 @@ def append_event_orchestration_router_rule(
     update_request = EventOrchestrationRouterUpdateRequest.from_path(updated_path)
 
     return update_event_orchestration_router(orchestration_id, update_request)
+
+
+def get_event_orchestration_service(service_id: str) -> EventOrchestrationService:
+    """Get the Service Orchestration configuration for a specific service.
+
+    Args:
+        service_id: The ID of the service to retrieve the orchestration configuration for
+
+    Returns:
+        The service orchestration configuration
+    """
+    response = get_client().jget(f"/event_orchestrations/services/{service_id}")
+
+    return EventOrchestrationService.from_api_response(response)
+
+
+def get_event_orchestration_global(orchestration_id: str) -> EventOrchestrationGlobal:
+    """Get the Global Orchestration configuration for a specific event orchestration.
+
+    Args:
+        orchestration_id: The ID of the event orchestration to retrieve global configuration for
+
+    Returns:
+        The global orchestration configuration
+    """
+    response = get_client().rget(f"/event_orchestrations/{orchestration_id}/global")
+
+    return EventOrchestrationGlobal.from_api_response(response)

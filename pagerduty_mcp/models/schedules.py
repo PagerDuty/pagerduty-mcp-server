@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import TeamReference, UserReference
@@ -60,8 +60,29 @@ class Schedule(BaseModel):
     def type(self) -> Literal["schedule"]:
         return "schedule"
 
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any]) -> "Schedule":
+        """Create Schedule from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Wrapped: {"schedule": {...}}
+        - Direct: {...} (schedule data directly)
+
+        Args:
+            response_data: The API response data
+
+        Returns:
+            Schedule instance
+        """
+        if isinstance(response_data, dict) and "schedule" in response_data:
+            return cls.model_validate(response_data["schedule"])
+
+        return cls.model_validate(response_data)
+
 
 class ScheduleQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     query: str | None = Field(description="Filter schedules by name or description", default=None)
     team_ids: list[str] | None = Field(description="Filter schedules by team IDs", default=None)
     user_ids: list[str] | None = Field(description="Filter schedules by user IDs", default=None)
@@ -99,3 +120,56 @@ class Override(BaseModel):
 
 class ScheduleOverrideCreate(BaseModel):
     overrides: list[Override] = Field(description="The list of overrides to create for the schedule")
+
+
+class ScheduleLayerRestriction(BaseModel):
+    type: str = Field(description="The type of restriction (daily_restriction or weekly_restriction)")
+    start_time_of_day: str = Field(description="The time of day when the restriction starts (HH:MM:SS)")
+    duration_seconds: int = Field(description="The duration of the restriction in seconds")
+    start_day_of_week: int = Field(
+        default=1,
+        description="The day of week the restriction starts (1=Monday, 7=Sunday, ISO-8601)",
+    )
+
+
+class ScheduleLayerCreate(BaseModel):
+    name: str = Field(description="The name of the schedule layer")
+    start: datetime = Field(description="The start time of this layer")
+    end: datetime | None = Field(
+        default=None,
+        description="The end time of this layer. If null, the layer does not end",
+    )
+    rotation_virtual_start: datetime = Field(
+        description="The effective start time of the layer. This can be before the start time of the schedule"
+    )
+    rotation_turn_length_seconds: int = Field(description="The duration of each on-call shift in seconds")
+    users: list[ScheduleLayerUser] = Field(
+        description="The ordered list of users on this layer. The position of the user on the list "
+        "determines their order in the layer"
+    )
+    restrictions: list[ScheduleLayerRestriction] | None = Field(
+        default=None,
+        description="An array of restrictions for the layer. A restriction is a limit on which "
+        "period of the day or week the schedule layer can accept assignments",
+    )
+
+
+class ScheduleCreateData(BaseModel):
+    name: str = Field(description="The name of the schedule")
+    time_zone: str = Field(
+        description="The time zone of the schedule using IANA timezone format (e.g., 'America/New_York')"
+    )
+    description: str | None = Field(default=None, description="The description of the schedule")
+    schedule_layers: list[ScheduleLayerCreate] = Field(description="A list of schedule layers")
+    type: Literal["schedule"] = "schedule"
+
+
+class ScheduleCreateRequest(BaseModel):
+    schedule: ScheduleCreateData = Field(
+        description="The schedule to be created",
+    )
+
+
+class ScheduleUpdateRequest(BaseModel):
+    schedule: ScheduleCreateData = Field(description="The updated schedule data")
+    id: str | None = Field(default=None, description="The ID of the schedule to update (optional if provided in path)")

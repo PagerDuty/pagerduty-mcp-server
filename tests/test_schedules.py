@@ -4,13 +4,26 @@ from unittest.mock import MagicMock, patch
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import UserReference
-from pagerduty_mcp.models.schedules import Override, Schedule, ScheduleOverrideCreate, ScheduleQuery
+from pagerduty_mcp.models.schedules import (
+    Override,
+    Schedule,
+    ScheduleCreateData,
+    ScheduleCreateRequest,
+    ScheduleLayerCreate,
+    ScheduleLayerRestriction,
+    ScheduleLayerUser,
+    ScheduleOverrideCreate,
+    ScheduleQuery,
+    ScheduleUpdateRequest,
+)
 from pagerduty_mcp.models.users import User
 from pagerduty_mcp.tools.schedules import (
+    create_schedule,
     create_schedule_override,
     get_schedule,
     list_schedule_users,
     list_schedules,
+    update_schedule,
 )
 
 
@@ -37,6 +50,16 @@ class TestScheduleTools(unittest.TestCase):
             "teams": [
                 {"id": "TEAM123", "summary": "Engineering Team", "type": "team_reference"},
             ],
+        }
+
+        cls.sample_schedule_layer_response = {
+            "id": "LAYER123",
+            "name": "Night Shift",
+            "start": "2023-01-01T20:00:00Z",
+            "end": None,
+            "rotation_virtual_start": "2023-01-01T20:00:00Z",
+            "rotation_turn_length_seconds": 86400,
+            "users": [{"user": {"id": "USER123", "summary": "John Doe", "type": "user_reference"}}],
         }
 
         cls.sample_schedules_list_response = [
@@ -494,6 +517,318 @@ class TestScheduleTools(unittest.TestCase):
         )
 
         self.assertEqual(schedule.type, "schedule")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_success(self, mock_get_client):
+        """Test successful schedule creation."""
+        mock_get_client.return_value = self.mock_client
+
+        # Create a mock response similar to the API's actual response
+        mock_response = {"schedule": self.sample_schedule_response}
+        self.mock_client.rpost.return_value = mock_response
+
+        # Create a test schedule request
+        user = UserReference(id="USER123", summary="John Doe")
+        layer_user = ScheduleLayerUser(user=user)
+
+        layer = ScheduleLayerCreate(
+            name="Night Shift",
+            start=datetime(2023, 1, 1, 20, 0),
+            rotation_virtual_start=datetime(2023, 1, 1, 20, 0),
+            rotation_turn_length_seconds=86400,
+            users=[layer_user],
+        )
+
+        schedule_data = ScheduleCreateData(
+            name="Engineering On-Call",
+            time_zone="America/New_York",
+            description="Primary engineering on-call rotation",
+            schedule_layers=[layer],
+        )
+
+        request = ScheduleCreateRequest(schedule=schedule_data)
+
+        result = create_schedule(request)
+
+        # Verify API call
+        mock_get_client.assert_called_once()
+
+        # Verify API call was made (not checking exact parameters since datetime formatting happens inside)
+        self.mock_client.rpost.assert_called_once()
+        args, kwargs = self.mock_client.rpost.call_args
+        self.assertEqual(args[0], "/schedules")
+        self.assertEqual(kwargs["json"]["schedule"]["name"], "Engineering On-Call")
+
+        # Verify result
+        self.assertIsInstance(result, Schedule)
+        self.assertEqual(result.id, "SCHED123")
+        self.assertEqual(result.name, "Primary On-Call")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_with_restrictions(self, mock_get_client):
+        """Test schedule creation with restrictions."""
+        mock_get_client.return_value = self.mock_client
+
+        # Create a mock response
+        mock_response = {"schedule": self.sample_schedule_response}
+        self.mock_client.rpost.return_value = mock_response
+
+        # Create a test schedule with restrictions
+        restriction = ScheduleLayerRestriction(
+            type="daily_restriction",
+            start_time_of_day="09:00:00",
+            duration_seconds=28800,  # 8 hours
+        )
+
+        user = UserReference(id="USER123", summary="John Doe")
+        layer_user = ScheduleLayerUser(user=user)
+
+        layer = ScheduleLayerCreate(
+            name="Business Hours",
+            start=datetime(2023, 1, 1),
+            rotation_virtual_start=datetime(2023, 1, 1),
+            rotation_turn_length_seconds=604800,  # 1 week
+            users=[layer_user],
+            restrictions=[restriction],
+        )
+
+        schedule_data = ScheduleCreateData(
+            name="Business Hours Coverage",
+            time_zone="America/New_York",
+            description="Coverage during business hours only",
+            schedule_layers=[layer],
+        )
+
+        request = ScheduleCreateRequest(schedule=schedule_data)
+
+        result = create_schedule(request)
+
+        # Verify API call
+        mock_get_client.assert_called_once()
+
+        # Verify result
+        self.assertIsInstance(result, Schedule)
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_api_error(self, mock_get_client):
+        """Test create_schedule when API returns an error."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.side_effect = Exception("API Error")
+
+        # Create a minimal test schedule
+        user = UserReference(id="USER123", summary="John Doe")
+        layer_user = ScheduleLayerUser(user=user)
+
+        layer = ScheduleLayerCreate(
+            name="Night Shift",
+            start=datetime(2023, 1, 1, 20, 0),
+            rotation_virtual_start=datetime(2023, 1, 1, 20, 0),
+            rotation_turn_length_seconds=86400,
+            users=[layer_user],
+        )
+
+        schedule_data = ScheduleCreateData(
+            name="Engineering On-Call", time_zone="America/New_York", schedule_layers=[layer]
+        )
+
+        request = ScheduleCreateRequest(schedule=schedule_data)
+
+        with self.assertRaises(Exception) as context:
+            create_schedule(request)
+
+        self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
+        self.mock_client.rpost.assert_called_once()
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_direct_response(self, mock_get_client):
+        """Test create_schedule when API returns direct schedule object."""
+        mock_get_client.return_value = self.mock_client
+
+        # Create a response without the "schedule" wrapper
+        self.mock_client.rpost.return_value = self.sample_schedule_response
+
+        # Create a minimal test schedule
+        user = UserReference(id="USER123", summary="John Doe")
+        layer_user = ScheduleLayerUser(user=user)
+
+        layer = ScheduleLayerCreate(
+            name="Night Shift",
+            start=datetime(2023, 1, 1, 20, 0),
+            rotation_virtual_start=datetime(2023, 1, 1, 20, 0),
+            rotation_turn_length_seconds=86400,
+            users=[layer_user],
+        )
+
+        schedule_data = ScheduleCreateData(
+            name="Engineering On-Call", time_zone="America/New_York", schedule_layers=[layer]
+        )
+
+        request = ScheduleCreateRequest(schedule=schedule_data)
+
+        result = create_schedule(request)
+
+        # Verify result handling with direct response
+        self.assertIsInstance(result, Schedule)
+        self.assertEqual(result.id, "SCHED123")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_update_schedule(self, mock_get_client):
+        """Test update_schedule with valid data."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rput.return_value = {"schedule": self.sample_schedule_response}
+
+        # Create test data for update
+        user = UserReference(id="USER123", summary="John Doe")
+        layer_user = ScheduleLayerUser(user=user)
+
+        layer = ScheduleLayerCreate(
+            name="Updated Layer Name",
+            start=datetime(2023, 1, 1, 20, 0),
+            rotation_virtual_start=datetime(2023, 1, 1, 20, 0),
+            rotation_turn_length_seconds=86400,
+            users=[layer_user],
+        )
+
+        schedule_data = ScheduleCreateData(
+            name="Updated Schedule Name", time_zone="America/New_York", schedule_layers=[layer]
+        )
+
+        request = ScheduleUpdateRequest(schedule=schedule_data)
+
+        result = update_schedule("SCHED123", request)
+
+        # Verify API call
+        self.mock_client.rput.assert_called_once()
+        args, kwargs = self.mock_client.rput.call_args
+        self.assertEqual(args[0], "/schedules/SCHED123")
+        self.assertEqual(kwargs["json"]["schedule"]["name"], "Updated Schedule Name")
+
+        # Verify result
+        self.assertIsInstance(result, Schedule)
+        self.assertEqual(result.id, "SCHED123")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_update_schedule_with_restrictions(self, mock_get_client):
+        """Test update_schedule with restrictions."""
+        mock_get_client.return_value = self.mock_client
+
+        # Reset any side effects
+        self.mock_client.rput.side_effect = None
+        self.mock_client.rput.return_value = {"schedule": self.sample_schedule_response}
+
+        # Create test data with restrictions
+        user = UserReference(id="USER123", summary="John Doe")
+        layer_user = ScheduleLayerUser(user=user)
+
+        daily_restriction = ScheduleLayerRestriction(
+            type="daily_restriction",
+            start_time_of_day="09:00:00",
+            duration_seconds=32400,  # 9 hours
+        )
+
+        weekly_restriction = ScheduleLayerRestriction(
+            type="weekly_restriction",
+            start_time_of_day="09:00:00",
+            duration_seconds=172800,  # 48 hours
+            start_day_of_week=1,  # Monday
+        )
+
+        layer = ScheduleLayerCreate(
+            name="Restricted Layer",
+            start=datetime(2023, 1, 1, 20, 0),
+            rotation_virtual_start=datetime(2023, 1, 1, 20, 0),
+            rotation_turn_length_seconds=86400,
+            users=[layer_user],
+            restrictions=[daily_restriction, weekly_restriction],
+        )
+
+        schedule_data = ScheduleCreateData(
+            name="Restricted Schedule", time_zone="America/New_York", schedule_layers=[layer]
+        )
+
+        request = ScheduleUpdateRequest(schedule=schedule_data)
+
+        # Execute update and store result for testing validation
+        _ = update_schedule("SCHED123", request)
+
+        # Verify API call and restrictions handling
+        self.mock_client.rput.assert_called_once()
+        args, kwargs = self.mock_client.rput.call_args
+
+        # Check that restrictions were properly formatted
+        restrictions = kwargs["json"]["schedule"]["schedule_layers"][0]["restrictions"]
+        self.assertEqual(len(restrictions), 2)
+        self.assertEqual(restrictions[0]["type"], "daily_restriction")
+        self.assertEqual(restrictions[0]["start_day_of_week"], 1)  # Default value added
+        self.assertEqual(restrictions[1]["type"], "weekly_restriction")
+        self.assertEqual(restrictions[1]["start_day_of_week"], 1)
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_update_schedule_direct_response(self, mock_get_client):
+        """Test update_schedule when API returns direct schedule object."""
+        mock_get_client.return_value = self.mock_client
+
+        # Reset any side effects
+        self.mock_client.rput.side_effect = None
+
+        # Create a response without the "schedule" wrapper
+        self.mock_client.rput.return_value = self.sample_schedule_response
+
+        # Create a minimal test schedule for update
+        user = UserReference(id="USER123", summary="John Doe")
+        layer_user = ScheduleLayerUser(user=user)
+
+        layer = ScheduleLayerCreate(
+            name="Night Shift",
+            start=datetime(2023, 1, 1, 20, 0),
+            rotation_virtual_start=datetime(2023, 1, 1, 20, 0),
+            rotation_turn_length_seconds=86400,
+            users=[layer_user],
+        )
+
+        schedule_data = ScheduleCreateData(
+            name="Updated Schedule", time_zone="America/New_York", schedule_layers=[layer]
+        )
+
+        request = ScheduleUpdateRequest(schedule=schedule_data)
+
+        result = update_schedule("SCHED123", request)
+
+        # Verify result handling with direct response
+        self.assertIsInstance(result, Schedule)
+        self.assertEqual(result.id, "SCHED123")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_update_schedule_api_error(self, mock_get_client):
+        """Test update_schedule when API returns an error."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rput.side_effect = Exception("API Error")
+
+        # Create a minimal test schedule for update
+        user = UserReference(id="USER123", summary="John Doe")
+        layer_user = ScheduleLayerUser(user=user)
+
+        layer = ScheduleLayerCreate(
+            name="Night Shift",
+            start=datetime(2023, 1, 1, 20, 0),
+            rotation_virtual_start=datetime(2023, 1, 1, 20, 0),
+            rotation_turn_length_seconds=86400,
+            users=[layer_user],
+        )
+
+        schedule_data = ScheduleCreateData(
+            name="Updated Schedule", time_zone="America/New_York", schedule_layers=[layer]
+        )
+
+        request = ScheduleUpdateRequest(schedule=schedule_data)
+
+        with self.assertRaises(Exception) as context:
+            update_schedule("SCHED123", request)
+
+        self.assertEqual(str(context.exception), "Failed to update schedule SCHED123: API Error")
+        mock_get_client.assert_called_once()
+        self.mock_client.rput.assert_called_once()
 
 
 if __name__ == "__main__":

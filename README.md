@@ -222,6 +222,8 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |
 | list_incidents           | Incidents          | Lists incidents                                     | ✅         |
 | manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
+| get_alert                | Alerts             | Retrieves a specific alert of an incident           | ✅         |
+| list_alerts              | Alerts             | Lists alerts of an incident                         | ✅         |
 | get_incident_workflow    | Incident Workflows | Retrieves a specific incident workflow              | ✅         |
 | list_incident_workflows  | Incident Workflows | Lists incident workflows with optional filtering    | ✅         |
 | start_incident_workflow  | Incident Workflows | Starts a workflow instance for an incident          | ❌         |

@@ -5,6 +5,7 @@ from .alert_grouping_settings import (
     list_alert_grouping_settings,
     update_alert_grouping_setting,
 )
+from .alerts import get_alert, list_alerts
 
 # Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
@@ -81,6 +82,9 @@ read_tools = [
     # Alert Grouping Settings
     list_alert_grouping_settings,
     get_alert_grouping_setting,
+    # Alerts
+    list_alerts,
+    get_alert,
     # Incidents
     list_incidents,
     get_incident,

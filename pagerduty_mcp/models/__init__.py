@@ -9,6 +9,7 @@ from .alert_grouping_settings import (
     IntelligentGroupingConfig,
     TimeGroupingConfig,
 )
+from .alerts import Alert, AlertQuery
 from .base import MAX_RESULTS, ListResponseModel
 from .context import MCPContext
 from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
@@ -107,6 +108,8 @@ __all__ = [
     "ActionConfiguration",
     "ActionInput",
     "ActionOutput",
+    "Alert",
+    "AlertQuery",
     "AlertGroupingSetting",
     "AlertGroupingSettingCreate",
     "AlertGroupingSettingCreateRequest",

@@ -115,24 +115,3 @@ class ChangeEventQuery(BaseModel):
         if self.until:
             params["until"] = self.until.isoformat()
         return params
-
-
-class ChangeEventUpdate(BaseModel):
-    """Fields that can be updated on a change event."""
-
-    summary: str | None = Field(
-        default=None,
-        description="A brief text summary of the event (maximum 1024 characters)",
-    )
-    custom_details: dict | None = Field(
-        default=None,
-        description="Additional details about the change event",
-    )
-
-
-class ChangeEventUpdateRequest(BaseModel):
-    """Request model for updating a change event."""
-
-    change_event: ChangeEventUpdate = Field(
-        description="The change event fields to update",
-    )

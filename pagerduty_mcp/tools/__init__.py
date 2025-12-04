@@ -10,7 +10,6 @@ from .change_events import (
     list_change_events,
     list_incident_change_events,
     list_service_change_events,
-    update_change_event,
 )
 
 # Currently disabled to prevent issues with the escalation policies domain
@@ -142,8 +141,6 @@ write_tools = [
     create_alert_grouping_setting,
     update_alert_grouping_setting,
     delete_alert_grouping_setting,
-    # Change Events
-    update_change_event,
     # Incidents
     create_incident,
     manage_incidents,

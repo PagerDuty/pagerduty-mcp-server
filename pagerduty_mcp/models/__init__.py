@@ -10,7 +10,7 @@ from .alert_grouping_settings import (
     TimeGroupingConfig,
 )
 from .base import MAX_RESULTS, ListResponseModel
-from .change_events import ChangeEvent, ChangeEventQuery, ChangeEventUpdate, ChangeEventUpdateRequest
+from .change_events import ChangeEvent, ChangeEventQuery
 from .context import MCPContext
 from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
 from .event_orchestrations import (
@@ -122,8 +122,6 @@ __all__ = [
     "AlertGroupingSettingUpdateRequest",
     "ChangeEvent",
     "ChangeEventQuery",
-    "ChangeEventUpdate",
-    "ChangeEventUpdateRequest",
     "ContentBasedConfig",
     "ContentBasedIntelligentConfig",
     "EscalationPolicy",

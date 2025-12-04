@@ -204,6 +204,10 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_alert_grouping_setting    | Alert Grouping | Retrieves a specific alert grouping setting         | ✅         |
 | list_alert_grouping_settings  | Alert Grouping | Lists alert grouping settings with filtering        | ✅         |
 | update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting          | ❌         |
+| get_change_event       | Change Events      | Retrieves a specific change event                   | ✅         |
+| list_change_events     | Change Events      | Lists change events with optional filtering         | ✅         |
+| list_incident_change_events | Change Events | Lists change events related to a specific incident  | ✅         |
+| list_service_change_events | Change Events  | Lists change events for a specific service          | ✅         |
 | get_event_orchestration | Event Orchestrations | Retrieves a specific event orchestration           | ✅         |
 | get_event_orchestration_global | Event Orchestrations | Gets the global orchestration configuration for an event orchestration | ✅         |
 | get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅         |

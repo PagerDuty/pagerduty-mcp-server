@@ -6,8 +6,6 @@ from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATI
 from pagerduty_mcp.models.change_events import (
     ChangeEvent,
     ChangeEventQuery,
-    ChangeEventUpdate,
-    ChangeEventUpdateRequest,
 )
 from pagerduty_mcp.models.references import IntegrationReference, ServiceReference
 from pagerduty_mcp.tools.change_events import (
@@ -15,7 +13,6 @@ from pagerduty_mcp.tools.change_events import (
     list_change_events,
     list_incident_change_events,
     list_service_change_events,
-    update_change_event,
 )
 
 
@@ -96,7 +93,6 @@ class TestChangeEventTools(unittest.TestCase):
         self.mock_client.reset_mock()
         # Clear any side effects
         self.mock_client.rget.side_effect = None
-        self.mock_client.rput.side_effect = None
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
     @patch("pagerduty_mcp.tools.change_events.get_client")
@@ -379,103 +375,6 @@ class TestChangeEventTools(unittest.TestCase):
 
         # Verify result
         self.assertEqual(len(result.response), 2)
-
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_update_change_event_success_wrapped_response(self, mock_get_client):
-        """Test successful change event update with wrapped response."""
-        mock_get_client.return_value = self.mock_client
-        # API response with change_event wrapped in 'change_event' key
-        updated_change_event = self.sample_change_event_response.copy()
-        updated_change_event["summary"] = "Updated: Test change event - verified!"
-        updated_change_event["custom_details"] = {
-            "description": "Updated description",
-            "test": True,
-            "updated": True,
-        }
-        wrapped_response = {"change_event": updated_change_event}
-        self.mock_client.rput.return_value = wrapped_response
-
-        # Create update request
-        update = ChangeEventUpdate(
-            summary="Updated: Test change event - verified!",
-            custom_details={"description": "Updated description", "test": True, "updated": True},
-        )
-        update_request = ChangeEventUpdateRequest(change_event=update)
-
-        result = update_change_event("01G6B73PTIFH786FXPLPEKWG5I", update_request)
-
-        # Verify API call
-        mock_get_client.assert_called_once()
-        self.mock_client.rput.assert_called_once_with(
-            "/change_events/01G6B73PTIFH786FXPLPEKWG5I", json=update_request.model_dump(exclude_none=True)
-        )
-
-        # Verify result
-        self.assertIsInstance(result, ChangeEvent)
-        self.assertEqual(result.id, "01G6B73PTIFH786FXPLPEKWG5I")
-        self.assertEqual(result.summary, "Updated: Test change event - verified!")
-        self.assertEqual(result.custom_details["description"], "Updated description")
-        self.assertTrue(result.custom_details["updated"])
-
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_update_change_event_success_direct_response(self, mock_get_client):
-        """Test successful change event update with direct response."""
-        mock_get_client.return_value = self.mock_client
-        # API response directly as change event object
-        updated_change_event = self.sample_change_event_response.copy()
-        updated_change_event["summary"] = "Simple summary update"
-        self.mock_client.rput.return_value = updated_change_event
-
-        # Create update request with only summary
-        update = ChangeEventUpdate(summary="Simple summary update")
-        update_request = ChangeEventUpdateRequest(change_event=update)
-
-        result = update_change_event("01G6B73PTIFH786FXPLPEKWG5I", update_request)
-
-        # Verify API call
-        mock_get_client.assert_called_once()
-        self.mock_client.rput.assert_called_once_with(
-            "/change_events/01G6B73PTIFH786FXPLPEKWG5I", json=update_request.model_dump(exclude_none=True)
-        )
-
-        # Verify result
-        self.assertIsInstance(result, ChangeEvent)
-        self.assertEqual(result.summary, "Simple summary update")
-
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_update_change_event_only_custom_details(self, mock_get_client):
-        """Test updating only custom_details of a change event."""
-        mock_get_client.return_value = self.mock_client
-        updated_change_event = self.sample_change_event_response.copy()
-        updated_change_event["custom_details"] = {"new_field": "new_value", "updated": True}
-        wrapped_response = {"change_event": updated_change_event}
-        self.mock_client.rput.return_value = wrapped_response
-
-        # Create update request with only custom_details
-        update = ChangeEventUpdate(custom_details={"new_field": "new_value", "updated": True})
-        update_request = ChangeEventUpdateRequest(change_event=update)
-
-        result = update_change_event("01G6B73PTIFH786FXPLPEKWG5I", update_request)
-
-        # Verify result
-        self.assertIsInstance(result, ChangeEvent)
-        self.assertEqual(result.custom_details["new_field"], "new_value")
-        self.assertTrue(result.custom_details["updated"])
-
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_update_change_event_client_error(self, mock_get_client):
-        """Test update_change_event when client raises an exception."""
-        mock_get_client.return_value = self.mock_client
-        self.mock_client.rput.side_effect = Exception("API Error")
-
-        update = ChangeEventUpdate(summary="Updated summary")
-        update_request = ChangeEventUpdateRequest(change_event=update)
-
-        with self.assertRaises(Exception) as context:
-            update_change_event("01G6B73PTIFH786FXPLPEKWG5I", update_request)
-
-        self.assertEqual(str(context.exception), "API Error")
-        mock_get_client.assert_called_once()
 
     def test_change_event_query_to_params_all_fields(self):
         """Test ChangeEventQuery.to_params() with all fields set."""

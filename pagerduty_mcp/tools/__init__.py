@@ -5,6 +5,12 @@ from .alert_grouping_settings import (
     list_alert_grouping_settings,
     update_alert_grouping_setting,
 )
+from .change_events import (
+    get_change_event,
+    list_change_events,
+    list_incident_change_events,
+    list_service_change_events,
+)
 
 # Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
@@ -81,6 +87,11 @@ read_tools = [
     # Alert Grouping Settings
     list_alert_grouping_settings,
     get_alert_grouping_setting,
+    # Change Events
+    list_change_events,
+    get_change_event,
+    list_service_change_events,
+    list_incident_change_events,
     # Incidents
     list_incidents,
     get_incident,

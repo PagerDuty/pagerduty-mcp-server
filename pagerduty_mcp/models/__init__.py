@@ -10,6 +10,7 @@ from .alert_grouping_settings import (
     TimeGroupingConfig,
 )
 from .base import MAX_RESULTS, ListResponseModel
+from .change_events import ChangeEvent, ChangeEventQuery
 from .context import MCPContext
 from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
 from .event_orchestrations import (
@@ -60,7 +61,14 @@ from .incidents import (
     ResponderRequestTarget,
 )
 from .oncalls import Oncall, OncallQuery
-from .references import IncidentReference, ScheduleReference, ServiceReference, TeamReference, UserReference
+from .references import (
+    IncidentReference,
+    IntegrationReference,
+    ScheduleReference,
+    ServiceReference,
+    TeamReference,
+    UserReference,
+)
 from .schedules import (
     Schedule,
     ScheduleCreateData,
@@ -112,6 +120,8 @@ __all__ = [
     "AlertGroupingSettingCreateRequest",
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
+    "ChangeEvent",
+    "ChangeEventQuery",
     "ContentBasedConfig",
     "ContentBasedIntelligentConfig",
     "EscalationPolicy",
@@ -146,6 +156,7 @@ __all__ = [
     "IncidentWorkflowInstanceRequest",
     "IncidentWorkflowQuery",
     "InlineStepInput",
+    "IntegrationReference",
     "IntelligentGroupingConfig",
     "ListResponseModel",
     "MCPContext",

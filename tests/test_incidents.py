@@ -41,6 +41,7 @@ from pagerduty_mcp.tools.incidents import (
     get_outlier_incident,
     get_past_incidents,
     get_related_incidents,
+    list_incident_notes,
     list_incidents,
     manage_incidents,
 )
@@ -676,6 +677,64 @@ class TestIncidentTools(unittest.TestCase):
         mock_client.rpost.assert_called_once_with(
             "/incidents/PINC123/notes", json={"note": {"content": "This is a test note"}}
         )
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_list_incident_notes_success(self, mock_get_client):
+        """Test successfully listing notes for an incident."""
+        # Setup mock response - rget returns the unwrapped array directly
+        mock_response = [
+            {
+                "id": "PNOTE123",
+                "content": "First note",
+                "created_at": "2023-01-01T10:00:00Z",
+                "user": {"id": "PUSER123", "summary": "Test User"},
+            },
+            {
+                "id": "PNOTE456",
+                "content": "Second note",
+                "created_at": "2023-01-01T11:00:00Z",
+                "user": {"id": "PUSER456", "summary": "Another User"},
+            },
+        ]
+
+        mock_client = Mock()
+        mock_client.rget.return_value = mock_response
+        mock_get_client.return_value = mock_client
+
+        # Test
+        result = list_incident_notes("PINC123")
+
+        # Assertions
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 2)
+        self.assertIsInstance(result.response[0], IncidentNote)
+        self.assertEqual(result.response[0].id, "PNOTE123")
+        self.assertEqual(result.response[0].content, "First note")
+        self.assertEqual(result.response[1].id, "PNOTE456")
+        self.assertEqual(result.response[1].content, "Second note")
+
+        # Verify API call
+        mock_client.rget.assert_called_once_with("/incidents/PINC123/notes")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_list_incident_notes_empty(self, mock_get_client):
+        """Test listing notes when there are no notes."""
+        # Setup mock response - rget returns the unwrapped array directly
+        mock_response = []
+
+        mock_client = Mock()
+        mock_client.rget.return_value = mock_response
+        mock_get_client.return_value = mock_client
+
+        # Test
+        result = list_incident_notes("PINC123")
+
+        # Assertions
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 0)
+
+        # Verify API call
+        mock_client.rget.assert_called_once_with("/incidents/PINC123/notes")
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_outlier_incident_success(self, mock_get_client):

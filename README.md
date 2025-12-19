@@ -292,6 +292,7 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_outlier_incident     | Incidents          | Retrieves outlier incident information for a specific incident | ✅         |
 | get_past_incidents       | Incidents          | Retrieves past incidents related to a specific incident | ✅         |
 | get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |
+| list_incident_notes      | Incidents          | Lists all notes for a specific incident             | ✅         |
 | list_incidents           | Incidents          | Lists incidents                                     | ✅         |
 | manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
 | get_incident_workflow    | Incident Workflows | Retrieves a specific incident workflow              | ✅         |

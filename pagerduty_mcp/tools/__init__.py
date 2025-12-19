@@ -42,6 +42,7 @@ from .incidents import (
     get_outlier_incident,
     get_past_incidents,
     get_related_incidents,
+    list_incident_notes,
     list_incidents,
     manage_incidents,
 )
@@ -98,6 +99,7 @@ read_tools = [
     get_outlier_incident,
     get_past_incidents,
     get_related_incidents,
+    list_incident_notes,
     # Incident Workflows
     list_incident_workflows,
     get_incident_workflow,

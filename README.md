@@ -177,47 +177,6 @@ docker run -i --rm \
   pagerduty-mcp:latest
 ```
 
-### Using Docker Compose
-
-The repository includes a `docker-compose.yml` for easy local testing:
-
-**Set environment variables:**
-
-```bash
-export PAGERDUTY_USER_API_KEY="your-api-key-here"
-# Optional: export PAGERDUTY_API_HOST="https://api.pagerduty.com"
-```
-
-**Build and run in read-only mode:**
-
-```bash
-docker-compose --profile readonly up
-```
-
-**Run with write tools enabled (use with caution):**
-
-```bash
-docker-compose --profile write up
-```
-
-**Interactive testing:**
-
-```bash
-# Read-only mode
-docker-compose --profile readonly run --rm pagerduty-mcp-readonly
-
-# With write tools
-docker-compose --profile write run --rm pagerduty-mcp-write
-```
-
-### Docker Image Features
-
-- **Multi-stage build**: Optimized for minimal image size (~572 MB)
-- **Security**: Runs as non-root user (UID 1000)
-- **Caching**: Uses uv cache mounts for faster rebuilds
-- **Bytecode compilation**: Pre-compiled Python bytecode for faster startup
-- **Stdio transport**: Compatible with MCP clients expecting stdio communication
-
 ### Using with MCP Clients via Docker
 
 To integrate the Docker container with MCP clients, you can use Docker as the command:

@@ -135,6 +135,74 @@ You can configure this MCP server to work with Claude Desktop by adding it to Cl
 
     > **Security Note:** Unlike VS Code's secure input prompts, Claude Desktop requires you to store your API key directly in the configuration file. Ensure this file has appropriate permissions (readable only by your user account) and consider the security implications of storing credentials in plain text.
 
+## Running with Docker
+
+The PagerDuty MCP server can be run in a Docker container, providing an isolated and portable deployment option. The Docker image uses stdio transport for MCP communication.
+
+### Prerequisites
+
+- Docker installed
+- A PagerDuty User API Token (see [Prerequisites](#prerequisites))
+
+### Quick Start
+
+**Build the Docker image:**
+
+```bash
+docker build -t pagerduty-mcp:latest .
+```
+
+**Run in read-only mode (default):**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  pagerduty-mcp:latest
+```
+
+**Run with write tools enabled:**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  pagerduty-mcp:latest --enable-write-tools
+```
+
+**For EU region:**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  -e PAGERDUTY_API_HOST="https://api.eu.pagerduty.com" \
+  pagerduty-mcp:latest
+```
+
+### Using with MCP Clients via Docker
+
+To integrate the Docker container with MCP clients, you can use Docker as the command:
+
+**Claude Desktop example:**
+
+```json
+{
+  "mcpServers": {
+    "pagerduty-mcp": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "PAGERDUTY_USER_API_KEY=your-api-key-here",
+        "pagerduty-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+> **Note**: The Docker container uses stdio transport, making it compatible with MCP clients that expect standard input/output communication. Ensure you build the image first using `docker build -t pagerduty-mcp:latest .`
+
 ## Set up locally
 
 1.  **Clone the repository** 

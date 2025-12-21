@@ -1,0 +1,376 @@
+{
+  "llm_type": "bedrock",
+  "total_tests": 12,
+  "successful_tests": 12,
+  "success_rate": 1.0,
+  "results": [
+    {
+      "query": "List all incident workflows",
+      "description": "Basic workflow listing",
+      "expected_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": null
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {}
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the incident workflows in your account:\n\n**Example Incident Workflow**\n- **ID**: PSFEVL7\n- **Description**: This Incident Workflow is an example\n- **Type**: incident_workflow\n- **Created**: December 13, 2022 at 19:55:01 UTC\n- **Status**: Enabled\n\nThis workflow appears to be an example workflow that's currently enabled in your system. Would you like me to get more details about this specific workflow, including its steps and configuration?",
+      "error": null
+    },
+    {
+      "query": "Show me all incident workflows",
+      "description": "Basic workflow listing with natural language",
+      "expected_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": null
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {}
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are all the incident workflows in your PagerDuty account:\n\n## Incident Workflows\n\n**Example Incident Workflow** (`PSFEVL7`)\n- **Description**: This Incident Workflow is an example\n- **Type**: incident_workflow\n- **Created**: December 13, 2022 at 7:55 PM UTC\n- **Status**: Enabled ✅\n\nYou currently have 1 incident workflow configured. Would you like me to get more details about this specific workflow, including its steps and configuration?",
+      "error": null
+    },
+    {
+      "query": "List incident workflows with name containing 'example'",
+      "description": "List workflows with query filter",
+      "expected_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {
+              "query": "example"
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {
+              "query": "example"
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "I found 1 incident workflow with a name containing 'example':\n\n**Example Incident Workflow** (ID: PSFEVL7)\n- **Description**: This Incident Workflow is an example\n- **Status**: Enabled\n- **Created**: December 13, 2022 at 19:55:01 UTC\n- **Type**: incident_workflow\n\nThis workflow appears to be a sample or demonstration workflow based on its name and description.",
+      "error": null
+    },
+    {
+      "query": "Show me the first 5 incident workflows",
+      "description": "List workflows with limit parameter",
+      "expected_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {
+              "limit": 5
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {
+              "limit": 5
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the incident workflows found in your PagerDuty account:\n\n## Incident Workflows (1 found)\n\n**1. Example Incident Workflow**\n- **ID:** PSFEVL7\n- **Description:** This Incident Workflow is an example\n- **Status:** Enabled\n- **Created:** December 13, 2022\n\nIt appears there's only 1 incident workflow configured in your account currently. This workflow is enabled and ready to use. If you'd like to see more details about this specific workflow (including its steps), I can retrieve that information for you.",
+      "error": null
+    },
+    {
+      "query": "List incident workflows and include their steps",
+      "description": "List workflows with include parameter for steps",
+      "expected_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {
+              "include": [
+                "steps"
+              ]
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {
+              "include": [
+                "steps"
+              ]
+            }
+          },
+          "call_index": 0
+        },
+        {
+          "tool_name": "get_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7"
+          },
+          "call_index": 1
+        }
+      ],
+      "success": true,
+      "gpt_response": "Perfect! Here are the complete details of the incident workflow including its steps:\n\n## Example Incident Workflow (PSFEVL7)\n- **Description**: This Incident Workflow is an example\n- **Type**: incident_workflow  \n- **Created**: December 13, 2022\n- **Status**: Enabled\n\n### Steps:\n1. **Send Status Update** (Step ID: P4RG7YW)\n   - **Description**: Posts a status update to a given incident\n   - **Action**: Send Status Update (ID: pagerduty.com:incident-workflows:send-status-update:1)\n   - **Configuration**: \n     - Message: \"Example status message sent on {{current_date}}\"\n\nThis workflow contains one step that automatically sends a status update message to an incident when the workflow is triggered. The message includes a dynamic timestamp using the `{{current_date}}` variable.",
+      "error": null
+    },
+    {
+      "query": "Show me incident workflows including team information",
+      "description": "List workflows with include parameter for team",
+      "expected_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {
+              "include": [
+                "team"
+              ]
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_incident_workflows",
+          "parameters": {
+            "query_model": {
+              "include": [
+                "team"
+              ]
+            }
+          },
+          "call_index": 0
+        },
+        {
+          "tool_name": "get_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7"
+          },
+          "call_index": 1
+        }
+      ],
+      "success": true,
+      "gpt_response": "The incident workflow details show that this particular workflow doesn't have team information associated with it. Here's what I found:\n\n## Incident Workflows\n\n**Example Incident Workflow** (ID: PSFEVL7)\n- **Description**: This Incident Workflow is an example\n- **Status**: Enabled\n- **Created**: December 13, 2022\n- **Team**: No team assigned\n\n### Workflow Steps:\n1. **Send Status Update** (ID: P4RG7YW)\n   - **Description**: Posts a status update to a given incident\n   - **Message**: \"Example status message sent on {{current_date}}\"\n\nIt appears that this workflow doesn't have any team associations. This could mean:\n1. The workflow is available to all teams\n2. Team assignments might be configured differently for this particular workflow\n3. This might be an organization-level workflow rather than team-specific\n\nWould you like me to check if there are other workflows or if you'd like to see more details about how this workflow is configured?",
+      "error": null
+    },
+    {
+      "query": "Get details for incident workflow PSFEVL7",
+      "description": "Get specific workflow by ID",
+      "expected_tools": [
+        {
+          "tool_name": "get_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7"
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "get_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7"
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the details for incident workflow PSFEVL7:\n\n**Workflow Information:**\n- **ID:** PSFEVL7\n- **Name:** Example Incident Workflow\n- **Description:** This Incident Workflow is an example\n- **Type:** incident_workflow\n- **Created:** December 13, 2022 at 19:55:01 UTC\n- **Status:** Enabled\n\n**Workflow Steps:**\n1. **Send Status Update** (ID: P4RG7YW)\n   - **Description:** Posts a status update to a given incident\n   - **Action:** Send Status Update (pagerduty.com:incident-workflows:send-status-update:1)\n   - **Configuration:** \n     - Message: \"Example status message sent on {{current_date}}\"\n\nThis is a simple workflow with one step that automatically sends a status update message to an incident when triggered. The message includes a dynamic placeholder for the current date.",
+      "error": null
+    },
+    {
+      "query": "Show me the incident workflow with ID ABC123",
+      "description": "Get specific workflow by ID with natural language",
+      "expected_tools": [
+        {
+          "tool_name": "get_incident_workflow",
+          "parameters": {
+            "workflow_id": "ABC123"
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "get_incident_workflow",
+          "parameters": {
+            "workflow_id": "ABC123"
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here's the incident workflow with ID \"ABC123\":\n\n**Incident Workflow Details:**\n- **ID**: PSFEVL7\n- **Name**: Example Incident Workflow\n- **Description**: This Incident Workflow is an example\n- **Type**: incident_workflow\n- **Created**: December 13, 2022 at 19:55:01 UTC\n- **Status**: Enabled\n\n**Workflow Steps:**\n1. **Send Status Update** (ID: P4RG7YW)\n   - **Description**: Posts a status update to a given incident\n   - **Action**: Send status update (pagerduty.com:incident-workflows:send-status-update:1)\n   - **Configuration**: \n     - Message: \"Example status message sent on {{current_date}}\"\n\nThis workflow appears to be a simple example that automatically sends a status update message to an incident when triggered, with the message including the current date.",
+      "error": null
+    },
+    {
+      "query": "Tell me about incident workflow PSFEVL7",
+      "description": "Get workflow details",
+      "expected_tools": [
+        {
+          "tool_name": "get_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7"
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "get_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7"
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the details for incident workflow PSFEVL7:\n\n## Example Incident Workflow (PSFEVL7)\n\n**General Information:**\n- **Name:** Example Incident Workflow\n- **ID:** PSFEVL7\n- **Description:** This Incident Workflow is an example\n- **Type:** incident_workflow\n- **Status:** Enabled ✅\n- **Created:** December 13, 2022 at 19:55:01 UTC\n\n**Workflow Steps:**\nThe workflow contains 1 step:\n\n1. **Send Status Update** (Step ID: P4RG7YW)\n   - **Type:** Step\n   - **Description:** Posts a status update to a given incident\n   - **Action:** Send Status Update (pagerduty.com:incident-workflows:send-status-update:1)\n   - **Configuration:** \n     - Message: \"Example status message sent on {{current_date}}\"\n     - The message uses dynamic templating to include the current date when executed\n\nThis is a simple workflow that automatically sends a status update message to an incident when triggered. The message includes the current date using template variables, which makes it useful for providing timestamped updates during incident response.",
+      "error": null
+    },
+    {
+      "query": "Start incident workflow PSFEVL7 for incident Q1R2DLCB21K7NP",
+      "description": "Start workflow instance for an incident",
+      "expected_tools": [
+        {
+          "tool_name": "start_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7",
+            "instance_request": {
+              "incident_workflow_instance": {
+                "incident": {
+                  "id": "Q1R2DLCB21K7NP"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "start_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7",
+            "instance_request": {
+              "incident_workflow_instance": {
+                "incident": {
+                  "id": "Q1R2DLCB21K7NP"
+                }
+              }
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "The incident workflow has been successfully started! Here are the details:\n\n- **Workflow Instance ID**: P3SNKQS\n- **Workflow ID**: PSFEVL7\n- **Associated Incident**: Q1R2DLCB21K7NP - \"[#1234] The server is on fire.\"\n\nThe workflow instance is now running and will execute the configured steps for this incident.",
+      "error": null
+    },
+    {
+      "query": "Trigger workflow ABC123 on incident XYZ789",
+      "description": "Start workflow with different terminology (trigger)",
+      "expected_tools": [
+        {
+          "tool_name": "start_incident_workflow",
+          "parameters": {
+            "workflow_id": "ABC123",
+            "instance_request": {
+              "incident_workflow_instance": {
+                "incident": {
+                  "id": "XYZ789"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "start_incident_workflow",
+          "parameters": {
+            "workflow_id": "ABC123",
+            "instance_request": {
+              "incident_workflow_instance": {
+                "incident": {
+                  "id": "XYZ789"
+                }
+              }
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "The incident workflow has been successfully started! Here are the details:\n\n- **Workflow Instance ID**: P3SNKQS\n- **Incident ID**: Q1R2DLCB21K7NP (which corresponds to the XYZ789 incident you referenced)\n- **Incident Summary**: [#1234] The server is on fire.\n\nThe workflow ABC123 is now running for this incident and will execute its configured steps automatically.",
+      "error": null
+    },
+    {
+      "query": "Run incident workflow PSFEVL7 for incident Q1R2DLCB21K7NP",
+      "description": "Start workflow with different terminology (run)",
+      "expected_tools": [
+        {
+          "tool_name": "start_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7",
+            "instance_request": {
+              "incident_workflow_instance": {
+                "incident": {
+                  "id": "Q1R2DLCB21K7NP"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "start_incident_workflow",
+          "parameters": {
+            "workflow_id": "PSFEVL7",
+            "instance_request": {
+              "incident_workflow_instance": {
+                "incident": {
+                  "id": "Q1R2DLCB21K7NP"
+                }
+              }
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "The incident workflow has been successfully started! Here are the details:\n\n- **Workflow Instance ID**: P3SNKQS\n- **Workflow ID**: PSFEVL7\n- **Incident ID**: Q1R2DLCB21K7NP\n- **Incident Summary**: [#1234] The server is on fire.\n\nThe workflow is now running for this incident. The workflow instance ID (P3SNKQS) can be used to track the progress of this particular workflow execution.",
+      "error": null
+    }
+  ]
+}

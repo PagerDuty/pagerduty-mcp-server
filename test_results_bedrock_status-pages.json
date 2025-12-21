@@ -1,0 +1,436 @@
+{
+  "llm_type": "bedrock",
+  "total_tests": 14,
+  "successful_tests": 14,
+  "success_rate": 1.0,
+  "results": [
+    {
+      "query": "List all status pages",
+      "description": "Basic status pages listing",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_pages",
+          "parameters": {
+            "query_model": {}
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_pages",
+          "parameters": {
+            "query_model": {}
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are all the status pages in your PagerDuty account:\n\n**Status Page Details:**\n- **ID**: PT4KHLK\n- **Name**: My Brand Status Page\n- **Type**: Public\n- **URL**: https://status.mybrand.example\n\nYou currently have 1 status page configured. This is a public status page, which means it's accessible to external users and customers to view the status of your services.",
+      "error": null
+    },
+    {
+      "query": "Show me only public status pages",
+      "description": "List status pages filtered by type",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_pages",
+          "parameters": {
+            "query_model": {
+              "status_page_type": "public"
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_pages",
+          "parameters": {
+            "query_model": {
+              "status_page_type": "public"
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the public status pages:\n\n**My Brand Status Page**\n- ID: PT4KHLK\n- Type: Public\n- URL: https://status.mybrand.example\n\nThis is the only public status page currently available in your PagerDuty account.",
+      "error": null
+    },
+    {
+      "query": "List all severities for status page PT4KHLK",
+      "description": "List severities for a specific status page",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_page_severities",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {}
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_page_severities",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {}
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are all the severities for status page PT4KHLK:\n\n1. **PIJ90N7** - \"all good\" (incident post type)\n2. **PF9KMXH** - \"minor\" (incident post type)\n\nBoth severities are configured for incident post types. These severities can be used when creating or updating status page posts to indicate the severity level of incidents.",
+      "error": null
+    },
+    {
+      "query": "Show me incident severities for status page PT4KHLK",
+      "description": "List severities filtered by post type",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_page_severities",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {
+              "post_type": "incident"
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_page_severities",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {
+              "post_type": "incident"
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the incident severities available for status page PT4KHLK:\n\n1. **PIJ90N7** - \"all good\" (incident severity)\n2. **PF9KMXH** - \"minor\" (incident severity)\n\nThese severities can be used when creating or updating incident posts on this status page to indicate the severity level of the incident.",
+      "error": null
+    },
+    {
+      "query": "List all impacts for status page PT4KHLK",
+      "description": "List impacts for a specific status page",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_page_impacts",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {}
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_page_impacts",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {}
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are all the impacts configured for status page PT4KHLK:\n\n## Status Page Impacts\n\n1. **PIJ90N7** - operational (incident posts)\n2. **PF9KMXH** - partial outage (incident posts)\n\nBoth impacts are configured for use with incident posts. These impact levels can be used when creating or updating incident posts on this status page to indicate the severity of the impact on your services.",
+      "error": null
+    },
+    {
+      "query": "Show me maintenance impacts for status page PT4KHLK",
+      "description": "List impacts filtered by post type",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_page_impacts",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {
+              "post_type": "maintenance"
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_page_impacts",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {
+              "post_type": "maintenance"
+            }
+          },
+          "call_index": 0
+        },
+        {
+          "tool_name": "list_status_page_impacts",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {}
+          },
+          "call_index": 1
+        }
+      ],
+      "success": true,
+      "gpt_response": "Based on the results, status page PT4KHLK has the following impacts configured:\n\n**Available Impacts:**\n1. **PIJ90N7** - \"operational\" (for incident posts)\n2. **PF9KMXH** - \"partial outage\" (for incident posts)\n\nHowever, there are currently **no maintenance-specific impacts** configured for this status page. All the available impacts are configured for incident post types only. \n\nIf you need to create maintenance posts with impact levels, you would typically use these same impact references, or you might need to configure additional impacts specifically for maintenance post types through the PagerDuty interface.",
+      "error": null
+    },
+    {
+      "query": "List all statuses for status page PT4KHLK",
+      "description": "List statuses for a specific status page",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_page_statuses",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {}
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_page_statuses",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {}
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are all the statuses for status page PT4KHLK:\n\n1. **PIJ90N7** - \"investigating\" (for incident posts)\n2. **PF9KMXH** - \"resolved\" (for incident posts)\n\nBoth statuses are configured for incident-type posts on this status page.",
+      "error": null
+    },
+    {
+      "query": "Show me incident statuses for status page PT4KHLK",
+      "description": "List statuses filtered by post type",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_page_statuses",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {
+              "post_type": "incident"
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_page_statuses",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "query_model": {
+              "post_type": "incident"
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the incident statuses configured for status page PT4KHLK:\n\n1. **Investigating** (ID: PIJ90N7)\n   - Used when the team is actively investigating an incident\n\n2. **Resolved** (ID: PF9KMXH)\n   - Used when an incident has been resolved\n\nThese statuses can be used when creating or updating incident posts on this status page to indicate the current state of the incident to your users.",
+      "error": null
+    },
+    {
+      "query": "Get details for post PIJ90N7 on status page PT4KHLK",
+      "description": "Get a specific status page post",
+      "expected_tools": [
+        {
+          "tool_name": "get_status_page_post",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "query_model": {}
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "get_status_page_post",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "query_model": {}
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the details for post PIJ90N7 on status page PT4KHLK:\n\n- **ID**: PIJ90N7\n- **Title**: Database Maintenance\n- **Post Type**: Maintenance\n- **Status Page**: PT4KHLK\n\nThis is a maintenance post titled \"Database Maintenance\" on the status page. If you need more detailed information including any post updates, let me know and I can retrieve that information as well.",
+      "error": null
+    },
+    {
+      "query": "Get post PIJ90N7 on status page PT4KHLK with post updates included",
+      "description": "Get a status page post with included resources",
+      "expected_tools": [
+        {
+          "tool_name": "get_status_page_post",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "query_model": {
+              "include": [
+                "status_page_post_update"
+              ]
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "get_status_page_post",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "query_model": {
+              "include": [
+                "status_page_post_update"
+              ]
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "I've retrieved the status page post PIJ90N7 from status page PT4KHLK. Here are the details:\n\n**Post Details:**\n- **ID:** PIJ90N7\n- **Title:** Database Maintenance\n- **Type:** Maintenance\n- **Status Page ID:** PT4KHLK\n\nThe post appears to be a maintenance post titled \"Database Maintenance\". However, it seems the response didn't include the post updates in the detailed format expected. This could mean either:\n1. There are no post updates associated with this post\n2. The post updates are included in a different format than expected\n\nWould you like me to also fetch the post updates separately using the list_status_page_post_updates function to get more detailed information about any updates associated with this post?",
+      "error": null
+    },
+    {
+      "query": "List all post updates for post PIJ90N7 on status page PT4KHLK",
+      "description": "List post updates for a specific post",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_page_post_updates",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "query_model": {}
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_page_post_updates",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "query_model": {}
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are all the post updates for post PIJ90N7 on status page PT4KHLK:\n\n**Post Update ID: PXSOCH0**\n- **Message:** \"Maintenance in progress\"\n- **Reviewed Status:** approved\n\nThere is currently one post update for this post, indicating that maintenance work is in progress and the update has been approved.",
+      "error": null
+    },
+    {
+      "query": "Show me approved post updates for post PIJ90N7 on status page PT4KHLK",
+      "description": "List post updates filtered by reviewed status",
+      "expected_tools": [
+        {
+          "tool_name": "list_status_page_post_updates",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "query_model": {
+              "reviewed_status": "approved"
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "list_status_page_post_updates",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "query_model": {
+              "reviewed_status": "approved"
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "Here are the approved post updates for post PIJ90N7 on status page PT4KHLK:\n\n**Post Update ID:** PXSOCH0\n- **Message:** \"Maintenance in progress\"\n- **Reviewed Status:** Approved\n\nThere is currently 1 approved post update for this post.",
+      "error": null
+    },
+    {
+      "query": "Create a maintenance post on status page PT4KHLK titled 'Database Upgrade' scheduled from 2023-12-12 11:00 to 12:00",
+      "description": "Create a maintenance status page post",
+      "expected_tools": [
+        {
+          "tool_name": "create_status_page_post",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "create_model": {
+              "post": {
+                "title": "Database Upgrade",
+                "post_type": "maintenance",
+                "starts_at": "2023-12-12T11:00:00",
+                "ends_at": "2023-12-12T12:00:00"
+              }
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "create_status_page_post",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "create_model": {
+              "post": {
+                "title": "Database Upgrade",
+                "post_type": "maintenance",
+                "starts_at": "2023-12-12T11:00:00",
+                "ends_at": "2023-12-12T12:00:00"
+              }
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "The maintenance post has been successfully created on status page PT4KHLK with the following details:\n- **Title**: Database Upgrade\n- **Type**: Maintenance\n- **Start Time**: December 12, 2023 at 11:00 AM\n- **End Time**: December 12, 2023 at 12:00 PM\n\nThe post is now live on your status page and will inform your users about the scheduled database maintenance window.",
+      "error": null
+    },
+    {
+      "query": "Add an update to post PIJ90N7 on status page PT4KHLK with message 'Work in progress'",
+      "description": "Create a status page post update",
+      "expected_tools": [
+        {
+          "tool_name": "create_status_page_post_update",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "create_model": {
+              "post_update": {
+                "message": "Work in progress"
+              }
+            }
+          }
+        }
+      ],
+      "actual_tools": [
+        {
+          "tool_name": "create_status_page_post_update",
+          "parameters": {
+            "status_page_id": "PT4KHLK",
+            "post_id": "PIJ90N7",
+            "create_model": {
+              "post_update": {
+                "message": "Work in progress"
+              }
+            }
+          },
+          "call_index": 0
+        }
+      ],
+      "success": true,
+      "gpt_response": "The update has been successfully added to post PIJ90N7 on status page PT4KHLK with the message \"Work in progress\". The post update is now live and will be visible to anyone viewing the status page.",
+      "error": null
+    }
+  ]
+}

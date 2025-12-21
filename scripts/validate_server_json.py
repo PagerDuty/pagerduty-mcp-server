@@ -3,6 +3,7 @@
 
 import json
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -14,7 +15,7 @@ def fetch_schema(schema_url: str) -> dict:
     try:
         with urllib.request.urlopen(schema_url) as response:
             return json.loads(response.read())
-    except Exception as e:
+    except (urllib.error.URLError, json.JSONDecodeError) as e:
         print(f"❌ Error fetching schema from {schema_url}: {e}", file=sys.stderr)
         sys.exit(1)
 
@@ -24,7 +25,7 @@ def load_server_json(file_path: Path) -> dict:
     try:
         with open(file_path) as f:
             return json.load(f)
-    except Exception as e:
+    except (OSError, json.JSONDecodeError) as e:
         print(f"❌ Error loading {file_path}: {e}", file=sys.stderr)
         sys.exit(1)
 
@@ -34,20 +35,20 @@ def validate_server_json(server_data: dict, schema: dict) -> None:
     try:
         jsonschema.validate(instance=server_data, schema=schema)
         print("✅ server.json is valid!")
-        print(f"\n📦 Server Details:")
+        print("\n📦 Server Details:")
         print(f"   Name: {server_data['name']}")
         print(f"   Version: {server_data['version']}")
         print(f"   Description: {server_data['description']}")
         if "packages" in server_data:
-            print(f"\n📦 Packages:")
+            print("\n📦 Packages:")
             for pkg in server_data["packages"]:
                 print(f"   - {pkg['registryType']}: {pkg['identifier']} v{pkg['version']}")
     except jsonschema.ValidationError as e:
-        print(f"❌ Validation Error:", file=sys.stderr)
+        print("❌ Validation Error:", file=sys.stderr)
         print(f"   Path: {' -> '.join(str(p) for p in e.path)}", file=sys.stderr)
         print(f"   Message: {e.message}", file=sys.stderr)
         sys.exit(1)
-    except Exception as e:
+    except (jsonschema.SchemaError, KeyError, TypeError) as e:
         print(f"❌ Unexpected error during validation: {e}", file=sys.stderr)
         sys.exit(1)
 
@@ -77,7 +78,7 @@ def main():
     schema = fetch_schema(schema_url)
 
     # Validate
-    print(f"🔍 Validating server.json against schema...")
+    print("🔍 Validating server.json against schema...")
     validate_server_json(server_data, schema)
 
 

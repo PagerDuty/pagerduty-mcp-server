@@ -1,6 +1,7 @@
 """Bedrock client implementation for evaluation testing."""
 
 import json
+import time
 import uuid
 from typing import Any
 
@@ -13,11 +14,21 @@ from .base import ChatResponse, LLMClient, ToolCall
 class BedrockClient(LLMClient):
     """Bedrock client implementation using the boto3 SDK."""
 
-    def __init__(self, region_name: str = "us-west-2", **kwargs: Any):
+    def __init__(
+        self,
+        region_name: str = "us-west-2",
+        max_retries: int = 3,
+        initial_retry_delay: float = 1.0,
+        max_retry_delay: float = 60.0,
+        **kwargs: Any,
+    ):
         """Initialize the Bedrock client.
 
         Args:
             region_name: AWS region for Bedrock service
+            max_retries: Maximum number of retry attempts for throttled requests (default: 3)
+            initial_retry_delay: Initial delay in seconds for exponential backoff (default: 1.0)
+            max_retry_delay: Maximum delay in seconds for exponential backoff (default: 60.0)
             **kwargs: Additional boto3 session parameters
 
         Raises:
@@ -40,6 +51,9 @@ class BedrockClient(LLMClient):
             ) from e
 
         self.region_name = region_name
+        self.max_retries = max_retries
+        self.initial_retry_delay = initial_retry_delay
+        self.max_retry_delay = max_retry_delay
 
     def chat_completion(
         self,
@@ -89,17 +103,48 @@ class BedrockClient(LLMClient):
         # Add any additional parameters from kwargs
         request_payload.update(kwargs)
 
-        try:
-            # Make the API call to Bedrock
-            response = self.client.converse(modelId=model, **request_payload)
+        # Implement retry logic with exponential backoff
+        last_exception = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                # Make the API call to Bedrock
+                response = self.client.converse(modelId=model, **request_payload)
 
-            # Convert response back to our standard format
-            return self._convert_response_from_bedrock(response)
+                # Convert response back to our standard format
+                return self._convert_response_from_bedrock(response)
 
-        except ClientError as e:
-            error_code = e.response.get("Error", {}).get("Code", "Unknown")
-            error_message = e.response.get("Error", {}).get("Message", str(e))
-            raise Exception(f"Bedrock API error ({error_code}): {error_message}") from e
+            except ClientError as e:
+                error_code = e.response.get("Error", {}).get("Code", "Unknown")
+                error_message = e.response.get("Error", {}).get("Message", str(e))
+                last_exception = e
+
+                # Check if this is a throttling error
+                if error_code in ["ThrottlingException", "TooManyRequestsException"]:
+                    if attempt < self.max_retries:
+                        # Calculate exponential backoff delay
+                        delay = min(
+                            self.initial_retry_delay * (2**attempt),
+                            self.max_retry_delay,
+                        )
+                        print(
+                            f"Bedrock throttled request (attempt {attempt + 1}/{self.max_retries + 1}). "
+                            f"Retrying in {delay:.2f} seconds..."
+                        )
+                        time.sleep(delay)
+                        continue
+                    # Max retries exhausted
+                    print(f"Bedrock throttled request after {self.max_retries + 1} attempts. Giving up.")
+                    raise Exception(f"Bedrock API error ({error_code}): {error_message}") from e
+
+                # Not a throttling error, raise immediately
+                raise Exception(f"Bedrock API error ({error_code}): {error_message}") from e
+
+        # Should never reach here, but just in case
+        if last_exception:
+            error_code = last_exception.response.get("Error", {}).get("Code", "Unknown")
+            error_message = last_exception.response.get("Error", {}).get("Message", str(last_exception))
+            raise Exception(f"Bedrock API error ({error_code}): {error_message}") from last_exception
+        raise Exception("Bedrock API call failed after retries")
 
     def supports_model(self, model: str) -> bool:
         """Check if this is a Bedrock model.

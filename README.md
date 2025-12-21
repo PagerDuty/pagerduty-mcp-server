@@ -25,6 +25,7 @@ PagerDuty's local MCP (Model Context Protocol) server which provides tools to in
     To obtain a PagerDuty User API Token, follow these steps:
 
     1. **Navigate to User Settings.** Click on your user profile icon, then select **My Profile** and then **User Settings**.
+        > For **Freemium** accounts, the permissions for generating User API tokens are limited to the user role as defined [here](https://support.pagerduty.com/main/docs/user-roles).
     2. In your user settings, locate the **API Access** section.
     3. Click the **Create API User Token** button and follow the prompts to generate a new token.
     4. **Copy the generated token and store it securely**. You will need this token to configure the MCP server.
@@ -147,6 +148,74 @@ You can configure this MCP server to work with Claude Desktop by adding it to Cl
 
     > **Security Note:** Unlike VS Code's secure input prompts, Claude Desktop requires you to store your API key directly in the configuration file. Ensure this file has appropriate permissions (readable only by your user account) and consider the security implications of storing credentials in plain text.
 
+## Running with Docker
+
+The PagerDuty MCP server can be run in a Docker container, providing an isolated and portable deployment option. The Docker image uses stdio transport for MCP communication.
+
+### Prerequisites
+
+- Docker installed
+- A PagerDuty User API Token (see [Prerequisites](#prerequisites))
+
+### Quick Start
+
+**Build the Docker image:**
+
+```bash
+docker build -t pagerduty-mcp:latest .
+```
+
+**Run in read-only mode (default):**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  pagerduty-mcp:latest
+```
+
+**Run with write tools enabled:**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  pagerduty-mcp:latest --enable-write-tools
+```
+
+**For EU region:**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  -e PAGERDUTY_API_HOST="https://api.eu.pagerduty.com" \
+  pagerduty-mcp:latest
+```
+
+### Using with MCP Clients via Docker
+
+To integrate the Docker container with MCP clients, you can use Docker as the command:
+
+**Claude Desktop example:**
+
+```json
+{
+  "mcpServers": {
+    "pagerduty-mcp": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "PAGERDUTY_USER_API_KEY=your-api-key-here",
+        "pagerduty-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+> **Note**: The Docker container uses stdio transport, making it compatible with MCP clients that expect standard input/output communication. Ensure you build the image first using `docker build -t pagerduty-mcp:latest .`
+
 ## Set up locally
 
 1.  **Clone the repository** 
@@ -216,8 +285,14 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_alert_grouping_setting    | Alert Grouping | Retrieves a specific alert grouping setting         | ✅         |
 | list_alert_grouping_settings  | Alert Grouping | Lists alert grouping settings with filtering        | ✅         |
 | update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting          | ❌         |
+| get_change_event       | Change Events      | Retrieves a specific change event                   | ✅         |
+| list_change_events     | Change Events      | Lists change events with optional filtering         | ✅         |
+| list_incident_change_events | Change Events | Lists change events related to a specific incident  | ✅         |
+| list_service_change_events | Change Events  | Lists change events for a specific service          | ✅         |
 | get_event_orchestration | Event Orchestrations | Retrieves a specific event orchestration           | ✅         |
+| get_event_orchestration_global | Event Orchestrations | Gets the global orchestration configuration for an event orchestration | ✅         |
 | get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅         |
+| get_event_orchestration_service | Event Orchestrations | Gets the service orchestration configuration for a specific service | ✅         |
 | list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅         |
 | update_event_orchestration_router | Event Orchestrations | Updates the router configuration for an event orchestration | ❌         |
 | append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router | ❌         |
@@ -227,8 +302,14 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | add_responders           | Incidents          | Adds responders to an incident                      | ❌         |
 | create_incident          | Incidents          | Creates a new incident                              | ❌         |
 | get_incident             | Incidents          | Retrieves a specific incident                       | ✅         |
+| get_outlier_incident     | Incidents          | Retrieves outlier incident information for a specific incident | ✅         |
+| get_past_incidents       | Incidents          | Retrieves past incidents related to a specific incident | ✅         |
+| get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |
 | list_incidents           | Incidents          | Lists incidents                                     | ✅         |
 | manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
+| get_incident_workflow    | Incident Workflows | Retrieves a specific incident workflow              | ✅         |
+| list_incident_workflows  | Incident Workflows | Lists incident workflows with optional filtering    | ✅         |
+| start_incident_workflow  | Incident Workflows | Starts a workflow instance for an incident          | ❌         |
 | add_team_member          | Teams              | Adds a user to a team with a specific role          | ❌         |
 | create_team              | Teams              | Creates a new team                                  | ❌         |
 | delete_team              | Teams              | Deletes a team                                      | ❌         |
@@ -244,10 +325,20 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_schedule             | Schedules          | Retrieves a specific schedule                       | ✅         |
 | list_schedule_users      | Schedules          | Lists users in a schedule                           | ✅         |
 | list_schedules           | Schedules          | Lists schedules                                     | ✅         |
+| create_schedule          | Schedules          | Creates a new on-call schedule                      | ❌         |
+| update_schedule          | Schedules          | Updates an existing schedule                        | ❌         |
 | create_service           | Services           | Creates a new service                               | ❌         |
 | get_service              | Services           | Retrieves a specific service                        | ✅         |
 | list_services            | Services           | Lists services                                      | ✅         |
 | update_service           | Services           | Updates an existing service                         | ❌         |
+| create_status_page_post  | Status Pages       | Creates a new post (incident or maintenance) on a status page | ❌         |
+| create_status_page_post_update | Status Pages | Adds a new update to an existing status page post   | ❌         |
+| get_status_page_post     | Status Pages       | Retrieves details of a specific status page post    | ✅         |
+| list_status_page_impacts | Status Pages       | Lists available impact levels for a status page     | ✅         |
+| list_status_page_post_updates | Status Pages  | Lists all updates for a specific status page post   | ✅         |
+| list_status_page_severities | Status Pages    | Lists available severity levels for a status page   | ✅         |
+| list_status_page_statuses | Status Pages      | Lists available statuses for a status page          | ✅         |
+| list_status_pages        | Status Pages       | Lists all status pages with optional filtering      | ✅         |
 
 
 ## Support

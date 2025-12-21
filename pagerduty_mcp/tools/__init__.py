@@ -5,6 +5,12 @@ from .alert_grouping_settings import (
     list_alert_grouping_settings,
     update_alert_grouping_setting,
 )
+from .change_events import (
+    get_change_event,
+    list_change_events,
+    list_incident_change_events,
+    list_service_change_events,
+)
 
 # Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
@@ -17,30 +23,52 @@ from .escalation_policies import (
 from .event_orchestrations import (
     append_event_orchestration_router_rule,
     get_event_orchestration,
+    get_event_orchestration_global,
     get_event_orchestration_router,
+    get_event_orchestration_service,
     list_event_orchestrations,
     update_event_orchestration_router,
+)
+from .incident_workflows import (
+    get_incident_workflow,
+    list_incident_workflows,
+    start_incident_workflow,
 )
 from .incidents import (
     add_note_to_incident,
     add_responders,
     create_incident,
     get_incident,
+    get_outlier_incident,
+    get_past_incidents,
+    get_related_incidents,
     list_incidents,
     manage_incidents,
 )
 from .oncalls import list_oncalls
 from .schedules import (
+    create_schedule,
     create_schedule_override,
     get_schedule,
     list_schedule_users,
     list_schedules,
+    update_schedule,
 )
 from .services import (
     create_service,
     get_service,
     list_services,
     update_service,
+)
+from .status_pages import (
+    create_status_page_post,
+    create_status_page_post_update,
+    get_status_page_post,
+    list_status_page_impacts,
+    list_status_page_post_updates,
+    list_status_page_severities,
+    list_status_page_statuses,
+    list_status_pages,
 )
 from .teams import (
     add_team_member,
@@ -59,9 +87,20 @@ read_tools = [
     # Alert Grouping Settings
     list_alert_grouping_settings,
     get_alert_grouping_setting,
+    # Change Events
+    list_change_events,
+    get_change_event,
+    list_service_change_events,
+    list_incident_change_events,
     # Incidents
     list_incidents,
     get_incident,
+    get_outlier_incident,
+    get_past_incidents,
+    get_related_incidents,
+    # Incident Workflows
+    list_incident_workflows,
+    get_incident_workflow,
     # Services
     list_services,
     get_service,
@@ -85,6 +124,15 @@ read_tools = [
     list_event_orchestrations,
     get_event_orchestration,
     get_event_orchestration_router,
+    get_event_orchestration_service,
+    get_event_orchestration_global,
+    # Status Pages
+    list_status_pages,
+    list_status_page_severities,
+    list_status_page_impacts,
+    list_status_page_statuses,
+    get_status_page_post,
+    list_status_page_post_updates,
 ]
 
 # Write tools (potentially dangerous operations that modify state)
@@ -98,6 +146,8 @@ write_tools = [
     manage_incidents,
     add_responders,
     add_note_to_incident,
+    # Incident Workflows
+    start_incident_workflow,
     # Services
     create_service,
     update_service,
@@ -108,10 +158,15 @@ write_tools = [
     add_team_member,
     remove_team_member,
     # Schedules
+    create_schedule,
     create_schedule_override,
+    update_schedule,
     # Event Orchestrations
     update_event_orchestration_router,
     append_event_orchestration_router_rule,
+    # Status Pages
+    create_status_page_post,
+    create_status_page_post_update,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

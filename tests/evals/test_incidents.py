@@ -81,6 +81,26 @@ class IncidentCompetencyTest(CompetencyTest):
                 ]
             },
         )
+        mcp.register_mock_response(
+            "list_incident_notes",
+            lambda params: True,
+            {
+                "response": [
+                    {
+                        "id": "NOTE123",
+                        "content": "First note about the incident",
+                        "created_at": "2023-01-01T10:00:00Z",
+                        "user": {"id": "USER123", "summary": "John Doe"},
+                    },
+                    {
+                        "id": "NOTE456",
+                        "content": "Second note with additional details",
+                        "created_at": "2023-01-01T11:00:00Z",
+                        "user": {"id": "USER456", "summary": "Jane Smith"},
+                    },
+                ]
+            },
+        )
 
 
 # Define the competency test cases
@@ -223,5 +243,35 @@ INCIDENT_COMPETENCY_TESTS = [
             }
         ],
         description="Get related incidents with additional_details parameter for enriched data",
+    ),
+    IncidentCompetencyTest(
+        query="Show me all notes for incident 123",
+        expected_tools=[
+            {
+                "tool_name": "list_incident_notes",
+                "parameters": {"incident_id": "123"},
+            }
+        ],
+        description="List all notes for a specific incident",
+    ),
+    IncidentCompetencyTest(
+        query="What notes are on incident ABC123?",
+        expected_tools=[
+            {
+                "tool_name": "list_incident_notes",
+                "parameters": {"incident_id": "ABC123"},
+            }
+        ],
+        description="List notes for incident using natural language query",
+    ),
+    IncidentCompetencyTest(
+        query="List incident notes for Q3QCNPM78BXOAL",
+        expected_tools=[
+            {
+                "tool_name": "list_incident_notes",
+                "parameters": {"incident_id": "Q3QCNPM78BXOAL"},
+            }
+        ],
+        description="List notes for incident with complex ID format",
     ),
 ]

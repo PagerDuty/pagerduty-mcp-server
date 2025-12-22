@@ -214,12 +214,6 @@ def list_incident_notes(incident_id: str) -> ListResponseModel[IncidentNote]:
     Returns:
         List of IncidentNote objects for the specified incident
 
-    Examples:
-        Basic usage:
-
-        >>> notes = list_incident_notes("PD12345")
-        >>> isinstance(notes.response, list)
-        True
     """
     response = get_client().rget(f"/incidents/{incident_id}/notes")
 

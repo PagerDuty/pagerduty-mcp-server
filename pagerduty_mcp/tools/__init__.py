@@ -9,6 +9,12 @@ from .alerts import (
     get_alert_from_incident,
     list_alerts_from_incident,
 )
+from .change_events import (
+    get_change_event,
+    list_change_events,
+    list_incident_change_events,
+    list_service_change_events,
+)
 
 # Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
@@ -40,6 +46,7 @@ from .incidents import (
     get_outlier_incident,
     get_past_incidents,
     get_related_incidents,
+    list_incident_notes,
     list_incidents,
     manage_incidents,
 )
@@ -92,12 +99,18 @@ read_tools = [
     # Alerts
     list_alerts_from_incident,
     get_alert_from_incident,
+    # Change Events
+    list_change_events,
+    get_change_event,
+    list_service_change_events,
+    list_incident_change_events,
     # Incidents
     list_incidents,
     get_incident,
     get_outlier_incident,
     get_past_incidents,
     get_related_incidents,
+    list_incident_notes,
     # Incident Workflows
     list_incident_workflows,
     get_incident_workflow,

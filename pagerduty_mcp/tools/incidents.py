@@ -205,6 +205,27 @@ def add_responders(
     return "Unexpected response format: " + str(response)
 
 
+def list_incident_notes(incident_id: str) -> ListResponseModel[IncidentNote]:
+    """List all notes for a specific incident.
+
+    Args:
+        incident_id: The ID of the incident to retrieve notes from
+
+    Returns:
+        List of IncidentNote objects for the specified incident
+
+    """
+    response = get_client().rget(f"/incidents/{incident_id}/notes")
+
+    # The rget method returns the unwrapped data directly (array of notes)
+    if isinstance(response, list):
+        notes = [IncidentNote.model_validate(note) for note in response]
+        return ListResponseModel[IncidentNote](response=notes)
+
+    # Fallback if response format is unexpected
+    return ListResponseModel[IncidentNote](response=[])
+
+
 def add_note_to_incident(incident_id: str, note: str) -> IncidentNote:
     """Add a note to an incident.
 

@@ -5,6 +5,10 @@ from .alert_grouping_settings import (
     list_alert_grouping_settings,
     update_alert_grouping_setting,
 )
+from .alerts import (
+    get_alert_from_incident,
+    list_alerts_from_incident,
+)
 
 # Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
@@ -38,6 +42,10 @@ from .incidents import (
     get_related_incidents,
     list_incidents,
     manage_incidents,
+)
+from .log_entries import (
+    get_log_entry,
+    list_log_entries,
 )
 from .oncalls import list_oncalls
 from .schedules import (
@@ -81,6 +89,9 @@ read_tools = [
     # Alert Grouping Settings
     list_alert_grouping_settings,
     get_alert_grouping_setting,
+    # Alerts
+    list_alerts_from_incident,
+    get_alert_from_incident,
     # Incidents
     list_incidents,
     get_incident,
@@ -106,6 +117,9 @@ read_tools = [
     list_schedule_users,
     # On-calls
     list_oncalls,
+    # Log Entries
+    list_log_entries,
+    get_log_entry,
     # Escalation Policies
     list_escalation_policies,
     get_escalation_policy,

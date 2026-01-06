@@ -1,0 +1,68 @@
+from datetime import datetime, timedelta, timezone
+
+from pagerduty_mcp.client import get_client
+from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
+from pagerduty_mcp.utils import paginate
+
+
+def get_log_entry(log_entry_id: str) -> LogEntry:
+    """Get a specific log entry by ID.
+
+    Args:
+        log_entry_id: The ID of the log entry
+
+    Returns:
+        LogEntry details
+    """
+    response = get_client().rget(f"/log_entries/{log_entry_id}")
+    return LogEntry.model_validate(response)
+
+
+def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
+    """List all log entries across the account.
+
+    Log entries are records of all events on your account. This function allows you
+    to filter log entries by time range and paginate through results.
+
+    If no time range is specified, defaults to the last 7 days.
+
+    Args:
+        query_model: Query parameters including since, until, limit, and offset
+
+    Returns:
+        List of LogEntry objects matching the query parameters
+
+    Examples:
+        Basic usage (defaults to last 7 days):
+
+        >>> from pagerduty_mcp.models import LogEntryQuery
+        >>> result = list_log_entries(LogEntryQuery())
+        >>> isinstance(result.response, list)
+        True
+
+        Filter by time range:
+
+        >>> from datetime import datetime, timedelta
+        >>> since = datetime.now() - timedelta(days=7)
+        >>> result = list_log_entries(LogEntryQuery(since=since, limit=50))
+
+        With pagination:
+
+        >>> result = list_log_entries(LogEntryQuery(limit=10, offset=0))
+    """
+    # Default to last 7 days if no time range specified
+    if query_model.since is None:
+        query_model.since = datetime.now(timezone.utc) - timedelta(days=7)
+    if query_model.until is None:
+        query_model.until = datetime.now(timezone.utc)
+
+    params = query_model.to_params()
+
+    response = paginate(
+        client=get_client(),
+        entity="log_entries",
+        params=params,
+        maximum_records=query_model.limit or 100,
+    )
+    log_entries = [LogEntry(**entry) for entry in response]
+    return ListResponseModel[LogEntry](response=log_entries)

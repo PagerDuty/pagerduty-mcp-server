@@ -32,23 +32,6 @@ def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
     Returns:
         List of LogEntry objects matching the query parameters
 
-    Examples:
-        Basic usage (defaults to last 7 days):
-
-        >>> from pagerduty_mcp.models import LogEntryQuery
-        >>> result = list_log_entries(LogEntryQuery())
-        >>> isinstance(result.response, list)
-        True
-
-        Filter by time range:
-
-        >>> from datetime import datetime, timedelta
-        >>> since = datetime.now() - timedelta(days=7)
-        >>> result = list_log_entries(LogEntryQuery(since=since, limit=50))
-
-        With pagination:
-
-        >>> result = list_log_entries(LogEntryQuery(limit=10, offset=0))
     """
     # Default to last 7 days if no time range specified
     if query_model.since is None:

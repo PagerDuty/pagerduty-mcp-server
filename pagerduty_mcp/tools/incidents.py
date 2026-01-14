@@ -35,17 +35,6 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     Returns:
         List of Incident objects matching the query parameters
 
-    Examples:
-        Basic usage filtering by status:
-
-        >>> from pagerduty_mcp.models import IncidentQuery
-        >>> result = list_incidents(IncidentQuery(status=["triggered"]))
-        >>> isinstance(result.response, list)
-        True
-
-        Multiple statuses with a limit:
-
-        >>> result = list_incidents(IncidentQuery(status=["triggered", "acknowledged"], limit=10))
     """
     params = query_model.to_params()
 

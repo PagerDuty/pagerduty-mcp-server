@@ -27,17 +27,6 @@ def list_alerts_from_incident(incident_id: str, query_model: AlertQuery) -> List
     Returns:
         List of Alert objects for the incident
 
-    Examples:
-        Basic usage:
-
-        >>> from pagerduty_mcp.models import AlertQuery
-        >>> result = list_alerts_from_incident("INCIDENT_ID", AlertQuery())
-        >>> isinstance(result.response, list)
-        True
-
-        With pagination:
-
-        >>> result = list_alerts_from_incident("INCIDENT_ID", AlertQuery(limit=10, offset=0))
     """
     params = query_model.to_params()
 

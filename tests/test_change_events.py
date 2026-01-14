@@ -106,7 +106,10 @@ class TestChangeEventTools(unittest.TestCase):
 
         # Verify paginate call
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="change_events", params=query.to_params(), maximum_records=DEFAULT_PAGINATION_LIMIT
+            client=self.mock_client,
+            entity="change_events",
+            params=query.to_params(),
+            maximum_records=DEFAULT_PAGINATION_LIMIT,
         )
 
         # Verify result
@@ -131,7 +134,10 @@ class TestChangeEventTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM123"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="change_events", params=expected_params, maximum_records=DEFAULT_PAGINATION_LIMIT
+            client=self.mock_client,
+            entity="change_events",
+            params=expected_params,
+            maximum_records=DEFAULT_PAGINATION_LIMIT,
         )
 
         # Verify result
@@ -157,7 +163,10 @@ class TestChangeEventTools(unittest.TestCase):
             "limit": DEFAULT_PAGINATION_LIMIT,
         }
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="change_events", params=expected_params, maximum_records=DEFAULT_PAGINATION_LIMIT
+            client=self.mock_client,
+            entity="change_events",
+            params=expected_params,
+            maximum_records=DEFAULT_PAGINATION_LIMIT,
         )
 
         # Verify result
@@ -176,7 +185,10 @@ class TestChangeEventTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"integration_ids[]": ["P0Z3BFB"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="change_events", params=expected_params, maximum_records=DEFAULT_PAGINATION_LIMIT
+            client=self.mock_client,
+            entity="change_events",
+            params=expected_params,
+            maximum_records=DEFAULT_PAGINATION_LIMIT,
         )
 
         # Verify result
@@ -381,7 +393,13 @@ class TestChangeEventTools(unittest.TestCase):
         since = datetime(2025, 11, 20, 10, 0, 0)
         until = datetime(2025, 11, 24, 10, 0, 0)
         query = ChangeEventQuery(
-            limit=50, offset=10, total=True, team_ids=["TEAM1", "TEAM2"], integration_ids=["INT1"], since=since, until=until
+            limit=50,
+            offset=10,
+            total=True,
+            team_ids=["TEAM1", "TEAM2"],
+            integration_ids=["INT1"],
+            since=since,
+            until=until,
         )
 
         params = query.to_params()

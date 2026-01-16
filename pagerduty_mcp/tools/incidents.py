@@ -56,11 +56,9 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             params["user_ids[]"] = [user_data.id]
         elif query_model.request_scope == "teams":
             user_team_ids = [team.id for team in user_data.teams]
-            params["teams_ids[]"] = user_team_ids
+            params["team_ids[]"] = user_team_ids
 
-    response = paginate(
-        client=get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
-    )
+    response = paginate(client=get_client(), entity="incidents", params=params)
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)
 

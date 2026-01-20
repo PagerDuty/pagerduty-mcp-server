@@ -101,6 +101,42 @@ class IncidentCompetencyTest(CompetencyTest):
                 ]
             },
         )
+        mcp.register_mock_response(
+            "list_alerts_from_incident",
+            lambda params: True,
+            {
+                "response": [
+                    {
+                        "id": "PALERT123",
+                        "type": "alert",
+                        "summary": "The server is on fire.",
+                        "self": "https://api.pagerduty.com/incidents/PINCIDENT123/alerts/PALERT123",
+                        "html_url": "https://subdomain.pagerduty.com/alerts/PALERT123",
+                        "created_at": "2015-10-06T21:30:42Z",
+                        "status": "triggered",
+                        "alert_key": "baf7cf21b1da41b4b0221008339ff357",
+                        "severity": "critical",
+                        "suppressed": False,
+                    }
+                ]
+            },
+        )
+        mcp.register_mock_response(
+            "get_alert_from_incident",
+            lambda params: True,
+            {
+                "id": "PALERT123",
+                "type": "alert",
+                "summary": "The server is on fire.",
+                "self": "https://api.pagerduty.com/incidents/PINCIDENT123/alerts/PALERT123",
+                "html_url": "https://subdomain.pagerduty.com/alerts/PALERT123",
+                "created_at": "2015-10-06T21:30:42Z",
+                "status": "triggered",
+                "alert_key": "baf7cf21b1da41b4b0221008339ff357",
+                "severity": "critical",
+                "suppressed": False,
+            },
+        )
 
 
 # Define the competency test cases
@@ -273,5 +309,56 @@ INCIDENT_COMPETENCY_TESTS = [
             }
         ],
         description="List notes for incident with complex ID format",
+    ),
+    # Alert-related tests
+    IncidentCompetencyTest(
+        query="Show me all alerts for incident 123",
+        expected_tools=[
+            {
+                "tool_name": "list_alerts_from_incident",
+                "parameters": {"incident_id": "123", "query_model": {}},
+            }
+        ],
+        description="List all alerts for a specific incident",
+    ),
+    IncidentCompetencyTest(
+        query="What alerts are on incident PINCIDENT123?",
+        expected_tools=[
+            {
+                "tool_name": "list_alerts_from_incident",
+                "parameters": {"incident_id": "PINCIDENT123", "query_model": {}},
+            }
+        ],
+        description="List alerts for incident using natural language query",
+    ),
+    IncidentCompetencyTest(
+        query="Get the first 10 alerts for incident ABC123",
+        expected_tools=[
+            {
+                "tool_name": "list_alerts_from_incident",
+                "parameters": {"incident_id": "ABC123", "query_model": {"limit": 10}},
+            }
+        ],
+        description="List alerts with limit parameter",
+    ),
+    IncidentCompetencyTest(
+        query="Show me alert PALERT123 from incident PINCIDENT456",
+        expected_tools=[
+            {
+                "tool_name": "get_alert_from_incident",
+                "parameters": {"incident_id": "PINCIDENT456", "alert_id": "PALERT123"},
+            }
+        ],
+        description="Get a specific alert from an incident",
+    ),
+    IncidentCompetencyTest(
+        query="Get details of alert XYZ789 for incident 123",
+        expected_tools=[
+            {
+                "tool_name": "get_alert_from_incident",
+                "parameters": {"incident_id": "123", "alert_id": "XYZ789"},
+            }
+        ],
+        description="Get specific alert using natural language query",
     ),
 ]

@@ -81,18 +81,18 @@ class LogEntryCompetencyTest(CompetencyTest):
 LOG_ENTRY_COMPETENCY_TESTS = [
     LogEntryCompetencyTest(
         query="Show me all log entries",
-        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {}}}],
+        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {"limit": 100}}}],
         description="Basic log entry listing (defaults to last 7 days)",
     ),
     LogEntryCompetencyTest(
         query="List log entries",
-        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {}}}],
+        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {"limit": 100}}}],
         description="Simple log entry listing request",
     ),
     LogEntryCompetencyTest(
         query="Show me log entries from the last 24 hours",
-        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {}}}],
-        description="List log entries with time range (allows LLM to calculate timestamps)",
+        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {"limit": 100}}}],
+        description="List log entries with time range (LLM calculates since/until timestamps)",
     ),
     LogEntryCompetencyTest(
         query="Get the first 50 log entries",

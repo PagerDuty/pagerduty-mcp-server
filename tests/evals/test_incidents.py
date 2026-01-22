@@ -316,7 +316,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tools=[
             {
                 "tool_name": "list_alerts_from_incident",
-                "parameters": {"incident_id": "123", "query_model": {}},
+                "parameters": {"incident_id": "123", "query_model": {"limit": 100, "offset": 0}},
             }
         ],
         description="List all alerts for a specific incident",
@@ -326,7 +326,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tools=[
             {
                 "tool_name": "list_alerts_from_incident",
-                "parameters": {"incident_id": "PINCIDENT123", "query_model": {}},
+                "parameters": {"incident_id": "PINCIDENT123", "query_model": {"limit": 100, "offset": 0}},
             }
         ],
         description="List alerts for incident using natural language query",

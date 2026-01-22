@@ -1,18 +1,21 @@
 """Bedrock client implementation for evaluation testing."""
 
 import json
+import os
 import time
 import uuid
 from typing import Any
+from urllib.parse import unquote
 
 import boto3
+import httpx
 from botocore.exceptions import ClientError, NoCredentialsError
 
 from .base import ChatResponse, LLMClient, ToolCall
 
 
 class BedrockClient(LLMClient):
-    """Bedrock client implementation using the boto3 SDK."""
+    """Bedrock client implementation supporting both bearer token and boto3 SDK."""
 
     def __init__(
         self,
@@ -35,25 +38,62 @@ class BedrockClient(LLMClient):
             NoCredentialsError: If AWS credentials are not available
             ClientError: If Bedrock service is not available in the region
         """
-        try:
-            self.client = boto3.client("bedrock-runtime", region_name=region_name, **kwargs)
-            # Test the connection by listing available models (if permission allows)
-            # This is optional as some roles may not have bedrock:ListFoundationModels permission
-        except NoCredentialsError as e:
-            raise NoCredentialsError(
-                "AWS credentials not found. Please configure AWS credentials "
-                "via environment variables, AWS credentials file, or IAM role."
-            ) from e
-        except Exception as e:
-            raise ClientError(
-                error_response={"Error": {"Code": "ServiceUnavailable", "Message": str(e)}},
-                operation_name="bedrock_client_init",
-            ) from e
-
         self.region_name = region_name
         self.max_retries = max_retries
         self.initial_retry_delay = initial_retry_delay
         self.max_retry_delay = max_retry_delay
+
+        # Check for bearer token first
+        bearer_token = os.environ.get('AWS_BEARER_TOKEN_BEDROCK', '')
+
+        if bearer_token:
+            print(f"[DEBUG] Using bearer token authentication from AWS_BEARER_TOKEN_BEDROCK")
+            self.use_bearer_token = True
+            # Extract URL from bearer token (format: "bedrock-api-key-{base64_url}")
+            if bearer_token.startswith('bedrock-api-key-'):
+                import base64
+                encoded_url = bearer_token.replace('bedrock-api-key-', '')
+                decoded_url = base64.b64decode(encoded_url).decode('utf-8')
+                # Add https:// if not present
+                self.bearer_url = decoded_url if decoded_url.startswith('http') else f'https://{decoded_url}'
+                print(f"[DEBUG] Bearer URL endpoint: {self.bearer_url[:60]}...")
+            else:
+                self.bearer_url = bearer_token if bearer_token.startswith('http') else f'https://{bearer_token}'
+            self.client = None
+        else:
+            print(f"[DEBUG] Using boto3 IAM authentication")
+            self.use_bearer_token = False
+            self.bearer_url = None
+
+            try:
+                # Debug: Check credentials before creating client
+                print(f"[DEBUG] AWS_PROFILE env var: {os.environ.get('AWS_PROFILE', 'NOT SET')}")
+                print(f"[DEBUG] Creating client for region: {region_name}")
+
+                self.client = boto3.client("bedrock-runtime", region_name=region_name, **kwargs)
+
+                # Debug: Verify credentials using same region
+                sts = boto3.client('sts', region_name=region_name)
+                identity = sts.get_caller_identity()
+                print(f"[DEBUG] Authenticated as: {identity['Arn']}")
+                print(f"[DEBUG] Account ID: {identity['Account']}")
+
+                # Check the actual credentials being used
+                session = boto3.Session()
+                credentials = session.get_credentials()
+                print(f"[DEBUG] Credentials type: {type(credentials).__name__}")
+                print(f"[DEBUG] Access Key ID (first 10 chars): {credentials.access_key[:10] if credentials.access_key else 'None'}")
+
+            except NoCredentialsError as e:
+                raise NoCredentialsError(
+                    "AWS credentials not found. Please configure AWS credentials "
+                    "via environment variables, AWS credentials file, or IAM role."
+                ) from e
+            except Exception as e:
+                raise ClientError(
+                    error_response={"Error": {"Code": "ServiceUnavailable", "Message": str(e)}},
+                    operation_name="bedrock_client_init",
+                ) from e
 
     def chat_completion(
         self,
@@ -79,6 +119,13 @@ class BedrockClient(LLMClient):
         Returns:
             Standardized ChatResponse object
         """
+        # Use bearer token authentication if available
+        if self.use_bearer_token:
+            return self._chat_completion_with_bearer_token(
+                messages, model, tools, tool_choice, max_tokens, temperature, **kwargs
+            )
+
+        # Otherwise use boto3
         # Convert messages to Bedrock format
         bedrock_messages = self._convert_messages_to_bedrock(messages)
 
@@ -107,6 +154,10 @@ class BedrockClient(LLMClient):
         last_exception = None
         for attempt in range(self.max_retries + 1):
             try:
+                # Debug logging
+                print(f"[DEBUG] Invoking Bedrock model: {model}")
+                print(f"[DEBUG] Region: {self.region_name}")
+
                 # Make the API call to Bedrock
                 response = self.client.converse(modelId=model, **request_payload)
 
@@ -116,6 +167,8 @@ class BedrockClient(LLMClient):
             except ClientError as e:
                 error_code = e.response.get("Error", {}).get("Code", "Unknown")
                 error_message = e.response.get("Error", {}).get("Message", str(e))
+                print(f"[DEBUG] Boto3 ClientError - Code: {error_code}, Message: {error_message}")
+                print(f"[DEBUG] Full error response: {e.response}")
                 last_exception = e
 
                 # Check if this is a throttling error
@@ -145,6 +198,88 @@ class BedrockClient(LLMClient):
             error_message = last_exception.response.get("Error", {}).get("Message", str(last_exception))
             raise Exception(f"Bedrock API error ({error_code}): {error_message}") from last_exception
         raise Exception("Bedrock API call failed after retries")
+
+    def _chat_completion_with_bearer_token(
+        self,
+        messages: list[dict[str, Any]],
+        model: str,
+        tools: list[dict[str, Any]] | None = None,
+        tool_choice: str = "auto",
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+        **kwargs: Any,
+    ) -> ChatResponse:
+        """Send chat completion using bearer token authentication."""
+        # Convert messages to Bedrock format
+        bedrock_messages = self._convert_messages_to_bedrock(messages)
+
+        # Build inference configuration
+        inference_config = {}
+        if max_tokens is not None:
+            inference_config["maxTokens"] = max_tokens
+        if temperature is not None:
+            inference_config["temperature"] = temperature
+
+        # Build request payload
+        request_payload = {"messages": bedrock_messages}
+
+        if inference_config:
+            request_payload["inferenceConfig"] = inference_config
+
+        # Handle tool configuration if provided
+        if tools is not None and len(tools) > 0:
+            tool_config = self._convert_tools_to_bedrock(tools, tool_choice)
+            request_payload["toolConfig"] = tool_config
+
+        request_payload.update(kwargs)
+
+        # Implement retry logic
+        last_exception = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                print(f"[DEBUG] Making HTTP POST to bearer URL with model: {model}")
+
+                # Make HTTP request to pre-signed bearer URL
+                # The bearer URL already contains authentication, just POST the converse request
+                with httpx.Client(timeout=120.0) as http_client:
+                    response = http_client.post(
+                        self.bearer_url,
+                        json={"modelId": model, **request_payload},
+                        headers={
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                        },
+                    )
+
+                    if response.status_code == 200:
+                        bedrock_response = response.json()
+                        return self._convert_response_from_bedrock(bedrock_response)
+                    else:
+                        error_data = response.json() if response.text else {}
+                        error_message = error_data.get("message", response.text)
+                        raise Exception(f"Bedrock HTTP error ({response.status_code}): {error_message}")
+
+            except httpx.HTTPStatusError as e:
+                error_message = str(e)
+                last_exception = e
+
+                # Check for throttling (429 status)
+                if e.response.status_code == 429:
+                    if attempt < self.max_retries:
+                        delay = min(self.initial_retry_delay * (2**attempt), self.max_retry_delay)
+                        print(f"Throttled (attempt {attempt + 1}/{self.max_retries + 1}). Retrying in {delay:.2f}s...")
+                        time.sleep(delay)
+                        continue
+                    raise Exception(f"Bedrock throttled after {self.max_retries + 1} attempts") from e
+
+                raise Exception(f"Bedrock HTTP error: {error_message}") from e
+
+            except Exception as e:
+                raise Exception(f"Bedrock request failed: {str(e)}") from e
+
+        if last_exception:
+            raise Exception(f"Bedrock API call failed after retries: {last_exception}") from last_exception
+        raise Exception("Bedrock API call failed")
 
     def supports_model(self, model: str) -> bool:
         """Check if this is a Bedrock model.

@@ -85,7 +85,7 @@ class BedrockClient(LLMClient):
                 print(f"[DEBUG] Access Key ID (first 10 chars): {credentials.access_key[:10] if credentials.access_key else 'None'}")
 
             except NoCredentialsError as e:
-                raise NoCredentialsError(
+                raise RuntimeError(
                     "AWS credentials not found. Please configure AWS credentials "
                     "via environment variables, AWS credentials file, or IAM role."
                 ) from e

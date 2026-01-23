@@ -8,6 +8,8 @@ from mcp.server.fastmcp import Context
 
 from pagerduty_mcp.models import (
     MAX_RESULTS,
+    Alert,
+    AlertQuery,
     Incident,
     IncidentCreate,
     IncidentCreateRequest,
@@ -27,6 +29,7 @@ from pagerduty_mcp.models import (
     ServiceReference,
     UserReference,
 )
+from pagerduty_mcp.tools.alerts import get_alert_from_incident, list_alerts_from_incident
 from pagerduty_mcp.tools.incidents import (
     _change_incident_status,
     _change_incident_urgency,
@@ -1099,6 +1102,106 @@ class TestIncidentTools(unittest.TestCase):
             'The correct parameter to filter by multiple Incidents statuses is "status", not "statuses"',
             str(ctx.exception),
         )
+
+
+class TestAlertTools(unittest.TestCase):
+    """Test cases for alert tools."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up test fixtures once for the entire test class."""
+        cls.sample_alert_data = {
+            "id": "PALERT123",
+            "type": "alert",
+            "summary": "The server is on fire.",
+            "self": "https://api.pagerduty.com/incidents/PINCIDENT123/alerts/PALERT123",
+            "html_url": "https://subdomain.pagerduty.com/alerts/PALERT123",
+            "created_at": "2015-10-06T21:30:42Z",
+            "status": "triggered",
+            "alert_key": "baf7cf21b1da41b4b0221008339ff357",
+            "service": {
+                "id": "PSERVICE123",
+                "type": "service_reference",
+                "summary": "My Mail Service",
+                "self": "https://api.pagerduty.com/services/PSERVICE123",
+                "html_url": "https://subdomain.pagerduty.com/service-directory/PSERVICE123",
+            },
+            "incident": {
+                "id": "PINCIDENT123",
+                "type": "incident_reference",
+                "summary": "[#1234] The server is on fire.",
+                "self": "https://api.pagerduty.com/incidents/PINCIDENT123",
+                "html_url": "https://subdomain.pagerduty.com/incidents/PINCIDENT123",
+            },
+            "body": {
+                "type": "alert_body",
+                "contexts": [{"type": "link"}],
+                "details": {
+                    "customKey": "Server is on fire!",
+                    "customKey2": "Other stuff!",
+                },
+            },
+            "severity": "critical",
+            "suppressed": False,
+        }
+
+    @patch("pagerduty_mcp.tools.alerts.get_client")
+    def test_get_alert_from_incident(self, mock_get_client):
+        """Test getting a specific alert from an incident."""
+        # Arrange
+        mock_client = Mock()
+        mock_client.rget.return_value = self.sample_alert_data
+        mock_get_client.return_value = mock_client
+
+        # Act
+        result = get_alert_from_incident("PINCIDENT123", "PALERT123")
+
+        # Assert
+        self.assertIsInstance(result, Alert)
+        self.assertEqual(result.id, "PALERT123")
+        self.assertEqual(result.summary, "The server is on fire.")
+        self.assertEqual(result.status, "triggered")
+        self.assertEqual(result.severity, "critical")
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/alerts/PALERT123")
+
+    @patch("pagerduty_mcp.tools.alerts.paginate")
+    @patch("pagerduty_mcp.tools.alerts.get_client")
+    def test_list_alerts_from_incident(self, mock_get_client, mock_paginate):
+        """Test listing alerts for an incident."""
+        # Arrange
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = [self.sample_alert_data]
+
+        query_model = AlertQuery(limit=10, offset=0)
+
+        # Act
+        result = list_alerts_from_incident("PINCIDENT123", query_model)
+
+        # Assert
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+        self.assertIsInstance(result.response[0], Alert)
+        self.assertEqual(result.response[0].id, "PALERT123")
+        mock_paginate.assert_called_once()
+
+    @patch("pagerduty_mcp.tools.alerts.paginate")
+    @patch("pagerduty_mcp.tools.alerts.get_client")
+    def test_list_alerts_from_incident_empty_result(self, mock_get_client, mock_paginate):
+        """Test listing alerts when no alerts exist."""
+        # Arrange
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        query_model = AlertQuery()
+
+        # Act
+        result = list_alerts_from_incident("PINCIDENT123", query_model)
+
+        # Assert
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 0)
 
 
 if __name__ == "__main__":

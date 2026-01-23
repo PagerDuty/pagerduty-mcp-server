@@ -288,16 +288,20 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | add_note_to_incident     | Incidents          | Adds note to an incident                            | ❌         |
 | add_responders           | Incidents          | Adds responders to an incident                      | ❌         |
 | create_incident          | Incidents          | Creates a new incident                              | ❌         |
+| get_alert_from_incident  | Incidents          | Retrieves a specific alert from an incident         | ✅         |
 | get_incident             | Incidents          | Retrieves a specific incident                       | ✅         |
 | get_outlier_incident     | Incidents          | Retrieves outlier incident information for a specific incident | ✅         |
 | get_past_incidents       | Incidents          | Retrieves past incidents related to a specific incident | ✅         |
 | get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |
+| list_alerts_from_incident | Incidents         | Lists all alerts for a specific incident with pagination | ✅         |
 | list_incident_notes      | Incidents          | Lists all notes for a specific incident             | ✅         |
 | list_incidents           | Incidents          | Lists incidents                                     | ✅         |
 | manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
 | get_incident_workflow    | Incident Workflows | Retrieves a specific incident workflow              | ✅         |
 | list_incident_workflows  | Incident Workflows | Lists incident workflows with optional filtering    | ✅         |
 | start_incident_workflow  | Incident Workflows | Starts a workflow instance for an incident          | ❌         |
+| get_log_entry            | Log Entries        | Retrieves a specific log entry by ID                | ✅         |
+| list_log_entries         | Log Entries        | Lists all log entries across the account with time filtering | ✅ |
 | add_team_member          | Teams              | Adds a user to a team with a specific role          | ❌         |
 | create_team              | Teams              | Creates a new team                                  | ❌         |
 | delete_team              | Teams              | Deletes a team                                      | ❌         |

@@ -4,6 +4,26 @@
 
 PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
+## Visualization Layer (MCP Apps)
+
+This repository now includes an optional **interactive visualization layer** using the [MCP Apps SDK](https://github.com/modelcontextprotocol/ext-apps). This adds real-time dashboards for incident management directly in your MCP client.
+
+**Features:**
+- 📊 **Incident Timeline Chart** - Live trends over 24h/7d/30d
+- 🎯 **Service Health Table** - Incidents per service with status indicators
+- 📈 **Urgency Distribution** - High vs low urgency breakdown
+- ⏱️ **MTTR Analytics** - Average resolution time tracking
+- 🔄 **Real-time Updates** - Auto-refresh every 30 seconds
+
+**Quick Start:**
+```bash
+cd mcp-apps
+npm install
+npm run build
+```
+
+See [mcp-apps/README.md](mcp-apps/README.md) for full visualization setup instructions and VS Code configuration.
+
 ## Prerequisites
 
 *   [asdf-vm](https://asdf-vm.com/) installed.

@@ -193,3 +193,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignoretest_results_*.json
 test_run_output.log
+
+# MCP Apps Visualization Layer
+# TypeScript/Node.js build artifacts and dependencies
+mcp-apps/dist/
+mcp-apps/node_modules/
+mcp-apps/.git

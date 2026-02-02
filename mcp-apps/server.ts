@@ -22,6 +22,7 @@ import {
 import {
   IncidentDashboardDataSchema,
   IncidentStatsSchema,
+  DashboardInputSchema,
 } from "./lib/schemas.js";
 
 // Works both from source (server.ts) and compiled (dist/server.js)
@@ -40,8 +41,9 @@ export function createServer(): McpServer {
   });
 
   const resourceUri = "ui://incident-dashboard/mcp-app.html";
+  const simpleResourceUri = "ui://incident-dashboard/simple-dashboard.html";
 
-  // Model-facing tool: returns initial dashboard data and opens UI
+  // Model-facing tool: returns initial dashboard data and opens UI (simple version)
   registerAppTool(
     server,
     "get-incident-dashboard",
@@ -49,9 +51,9 @@ export function createServer(): McpServer {
       title: "Get Incident Dashboard",
       description:
         "Displays an interactive dashboard with incident trends, service health, and MTTR analytics. Shows incidents over 24h, 7d, or 30d.",
-      inputSchema: {},
+      inputSchema: DashboardInputSchema.shape,
       outputSchema: IncidentDashboardDataSchema.shape,
-      _meta: { ui: { resourceUri } },
+      _meta: { ui: { resourceUri: simpleResourceUri } },
     },
     async (params: any): Promise<CallToolResult> => {
       const timeRange =
@@ -191,6 +193,33 @@ ${dashboardData.service_health
         contents: [
           {
             uri: resourceUri,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+          },
+        ],
+      };
+    }
+  );
+
+  // Register the simple dashboard resource (HTML UI)
+  registerAppResource(
+    server,
+    simpleResourceUri,
+    simpleResourceUri,
+    {
+      mimeType: RESOURCE_MIME_TYPE,
+      description: "PagerDuty Simple Incident Dashboard UI",
+    },
+    async (): Promise<ReadResourceResult> => {
+      const html = await fs.readFile(
+        path.join(DIST_DIR, "simple-dashboard.html"),
+        "utf-8"
+      );
+
+      return {
+        contents: [
+          {
+            uri: simpleResourceUri,
             mimeType: RESOURCE_MIME_TYPE,
             text: html,
           },

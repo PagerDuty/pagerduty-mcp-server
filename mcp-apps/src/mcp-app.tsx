@@ -91,8 +91,16 @@ interface IncidentStats {
   }>;
 }
 
+function extractDashboardData(toolResult: any): IncidentDashboardData | null {
+  // Try to get structured content first
+  if (toolResult.structuredContent) {
+    return toolResult.structuredContent as IncidentDashboardData;
+  }
+  return null;
+}
+
 function IncidentDashboardApp() {
-  const [dashboardData, setDashboardData] = useState<IncidentDashboardData | null>(null);
+  const [toolResult, setToolResult] = useState<any | null>(null);
   const [hostContext, setHostContext] = useState<McpUiHostContext | undefined>();
 
   const { app, error } = useApp({
@@ -110,10 +118,7 @@ function IncidentDashboardApp() {
 
       app.ontoolresult = async (result) => {
         console.info("[Dashboard] Received tool call result:", result);
-
-        if (result.structuredContent) {
-          setDashboardData(result.structuredContent as unknown as IncidentDashboardData);
-        }
+        setToolResult(result);
       };
 
       app.ontoolcancelled = (params) => {
@@ -136,28 +141,36 @@ function IncidentDashboardApp() {
     }
   }, [app]);
 
-  if (error) return <div><strong>ERROR:</strong> {error.message}</div>;
-  if (!app) return <div>Connecting...</div>;
-  if (!dashboardData) return <div>Loading dashboard...</div>;
+  if (error) {
+    return (
+      <div style={{ padding: "20px", color: "red" }}>
+        <strong>ERROR:</strong> {error.message}
+        <pre style={{ marginTop: "10px", fontSize: "12px" }}>{JSON.stringify(error, null, 2)}</pre>
+      </div>
+    );
+  }
 
-  return (
-    <IncidentDashboardInner
-      app={app}
-      dashboardData={dashboardData}
-      hostContext={hostContext}
-    />
-  );
+  if (!app) {
+    return (
+      <div style={{ padding: "20px" }}>
+        <h2>🔄 Connecting to MCP...</h2>
+        <p>Initializing dashboard application...</p>
+      </div>
+    );
+  }
+
+  return <IncidentDashboardInner app={app} toolResult={toolResult} hostContext={hostContext} />;
 }
 
 interface IncidentDashboardInnerProps {
   app: App;
-  dashboardData: IncidentDashboardData;
+  toolResult: any | null;
   hostContext?: McpUiHostContext;
 }
 
 function IncidentDashboardInner({
   app,
-  dashboardData,
+  toolResult,
   hostContext,
 }: IncidentDashboardInnerProps) {
   const [currentStats, setCurrentStats] = useState<IncidentStats | null>(null);
@@ -169,9 +182,25 @@ function IncidentDashboardInner({
   const timelineChart = useRef<Chart | null>(null);
   const urgencyChart = useRef<Chart | null>(null);
 
-  // Initialize charts
+  // Extract dashboard data from tool result
+  const dashboardData = extractDashboardData(toolResult);
+
+  // Show loading state if we don't have data yet
+  if (!dashboardData) {
+    return (
+      <div style={{ padding: "20px" }}>
+        <h2>⏳ Loading dashboard data...</h2>
+        <p>App connected. Waiting for incident data...</p>
+        <p style={{ fontSize: "12px", color: "#666", marginTop: "10px" }}>
+          Tool result: {toolResult ? "Received, parsing..." : "Not yet received"}
+        </p>
+      </div>
+    );
+  }
+
+  // Initialize charts when dashboard data is available
   useEffect(() => {
-    if (!timelineChartRef.current || !urgencyChartRef.current) return;
+    if (!timelineChartRef.current || !urgencyChartRef.current || !dashboardData) return;
 
     const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const textColor = isDarkMode ? "#9ca3af" : "#374151";

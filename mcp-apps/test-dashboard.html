@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Dashboard</title>
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-card-bg: #f9fafb;
+      --color-border: #e5e7eb;
+      --color-text-primary: #1f2937;
+      --color-text-secondary: #6b7280;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #111827;
+        --color-card-bg: #1f2937;
+        --color-border: #374151;
+        --color-text-primary: #f3f4f6;
+        --color-text-secondary: #9ca3af;
+      }
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      padding: 20px;
+    }
+    
+    h1 { font-size: 24px; margin-bottom: 16px; }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--color-card-bg);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+    
+    .charts {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .chart-container {
+      background: var(--color-card-bg);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      height: 300px;
+    }
+    
+    .success { color: #10b981; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Test Dashboard - React is Working!</h1>
+  
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value">16</div>
+      <div class="stat-label">Total Incidents</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value success">0</div>
+      <div class="stat-label">Active Incidents</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">16</div>
+      <div class="stat-label">Resolved Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">74m</div>
+      <div class="stat-label">Avg Resolution Time</div>
+    </div>
+  </div>
+  
+  <div class="charts">
+    <div class="chart-container">
+      <canvas id="timeline"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="urgency"></canvas>
+    </div>
+  </div>
+  
+  <div style="padding: 16px; background: var(--color-card-bg); border-radius: 8px; border: 1px solid var(--color-border);">
+    <h2 style="margin-bottom: 12px; font-size: 18px;">✅ If you can see this, HTML rendering works!</h2>
+    <p style="color: var(--color-text-secondary);">
+      This is a static test page. The actual MCP dashboard should look similar but with real data and interactive charts.
+    </p>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Test Chart.js
+    const timelineCtx = document.getElementById('timeline').getContext('2d');
+    new Chart(timelineCtx, {
+      type: 'line',
+      data: {
+        labels: ['Jan 27', 'Jan 28', 'Jan 29', 'Jan 30'],
+        datasets: [{
+          label: 'Incidents',
+          data: [6, 10, 0, 0],
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'Incident Timeline (Test)' } }
+      }
+    });
+    
+    const urgencyCtx = document.getElementById('urgency').getContext('2d');
+    new Chart(urgencyCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['High', 'Low'],
+        datasets: [{
+          data: [15, 1],
+          backgroundColor: ['#ef4444', '#f59e0b']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'Urgency Distribution' } }
+      }
+    });
+    
+    console.log('✅ Test dashboard loaded successfully!');
+  </script>
+</body>
+</html>

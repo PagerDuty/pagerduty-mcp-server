@@ -289,7 +289,7 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | add_responders           | Incidents          | Adds responders to an incident                      | ❌         |
 | create_incident          | Incidents          | Creates a new incident                              | ❌         |
 | get_alert_from_incident  | Incidents          | Retrieves a specific alert from an incident         | ✅         |
-| get_incident             | Incidents          | Retrieves a specific incident                       | ✅         |
+| get_incident             | Incidents          | Retrieves a specific incident with optional related data (users, teams, etc.) | ✅         |
 | get_outlier_incident     | Incidents          | Retrieves outlier incident information for a specific incident | ✅         |
 | get_past_incidents       | Incidents          | Retrieves past incidents related to a specific incident | ✅         |
 | get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |

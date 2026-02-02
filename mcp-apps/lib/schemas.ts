@@ -49,7 +49,7 @@ export const IncidentSchema = z.object({
       id: z.string(),
       summary: z.string(),
     })
-    .optional(),
+    .nullish(), // Allow null or undefined (incidents may not have priorities)
   service: ServiceReferenceSchema,
   assignments: z
     .array(
@@ -76,8 +76,8 @@ export const IncidentListSchema = z.object({
   incidents: z.array(IncidentSchema),
   limit: z.number(),
   offset: z.number(),
-  total: z.number().optional(),
-  more: z.boolean(),
+  total: z.number().nullable().optional(),
+  more: z.boolean().nullable().optional(),
 });
 
 // Service schema
@@ -96,8 +96,13 @@ export const ServiceListSchema = z.object({
   services: z.array(ServiceSchema),
   limit: z.number(),
   offset: z.number(),
-  total: z.number().optional(),
-  more: z.boolean(),
+  total: z.number().nullable().optional(),
+  more: z.boolean().nullable().optional(),
+});
+
+// Input schemas for tools
+export const DashboardInputSchema = z.object({
+  timeRange: z.enum(["24h", "7d", "30d"]).optional().default("24h"),
 });
 
 // Aggregated data schemas for visualizations
@@ -168,6 +173,7 @@ export const IncidentStatsSchema = z.object({
 });
 
 // Type exports
+export type DashboardInput = z.infer<typeof DashboardInputSchema>;
 export type Incident = z.infer<typeof IncidentSchema>;
 export type IncidentList = z.infer<typeof IncidentListSchema>;
 export type Service = z.infer<typeof ServiceSchema>;

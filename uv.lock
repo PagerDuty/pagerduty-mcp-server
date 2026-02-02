@@ -596,7 +596,7 @@ wheels = [
 
 [[package]]
 name = "pagerduty-mcp"
-version = "0.11.0"
+version = "0.11.1"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
@@ -613,6 +613,7 @@ dev = [
     { name = "openai" },
     { name = "pyright" },
     { name = "pytest" },
+    { name = "python-dotenv" },
     { name = "ruff" },
 ]
 
@@ -632,6 +633,7 @@ dev = [
     { name = "openai", specifier = "~=1.84" },
     { name = "pyright", specifier = "~=1.1" },
     { name = "pytest", specifier = "~=8.3" },
+    { name = "python-dotenv", specifier = "~=1.0" },
     { name = "ruff", specifier = "~=0.12.0" },
 ]
 

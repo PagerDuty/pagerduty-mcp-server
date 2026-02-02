@@ -41,3 +41,7 @@ class ServiceReference(ReferenceBase):
 
 class IntegrationReference(ReferenceBase):
     _type: ClassVar[str] = "inbound_integration_reference"
+
+
+class PriorityReference(ReferenceBase):
+    _type: ClassVar[str] = "priority_reference"

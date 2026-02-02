@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>PagerDuty Incidents - Simple View</title>
+  <style>
+    :root {
+      --color-bg: light-dark(#ffffff, #111827);
+      --color-card-bg: light-dark(#f9fafb, #1f2937);
+      --color-border: light-dark(#e5e7eb, #374151);
+      --color-text-primary: light-dark(#111827, #f9fafb);
+      --color-text-secondary: light-dark(#6b7280, #9ca3af);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 20px 0;
+      font-size: 24px;
+    }
+
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--color-card-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .card-value {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .card-label {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .service-list {
+      background: var(--color-card-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .service-item {
+      padding: 12px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .service-item:last-child {
+      border-bottom: none;
+    }
+
+    .service-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .service-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-critical {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-healthy {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--color-text-secondary);
+    }
+
+    .error {
+      color: #ef4444;
+      padding: 20px;
+      background: #fee2e2;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 8px 16px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 PagerDuty Incident Dashboard</h1>
+    
+    <button id="refresh-btn">🔄 Refresh Data</button>
+
+    <div id="app">
+      <div class="loading">
+        <p>⏳ Connecting to PagerDuty MCP...</p>
+        <p style="font-size: 12px;">Watch the DevTools console for details.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/simple-dashboard.ts"></script>
+</body>
+</html>

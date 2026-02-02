@@ -2,6 +2,12 @@
 
 Configure the PagerDuty Visualization Server globally in VS Code so it's available in all workspaces.
 
+## Requirements
+
+**Node.js**: v20.11.0+ or v22+ (required for `import.meta.filename` support)
+- Check version: `node --version`
+- If using nvm: `nvm use 22` or `nvm install 22`
+
 ## Global Settings Location
 
 **macOS**: `~/Library/Application Support/Code/User/settings.json`
@@ -29,7 +35,7 @@ Open your global VS Code settings:
     "servers": {
       "pagerduty-viz": {
         "type": "stdio",
-        "command": "node",
+        "command": "/Users/svillanelo/.nvm/versions/node/v22.22.0/bin/node",
         "args": [
           "/Users/svillanelo/Documents/GitHub/pagerduty-mcp-server/mcp-apps/dist/index.js",
           "--stdio"

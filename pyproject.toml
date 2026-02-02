@@ -104,5 +104,6 @@ dev = [
     "openai~=1.84",
     "pyright~=1.1",
     "pytest~=8.3",
+    "python-dotenv~=1.0",
     "ruff~=0.12.0",
 ]

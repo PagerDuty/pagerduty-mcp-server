@@ -47,13 +47,17 @@ ENV PATH="/app/.venv/bin:$PATH" \
 # Set default PagerDuty API host (can be overridden)
 ENV PAGERDUTY_API_HOST="https://api.pagerduty.com"
 
+# Expose port for HTTP transport (streamable-http or sse)
+EXPOSE 8000
+
 # Health check to verify the server can start
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import pagerduty_mcp" || exit 1
 
-# Entry point for the MCP server (stdio transport)
+# Entry point for the MCP server
 ENTRYPOINT ["python", "-m", "pagerduty_mcp"]
 
-# Default command (read-only mode)
-# To enable write tools, pass: --enable-write-tools
-CMD []
+# Default: HTTP mode on 0.0.0.0:8000
+# Override with: docker run <image> --transport stdio
+# Add --enable-write-tools for write operations
+CMD ["--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8000"]

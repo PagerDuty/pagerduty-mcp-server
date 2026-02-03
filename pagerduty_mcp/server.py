@@ -67,16 +67,36 @@ def add_write_tool(mcp_instance: FastMCP, tool: Callable) -> None:
 
 
 @app.command()
-def run(*, enable_write_tools: bool = False) -> None:
+def run(
+    *,
+    enable_write_tools: bool = False,
+    transport: str = typer.Option(
+        "stdio",
+        help="Transport protocol: stdio, sse, or streamable-http",
+    ),
+    host: str = typer.Option(
+        "127.0.0.1",
+        help="Host for HTTP server (sse/streamable-http only)",
+    ),
+    port: int = typer.Option(
+        8000,
+        help="Port for HTTP server (sse/streamable-http only)",
+    ),
+) -> None:
     """Run the MCP server with the specified configuration.
 
     Args:
         enable_write_tools: Flag to enable write tools
+        transport: Transport protocol (stdio, sse, or streamable-http)
+        host: Host for HTTP server
+        port: Port for HTTP server
     """
     mcp = FastMCP(
         "PagerDuty MCP Server",
         lifespan=app_lifespan,
         instructions=MCP_SERVER_INSTRUCTIONS,
+        host=host,
+        port=port,
     )
     for tool in read_tools:
         add_read_only_tool(mcp, tool)
@@ -85,4 +105,4 @@ def run(*, enable_write_tools: bool = False) -> None:
         for tool in write_tools:
             add_write_tool(mcp, tool)
 
-    mcp.run()
+    mcp.run(transport=transport)

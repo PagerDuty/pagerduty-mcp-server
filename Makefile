@@ -1,88 +1,121 @@
-.PHONY: help test test-coverage test-html-coverage clean install dev-install lint format check
+# Based on https://github.com/answerbook/repo-template-base
 
-# Default target
-help:
-	@echo "Available commands:"
-	@echo "  test              Run all unit tests"
-	@echo "  test-coverage     Run tests with coverage report"
-	@echo "  test-html-coverage Run tests with HTML coverage report"
-	@echo "  clean             Clean up generated files"
-	@echo "  install           Install dependencies"
-	@echo "  dev-install       Install development dependencies"
-	@echo "  lint              Run linting checks"
-	@echo "  format            Format code"
-	@echo "  check             Run all checks (lint, format, test)"
+-include .config.mk
 
-# Run all unit tests
-test:
-	@echo "Running all unit tests..."
-	uv run python -m pytest tests/ -v
+# Provide standard defaults - set overrides in .config.mk
+SHELL=/bin/bash -o pipefail
+ALWAYS_TIMESTAMP_VERSION ?= false
+ifndef APP_NAME
+    APP_NAME := $(shell git remote -v | awk '/origin/ && /fetch/ { sub(/\.git/, ""); n=split($$2, origin, "/"); print origin[n]}')
+endif
+PUBLISH_LATEST ?= false
+RELEASE_BRANCHES ?= master main
 
-# Run tests with coverage report
-test-coverage:
-	@echo "Running tests with coverage..."
-	uv run python -m coverage run -m pytest tests/
-	@echo "\nCoverage Report:"
-	uv run python -m coverage report --include="pagerduty_mcp/tools/*" --show-missing
-	@echo "\nDetailed Coverage by Module:"
-	@echo "================================"
-	uv run python -m coverage report --include="pagerduty_mcp/tools/incidents.py" --show-missing
-	uv run python -m coverage report --include="pagerduty_mcp/tools/users.py" --show-missing
-	uv run python -m coverage report --include="pagerduty_mcp/tools/services.py" --show-missing
-	uv run python -m coverage report --include="pagerduty_mcp/tools/teams.py" --show-missing
-	uv run python -m coverage report --include="pagerduty_mcp/tools/schedules.py" --show-missing
-	uv run python -m coverage report --include="pagerduty_mcp/tools/escalation_policies.py" --show-missing
-	uv run python -m coverage report --include="pagerduty_mcp/tools/oncalls.py" --show-missing
-	uv run python -m coverage report --include="pagerduty_mcp/tools/event_orchestrations.py" --show-missing
+## Define sources for rendering and templating
+GIT_SHA1 := $(shell git log --pretty=format:'%h' -n 1)
+GIT_BRANCH := $(shell git branch --show-current)
+GIT_URL := $(shell git remote get-url origin)
+GIT_INFO ?= $(TMP_DIR)/.git-info.$(GIT_SHA1)
+ifndef BUILD_URL
+    BUILD_URL := localbuild://${USER}@$(shell uname -n | sed "s/'//g")
+endif
+BUILD_DATESTAMP := $(shell date -u '+%Y%m%dT%H%M%SZ')
 
-# Run tests with HTML coverage report
-test-html-coverage:
-	@echo "Running tests with HTML coverage report..."
-	uv run python -m coverage run -m pytest tests/
-	uv run python -m coverage html --include="pagerduty_mcp/tools/*"
-	@echo "HTML coverage report generated in htmlcov/index.html"
+TMP_DIR ?= tmp
+BUILD_ENV ?= $(TMP_DIR)/build-env
+VERSION_INFO ?= $(TMP_DIR)/version-info
 
-# Clean up generated files
-clean:
-	@echo "Cleaning up generated files..."
-	rm -rf .coverage
-	rm -rf htmlcov/
-	rm -rf .pytest_cache/
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete
+# Define commands via docker
+DOCKER ?= docker
+DOCKER_RUN ?= $(DOCKER) run --rm -i
+DOCKER_RUN_BUILD_ENV ?= $(DOCKER_RUN) --env-file=$(BUILD_ENV)
 
-# Install dependencies
-install:
-	@echo "Installing dependencies..."
-	uv sync
+# Handle versioning
+ifeq ("$(VERSION_INFO)", "$(wildcard $(VERSION_INFO))")
+  # if tmp/build-env exists on disk, use it
+  include $(VERSION_INFO)
+else ifneq "$(APP_VERSION)" ""
+  MAJOR_VERSION := $(shell echo $(APP_VERSION) | sed 's/v//' | cut -f1 -d'.')
+  MINOR_VERSION := $(shell echo $(APP_VERSION) | sed 's/v//' | cut -f1-2 -d'.')
+  PATCH_VERSION := $(shell echo $(APP_VERSION) | sed 's/v//')
+  BUILD_VERSION := $(PATCH_VERSION)-$(BUILD_DATESTAMP)
+  ifneq ($(GIT_BRANCH), $(filter $(RELEASE_BRANCHES), $(GIT_BRANCH)))
+    RELEASE_VERSION := $(BUILD_VERSION)
+  else ifeq ("$(ALWAYS_TIMESTAMP_VERSION)", "true")
+    RELEASE_VERSION := $(BUILD_VERSION)
+  else
+    RELEASE_VERSION := $(PATCH_VERSION)
+  endif
+else
+  BUILD_VERSION = $(BUILD_DATESTAMP)
+  RELEASE_VERSION := $(BUILD_VERSION)
+endif
 
-# Install development dependencies
-dev-install:
-	@echo "Installing development dependencies..."
-	uv sync --group dev
+# Exports the variables for shell use
+export
 
-# Run linting checks
-lint:
-	@echo "Running linting checks..."
-	uv run python -m ruff check .
+# Source in repository specific environment variables
+MAKEFILE_LIB=.makefiles
+MAKEFILE_INCLUDES=$(wildcard $(MAKEFILE_LIB)/*.mk)
+include $(MAKEFILE_INCLUDES)
 
-# Format code
-format:
-	@echo "Formatting code..."
-	uv run python -m ruff format .
+$(BUILD_ENV):: $(GIT_INFO) $(VERSION_INFO)
+	@cat $(VERSION_INFO) $(GIT_INFO) | sort > $(@)
 
-# Run all checks
-check: lint test-coverage
-	@echo "All checks completed!"
+$(VERSION_INFO):: $(GIT_INFO)
+	@env | awk '!/TOKEN/ && /^(BUILD|APP_NAME)/ || /(VERSION=)/ { print }' | sort > $(@)
 
-# Coverage summary
-coverage-summary:
-	@echo "Coverage Summary:"
-	@echo "================="
-	@uv run python -m coverage run -m pytest tests/ > /dev/null 2>&1
-	@uv run python -m coverage report --include="pagerduty_mcp/tools/*" | tail -1
+$(GIT_INFO):: $(TMP_DIR)
+	@env | awk '!/TOKEN/ && /^(GIT)/ { print }' | sort > $(@)
 
-# Start mcp server debugging session
-debug:
-	@echo "Starting mcp server debugging session..."
-	npx @modelcontextprotocol/inspector uv run --directory ./ python -m pagerduty_mcp --enable-write-tools
+$(TMP_DIR)::
+	@mkdir -p $(@)
+
+# This helper function makes debugging much easier.
+.PHONY:debug-%
+debug-%:              ## Debug a variable by calling `make debug-VARIABLE`
+	@echo $(*) = $($(*))
+
+.PHONY:help
+.SILENT:help
+help:                 ## Show this help, includes list of all actions.
+	@awk 'BEGIN {FS = ":.*?## "}; /^.+: .*?## / && !/awk/ {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' ${MAKEFILE_LIST} | sort
+
+.PHONY:build
+build:: $(BUILD_ENV)
+
+.PHONY:clean
+clean::          ## Cleanup the local checkout
+	-rm -rf *.backup tmp/ reports/
+
+.PHONY:clean-all
+clean-all:: clean      ## Full cleanup of all artifacts
+	-git clean -Xdf
+
+.PHONY:lint
+lint:: ## Run all "lint-%" tasks
+
+.PHONY:publish
+publish:: ## Run all "publish-%" tasks
+
+.PHONY:setup
+setup:: ## Run all "setup-%" tasks (for use in CI)
+
+.PHONY:test
+test:: ## Run all "test-%" tasks
+
+.PHONY:version
+version:: ## Run all "version-%" tasks
+
+# Local development helpers
+.PHONY:run
+run: setup-python ## Run the MCP server locally (stdio mode)
+	uv run pagerduty-mcp
+
+.PHONY:run-http
+run-http: setup-python ## Run the MCP server locally (HTTP mode)
+	uv run pagerduty-mcp --transport streamable-http --host 0.0.0.0 --port 8000
+
+.PHONY:debug
+debug: setup-python ## Start MCP inspector debugging session
+	npx @modelcontextprotocol/inspector uv run python -m pagerduty_mcp --enable-write-tools

@@ -193,3 +193,7 @@ cython_debug/
 .cursorignore
 .cursorindexingignoretest_results_*.json
 test_run_output.log
+
+# Build artifacts
+tmp/
+reports/

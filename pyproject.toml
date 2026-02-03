@@ -101,8 +101,24 @@ dev = [
     "coverage~=7.8",
     "deepdiff~=8.5",
     "ipykernel~=6.29",
+    "mypy~=1.14",
     "openai~=1.84",
     "pyright~=1.1",
     "pytest~=8.3",
+    "pytest-cov~=6.0",
+    "python-semantic-release~=9.15",
     "ruff~=0.12.0",
 ]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+commit_author = "LogDNA Bot <bot@logdna.com>"
+parser_angular_minor_types = "feat"
+parser_angular_patch_types = "fix,perf"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

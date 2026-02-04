@@ -11,28 +11,28 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_schedules(query_model: ScheduleQuery) -> ListResponseModel[Schedule]:
+def list_schedules(query_model: ScheduleQuery) -> str:
     """List schedules with optional filtering.
 
     Returns:
-        List of schedules matching the query parameters
+        JSON string of ListResponseModel containing Schedule objects
     """
     response = paginate(client=get_client(), entity="schedules", params=query_model.to_params())
     schedules = [Schedule(**schedule) for schedule in response]
-    return ListResponseModel[Schedule](response=schedules)
+    return ListResponseModel[Schedule](response=schedules).model_dump_json()
 
 
-def get_schedule(schedule_id: str) -> Schedule:
+def get_schedule(schedule_id: str) -> str:
     """Get a specific schedule by ID.
 
     Args:
         schedule_id: The ID of the schedule to retrieve
 
     Returns:
-        Schedule details
+        JSON string of Schedule details
     """
     response = get_client().rget(f"/schedules/{schedule_id}")
-    return Schedule.from_api_response(response)
+    return Schedule.from_api_response(response).model_dump_json()
 
 
 def create_schedule_override(schedule_id: str, override_request: ScheduleOverrideCreate) -> dict | list:
@@ -53,28 +53,28 @@ def create_schedule_override(schedule_id: str, override_request: ScheduleOverrid
     return get_client().rpost(f"/schedules/{schedule_id}/overrides", json=request_data)
 
 
-def list_schedule_users(schedule_id: str) -> ListResponseModel[User]:
+def list_schedule_users(schedule_id: str) -> str:
     """List users in a schedule.
 
     Args:
         schedule_id: The ID of the schedule
 
     Returns:
-        List of users in the schedule
+        JSON string of ListResponseModel containing User objects
     """
     response = get_client().rget(f"/schedules/{schedule_id}/users")
     users = [User(**user) for user in response]
-    return ListResponseModel[User](response=users)
+    return ListResponseModel[User](response=users).model_dump_json()
 
 
-def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
+def create_schedule(create_model: ScheduleCreateRequest) -> str:
     """Create a new on-call schedule.
 
     Args:
         create_model: The schedule creation data
 
     Returns:
-        The created schedule
+        JSON string of the created schedule
     """
     request_data = create_model.model_dump()
     for layer in request_data["schedule"]["schedule_layers"]:
@@ -90,10 +90,10 @@ def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
                     restriction["start_day_of_week"] = 1
 
     response = get_client().rpost("/schedules", json=request_data)
-    return Schedule.from_api_response(response)
+    return Schedule.from_api_response(response).model_dump_json()
 
 
-def update_schedule(schedule_id: str, update_model: ScheduleUpdateRequest) -> Schedule:
+def update_schedule(schedule_id: str, update_model: ScheduleUpdateRequest) -> str:
     """Update an existing schedule.
 
     Args:
@@ -101,7 +101,7 @@ def update_schedule(schedule_id: str, update_model: ScheduleUpdateRequest) -> Sc
         update_model: The updated schedule data
 
     Returns:
-        The updated schedule
+        JSON string of the updated schedule
     """
     request_data = update_model.model_dump()
 
@@ -120,6 +120,6 @@ def update_schedule(schedule_id: str, update_model: ScheduleUpdateRequest) -> Sc
 
     try:
         response = get_client().rput(f"/schedules/{schedule_id}", json=request_data)
-        return Schedule.from_api_response(response)
+        return Schedule.from_api_response(response).model_dump_json()
     except Exception as e:
         raise Exception(f"Failed to update schedule {schedule_id}: {e!s}") from e

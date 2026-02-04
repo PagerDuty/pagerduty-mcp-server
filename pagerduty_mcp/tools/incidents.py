@@ -26,15 +26,14 @@ from pagerduty_mcp.tools.users import get_user_data
 from pagerduty_mcp.utils import paginate
 
 
-def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
+def list_incidents(query_model: IncidentQuery) -> str:
     """List incidents with optional filtering.
 
     Args:
         query_model: Optional filtering parameters
 
     Returns:
-        List of Incident objects matching the query parameters
-
+        JSON string of ListResponseModel containing Incident objects
     """
     params = query_model.to_params()
 
@@ -51,31 +50,30 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
         client=get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
     )
     incidents = [Incident(**incident) for incident in response]
-    return ListResponseModel[Incident](response=incidents)
+    return ListResponseModel[Incident](response=incidents).model_dump_json()
 
 
-def get_incident(incident_id: str) -> Incident:
+def get_incident(incident_id: str) -> str:
     """Get a specific incident.
 
     Args:
         incident_id: The ID or number of the incident to retrieve.
 
     Returns:
-        Incident details
+        JSON string of Incident details
     """
     response = get_client().rget(f"/incidents/{incident_id}")
-    return Incident.model_validate(response)
+    return Incident.model_validate(response).model_dump_json()
 
-
-def create_incident(create_model: IncidentCreateRequest) -> Incident:
+def create_incident(create_model: IncidentCreateRequest) -> str:
     """Create an incident.
 
     Returns:
-        The created incident
+        JSON string of the created incident
     """
     response = get_client().rpost("/incidents", json=create_model.model_dump(exclude_none=True))
 
-    return Incident.model_validate(response)
+    return Incident.model_validate(response).model_dump_json()
 
 
 def _generate_manage_request(incident_ids: list[str]):
@@ -134,37 +132,63 @@ def _escalate_incident(incident_ids: list[str], level: int):
     return get_client().rput("/incidents", json=request_payload)
 
 
+def _escalate_to_policy(incident_ids: list[str], policy_id: str):
+    request_payload = _generate_manage_request(incident_ids)
+    request_payload = _update_manage_request(
+        request_payload,
+        "escalation_policy",
+        {"type": "escalation_policy_reference", "id": policy_id},
+    )
+
+    return get_client().rput("/incidents", json=request_payload)
+
+
+def _change_incident_priority(incident_ids: list[str], priority_id: str):
+    request_payload = _generate_manage_request(incident_ids)
+    request_payload = _update_manage_request(
+        request_payload,
+        "priority",
+        {"type": "priority_reference", "id": priority_id},
+    )
+
+    return get_client().rput("/incidents", json=request_payload)
+
+
 # TODO: Currently only supporting managing a single incident at a time.
 # consider refactoring to support multiple incidents in the future.
 def manage_incidents(
     manage_request: IncidentManageRequest,
-) -> ListResponseModel[Incident]:
-    """Manage one or more incidents by changing its status, urgency, assignment, or escalation level.
+) -> str:
+    """Manage one or more incidents by changing its status, urgency, priority, assignment, or escalation level.
 
     Use this tool when you want to bulk update incidents.
 
     Args:
         manage_request: The request model containing the incident IDs and the fields to update
-            (status, urgency, assignment, escalation level)
+            (status, urgency, priority, assignment, escalation level)
 
     Returns:
-        The updated incident
+        JSON string of ListResponseModel containing updated Incident objects
     """
     response = None
     if manage_request.status:
         response = _change_incident_status(manage_request.incident_ids, manage_request.status)
     if manage_request.urgency:
         response = _change_incident_urgency(manage_request.incident_ids, manage_request.urgency)
+    if manage_request.priority:
+        response = _change_incident_priority(manage_request.incident_ids, manage_request.priority.id)
     if manage_request.assignement:
         response = _reassign_incident(manage_request.incident_ids, manage_request.assignement)
     if manage_request.escalation_level:
         response = _escalate_incident(manage_request.incident_ids, manage_request.escalation_level)
+    if manage_request.escalation_policy_id:
+        response = _escalate_to_policy(manage_request.incident_ids, manage_request.escalation_policy_id)
 
     # TODO: Reconsider approach - We're overwriting the response
     if response:
         incidents = [Incident(**incident) for incident in response]
-        return ListResponseModel[Incident](response=incidents)
-    return ListResponseModel[Incident](response=[])
+        return ListResponseModel[Incident](response=incidents).model_dump_json()
+    return ListResponseModel[Incident](response=[]).model_dump_json()
 
 
 def add_responders(
@@ -194,44 +218,43 @@ def add_responders(
     return "Unexpected response format: " + str(response)
 
 
-def list_incident_notes(incident_id: str) -> ListResponseModel[IncidentNote]:
+def list_incident_notes(incident_id: str) -> str:
     """List all notes for a specific incident.
 
     Args:
         incident_id: The ID of the incident to retrieve notes from
 
     Returns:
-        List of IncidentNote objects for the specified incident
-
+        JSON string of ListResponseModel containing IncidentNote objects
     """
     response = get_client().rget(f"/incidents/{incident_id}/notes")
 
     # The rget method returns the unwrapped data directly (array of notes)
     if isinstance(response, list):
         notes = [IncidentNote.model_validate(note) for note in response]
-        return ListResponseModel[IncidentNote](response=notes)
+        return ListResponseModel[IncidentNote](response=notes).model_dump_json()
 
     # Fallback if response format is unexpected
-    return ListResponseModel[IncidentNote](response=[])
+    return ListResponseModel[IncidentNote](response=[]).model_dump_json()
 
 
-def add_note_to_incident(incident_id: str, note: str) -> IncidentNote:
+def add_note_to_incident(incident_id: str, note: str) -> str:
     """Add a note to an incident.
 
     Args:
         incident_id: The ID of the incident to add a note to
         note: The note text to be added
     Returns:
-        The updated incident with the new note
+        JSON string of the updated incident with the new note
     """
     response = get_client().rpost(
         f"/incidents/{incident_id}/notes",
         json={"note": {"content": note}},
     )
-    return IncidentNote.model_validate(response)
+    return IncidentNote.model_validate(response).model_dump_json()
 
 
-def get_outlier_incident(incident_id: str, query_model: OutlierIncidentQuery) -> OutlierIncidentResponse:
+def get_outlier_incident(incident_id: str, query_model: OutlierIncidentQuery) -> str:
     """Get Outlier Incident information for a given Incident on its Service.
 
     Outlier Incident returns incident that deviates from the expected patterns
@@ -243,15 +266,15 @@ def get_outlier_incident(incident_id: str, query_model: OutlierIncidentQuery) ->
         query_model: Query parameters including date range and additional details
 
     Returns:
-        Outlier incident information calculated over the same Service as the given Incident
+        JSON string of outlier incident information
     """
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/outlier_incident", params=params)
 
-    return OutlierIncidentResponse.from_api_response(response)
+    return OutlierIncidentResponse.from_api_response(response).model_dump_json()
 
 
-def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> PastIncidentsResponse:
+def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> str:
     """Get Past Incidents related to a specific incident ID.
 
     Past Incidents returns Incidents within the past 6 months that have similar
@@ -264,15 +287,15 @@ def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> Pas
         query_model: Query parameters including limit and total flag
 
     Returns:
-        List of past incidents with similarity scores
+        JSON string of past incidents with similarity scores
     """
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/past_incidents", params=params)
 
-    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit or 5)
+    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit or 5).model_dump_json()
 
 
-def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
+def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) -> str:
     """Get Related Incidents for a specific incident ID.
 
     Returns the 20 most recent Related Incidents that are impacting other Responders
@@ -284,9 +307,9 @@ def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) 
         query_model: Query parameters including additional details
 
     Returns:
-        List of related incidents and their relationships
+        JSON string of related incidents and their relationships
     """
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
 
-    return RelatedIncidentsResponse.from_api_response(response)
+    return RelatedIncidentsResponse.from_api_response(response).model_dump_json()

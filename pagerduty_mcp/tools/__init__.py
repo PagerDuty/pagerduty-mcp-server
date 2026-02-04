@@ -55,6 +55,7 @@ from .log_entries import (
     list_log_entries,
 )
 from .oncalls import list_oncalls
+from .priorities import list_priorities
 from .schedules import (
     create_schedule,
     create_schedule_override,
@@ -114,6 +115,8 @@ read_tools = [
     # Incident Workflows
     list_incident_workflows,
     get_incident_workflow,
+    # Priorities
+    list_priorities,
     # Services
     list_services,
     get_service,

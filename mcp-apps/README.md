@@ -1,306 +1,232 @@
-# PagerDuty MCP Visualization Server
+# PagerDuty MCP Apps
 
-Interactive dashboards for PagerDuty incident management using the MCP Apps SDK.
-
-## Features
-
-- **Real-time Incident Dashboard** - Live charts showing incident trends over 24h/7d/30d
-- **Service Health Table** - Visual overview of incidents per service with status indicators
-- **Urgency Distribution** - Donut chart breakdown of high vs low urgency incidents
-- **MTTR Analytics** - Average resolution time tracking per service
-- **Auto-polling** - Dashboard updates every 30 seconds with fresh data
-- **Recent Incidents** - Live feed of active incidents with status badges
-
-## Prerequisites
-
-- Node.js 18+
-- Bun runtime (auto-installed on first build)
-- PagerDuty API credentials (read-only access sufficient)
-
-## Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/svillanelo/pagerduty-mcp-viz-server.git
-cd pagerduty-mcp-viz-server
-
-# Install dependencies
-npm install
-
-# Build the server
-export PATH="$HOME/.bun/bin:$PATH"
-npm run build
-```
-
-## Configuration
-
-### Environment Variables
-
-Set these environment variables for PagerDuty API access:
-
-```bash
-export PAGERDUTY_API_KEY="your-api-key"
-export PAGERDUTY_USER_EMAIL="your-email@example.com"
-```
-
-### Claude Desktop Configuration
-
-Add this server to your Claude Desktop config file:
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "pagerduty-viz": {
-      "command": "node",
-      "args": ["/absolute/path/to/pagerduty-mcp-viz-server/dist/index.js", "--stdio"],
-      "env": {
-        "PAGERDUTY_API_KEY": "your-api-key-here",
-        "PAGERDUTY_USER_EMAIL": "your-email@example.com"
-      }
-    }
-  }
-}
-```
-
-**Important**: Replace `/absolute/path/to/` with the actual path to your cloned repository.
-
-### VS Code Configuration
-
-For VS Code with the Claude extension, add to your workspace settings (`.vscode/settings.json`):
-
-```json
-{
-  "claude.mcpServers": {
-    "pagerduty-viz": {
-      "command": "node",
-      "args": ["/absolute/path/to/pagerduty-mcp-viz-server/dist/index.js", "--stdio"],
-      "env": {
-        "PAGERDUTY_API_KEY": "your-api-key-here",
-        "PAGERDUTY_USER_EMAIL": "your-email@example.com"
-      }
-    }
-  }
-}
-```
-
-## Usage
-
-After configuring the server in your MCP client (Claude Desktop or VS Code):
-
-1. **Open the dashboard**:
-   ```
-   Show me incident trends
-   ```
-   or
-   ```
-   Get incident dashboard
-   ```
-
-2. **The dashboard displays**:
-   - **Summary cards**: Total incidents, active incidents, resolved today, average resolution time
-   - **Incident timeline**: Line chart showing triggered/acknowledged/resolved incidents over time
-   - **Urgency distribution**: Donut chart showing high vs low urgency breakdown
-   - **Service health table**: Top 10 services by incident count with status indicators
-   - **Recent active incidents**: Live feed with status and urgency badges
-
-3. **Real-time updates**:
-   - Dashboard auto-refreshes every 30 seconds
-   - Pause/resume updates with the button in the header
-   - Last update timestamp shown
-   - Active incidents count updates in real-time
-
-## Development
-
-```bash
-# Development mode with hot reload
-npm run dev
-
-# Watch mode for UI changes only
-npm run watch
-
-# Serve the server with hot reload
-npm run serve
-
-# Build for production
-npm run build
-```
+Interactive React UIs for PagerDuty incident management, embedded in the Python MCP server for seamless IDE integration.
 
 ## Architecture
 
-This server follows the MCP Apps SDK **two-tool pattern** from the system-monitor example:
+These apps are built as **single-file HTML bundles** using Vite + `vite-plugin-singlefile`, then embedded as MCP resources in the Python server. No separate HTTP servers needed - everything runs through the Python MCP server on stdio.
 
-### Tools
+**Benefits:**
+- ✅ Native VS Code integration (MCP resources)
+- ✅ Single process, no HTTP server management
+- ✅ Direct access to all PagerDuty MCP tools
+- ✅ Simple deployment: `uv run pagerduty-mcp`
 
-1. **get-incident-dashboard** (Model-facing)
-   - Called by LLM when user requests visualization
-   - Fetches incident and service data from PagerDuty API
-   - Aggregates data: time-series, service health, urgency distribution
-   - Returns structured data + opens React UI in iframe
-   - Provides text summary for the LLM context
+## Available Apps
 
-2. **poll-incident-stats** (App-only)
-   - Called by React app every 30 seconds via `setInterval`
-   - Returns real-time active incident metrics
-   - Hidden from LLM (`_meta.ui.visibility: ["app"]`)
-   - Lightweight: only dynamic data, no full refetch
+### 1. Incident Command Center
+Full incident lifecycle management from your IDE:
+- Real-time incident feed with auto-refresh
+- Deep incident details: timeline, notes, alerts, changes
+- Quick actions: acknowledge, resolve
+- Escalation UI with policy selection
+- AI-powered similar incident detection
+- Alert inspection with raw data
+- Runbook links parsed from incident metadata
 
-### Data Flow
-
+**Usage in VS Code:**
 ```
-User asks Claude → "Show me incident trends"
-                 ↓
-Claude calls → get-incident-dashboard tool
-             ↓
-Server fetches → PagerDuty API (list_incidents, list_services)
-               ↓
-Server aggregates → Time-series buckets, service grouping, MTTR calc
-                  ↓
-Returns to UI → Structured data + opens React dashboard iframe
-              ↓
-React app polls → poll-incident-stats every 30s
-                ↓
-Charts update → Chart.js renders, smooth animations
+Ask Claude: "Show me the incident command center"
 ```
 
-### Caching Strategy
+### 2. On-Call Schedule Visualizer
+Who's on-call right now across teams and schedules.
 
-To respect PagerDuty API rate limits (960 requests/min):
-
-- **Incident data**: 30 second TTL
-- **Service data**: 5 minute TTL (services change infrequently)
-- **Aggregated metrics**: 60 second TTL
-
-**Estimated load**: ~120 API requests/hour (well under limit)
-
-## Project Structure
-
+**Usage in VS Code:**
 ```
-pagerduty-mcp-viz-server/
-├── server.ts                    # MCP server (tool registration)
-├── main.ts                      # HTTP server for development
-├── lib/
-│   ├── schemas.ts               # Zod schemas + TypeScript types
-│   ├── pagerduty-client.ts      # PagerDuty REST API wrapper
-│   ├── cache.ts                 # Server-side TTL cache
-│   └── aggregations.ts          # Time-series, MTTR calculations
-├── src/
-│   ├── mcp-app.tsx              # React dashboard component
-│   ├── mcp-app.html             # HTML template
-│   └── global.css               # Global styles
-└── dist/                        # Build output
-    ├── mcp-app.html             # Bundled UI (single 759KB file)
-    ├── server.js                # Compiled server logic
-    └── index.js                 # CLI entry point with shebang
+Ask Claude: "Show me the on-call schedule"
 ```
 
-## Tech Stack
+### 3. Service Health Matrix
+Service health overview with incident counts and status indicators.
 
-- **Backend**: TypeScript + Node.js
-- **Frontend**: React 19 + Chart.js 4.4
-- **MCP SDK**: @modelcontextprotocol/ext-apps (MCP Apps standard)
-- **Build**: Vite (UI bundling) + Bun (server bundling)
-- **Validation**: Zod schemas for type-safe data
+**Usage in VS Code:**
+```
+Ask Claude: "Show me the service health matrix"
+```
+
+## Development
+
+### Quick Start - Build All Apps
+
+```bash
+./build-all.sh
+```
+
+This builds all 3 apps and copies them to the Python package.
+
+### Manual Build Process
+
+#### Install Dependencies
+```bash
+cd incident-command-center && npm install
+cd ../oncall-schedule-visualizer && npm install
+cd ../service-health-matrix && npm install
+```
+
+#### Build Individual Apps
+```bash
+cd incident-command-center && npm run build
+cd ../oncall-schedule-visualizer && npm run build
+cd ../service-health-matrix && npm run build
+```
+
+#### Copy to Python Package
+```bash
+cp incident-command-center/dist/mcp-app.html ../pagerduty_mcp/incident_command_center_view.html
+cp oncall-schedule-visualizer/dist/mcp-app.html ../pagerduty_mcp/oncall_schedule_visualizer_view.html
+cp service-health-matrix/dist/mcp-app.html ../pagerduty_mcp/service_health_matrix_view.html
+```
+
+### Test in VS Code
+
+1. **Start the Python MCP server:**
+   ```bash
+   cd .. && uv run pagerduty-mcp --enable-write-tools
+   ```
+
+2. **Configure VS Code** (if not already done):
+   Add to your VS Code `settings.json`:
+   ```json
+   {
+     "mcp.servers": {
+       "pagerduty": {
+         "command": "uv",
+         "args": ["run", "pagerduty-mcp", "--enable-write-tools"],
+         "cwd": "/path/to/pagerduty-mcp-server",
+         "env": {
+           "PAGERDUTY_USER_API_KEY": "${input:pagerduty-api-key}"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Test in Claude Code:**
+   - "Show me the incident command center"
+   - "Show me the on-call schedule"
+   - "Show me the service health matrix"
 
 ## How It Works
 
-This implementation follows the official MCP Apps specification:
+```
+┌─────────────────────────────────────────┐
+│          VS Code (Claude)               │
+│  ┌───────────────────────────────────┐  │
+│  │  Embedded HTML UI (React App)    │  │
+│  │  - Calls MCP tools via bridge    │  │
+│  └───────────────────────────────────┘  │
+│              ↕ MCP Protocol (stdio)     │
+│  ┌───────────────────────────────────┐  │
+│  │  Python MCP Server                │  │
+│  │  - Serves HTML as MCP resource    │  │
+│  │  - Provides tools & data          │  │
+│  └───────────────────────────────────┘  │
+│              ↕ HTTPS API                │
+│  ┌───────────────────────────────────┐  │
+│  │  PagerDuty API                    │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
 
-1. **Server registers tool + resource**:
-   ```typescript
-   registerAppTool(server, "get-incident-dashboard", {
-     _meta: { ui: { resourceUri: "ui://incident-dashboard/mcp-app.html" } }
-   });
-   registerAppResource(server, resourceUri, ...);
-   ```
+## Folder Structure
 
-2. **Host (Claude Desktop) calls tool**:
-   - Reads `_meta.ui.resourceUri` from tool definition
-   - Fetches HTML resource via MCP protocol
-   - Creates sandboxed iframe and loads HTML
+```
+mcp-apps/
+├── README.md (this file)
+├── build-all.sh (build script for all apps)
+│
+├── incident-command-center/
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts
+│   ├── mcp-app.html (entry point)
+│   ├── src/
+│   │   ├── mcp-app.tsx (main React app)
+│   │   ├── styles.css
+│   │   ├── api.ts (MCP tool calls)
+│   │   └── components/
+│   │       ├── IncidentDetailsModal.tsx
+│   │       ├── Timeline.tsx
+│   │       ├── NotesThread.tsx
+│   │       ├── AlertInspector.tsx
+│   │       └── EscalationPanel.tsx
+│   ├── dist/ (generated by build)
+│   │   └── mcp-app.html (single-file bundle)
+│   └── README.md
+│
+├── oncall-schedule-visualizer/
+│   └── [similar structure]
+│
+└── service-health-matrix/
+    └── [similar structure]
+```
 
-3. **React app initializes**:
-   ```typescript
-   const { app } = useApp({ ... });
-   app.ontoolresult = (result) => {
-     setDashboardData(result.structuredContent);
-   };
-   ```
+## Development Workflow
 
-4. **App polls for updates**:
-   ```typescript
-   setInterval(() => {
-     app.callServerTool({ name: "poll-incident-stats" });
-   }, 30000);
-   ```
+### Making Changes
+
+1. **Edit React components** in `src/`
+2. **Build the app**: `npm run build`
+3. **Copy to Python**: `cp dist/mcp-app.html ../pagerduty_mcp/{app}_view.html`
+4. **Restart Python server**: `uv run pagerduty-mcp --enable-write-tools`
+5. **Test in VS Code**: Ask Claude to show the app
+
+### Hot Reload (Development Mode)
+
+```bash
+# Watch mode (rebuilds on changes)
+cd incident-command-center
+npm start
+```
+
+Note: You'll still need to manually copy the HTML after builds since the apps are embedded.
+
+## Design System
+
+All apps use a consistent design language:
+
+### Colors
+- **Primary**: #4299e1 (blue)
+- **Success**: #48bb78 (green)
+- **Warning**: #ed8936 (orange)
+- **Danger**: #e53e3e (red)
+- **Gray**: #718096
+
+### Typography
+- **Font**: System fonts (-apple-system, SF Pro, etc.)
+- **Headers**: 700 weight
+- **Body**: 400 weight
+- **Labels**: 500-600 weight
+
+### Spacing
+- **Small**: 4-8px
+- **Medium**: 12-16px
+- **Large**: 20-24px
 
 ## Troubleshooting
 
-### "Missing PagerDuty credentials"
+### App doesn't load in VS Code
+- Verify HTML file exists in `pagerduty_mcp/` directory
+- Check Python server starts without errors
+- Ensure tool names match between React app and Python server
 
-Ensure environment variables are set in your MCP client config:
-```json
-"env": {
-  "PAGERDUTY_API_KEY": "your-key",
-  "PAGERDUTY_USER_EMAIL": "your-email"
-}
-```
+### Data doesn't load
+- Verify PagerDuty API token is configured
+- Check `--enable-write-tools` flag if using write operations
+- Look for errors in Python server logs
 
-### Dashboard not loading
+### Build fails
+- Run `npm install` to ensure dependencies are installed
+- Check TypeScript errors: `npm run typecheck`
+- Verify `vite-plugin-singlefile` is installed
 
-1. Verify build succeeded: `ls -la dist/mcp-app.html dist/index.js`
-2. Check path in MCP config is absolute (not relative)
-3. Restart Claude Desktop after config changes
-4. Check Claude Desktop logs: `~/Library/Logs/Claude/` (macOS)
+## Support
 
-### No data showing
-
-1. Verify PagerDuty API key has read permissions
-2. Check that incidents exist in your PagerDuty account
-3. Open browser DevTools in the iframe (right-click → Inspect)
-4. Check console for API errors
-
-### Charts not updating
-
-1. Check browser console for polling errors
-2. Verify PagerDuty API connectivity
-3. Check if caching is working (look for `[Cache HIT]` logs)
-4. Ensure polling is not paused (button should show "⏸ Pause Updates")
-
-### Build errors
-
-If `bun: command not found`:
-```bash
-# Install bun
-curl -fsSL https://bun.sh/install | bash
-
-# Add to PATH
-export PATH="$HOME/.bun/bin:$PATH"
-
-# Try building again
-npm run build
-```
-
-## Future Enhancements
-
-- [ ] Time range selector in UI (switch between 24h/7d/30d)
-- [ ] Service filtering (focus on specific services)
-- [ ] MTTR trend chart with historical data
-- [ ] On-call schedule visualization
-- [ ] Alert intelligence (top noisy services)
-- [ ] Export dashboard as PNG/PDF
-- [ ] Responsive mobile layout
-- [ ] Incident drill-down (click to see details)
+- **Issues**: Open issues in the repository
+- **Documentation**: See [MCP Apps SDK](https://github.com/modelcontextprotocol/ext-apps)
+- **PagerDuty API**: [API Reference](https://developer.pagerduty.com/api-reference/)
 
 ## License
 
 MIT
-
-## Based On
-
-Built using the [MCP Apps SDK](https://github.com/modelcontextprotocol/ext-apps) following patterns from:
-- `system-monitor-server` - Two-tool polling pattern
-- `budget-allocator-server` - Chart.js integration
-- `scenario-modeler-server` - Dashboard layout
-- `cohort-heatmap-server` - React components

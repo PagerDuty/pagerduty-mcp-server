@@ -4,25 +4,40 @@
 
 PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
-## Visualization Layer (MCP Apps)
+## Embedded MCP Apps (Developer Experience)
 
-This repository now includes an optional **interactive visualization layer** using the [MCP Apps SDK](https://github.com/modelcontextprotocol/ext-apps). This adds real-time dashboards for incident management directly in your MCP client.
+Interactive React UIs for PagerDuty incident management, embedded directly in the Python MCP server for seamless IDE integration. Manage your full incident lifecycle without leaving your IDE.
 
-**Features:**
-- 📊 **Incident Timeline Chart** - Live trends over 24h/7d/30d
-- 🎯 **Service Health Table** - Incidents per service with status indicators
-- 📈 **Urgency Distribution** - High vs low urgency breakdown
-- ⏱️ **MTTR Analytics** - Average resolution time tracking
-- 🔄 **Real-time Updates** - Auto-refresh every 30 seconds
+**Available Apps:**
 
-**Quick Start:**
-```bash
-cd mcp-apps
-npm install
-npm run build
-```
+### 1. **Incident Command Center** 🚨
+Full incident lifecycle management from your IDE:
+- Real-time incident feed with auto-refresh
+- Deep incident details: timeline, notes, alerts, changes
+- Quick actions: acknowledge, resolve, escalate
+- AI-powered similar incident detection
+- Alert inspection with raw data
+- Runbook links parsed from incident metadata
 
-See [mcp-apps/README.md](mcp-apps/README.md) for full visualization setup instructions and VS Code configuration.
+**Usage in VS Code:** Ask Claude: `Show me the incident command center`
+
+### 2. **On-Call Schedule Visualizer** 📅
+Who's on-call right now across teams and schedules.
+
+**Usage in VS Code:** Ask Claude: `Show me the on-call schedule`
+
+### 3. **Service Health Matrix** 💚
+Service health overview with incident counts and status indicators.
+
+**Usage in VS Code:** Ask Claude: `Show me the service health matrix`
+
+**Architecture:**
+- ✅ Native VS Code integration (MCP resources)
+- ✅ Single process, no HTTP server management
+- ✅ Direct access to all PagerDuty MCP tools
+- ✅ Simple deployment: `uv run pagerduty-mcp`
+
+See [mcp-apps/README.md](mcp-apps/README.md) for development instructions and customization.
 
 ## Prerequisites
 

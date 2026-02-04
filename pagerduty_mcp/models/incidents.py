@@ -164,6 +164,13 @@ class Assignment(BaseModel):
     assignee: UserReference = Field(description="The user assigned to the incident")
 
 
+class AlertCounts(BaseModel):
+    """Alert counts for an incident."""
+    triggered: int = Field(default=0, description="Number of triggered alerts")
+    resolved: int = Field(default=0, description="Number of resolved alerts")
+    all: int = Field(default=0, description="Total number of alerts")
+
+
 class Incident(BaseModel):
     id: str | None = Field(description="The ID of the incident", default=None)
     summary: str | None = Field(default=None, description="A short summary of the incident")
@@ -180,6 +187,11 @@ class Incident(BaseModel):
     priority: PriorityReference | None = Field(
         default=None,
         description="The priority of the incident. Will be null if the incident has no priority set.",
+    )
+    urgency: Urgency = Field(default="high", description="The urgency of the incident")
+    alert_counts: AlertCounts | None = Field(
+        default=None,
+        description="Alert counts for the incident",
     )
     assignments: list[Assignment] | None = Field(
         default=None,
@@ -233,11 +245,19 @@ class IncidentManageRequest(BaseModel):
     )
     urgency: IncidentUrgency | None = Field(
         default=None,
+        description="The urgency to set the incident to",
+    )
+    priority: PriorityReference | None = Field(
+        default=None,
         description="The priority to set the incident to",
     )
     escalation_level: int | None = Field(
         default=None,
         description="The escalation level to set the incident to",
+    )
+    escalation_policy_id: str | None = Field(
+        default=None,
+        description="The ID of the escalation policy to escalate/reassign the incident to",
     )
 
 

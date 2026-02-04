@@ -3,7 +3,7 @@ from pagerduty_mcp.models import ChangeEvent, ChangeEventQuery, ListResponseMode
 from pagerduty_mcp.utils import paginate
 
 
-def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[ChangeEvent]:
+def list_change_events(query_model: ChangeEventQuery) -> str:
     """List all change events with optional filtering.
 
     Change Events represent changes to systems, services, and applications that
@@ -13,7 +13,7 @@ def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[Chang
         query_model: Query parameters for filtering change events
 
     Returns:
-        List of ChangeEvent objects matching the query parameters
+        JSON string of ListResponseModel containing ChangeEvent objects
     """
     params = query_model.to_params()
     response = paginate(
@@ -23,28 +23,28 @@ def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[Chang
         maximum_records=query_model.limit or 100,
     )
     change_events = [ChangeEvent(**change_event) for change_event in response]
-    return ListResponseModel[ChangeEvent](response=change_events)
+    return ListResponseModel[ChangeEvent](response=change_events).model_dump_json()
 
 
-def get_change_event(change_event_id: str) -> ChangeEvent:
+def get_change_event(change_event_id: str) -> str:
     """Get details about a specific change event.
 
     Args:
         change_event_id: The ID of the change event to retrieve
 
     Returns:
-        ChangeEvent details
+        JSON string of ChangeEvent details
     """
     response = get_client().rget(f"/change_events/{change_event_id}")
 
     # Handle wrapped response
     if isinstance(response, dict) and "change_event" in response:
-        return ChangeEvent.model_validate(response["change_event"])
+        return ChangeEvent.model_validate(response["change_event"]).model_dump_json()
 
-    return ChangeEvent.model_validate(response)
+    return ChangeEvent.model_validate(response).model_dump_json()
 
 
-def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -> ListResponseModel[ChangeEvent]:
+def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -> str:
     """List all change events for a specific service.
 
     Args:
@@ -52,7 +52,7 @@ def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -
         query_model: Query parameters for filtering change events
 
     Returns:
-        List of ChangeEvent objects associated with the service
+        JSON string of ListResponseModel containing ChangeEvent objects
     """
     params = query_model.to_params()
     response = paginate(
@@ -62,10 +62,10 @@ def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -
         maximum_records=query_model.limit or 100,
     )
     change_events = [ChangeEvent(**change_event) for change_event in response]
-    return ListResponseModel[ChangeEvent](response=change_events)
+    return ListResponseModel[ChangeEvent](response=change_events).model_dump_json()
 
 
-def list_incident_change_events(incident_id: str, limit: int | None = None) -> ListResponseModel[ChangeEvent]:
+def list_incident_change_events(incident_id: str, limit: int | None = None) -> str:
     """List change events related to a specific incident.
 
     Args:
@@ -73,7 +73,7 @@ def list_incident_change_events(incident_id: str, limit: int | None = None) -> L
         limit: Maximum number of results to return (optional)
 
     Returns:
-        List of ChangeEvent objects related to the incident
+        JSON string of ListResponseModel containing ChangeEvent objects
     """
     params = {}
     if limit:
@@ -86,4 +86,4 @@ def list_incident_change_events(incident_id: str, limit: int | None = None) -> L
         maximum_records=limit or 100,
     )
     change_events = [ChangeEvent(**change_event) for change_event in response]
-    return ListResponseModel[ChangeEvent](response=change_events)
+    return ListResponseModel[ChangeEvent](response=change_events).model_dump_json()

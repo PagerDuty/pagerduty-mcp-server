@@ -1,0 +1,128 @@
+{
+  "name": "create-pagerduty-mcp-app",
+  "version": "1.0.0",
+  "description": "Create or modify PagerDuty MCP Apps using the Incident Command Center as a golden template",
+  "author": "PagerDuty Professional Services",
+  "category": "development",
+  "tags": ["mcp", "pagerduty", "ui", "react", "visualization"],
+  "trigger": {
+    "command": "/create-pagerduty-mcp-app",
+    "aliases": ["/create-pd-app", "/scaffold-mcp-app"]
+  },
+  "parameters": [
+    {
+      "name": "app_name",
+      "type": "string",
+      "required": true,
+      "description": "Name of the MCP app to create (e.g., service-health-dashboard)"
+    },
+    {
+      "name": "based_on",
+      "type": "string",
+      "required": false,
+      "default": "incident-command-center",
+      "description": "Template to use as base"
+    },
+    {
+      "name": "tools",
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated list of MCP tools to use"
+    },
+    {
+      "name": "description",
+      "type": "string",
+      "required": false,
+      "description": "Brief description of the app"
+    },
+    {
+      "name": "features",
+      "type": "string",
+      "required": false,
+      "description": "Comma-separated list of features (modals, charts, filters, etc.)"
+    }
+  ],
+  "examples": [
+    {
+      "command": "/create-pagerduty-mcp-app service-dashboard",
+      "description": "Create a service health dashboard"
+    },
+    {
+      "command": "/create-pagerduty-mcp-app oncall-calendar --tools list_schedules,list_oncalls",
+      "description": "Create an on-call calendar with specific tools"
+    },
+    {
+      "command": "/create-pagerduty-mcp-app team-analytics --features charts,metrics,filters",
+      "description": "Create team analytics with specific features"
+    }
+  ],
+  "capabilities": {
+    "create": true,
+    "modify": true,
+    "analyze": true
+  },
+  "goldenTemplate": {
+    "name": "incident-command-center",
+    "path": "/Users/svillanelo/Documents/GitHub/pagerduty-mcp-server/mcp-apps/incident-command-center/",
+    "status": "production-ready",
+    "version": "1.0.0",
+    "lastUpdated": "2026-02-04",
+    "iterations": 14,
+    "features": [
+      "dark-mode",
+      "slack-style-actions",
+      "action-dropdown",
+      "multiple-modals",
+      "timeline-view",
+      "alert-inspector",
+      "escalation-panel",
+      "notes-thread",
+      "priority-management",
+      "workflow-execution",
+      "auto-refresh",
+      "dynamic-sizing"
+    ],
+    "actions": [
+      "acknowledge",
+      "resolve",
+      "add-note",
+      "run-workflow",
+      "change-priority",
+      "escalate",
+      "details"
+    ],
+    "tools": [
+      "list_incidents",
+      "get_incident",
+      "list_incident_notes",
+      "list_alerts_from_incident",
+      "list_incident_change_events",
+      "manage_incidents",
+      "add_note_to_incident",
+      "get_past_incidents",
+      "get_related_incidents",
+      "list_escalation_policies",
+      "list_priorities",
+      "list_incident_workflows",
+      "start_incident_workflow"
+    ]
+  },
+  "validation": {
+    "required": [
+      "no-wrapper-tools",
+      "proper-tool-calls",
+      "dark-mode-support",
+      "error-handling",
+      "loading-states",
+      "pagerduty-branding",
+      "responsive-layout"
+    ],
+    "recommended": [
+      "action-dropdown",
+      "multiple-modals",
+      "auto-refresh",
+      "dynamic-sizing",
+      "typescript-strict-mode"
+    ]
+  }
+}

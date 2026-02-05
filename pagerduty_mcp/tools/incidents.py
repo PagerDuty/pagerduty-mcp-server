@@ -61,7 +61,14 @@ def get_incident(incident_id: str, query_model: GetIncidentQuery | None = None) 
 
     Args:
         incident_id: The ID or number of the incident to retrieve.
-        query_model: Optional query parameters for additional information to include
+        query_model: Optional query parameters for additional information to include.
+            Use include=["body"] to get the incident description/details.
+            Use include=["external_references"] to get links to Datadog monitors, runbooks, etc.
+            Use include=["first_trigger_log_entry"] to get the initial trigger log with alert payload.
+            Use include=["conference_bridge"] to get conference bridge details.
+            Use include=["acknowledgers"] to get users who acknowledged the incident.
+            Use include=["assignees"] to get users assigned to the incident.
+            Use include=["metadata"] to get service-level metadata associated with the incident.
 
     Returns:
         Incident details

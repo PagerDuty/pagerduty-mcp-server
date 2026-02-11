@@ -9,7 +9,7 @@ import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
-import { fetchIncidents, acknowledgeIncident, resolveIncident, addIncidentNote } from "./api";
+import { fetchIncidents, acknowledgeIncident, resolveIncident, addIncidentNote, fetchIncidentDetails } from "./api";
 import { IncidentDetailsModal } from "./components/IncidentDetailsModal";
 import { PagerDutyLogo } from "./components/PagerDutyLogo";
 import { ActionsDropdown } from "./components/ActionsDropdown";
@@ -124,40 +124,26 @@ function IncidentCommandCenter() {
       const dims = context?.containerDimensions;
       console.log("[IncidentCommandCenter] Container dimensions:", dims);
 
+      const root = document.documentElement;
+      
+      // Always use full viewport height to ensure internal scrolling works
+      root.style.height = "100vh";
+      root.style.minHeight = "100vh";
+      document.body.style.height = "100vh";
+      console.log("[IncidentCommandCenter] Using full viewport height");
+
       if (dims) {
-        const root = document.documentElement;
-
-        // Handle height
-        if ("height" in dims && dims.height) {
-          // Fixed height: fill the container
-          root.style.height = "100vh";
-          root.style.minHeight = "100vh";
-          document.body.style.height = "100vh";
-          console.log("[IncidentCommandCenter] Using fixed height:", dims.height);
-        } else if ("maxHeight" in dims && dims.maxHeight) {
-          // Flexible with max: let content determine size
-          root.style.maxHeight = `${dims.maxHeight}px`;
-          root.style.height = "auto";
-          console.log("[IncidentCommandCenter] Using max height:", dims.maxHeight);
-        } else {
-          // Unbounded height
-          root.style.height = "100vh";
-          root.style.minHeight = "600px";
-          console.log("[IncidentCommandCenter] Using unbounded height (defaulting to viewport)");
-        }
-
-        // Handle width
+        // Handle width constraints if present
         if ("width" in dims && dims.width) {
           root.style.width = "100vw";
         } else if ("maxWidth" in dims && dims.maxWidth) {
           root.style.maxWidth = `${dims.maxWidth}px`;
+          root.style.margin = "0 auto"; // Center it
         }
       } else {
         // No dimensions specified, use full viewport
         console.log("[IncidentCommandCenter] No container dimensions, using full viewport");
-        document.documentElement.style.height = "100vh";
         document.documentElement.style.minHeight = "600px";
-        document.body.style.height = "100vh";
       }
 
       // Request reasonable minimum height for dashboard (even with 1 incident)
@@ -439,6 +425,232 @@ function IncidentCard({
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [isSubmittingNote, setIsSubmittingNote] = useState(false);
+  const [isTriaging, setIsTriaging] = useState(false);
+  const [isTriagingAdvance, setIsTriagingAdvance] = useState(false);
+
+  /**
+   * Parse runbook URLs from incident description or metadata
+   */
+  const parseRunbookUrls = (incident: any): string[] => {
+    const urls: string[] = [];
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    // Check description
+    if (incident.description) {
+      const matches = incident.description.match(urlRegex);
+      if (matches) {
+        urls.push(...matches.filter((url: string) =>
+          url.includes("runbook") || url.includes("playbook") || url.includes("wiki")
+        ));
+      }
+    }
+
+    // Check service metadata
+    if (incident.service?.description) {
+      const matches = incident.service.description.match(urlRegex);
+      if (matches) {
+        urls.push(...matches.filter((url: string) =>
+          url.includes("runbook") || url.includes("playbook") || url.includes("wiki")
+        ));
+      }
+    }
+
+    return [...new Set(urls)]; // Deduplicate
+  };
+
+  /**
+   * Triage incident with generic AI
+   */
+  const handleTriageIt = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsTriaging(true);
+
+    try {
+      // Fetch full incident details
+      const details = await fetchIncidentDetails(app, incident.id);
+      if (!details) {
+        throw new Error("Failed to fetch incident details");
+      }
+
+      const fullIncident = details.incident;
+      const alerts = details.alerts || [];
+      const notes = details.notes || [];
+      const runbookUrls = parseRunbookUrls(fullIncident);
+
+      // Format incident details as markdown for the model
+      const markdown = `# PagerDuty Incident #${fullIncident.incident_number}
+
+## Summary
+**Status:** ${fullIncident.status}
+**Urgency:** ${fullIncident.urgency}
+**Priority:** ${fullIncident.priority?.summary || 'None'}
+**Service:** ${fullIncident.service?.summary || 'Unknown'}
+**Assigned to:** ${fullIncident.assignments?.[0]?.assignee?.summary || 'Unassigned'}
+**Created:** ${fullIncident.created_at}
+
+## Description
+${fullIncident.title}
+
+${fullIncident.description || 'No description provided'}
+
+## Full Incident Payload
+\`\`\`json
+${JSON.stringify(fullIncident, null, 2)}
+\`\`\`
+
+## Alerts (${alerts.length})
+${alerts.map((alert: any, idx: number) => `
+### Alert ${idx + 1}: ${alert.summary}
+- **Status:** ${alert.status}
+- **Severity:** ${alert.severity || 'unknown'}
+- **Created:** ${alert.created_at}
+
+**Full Alert Payload:**
+\`\`\`json
+${JSON.stringify(alert, null, 2)}
+\`\`\`
+`).join('\n')}
+
+## Recent Notes (${notes.length})
+${notes.slice(0, 5).map((note: any) => `
+- **${note.user?.summary || 'Unknown'}** (${note.created_at}): ${note.content}
+`).join('\n')}
+
+## Runbook Links
+${runbookUrls.length > 0 ? runbookUrls.map(url => `- ${url}`).join('\n') : 'No runbook links found'}
+
+---
+**Action needed:** Please help investigate and resolve this incident. Focus on the error details in the alert payloads and suggest next steps based on the incident history. Pay special attention to any file paths, stack traces, or error messages in the alert bodies.`;
+
+      // Send to model context
+      await app.updateModelContext({
+        content: [
+          {
+            type: "text",
+            text: markdown,
+          },
+        ],
+      });
+
+      console.log("[IncidentCard] Incident context sent to model");
+
+      // Send a trigger message to activate the model's response
+      await app.sendMessage({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "I've handed over this PagerDuty incident to you. Please analyze the error details in the alerts and suggest next steps for resolution. If you see file paths or error stack traces, help me navigate to the relevant code.",
+          },
+        ],
+      });
+
+      console.log("[IncidentCard] Incident triaged successfully");
+    } catch (err) {
+      console.error("[IncidentCard] Failed to triage incident:", err);
+      alert("Failed to triage incident. Please try again.");
+    } finally {
+      setIsTriaging(false);
+    }
+  };
+
+  /**
+   * Triage incident using PagerDuty Advance MCP server
+   */
+  const handleTriageWithAdvance = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsTriagingAdvance(true);
+
+    try {
+      // Fetch full incident details
+      const details = await fetchIncidentDetails(app, incident.id);
+      if (!details) {
+        throw new Error("Failed to fetch incident details");
+      }
+
+      const fullIncident = details.incident;
+      const alerts = details.alerts || [];
+      const notes = details.notes || [];
+      const runbookUrls = parseRunbookUrls(fullIncident);
+
+      // Format incident details as markdown for the model
+      const markdown = `# PagerDuty Incident #${fullIncident.incident_number}
+
+## Summary
+**Status:** ${fullIncident.status}
+**Urgency:** ${fullIncident.urgency}
+**Priority:** ${fullIncident.priority?.summary || 'None'}
+**Service:** ${fullIncident.service?.summary || 'Unknown'}
+**Assigned to:** ${fullIncident.assignments?.[0]?.assignee?.summary || 'Unassigned'}
+**Created:** ${fullIncident.created_at}
+
+## Description
+${fullIncident.title}
+
+${fullIncident.description || 'No description provided'}
+
+## Full Incident Payload
+\`\`\`json
+${JSON.stringify(fullIncident, null, 2)}
+\`\`\`
+
+## Alerts (${alerts.length})
+${alerts.map((alert: any, idx: number) => `
+### Alert ${idx + 1}: ${alert.summary}
+- **Status:** ${alert.status}
+- **Severity:** ${alert.severity || 'unknown'}
+- **Created:** ${alert.created_at}
+
+**Full Alert Payload:**
+\`\`\`json
+${JSON.stringify(alert, null, 2)}
+\`\`\`
+`).join('\n')}
+
+## Recent Notes (${notes.length})
+${notes.slice(0, 5).map((note: any) => `
+- **${note.user?.summary || 'Unknown'}** (${note.created_at}): ${note.content}
+`).join('\n')}
+
+## Runbook Links
+${runbookUrls.length > 0 ? runbookUrls.map(url => `- ${url}`).join('\n') : 'No runbook links found'}
+
+---
+**Action needed:** Please triage this incident using PagerDuty Advance. Check if the PagerDuty Advance MCP server is available and use its tools to analyze and triage this incident. The incident ID is: ${fullIncident.id}`;
+
+      // Send to model context
+      await app.updateModelContext({
+        content: [
+          {
+            type: "text",
+            text: markdown,
+          },
+        ],
+      });
+
+      console.log("[IncidentCard] Incident context sent to model for PD Advance triage");
+
+      // Send a trigger message to activate PD Advance triage
+      await app.sendMessage({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `Please triage this PagerDuty incident using the PagerDuty Advance MCP server. Use the sre_agent_tool from the pagerduty-advance-mcp server with the following incident ID: ${fullIncident.id}
+
+This tool requires the incident_id parameter. Please run it to get SRE agent analysis and recommendations for this incident.`,
+          },
+        ],
+      });
+
+      console.log("[IncidentCard] Incident sent for PD Advance triage successfully");
+    } catch (err) {
+      console.error("[IncidentCard] Failed to triage with PD Advance:", err);
+      alert("Failed to triage with PD Advance. Please try again.");
+    } finally {
+      setIsTriagingAdvance(false);
+    }
+  };
   return (
     <div
       className={`incident-card urgency-${incident.urgency}`}
@@ -485,6 +697,9 @@ function IncidentCard({
 
       {/* Slack-style Action Buttons */}
       <div className="incident-actions">
+        <button className="action-btn details" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+          🔍 Details
+        </button>
         {incident.status === "triggered" && (
           <button
             className="action-btn acknowledge"
@@ -503,8 +718,24 @@ function IncidentCard({
             {isLoading ? "⏳" : "✓"} Resolve
           </button>
         )}
-        <button className="action-btn details" onClick={(e) => { e.stopPropagation(); onClick(); }}>
-          🔍 Details
+        <button
+          className="action-btn triage"
+          onClick={handleTriageIt}
+          disabled={isLoading || isTriaging}
+        >
+          {isTriaging ? "⏳" : "🤖"} Triage Locally
+        </button>
+        <button
+          className="action-btn triage-advance"
+          onClick={handleTriageWithAdvance}
+          disabled={isLoading || isTriagingAdvance}
+          style={{
+            background: isTriagingAdvance ? "#999" : "#048a24",
+            color: "#fff",
+            border: "none",
+          }}
+        >
+          {isTriagingAdvance ? "⏳ Triaging..." : "✨ Triage with SRE Agent"}
         </button>
         <ActionsDropdown
           disabled={isLoading}

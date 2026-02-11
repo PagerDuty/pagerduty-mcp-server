@@ -397,7 +397,7 @@ This tool requires the incident_id parameter. Please run it to get SRE agent ana
           {activeTab === "timeline" && (
             <div className="tab-content">
               <Timeline
-                notes={details.notes}
+                notes={[]}
                 alerts={details.alerts}
                 changes={details.changes}
               />

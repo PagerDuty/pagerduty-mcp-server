@@ -106,7 +106,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            client=self.mock_client, entity="escalation_policies", params=expected_params, maximum_records=expected_params.get("limit") or 1000
         )
 
         # Verify result
@@ -131,7 +131,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"query": "Engineering", "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            client=self.mock_client, entity="escalation_policies", params=expected_params, maximum_records=expected_params.get("limit") or 1000
         )
 
         # Verify result
@@ -151,7 +151,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"user_ids[]": ["USER123", "USER456"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            client=self.mock_client, entity="escalation_policies", params=expected_params, maximum_records=expected_params.get("limit") or 1000
         )
 
         # Verify result
@@ -170,7 +170,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM123"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            client=self.mock_client, entity="escalation_policies", params=expected_params, maximum_records=expected_params.get("limit") or 1000
         )
 
         # Verify result
@@ -189,7 +189,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"include[]": ["services", "teams"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            client=self.mock_client, entity="escalation_policies", params=expected_params, maximum_records=expected_params.get("limit") or 1000
         )
 
         # Verify result
@@ -220,7 +220,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
             "limit": 50,
         }
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            client=self.mock_client, entity="escalation_policies", params=expected_params, maximum_records=expected_params.get("limit") or 1000
         )
 
         # Verify result
@@ -239,7 +239,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"limit": 50}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            client=self.mock_client, entity="escalation_policies", params=expected_params, maximum_records=expected_params.get("limit") or 1000
         )
 
         # Verify result
@@ -258,7 +258,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"query": "NonExistentPolicy", "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            client=self.mock_client, entity="escalation_policies", params=expected_params, maximum_records=expected_params.get("limit") or 1000
         )
 
         # Verify result

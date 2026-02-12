@@ -124,7 +124,7 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params, maximum_records=expected_params.get("limit") or 1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -147,7 +147,7 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "Primary", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params, maximum_records=expected_params.get("limit") or 1000)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -165,7 +165,7 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM123"], "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params, maximum_records=expected_params.get("limit") or 1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -182,7 +182,7 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"user_ids[]": ["USER123", "USER456"], "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params, maximum_records=expected_params.get("limit") or 1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -199,7 +199,7 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"include[]": ["schedule_layers"], "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params, maximum_records=expected_params.get("limit") or 1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -228,7 +228,7 @@ class TestScheduleTools(unittest.TestCase):
             "include[]": ["schedule_layers"],
             "limit": 50,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params, maximum_records=expected_params.get("limit") or 1000)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -245,7 +245,7 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"limit": 50}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params, maximum_records=expected_params.get("limit") or 1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -262,7 +262,7 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "NonExistentSchedule", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params, maximum_records=expected_params.get("limit") or 1000)
 
         # Verify result
         self.assertEqual(len(result.response), 0)

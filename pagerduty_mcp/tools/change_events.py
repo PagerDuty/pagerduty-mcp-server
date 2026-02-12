@@ -1,9 +1,9 @@
-from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import ChangeEvent, ChangeEventQuery, ListResponseModel
-from pagerduty_mcp.utils import paginate
+from pagerduty_mcp.models import ChangeEvent, ChangeEventQuery, ListResponseModel, MCPContext
+from pagerduty_mcp.utils import inject_context, paginate
 
 
-def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[ChangeEvent]:
+@inject_context
+def list_change_events(query_model: ChangeEventQuery, context: MCPContext) -> ListResponseModel[ChangeEvent]:
     """List all change events with optional filtering.
 
     Change Events represent changes to systems, services, and applications that
@@ -11,13 +11,14 @@ def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[Chang
 
     Args:
         query_model: Query parameters for filtering change events
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of ChangeEvent objects matching the query parameters
     """
     params = query_model.to_params()
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity="change_events",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -26,16 +27,18 @@ def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[Chang
     return ListResponseModel[ChangeEvent](response=change_events)
 
 
-def get_change_event(change_event_id: str) -> ChangeEvent:
-    """Get details about a specific change event.
+@inject_context
+def get_change_event(change_event_id: str, context: MCPContext) -> ChangeEvent:
+    """Get a specific change event by ID.
 
     Args:
         change_event_id: The ID of the change event to retrieve
+        context: The MCP context with client and user info (injected)
 
     Returns:
         ChangeEvent details
     """
-    response = get_client().rget(f"/change_events/{change_event_id}")
+    response = context.client.rget(f"/change_events/{change_event_id}")
 
     # Handle wrapped response
     if isinstance(response, dict) and "change_event" in response:
@@ -44,19 +47,21 @@ def get_change_event(change_event_id: str) -> ChangeEvent:
     return ChangeEvent.model_validate(response)
 
 
-def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -> ListResponseModel[ChangeEvent]:
+@inject_context
+def list_service_change_events(service_id: str, query_model: ChangeEventQuery, context: MCPContext) -> ListResponseModel[ChangeEvent]:
     """List all change events for a specific service.
 
     Args:
         service_id: The ID of the service
         query_model: Query parameters for filtering change events
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of ChangeEvent objects associated with the service
     """
     params = query_model.to_params()
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity=f"services/{service_id}/change_events",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -65,12 +70,14 @@ def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -
     return ListResponseModel[ChangeEvent](response=change_events)
 
 
-def list_incident_change_events(incident_id: str, limit: int | None = None) -> ListResponseModel[ChangeEvent]:
+@inject_context
+def list_incident_change_events(incident_id: str, limit: int | None, context: MCPContext) -> ListResponseModel[ChangeEvent]:
     """List change events related to a specific incident.
 
     Args:
         incident_id: The ID of the incident
         limit: Maximum number of results to return (optional)
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of ChangeEvent objects related to the incident
@@ -80,7 +87,7 @@ def list_incident_change_events(incident_id: str, limit: int | None = None) -> L
         params["limit"] = limit
 
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity=f"incidents/{incident_id}/related_change_events",
         params=params,
         maximum_records=limit or 100,

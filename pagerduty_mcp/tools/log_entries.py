@@ -1,24 +1,26 @@
 from datetime import datetime, timedelta, timezone
 
-from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
-from pagerduty_mcp.utils import paginate
+from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery, MCPContext
+from pagerduty_mcp.utils import inject_context, paginate
 
 
-def get_log_entry(log_entry_id: str) -> LogEntry:
+@inject_context
+def get_log_entry(log_entry_id: str, context: MCPContext) -> LogEntry:
     """Get a specific log entry by ID.
 
     Args:
         log_entry_id: The ID of the log entry
+        context: The MCP context with client and user info (injected)
 
     Returns:
         LogEntry details
     """
-    response = get_client().rget(f"/log_entries/{log_entry_id}")
+    response = context.client.rget(f"/log_entries/{log_entry_id}")
     return LogEntry.model_validate(response)
 
 
-def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
+@inject_context
+def list_log_entries(query_model: LogEntryQuery, context: MCPContext) -> ListResponseModel[LogEntry]:
     """List all log entries across the account.
 
     Log entries are records of all events on your account. This function allows you
@@ -28,6 +30,7 @@ def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
 
     Args:
         query_model: Query parameters including since, until, limit, and offset
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of LogEntry objects matching the query parameters
@@ -42,7 +45,7 @@ def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity="log_entries",
         params=params,
         maximum_records=query_model.limit or 100,

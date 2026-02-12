@@ -1,6 +1,7 @@
 """Unit tests for incident workflow tools."""
 
 import unittest
+from tests.fixtures import ContextTestCase
 from unittest.mock import Mock, patch
 
 from pagerduty_mcp.models import (
@@ -19,7 +20,7 @@ from pagerduty_mcp.tools.incident_workflows import (
 )
 
 
-class TestIncidentWorkflowTools(unittest.TestCase):
+class TestIncidentWorkflowTools(unittest.TestCase, ContextTestCase):
     """Test cases for incident workflow tools."""
 
     @classmethod
@@ -83,14 +84,18 @@ class TestIncidentWorkflowTools(unittest.TestCase):
             },
         }
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
+    def setUp(self):
+        """Set up test fixtures before each test method."""
+        self.mock_client = self.create_mock_client()
+        self.mock_context = self.create_mock_context(client=self.mock_client)
+
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_basic(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_basic(self, mock_paginate):
         """Test basic workflow listing."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
         query = IncidentWorkflowQuery()
-        result = list_incident_workflows(query)
+        result = list_incident_workflows(query, ctx=self.mock_context)
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -99,14 +104,13 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(result.response[0].name, "Example Incident Workflow")
         self.assertTrue(result.response[0].is_enabled)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_with_query(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_with_query(self, mock_paginate):
         """Test workflow listing with query filter."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
         query = IncidentWorkflowQuery(query="example", limit=10)
-        result = list_incident_workflows(query)
+        result = list_incident_workflows(query, ctx=self.mock_context)
 
         self.assertEqual(len(result.response), 1)
         mock_paginate.assert_called_once()
@@ -114,38 +118,35 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(call_args.kwargs["params"]["query"], "example")
         self.assertEqual(call_args.kwargs["maximum_records"], 10)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_with_include(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_with_include(self, mock_paginate):
         """Test workflow listing with include parameter."""
         mock_paginate.return_value = [self.sample_workflow_with_steps]
 
         query = IncidentWorkflowQuery(include=["steps", "team"])
-        result = list_incident_workflows(query)
+        result = list_incident_workflows(query, ctx=self.mock_context)
 
         self.assertEqual(len(result.response), 1)
         self.assertIsNotNone(result.response[0].steps)
         self.assertEqual(len(result.response[0].steps), 1)
         self.assertEqual(result.response[0].steps[0].name, "Send Status Update")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_empty(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_empty(self, mock_paginate):
         """Test workflow listing with empty results."""
         mock_paginate.return_value = []
 
         query = IncidentWorkflowQuery()
-        result = list_incident_workflows(query)
+        result = list_incident_workflows(query, ctx=self.mock_context)
 
         self.assertEqual(len(result.response), 0)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_no_parameters(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_no_parameters(self, mock_paginate):
         """Test workflow listing with no parameters (None)."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
-        result = list_incident_workflows()
+        result = list_incident_workflows(None, ctx=self.mock_context)
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -155,13 +156,12 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         call_args = mock_paginate.call_args
         self.assertEqual(call_args.kwargs["maximum_records"], 100)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_explicit_none(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_explicit_none(self, mock_paginate):
         """Test workflow listing with explicit None parameter."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
-        result = list_incident_workflows(None)
+        result = list_incident_workflows(None, ctx=self.mock_context)
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -169,111 +169,90 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         call_args = mock_paginate.call_args
         self.assertEqual(call_args.kwargs["maximum_records"], 100)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_get_incident_workflow_success(self, mock_get_client):
+    def test_get_incident_workflow_success(self):
         """Test getting a specific workflow successfully."""
-        mock_client = Mock()
-        mock_client.rget.return_value = self.sample_workflow_with_steps
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = self.sample_workflow_with_steps
 
-        result = get_incident_workflow("PSFEVL7")
+        result = get_incident_workflow("PSFEVL7", ctx=self.mock_context)
 
         self.assertIsInstance(result, IncidentWorkflow)
         self.assertEqual(result.id, "PSFEVL7")
         self.assertEqual(result.name, "Example Incident Workflow")
         self.assertIsNotNone(result.steps)
         self.assertEqual(len(result.steps), 1)
-        mock_client.rget.assert_called_once_with("/incident_workflows/PSFEVL7")
+        self.mock_client.rget.assert_called_once_with("/incident_workflows/PSFEVL7")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_get_incident_workflow_wrapped_response(self, mock_get_client):
+    def test_get_incident_workflow_wrapped_response(self):
         """Test getting a workflow with wrapped response."""
-        mock_client = Mock()
-        mock_client.rget.return_value = {"incident_workflow": self.sample_workflow_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = {"incident_workflow": self.sample_workflow_data}
 
-        result = get_incident_workflow("PSFEVL7")
+        result = get_incident_workflow("PSFEVL7", ctx=self.mock_context)
 
         self.assertIsInstance(result, IncidentWorkflow)
         self.assertEqual(result.id, "PSFEVL7")
         self.assertEqual(result.name, "Example Incident Workflow")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_get_incident_workflow_unwrapped_response(self, mock_get_client):
+    def test_get_incident_workflow_unwrapped_response(self):
         """Test getting a workflow with unwrapped response."""
-        mock_client = Mock()
-        mock_client.rget.return_value = self.sample_workflow_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = self.sample_workflow_data
 
-        result = get_incident_workflow("PSFEVL7")
+        result = get_incident_workflow("PSFEVL7", ctx=self.mock_context)
 
         self.assertIsInstance(result, IncidentWorkflow)
         self.assertEqual(result.id, "PSFEVL7")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_start_incident_workflow_success(self, mock_get_client):
+    def test_start_incident_workflow_success(self):
         """Test starting a workflow successfully."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = self.sample_instance_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = self.sample_instance_data
 
         incident_ref = IncidentReference(id="Q1R2DLCB21K7NP")
         instance_create = IncidentWorkflowInstanceCreate(incident=incident_ref)
         request = IncidentWorkflowInstanceRequest(incident_workflow_instance=instance_create)
 
-        result = start_incident_workflow("PSFEVL7", request)
+        result = start_incident_workflow("PSFEVL7", request, ctx=self.mock_context)
 
         self.assertIsInstance(result, IncidentWorkflowInstance)
         self.assertEqual(result.id, "P3SNKQS")
         self.assertEqual(result.incident.id, "Q1R2DLCB21K7NP")
-        mock_client.rpost.assert_called_once()
+        self.mock_client.rpost.assert_called_once()
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_start_incident_workflow_wrapped_response(self, mock_get_client):
+    def test_start_incident_workflow_wrapped_response(self):
         """Test starting a workflow with wrapped response."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = {"incident_workflow_instance": self.sample_instance_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = {"incident_workflow_instance": self.sample_instance_data}
 
         incident_ref = IncidentReference(id="Q1R2DLCB21K7NP")
         instance_create = IncidentWorkflowInstanceCreate(incident=incident_ref)
         request = IncidentWorkflowInstanceRequest(incident_workflow_instance=instance_create)
 
-        result = start_incident_workflow("PSFEVL7", request)
+        result = start_incident_workflow("PSFEVL7", request, ctx=self.mock_context)
 
         self.assertIsInstance(result, IncidentWorkflowInstance)
         self.assertEqual(result.id, "P3SNKQS")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_start_incident_workflow_unwrapped_response(self, mock_get_client):
+    def test_start_incident_workflow_unwrapped_response(self):
         """Test starting a workflow with unwrapped response."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = self.sample_instance_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = self.sample_instance_data
 
         incident_ref = IncidentReference(id="Q1R2DLCB21K7NP")
         instance_create = IncidentWorkflowInstanceCreate(incident=incident_ref)
         request = IncidentWorkflowInstanceRequest(incident_workflow_instance=instance_create)
 
-        result = start_incident_workflow("PSFEVL7", request)
+        result = start_incident_workflow("PSFEVL7", request, ctx=self.mock_context)
 
         self.assertIsInstance(result, IncidentWorkflowInstance)
         self.assertEqual(result.id, "P3SNKQS")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_start_incident_workflow_with_custom_id(self, mock_get_client):
+    def test_start_incident_workflow_with_custom_id(self):
         """Test starting a workflow with custom instance ID."""
-        mock_client = Mock()
         instance_data_with_custom_id = self.sample_instance_data.copy()
         instance_data_with_custom_id["id"] = "CUSTOM123"
-        mock_client.rpost.return_value = instance_data_with_custom_id
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = instance_data_with_custom_id
 
         incident_ref = IncidentReference(id="Q1R2DLCB21K7NP")
         instance_create = IncidentWorkflowInstanceCreate(id="CUSTOM123", incident=incident_ref)
         request = IncidentWorkflowInstanceRequest(incident_workflow_instance=instance_create)
 
-        result = start_incident_workflow("PSFEVL7", request)
+        result = start_incident_workflow("PSFEVL7", request, ctx=self.mock_context)
 
         self.assertIsInstance(result, IncidentWorkflowInstance)
         self.assertEqual(result.id, "CUSTOM123")

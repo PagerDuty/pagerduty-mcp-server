@@ -1,4 +1,5 @@
 import unittest
+from tests.fixtures import ContextTestCase
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
@@ -16,7 +17,7 @@ from pagerduty_mcp.tools.change_events import (
 )
 
 
-class TestChangeEventTools(unittest.TestCase):
+class TestChangeEventTools(unittest.TestCase, ContextTestCase):
     """Test cases for change event tools."""
 
     @classmethod
@@ -90,19 +91,16 @@ class TestChangeEventTools(unittest.TestCase):
 
     def setUp(self):
         """Reset mock before each test."""
-        self.mock_client.reset_mock()
-        # Clear any side effects
-        self.mock_client.rget.side_effect = None
+        self.mock_client = self.create_mock_client()
+        self.mock_context = self.create_mock_context(client=self.mock_client)
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_change_events_no_filters(self, mock_get_client, mock_paginate):
+    def test_list_change_events_no_filters(self, mock_paginate):
         """Test listing change events without any filters."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
         query = ChangeEventQuery()
-        result = list_change_events(query)
+        result = list_change_events(query, ctx=self.mock_context)
 
         # Verify paginate call
         mock_paginate.assert_called_once_with(
@@ -122,14 +120,12 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(result.response[1].summary, "Database deployment to prod")
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_change_events_with_team_filter(self, mock_get_client, mock_paginate):
+    def test_list_change_events_with_team_filter(self, mock_paginate):
         """Test listing change events with team filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_change_events_list_response[0]]
 
         query = ChangeEventQuery(team_ids=["TEAM123"])
-        result = list_change_events(query)
+        result = list_change_events(query, ctx=self.mock_context)
 
         # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM123"], "limit": DEFAULT_PAGINATION_LIMIT}
@@ -145,16 +141,14 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(result.response[0].summary, "Test change event from MCP server")
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_change_events_with_date_range(self, mock_get_client, mock_paginate):
+    def test_list_change_events_with_date_range(self, mock_paginate):
         """Test listing change events with date range filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
         since = datetime.now() - timedelta(days=7)
         until = datetime.now()
         query = ChangeEventQuery(since=since, until=until)
-        result = list_change_events(query)
+        result = list_change_events(query, ctx=self.mock_context)
 
         # Verify paginate call
         expected_params = {
@@ -173,14 +167,12 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_change_events_with_integration_filter(self, mock_get_client, mock_paginate):
+    def test_list_change_events_with_integration_filter(self, mock_paginate):
         """Test listing change events with integration filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_change_events_list_response[1]]
 
         query = ChangeEventQuery(integration_ids=["P0Z3BFB"])
-        result = list_change_events(query)
+        result = list_change_events(query, ctx=self.mock_context)
 
         # Verify paginate call
         expected_params = {"integration_ids[]": ["P0Z3BFB"], "limit": DEFAULT_PAGINATION_LIMIT}
@@ -195,14 +187,12 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_change_events_with_custom_limit(self, mock_get_client, mock_paginate):
+    def test_list_change_events_with_custom_limit(self, mock_paginate):
         """Test listing change events with custom limit."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
         query = ChangeEventQuery(limit=50)
-        result = list_change_events(query)
+        result = list_change_events(query, ctx=self.mock_context)
 
         # Verify paginate call
         expected_params = {"limit": 50}
@@ -214,14 +204,12 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_change_events_with_offset_and_total(self, mock_get_client, mock_paginate):
+    def test_list_change_events_with_offset_and_total(self, mock_paginate):
         """Test listing change events with offset and total parameters."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_change_events_list_response[1]]
 
         query = ChangeEventQuery(limit=25, offset=10, total=True)
-        result = list_change_events(query)
+        result = list_change_events(query, ctx=self.mock_context)
 
         # Verify paginate call
         expected_params = {"limit": 25, "offset": 10, "total": True}
@@ -233,30 +221,25 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_change_events_empty_response(self, mock_get_client, mock_paginate):
+    def test_list_change_events_empty_response(self, mock_paginate):
         """Test listing change events when paginate returns empty list."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = ChangeEventQuery()
-        result = list_change_events(query)
+        result = list_change_events(query, ctx=self.mock_context)
 
         # Verify result
         self.assertEqual(len(result.response), 0)
 
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_get_change_event_success_wrapped_response(self, mock_get_client):
+    def test_get_change_event_success_wrapped_response(self):
         """Test successful retrieval of a specific change event with wrapped response."""
-        mock_get_client.return_value = self.mock_client
         # API response with change_event wrapped in 'change_event' key
         wrapped_response = {"change_event": self.sample_change_event_response}
         self.mock_client.rget.return_value = wrapped_response
 
-        result = get_change_event("01G6B73PTIFH786FXPLPEKWG5I")
+        result = get_change_event("01G6B73PTIFH786FXPLPEKWG5I", ctx=self.mock_context)
 
         # Verify API call
-        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/change_events/01G6B73PTIFH786FXPLPEKWG5I")
 
         # Verify result
@@ -273,17 +256,14 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(result.custom_details["description"], "This is a test change event sent via the Events API v2")
         self.assertEqual(result.type, "change_event")
 
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_get_change_event_success_direct_response(self, mock_get_client):
+    def test_get_change_event_success_direct_response(self):
         """Test successful retrieval of a specific change event with direct response."""
-        mock_get_client.return_value = self.mock_client
         # API response directly as change event object
         self.mock_client.rget.return_value = self.sample_change_event_response
 
-        result = get_change_event("01G6B73PTIFH786FXPLPEKWG5I")
+        result = get_change_event("01G6B73PTIFH786FXPLPEKWG5I", ctx=self.mock_context)
 
         # Verify API call
-        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/change_events/01G6B73PTIFH786FXPLPEKWG5I")
 
         # Verify result
@@ -291,28 +271,23 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(result.id, "01G6B73PTIFH786FXPLPEKWG5I")
         self.assertEqual(result.summary, "Test change event from MCP server")
 
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_get_change_event_client_error(self, mock_get_client):
+    def test_get_change_event_client_error(self):
         """Test get_change_event when client raises an exception."""
-        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
-            get_change_event("01G6B73PTIFH786FXPLPEKWG5I")
+            get_change_event("01G6B73PTIFH786FXPLPEKWG5I", ctx=self.mock_context)
 
         self.assertEqual(str(context.exception), "API Error")
-        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/change_events/01G6B73PTIFH786FXPLPEKWG5I")
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_service_change_events_success(self, mock_get_client, mock_paginate):
+    def test_list_service_change_events_success(self, mock_paginate):
         """Test listing change events for a specific service."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
         query = ChangeEventQuery(limit=20)
-        result = list_service_change_events("P43PBXB", query)
+        result = list_service_change_events("P43PBXB", query, ctx=self.mock_context)
 
         # Verify paginate call
         expected_params = {"limit": 20}
@@ -326,15 +301,13 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "01G6B73PTIFH786FXPLPEKWG5I")
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_service_change_events_with_date_range(self, mock_get_client, mock_paginate):
+    def test_list_service_change_events_with_date_range(self, mock_paginate):
         """Test listing service change events with date range."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_change_events_list_response[0]]
 
         since = datetime.now() - timedelta(hours=24)
         query = ChangeEventQuery(since=since, limit=10)
-        result = list_service_change_events("P43PBXB", query)
+        result = list_service_change_events("P43PBXB", query, ctx=self.mock_context)
 
         # Verify paginate call
         expected_params = {"since": since.isoformat(), "limit": 10}
@@ -346,13 +319,11 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_incident_change_events_success(self, mock_get_client, mock_paginate):
+    def test_list_incident_change_events_success(self, mock_paginate):
         """Test listing change events related to an incident."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
-        result = list_incident_change_events("INC123", limit=10)
+        result = list_incident_change_events("INC123", limit=10, ctx=self.mock_context)
 
         # Verify paginate call
         expected_params = {"limit": 10}
@@ -368,13 +339,11 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertIsInstance(result.response[0], ChangeEvent)
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_incident_change_events_no_limit(self, mock_get_client, mock_paginate):
+    def test_list_incident_change_events_no_limit(self, mock_paginate):
         """Test listing incident change events without limit."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
-        result = list_incident_change_events("INC123")
+        result = list_incident_change_events("INC123", None, ctx=self.mock_context)
 
         # Verify paginate call with default limit
         expected_params = {}

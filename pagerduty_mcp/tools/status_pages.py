@@ -1,5 +1,4 @@
-from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import ListResponseModel
+from pagerduty_mcp.models import ListResponseModel, MCPContext
 from pagerduty_mcp.models.status_pages import (
     StatusPage,
     StatusPageImpact,
@@ -16,14 +15,16 @@ from pagerduty_mcp.models.status_pages import (
     StatusPageStatus,
     StatusPageStatusQuery,
 )
-from pagerduty_mcp.utils import paginate
+from pagerduty_mcp.utils import inject_context, paginate
 
 
-def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusPage]:
+@inject_context
+def list_status_pages(query_model: StatusPageQuery, context: MCPContext) -> ListResponseModel[StatusPage]:
     """List Status Pages with optional filtering.
 
     Args:
         query_model: Optional filtering parameters
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of StatusPage objects matching the query parameters
@@ -31,7 +32,7 @@ def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusP
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity="status_pages",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -41,14 +42,14 @@ def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusP
     return ListResponseModel[StatusPage](response=status_pages)
 
 
-def list_status_page_severities(
-    status_page_id: str, query_model: StatusPageSeverityQuery
-) -> ListResponseModel[StatusPageSeverity]:
+@inject_context
+def list_status_page_severities(status_page_id: str, query_model: StatusPageSeverityQuery, context: MCPContext) -> ListResponseModel[StatusPageSeverity]:
     """List Severities for a Status Page by Status Page ID.
 
     Args:
         status_page_id: The ID of the Status Page
         query_model: Optional filtering parameters
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of StatusPageSeverity objects for the given Status Page
@@ -56,7 +57,7 @@ def list_status_page_severities(
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity=f"/status_pages/{status_page_id}/severities",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -66,14 +67,16 @@ def list_status_page_severities(
     return ListResponseModel[StatusPageSeverity](response=severities)
 
 
+@inject_context
 def list_status_page_impacts(
-    status_page_id: str, query_model: StatusPageImpactQuery
+    status_page_id: str, query_model: StatusPageImpactQuery, context: MCPContext
 ) -> ListResponseModel[StatusPageImpact]:
     """List Impacts for a Status Page by Status Page ID.
 
     Args:
         status_page_id: The ID of the Status Page
         query_model: Optional filtering parameters
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of StatusPageImpact objects for the given Status Page
@@ -81,7 +84,7 @@ def list_status_page_impacts(
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity=f"/status_pages/{status_page_id}/impacts",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -91,14 +94,16 @@ def list_status_page_impacts(
     return ListResponseModel[StatusPageImpact](response=impacts)
 
 
+@inject_context
 def list_status_page_statuses(
-    status_page_id: str, query_model: StatusPageStatusQuery
+    status_page_id: str, query_model: StatusPageStatusQuery, context: MCPContext
 ) -> ListResponseModel[StatusPageStatus]:
     """List Statuses for a Status Page by Status Page ID.
 
     Args:
         status_page_id: The ID of the Status Page
         query_model: Optional filtering parameters
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of StatusPageStatus objects for the given Status Page
@@ -106,7 +111,7 @@ def list_status_page_statuses(
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity=f"/status_pages/{status_page_id}/statuses",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -116,7 +121,8 @@ def list_status_page_statuses(
     return ListResponseModel[StatusPageStatus](response=statuses)
 
 
-def create_status_page_post(status_page_id: str, create_model: StatusPagePostCreateRequestWrapper) -> StatusPagePost:
+@inject_context
+def create_status_page_post(status_page_id: str, create_model: StatusPagePostCreateRequestWrapper, context: MCPContext) -> StatusPagePost:
     """Create a Post for a Status Page by Status Page ID.
 
     This tool creates a new post (incident or maintenance) on a status page.
@@ -130,36 +136,40 @@ def create_status_page_post(status_page_id: str, create_model: StatusPagePostCre
             - post.starts_at: When the post becomes effective (required)
             - post.ends_at: When the post is concluded (required)
             - post.updates: List of at least one post update with message, status, severity, etc.
+        context: The MCP context with client and user info (injected)
 
     Returns:
         The created StatusPagePost
     """
-    response = get_client().rpost(
+    response = context.client.rpost(
         f"/status_pages/{status_page_id}/posts", json=create_model.model_dump(mode="json")
     )
 
     return StatusPagePost.from_api_response(response)
 
 
-def get_status_page_post(status_page_id: str, post_id: str, query_model: StatusPagePostQuery) -> StatusPagePost:
+@inject_context
+def get_status_page_post(status_page_id: str, post_id: str, query_model: StatusPagePostQuery, context: MCPContext) -> StatusPagePost:
     """Get a Post for a Status Page by Status Page ID and Post ID.
 
     Args:
         status_page_id: The ID of the Status Page
         post_id: The ID of the Status Page Post
         query_model: Optional query parameters (e.g., include related resources)
+        context: The MCP context with client and user info (injected)
 
     Returns:
         StatusPagePost details
     """
     params = query_model.to_params()
-    response = get_client().rget(f"/status_pages/{status_page_id}/posts/{post_id}", params=params)
+    response = context.client.rget(f"/status_pages/{status_page_id}/posts/{post_id}", params=params)
 
     return StatusPagePost.from_api_response(response)
 
 
+@inject_context
 def create_status_page_post_update(
-    status_page_id: str, post_id: str, create_model: StatusPagePostUpdateRequestWrapper
+    status_page_id: str, post_id: str, create_model: StatusPagePostUpdateRequestWrapper, context: MCPContext
 ) -> StatusPagePostUpdate:
     """Create a Post Update for a Post by Post ID.
 
@@ -177,11 +187,12 @@ def create_status_page_post_update(
             - post_update.impacted_services: List of impacted services (defaults to empty list)
             - post_update.notify_subscribers: Whether to notify subscribers (defaults to False)
             - post_update.update_frequency_ms: Update frequency in milliseconds (defaults to null)
+        context: The MCP context with client and user info (injected)
 
     Returns:
         The created StatusPagePostUpdate
     """
-    response = get_client().rpost(
+    response = context.client.rpost(
         f"/status_pages/{status_page_id}/posts/{post_id}/post_updates",
         json=create_model.model_dump(mode="json"),
     )
@@ -189,8 +200,9 @@ def create_status_page_post_update(
     return StatusPagePostUpdate.from_api_response(response)
 
 
+@inject_context
 def list_status_page_post_updates(
-    status_page_id: str, post_id: str, query_model: StatusPagePostUpdateQuery
+    status_page_id: str, post_id: str, query_model: StatusPagePostUpdateQuery, context: MCPContext
 ) -> ListResponseModel[StatusPagePostUpdate]:
     """List Post Updates for a Status Page by Status Page ID and Post ID.
 
@@ -198,6 +210,7 @@ def list_status_page_post_updates(
         status_page_id: The ID of the Status Page
         post_id: The ID of the Status Page Post
         query_model: Optional filtering parameters
+        context: The MCP context with client and user info (injected)
 
     Returns:
         List of StatusPagePostUpdate objects for the given Post
@@ -205,7 +218,7 @@ def list_status_page_post_updates(
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
+        client=context.client,
         entity=f"/status_pages/{status_page_id}/posts/{post_id}/post_updates",
         params=params,
         maximum_records=query_model.limit or 100,

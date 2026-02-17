@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 from mcp.server.fastmcp import Context
 
+from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.models import (
     MAX_RESULTS,
     Alert,
@@ -20,7 +21,6 @@ from pagerduty_mcp.models import (
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
-    MCPContext,
     OutlierIncidentQuery,
     OutlierIncidentResponse,
     PastIncidentsQuery,

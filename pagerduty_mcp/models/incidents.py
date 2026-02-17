@@ -88,7 +88,7 @@ class IncidentQuery(BaseModel):
         if self.service_ids:
             params["service_ids[]"] = self.service_ids
         if self.teams_ids:
-            params["teams_ids[]"] = self.teams_ids
+            params["team_ids[]"] = self.teams_ids
         if self.user_ids:
             params["user_ids[]"] = self.user_ids
         if self.urgencies:
@@ -120,23 +120,21 @@ class PastIncidentsQuery(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    limit: int | None = Field(
-        default=None,
+    limit: int = Field(
+        default=50,
         ge=1,
         le=999,
-        description="The number of results to be returned in the response. Default is 5, maximum is 999.",
+        description="The number of results to be returned in the response. Default is 50, maximum is 999.",
     )
-    total: bool | None = Field(
-        default=None,
-        description="Set to true to include the total number of Past Incidents in the response",
+    total: bool = Field(
+        default=True,
+        description="Include the total number of Past Incidents in the response. Default is True.",
     )
 
     def to_params(self) -> dict[str, Any]:
         params = {}
-        if self.limit is not None:
-            params["limit"] = self.limit
-        if self.total is not None:
-            params["total"] = self.total
+        params["limit"] = self.limit
+        params["total"] = self.total
         return params
 
 
@@ -394,6 +392,7 @@ class PastIncidentsResponse(BaseModel):
 
         Handles both wrapped and direct response formats:
         - Standard dict: {"past_incidents": [...], "limit": 5, "total": 10}
+        - Direct list: [...] (list of past incident objects, unwrapped)
         - Edge case: [] (empty list, returns default structure)
 
         Args:
@@ -403,9 +402,17 @@ class PastIncidentsResponse(BaseModel):
         Returns:
             PastIncidentsResponse instance
         """
-        # Handle edge case: empty list
-        if isinstance(response_data, list) and len(response_data) == 0:
-            return cls(past_incidents=[], limit=default_limit, total=0)
+        # Handle list responses (both empty and non-empty)
+        if isinstance(response_data, list):
+            if len(response_data) == 0:
+                return cls(past_incidents=[], limit=default_limit, total=0)
+            # Non-empty list: API returned unwrapped list of past incidents
+            # Note: We set total=None because unwrapped format doesn't include total metadata
+            return cls(
+                past_incidents=[PastIncident.model_validate(item) for item in response_data],
+                limit=default_limit,
+                total=None,
+            )
 
         # Handle normal dict response
         if isinstance(response_data, dict):
@@ -435,6 +442,7 @@ class RelatedIncidentsResponse(BaseModel):
 
         Handles both wrapped and direct response formats:
         - Standard dict: {"related_incidents": [...]}
+        - Direct list: [...] (list of related incident objects, unwrapped)
         - Edge case: [] (empty list, returns default structure)
 
         Args:
@@ -443,9 +451,12 @@ class RelatedIncidentsResponse(BaseModel):
         Returns:
             RelatedIncidentsResponse instance
         """
-        # Handle edge case: empty list
-        if isinstance(response_data, list) and len(response_data) == 0:
-            return cls(related_incidents=[])
+        # Handle list responses (both empty and non-empty)
+        if isinstance(response_data, list):
+            if len(response_data) == 0:
+                return cls(related_incidents=[])
+            # Non-empty list: API returned unwrapped list of related incidents
+            return cls(related_incidents=[RelatedIncident.model_validate(item) for item in response_data])
 
         # Handle normal dict response
         if isinstance(response_data, dict):

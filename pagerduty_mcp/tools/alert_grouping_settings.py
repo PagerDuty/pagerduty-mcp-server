@@ -1,6 +1,6 @@
 """Alert Grouping Settings tools for the PagerDuty MCP server."""
 
-from pagerduty_mcp.client import get_client
+from pagerduty_mcp.context import get_client
 from pagerduty_mcp.models import (
     AlertGroupingSetting,
     AlertGroupingSettingCreateRequest,

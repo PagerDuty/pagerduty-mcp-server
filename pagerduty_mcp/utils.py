@@ -1,27 +1,5 @@
 from pagerduty import RestApiV2Client
-from pagerduty.errors import HttpError
-
-from pagerduty_mcp.models import MAX_RESULTS, MCPContext, User
-
-
-def get_mcp_context(client: RestApiV2Client) -> MCPContext:
-    """Get MCP Context.
-
-    This function takes the user credentials and determines if this is an account or user level
-    auth mode.
-
-    If the credentials are bound to a user, it will return the user Schema. Otherwise None.
-    """
-    try:
-        response = client.rget("/users/me")
-        # add the from header so all requests are made from the user
-        if type(response) is dict:
-            user_email = response.get("email", "no-email-provided")
-            client.headers["From"] = user_email
-        return MCPContext(user=User.model_validate(response))
-
-    except HttpError:
-        return MCPContext(user=None)
+from pagerduty_mcp.models import MAX_RESULTS
 
 
 def paginate(*, client: RestApiV2Client, entity: str, params: dict, maximum_records: int = MAX_RESULTS):

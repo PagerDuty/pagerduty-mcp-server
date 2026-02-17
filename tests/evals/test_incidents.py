@@ -40,7 +40,6 @@ class IncidentCompetencyTest(CompetencyTest):
                 }
             },
         )
-
         mcp.register_mock_response(
             "get_past_incidents",
             lambda params: True,
@@ -60,7 +59,6 @@ class IncidentCompetencyTest(CompetencyTest):
                 "limit": 5,
             },
         )
-
         mcp.register_mock_response(
             "get_related_incidents",
             lambda params: True,

@@ -40,9 +40,7 @@ class IncidentCompetencyTest(CompetencyTest):
                 }
             },
         )
-        # get_past_incidents supports both wrapped dict and unwrapped list formats
-        # Wrapped format (standard): {"past_incidents": [...], "total": N, "limit": M}
-        # Unwrapped format: [{incident: ..., score: ...}, ...]
+
         mcp.register_mock_response(
             "get_past_incidents",
             lambda params: True,
@@ -62,9 +60,7 @@ class IncidentCompetencyTest(CompetencyTest):
                 "limit": 5,
             },
         )
-        # get_related_incidents supports both wrapped dict and unwrapped list formats
-        # Wrapped format (standard): {"related_incidents": [...]}
-        # Unwrapped format: [{incident: ..., relationships: [...]}, ...]
+
         mcp.register_mock_response(
             "get_related_incidents",
             lambda params: True,

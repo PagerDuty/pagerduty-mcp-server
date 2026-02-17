@@ -45,7 +45,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             params["user_ids[]"] = [user_data.id]
         elif query_model.request_scope == "teams":
             user_team_ids = [team.id for team in user_data.teams]
-            params["teams_ids[]"] = user_team_ids
+            params["team_ids[]"] = user_team_ids
 
     response = paginate(
         client=get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
@@ -256,7 +256,7 @@ def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> Pas
 
     Past Incidents returns Incidents within the past 6 months that have similar
     metadata and were generated on the same Service as the parent Incident.
-    By default, 5 Past Incidents are returned. This feature is currently available
+    By default, 50 Past Incidents are returned. This feature is currently available
     as part of the Event Intelligence package or Digital Operations plan only.
 
     Args:
@@ -269,7 +269,7 @@ def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> Pas
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/past_incidents", params=params)
 
-    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit or 5)
+    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit).model_dump_json()
 
 
 def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
@@ -289,4 +289,4 @@ def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) 
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
 
-    return RelatedIncidentsResponse.from_api_response(response)
+    return RelatedIncidentsResponse.from_api_response(response).model_dump_json()

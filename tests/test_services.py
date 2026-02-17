@@ -123,7 +123,7 @@ class TestServiceTools(unittest.TestCase):
         result = list_services(query)
 
         # Verify paginate call
-        expected_params = {"teams_ids[]": ["TEAM2"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": ["TEAM2"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
         # Verify result
@@ -158,7 +158,7 @@ class TestServiceTools(unittest.TestCase):
         result = list_services(query)
 
         # Verify paginate call
-        expected_params = {"query": "Web", "teams_ids[]": ["TEAM1"], "limit": 10}
+        expected_params = {"query": "Web", "team_ids[]": ["TEAM1"], "limit": 10}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
         # Verify result
@@ -395,7 +395,7 @@ class TestServiceTools(unittest.TestCase):
 
         params = query.to_params()
 
-        expected_params = {"query": "test service", "teams_ids[]": ["TEAM1", "TEAM2"], "limit": 25}
+        expected_params = {"query": "test service", "team_ids[]": ["TEAM1", "TEAM2"], "limit": 25}
         self.assertEqual(params, expected_params)
 
     def test_service_query_to_params_partial_fields(self):

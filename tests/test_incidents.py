@@ -11,6 +11,7 @@ from pagerduty_mcp.models import (
     MAX_RESULTS,
     Alert,
     AlertQuery,
+    GetIncidentQuery,
     Incident,
     IncidentCreate,
     IncidentCreateRequest,
@@ -300,7 +301,7 @@ class TestIncidentTools(unittest.TestCase):
         # Assertions
         self.assertIsInstance(result, Incident)
         self.assertEqual(result.id, "PINCIDENT123")
-        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123")
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={})
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_incident_api_error(self, mock_get_client):
@@ -313,6 +314,131 @@ class TestIncidentTools(unittest.TestCase):
         # Test that exception is raised
         with self.assertRaises(Exception) as context:
             get_incident("PINCIDENT123")
+
+        self.assertIn("API Error", str(context.exception))
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_include_single(self, mock_get_client):
+        """Test getting an incident with single include parameter."""
+        # Setup mock
+        mock_client = Mock()
+        incident_with_users = {
+            **self.sample_incident_data,
+            "users": [{"id": "PUSER123", "summary": "John Doe"}],
+        }
+        mock_client.rget.return_value = incident_with_users
+        mock_get_client.return_value = mock_client
+
+        # Test
+        query = GetIncidentQuery(include=["users"])
+        result = get_incident("PINCIDENT123", query)
+
+        # Verify API call
+        mock_get_client.assert_called_once()
+        expected_params = {"include[]": ["users"]}
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params=expected_params)
+
+        # Verify result
+        self.assertIsInstance(result, Incident)
+        self.assertEqual(result.id, "PINCIDENT123")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_include_multiple(self, mock_get_client):
+        """Test getting an incident with multiple include parameters."""
+        # Setup mock
+        mock_client = Mock()
+        incident_with_data = {
+            **self.sample_incident_data,
+            "users": [{"id": "PUSER123"}],
+            "teams": [{"id": "PTEAM123"}],
+            "services": [{"id": "PSERVICE123"}],
+        }
+        mock_client.rget.return_value = incident_with_data
+        mock_get_client.return_value = mock_client
+
+        # Test
+        query = GetIncidentQuery(include=["users", "teams", "services"])
+        result = get_incident("PINCIDENT123", query)
+
+        # Verify API call
+        expected_params = {"include[]": ["users", "teams", "services"]}
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params=expected_params)
+
+        # Verify result
+        self.assertIsInstance(result, Incident)
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_without_query_model(self, mock_get_client):
+        """Test get_incident without query model maintains backward compatibility."""
+        # Setup mock
+        mock_client = Mock()
+        mock_client.rget.return_value = self.sample_incident_data
+        mock_get_client.return_value = mock_client
+
+        # Test - call without query_model parameter
+        result = get_incident("PINCIDENT123")
+
+        # Verify API call with empty params
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={})
+
+        # Verify result
+        self.assertIsInstance(result, Incident)
+        self.assertEqual(result.id, "PINCIDENT123")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_empty_query_model(self, mock_get_client):
+        """Test get_incident with empty query model."""
+        # Setup mock
+        mock_client = Mock()
+        mock_client.rget.return_value = self.sample_incident_data
+        mock_get_client.return_value = mock_client
+
+        # Test
+        query = GetIncidentQuery()
+        result = get_incident("PINCIDENT123", query)
+
+        # Should have empty params
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={})
+
+        # Verify result
+        self.assertIsInstance(result, Incident)
+
+    def test_get_incident_query_to_params_with_include(self):
+        """Test GetIncidentQuery.to_params() with include parameter."""
+        query = GetIncidentQuery(include=["users", "teams"])
+        params = query.to_params()
+
+        expected_params = {"include[]": ["users", "teams"]}
+        self.assertEqual(params, expected_params)
+
+    def test_get_incident_query_to_params_empty(self):
+        """Test GetIncidentQuery.to_params() with no parameters."""
+        query = GetIncidentQuery()
+        params = query.to_params()
+
+        self.assertEqual(params, {})
+
+    def test_get_incident_query_validation_extra_forbidden(self):
+        """Test GetIncidentQuery rejects extra fields."""
+        from pydantic import ValidationError
+
+        with self.assertRaises(ValidationError) as ctx:
+            GetIncidentQuery(include=["users"], invalid_field="value")
+
+        self.assertIn("Extra inputs are not permitted", str(ctx.exception))
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_query_api_error(self, mock_get_client):
+        """Test get_incident with query parameters when API returns error."""
+        # Setup mock to raise exception
+        mock_client = Mock()
+        mock_client.rget.side_effect = Exception("API Error")
+        mock_get_client.return_value = mock_client
+
+        # Test
+        query = GetIncidentQuery(include=["users"])
+        with self.assertRaises(Exception) as context:
+            get_incident("PINCIDENT123", query)
 
         self.assertIn("API Error", str(context.exception))
 

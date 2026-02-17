@@ -174,6 +174,49 @@ INCIDENT_COMPETENCY_TESTS = [
         description="Get specific incident by number",
     ),
     IncidentCompetencyTest(
+        query="Get incident 123 with user details",
+        expected_tools=[
+            {"tool_name": "get_incident", "parameters": {"incident_id": "123", "query_model": {"include": ["users"]}}}
+        ],
+        description="Get incident with users included",
+    ),
+    IncidentCompetencyTest(
+        query="Show me incident ABC456 with teams and services",
+        expected_tools=[
+            {
+                "tool_name": "get_incident",
+                "parameters": {"incident_id": "ABC456", "query_model": {"include": ["teams", "services"]}},
+            }
+        ],
+        description="Get incident with multiple includes (teams and services)",
+    ),
+    IncidentCompetencyTest(
+        query="Get incident 789 including escalation policies and log entries",
+        expected_tools=[
+            {
+                "tool_name": "get_incident",
+                "parameters": {
+                    "incident_id": "789",
+                    "query_model": {"include": ["escalation_policies", "log_entries"]},
+                },
+            }
+        ],
+        description="Get incident with escalation policies and log entries",
+    ),
+    IncidentCompetencyTest(
+        query="Show me all details for incident XYZ999 including users, teams, notes, and assignments",
+        expected_tools=[
+            {
+                "tool_name": "get_incident",
+                "parameters": {
+                    "incident_id": "XYZ999",
+                    "query_model": {"include": ["users", "teams", "notes", "assignments"]},
+                },
+            }
+        ],
+        description="Get incident with comprehensive includes (users, teams, notes, assignments)",
+    ),
+    IncidentCompetencyTest(
         query="Create an incident with title 'Testing MCP' for service with ID 1234 with high urgency",
         expected_tools=[
             {

@@ -40,6 +40,9 @@ class IncidentCompetencyTest(CompetencyTest):
                 }
             },
         )
+        # get_past_incidents supports both wrapped dict and unwrapped list formats
+        # Wrapped format (standard): {"past_incidents": [...], "total": N, "limit": M}
+        # Unwrapped format: [{incident: ..., score: ...}, ...]
         mcp.register_mock_response(
             "get_past_incidents",
             lambda params: True,
@@ -59,6 +62,9 @@ class IncidentCompetencyTest(CompetencyTest):
                 "limit": 5,
             },
         )
+        # get_related_incidents supports both wrapped dict and unwrapped list formats
+        # Wrapped format (standard): {"related_incidents": [...]}
+        # Unwrapped format: [{incident: ..., relationships: [...]}, ...]
         mcp.register_mock_response(
             "get_related_incidents",
             lambda params: True,
@@ -316,7 +322,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tools=[
             {
                 "tool_name": "list_alerts_from_incident",
-                "parameters": {"incident_id": "123", "query_model": {"limit": 100, "offset": 0}},
+                "parameters": {"incident_id": "123", "query_model": {}},
             }
         ],
         description="List all alerts for a specific incident",
@@ -326,7 +332,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tools=[
             {
                 "tool_name": "list_alerts_from_incident",
-                "parameters": {"incident_id": "PINCIDENT123", "query_model": {"limit": 100, "offset": 0}},
+                "parameters": {"incident_id": "PINCIDENT123", "query_model": {}},
             }
         ],
         description="List alerts for incident using natural language query",

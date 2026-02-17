@@ -1,5 +1,6 @@
 """Unit tests for incident tools."""
 
+import json
 import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
@@ -240,10 +241,10 @@ class TestIncidentTools(unittest.TestCase):
         query = IncidentQuery(request_scope="teams")
         _ = list_incidents(query)
 
-        # Verify teams_ids parameter was added
+        # Verify team_ids parameter was added
         call_args = mock_paginate.call_args
-        self.assertIn("teams_ids[]", call_args[1]["params"])
-        self.assertEqual(call_args[1]["params"]["teams_ids[]"], ["PTEAM123"])
+        self.assertIn("team_ids[]", call_args[1]["params"])
+        self.assertEqual(call_args[1]["params"]["team_ids[]"], ["PTEAM123"])
 
     @patch("pagerduty_mcp.tools.incidents.get_user_data")
     def test_list_incidents_user_required_error(self, mock_get_user):
@@ -832,7 +833,11 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = PastIncidentsQuery()
-        result = get_past_incidents("PINCIDENT123", query)
+        result_json = get_past_incidents("PINCIDENT123", query)
+
+        # Parse JSON result
+        self.assertIsInstance(result_json, str)
+        result = PastIncidentsResponse.model_validate_json(result_json)
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -841,7 +846,8 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(result.past_incidents[0].score, 46.8249)
         self.assertEqual(result.total, 2)
         self.assertEqual(result.limit, 5)
-        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={})
+        # limit=50 and total=True are now the defaults
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={"limit": 50, "total": True})
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_past_incidents_with_params(self, mock_get_client):
@@ -853,7 +859,11 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test with limit and total parameters
         query = PastIncidentsQuery(limit=10, total=True)
-        result = get_past_incidents("PINCIDENT123", query)
+        result_json = get_past_incidents("PINCIDENT123", query)
+
+        # Parse JSON result
+        self.assertIsInstance(result_json, str)
+        result = PastIncidentsResponse.model_validate_json(result_json)
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -874,7 +884,11 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = RelatedIncidentsQuery()
-        result = get_related_incidents("PINCIDENT123", query)
+        result_json = get_related_incidents("PINCIDENT123", query)
+
+        # Parse JSON result
+        self.assertIsInstance(result_json, str)
+        result = RelatedIncidentsResponse.model_validate_json(result_json)
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -893,7 +907,11 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test with additional_details parameter
         query = RelatedIncidentsQuery(additional_details=["incident"])
-        result = get_related_incidents("PINCIDENT123", query)
+        result_json = get_related_incidents("PINCIDENT123", query)
+
+        # Parse JSON result
+        self.assertIsInstance(result_json, str)
+        result = RelatedIncidentsResponse.model_validate_json(result_json)
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -958,7 +976,11 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = RelatedIncidentsQuery()
-        result = get_related_incidents("PINCIDENT123", query)
+        result_json = get_related_incidents("PINCIDENT123", query)
+
+        # Parse JSON result
+        self.assertIsInstance(result_json, str)
+        result = RelatedIncidentsResponse.model_validate_json(result_json)
 
         # Should return empty related incidents response
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -1011,13 +1033,120 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = PastIncidentsQuery(limit=10)
-        result = get_past_incidents("PINCIDENT123", query)
+        result_json = get_past_incidents("PINCIDENT123", query)
+
+        # Parse JSON result
+        self.assertIsInstance(result_json, str)
+        result = PastIncidentsResponse.model_validate_json(result_json)
 
         # Should return empty past incidents response with correct default values
         self.assertIsInstance(result, PastIncidentsResponse)
         self.assertEqual(len(result.past_incidents), 0)
         self.assertEqual(result.limit, 10)
         self.assertEqual(result.total, 0)
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_past_incidents_unwrapped_list_response(self, mock_get_client):
+        """Test get_past_incidents handles unwrapped list response (non-empty)."""
+        # Setup mock to return unwrapped list (API sometimes returns this format)
+        unwrapped_list = [
+            {
+                "incident": {
+                    "id": "PFBE9I2",
+                    "created_at": "2020-11-04T16:08:15Z",
+                    "self": "https://api.pagerduty.com/incidents/PFBE9I2",
+                    "title": "Things are so broken!",
+                },
+                "score": 46.8249,
+            },
+            {
+                "incident": {
+                    "id": "P1J6V6M",
+                    "created_at": "2020-10-22T17:18:14Z",
+                    "self": "https://api.pagerduty.com/incidents/P1J6V6M",
+                    "title": "Things are so broken!",
+                },
+                "score": 46.8249,
+            },
+        ]
+        mock_client = Mock()
+        mock_client.rget.return_value = unwrapped_list
+        mock_get_client.return_value = mock_client
+
+        # Test
+        query = PastIncidentsQuery(limit=10)
+        result_json = get_past_incidents("PINCIDENT123", query)
+
+        # Parse JSON result
+        self.assertIsInstance(result_json, str)
+        result = PastIncidentsResponse.model_validate_json(result_json)
+
+        # Should parse unwrapped list correctly
+        self.assertIsInstance(result, PastIncidentsResponse)
+        self.assertEqual(len(result.past_incidents), 2)
+        self.assertEqual(result.past_incidents[0].incident.id, "PFBE9I2")
+        self.assertEqual(result.past_incidents[0].score, 46.8249)
+        # Unwrapped format doesn't include total metadata
+        self.assertIsNone(result.total)
+        self.assertEqual(result.limit, 10)
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_related_incidents_unwrapped_list_response(self, mock_get_client):
+        """Test get_related_incidents handles unwrapped list response (non-empty)."""
+        # Setup mock to return unwrapped list (API sometimes returns this format)
+        unwrapped_list = [
+            {
+                "incident": {
+                    "id": "PINCIDENT123",
+                    "created_at": "2020-11-18T13:08:14Z",
+                    "self": "https://api.pagerduty.com/incidents/PINCIDENT123",
+                    "title": "Test Incident",
+                },
+                "relationships": [
+                    {
+                        "type": "machine_learning_inferred",
+                        "metadata": {
+                            "grouping_classification": "similar_contents",
+                            "user_feedback": {"positive_feedback_count": 12, "negative_feedback_count": 3},
+                        },
+                    }
+                ],
+            },
+            {
+                "incident": {
+                    "id": "PINCIDENT456",
+                    "created_at": "2023-01-02T00:00:00Z",
+                    "self": "https://api.pagerduty.com/incidents/PINCIDENT456",
+                    "title": "Related Test Incident",
+                },
+                "relationships": [
+                    {
+                        "type": "service_dependency",
+                        "metadata": {
+                            "dependent_services": {"id": "PSERVICE123", "type": "business_service_reference"},
+                            "supporting_services": {"id": "PSERVICE456", "type": "technical_service_reference"},
+                        },
+                    }
+                ],
+            },
+        ]
+        mock_client = Mock()
+        mock_client.rget.return_value = unwrapped_list
+        mock_get_client.return_value = mock_client
+
+        # Test
+        query = RelatedIncidentsQuery()
+        result_json = get_related_incidents("PINCIDENT123", query)
+
+        # Parse JSON result
+        self.assertIsInstance(result_json, str)
+        result = RelatedIncidentsResponse.model_validate_json(result_json)
+
+        # Should parse unwrapped list correctly
+        self.assertIsInstance(result, RelatedIncidentsResponse)
+        self.assertEqual(len(result.related_incidents), 2)
+        self.assertEqual(result.related_incidents[0].incident.id, "PINCIDENT123")
+        self.assertEqual(result.related_incidents[1].incident.id, "PINCIDENT456")
 
     def test_outlier_incident_response_from_api_response_wrapped(self):
         """Test OutlierIncidentResponse.from_api_response with wrapped data."""

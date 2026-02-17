@@ -4,41 +4,6 @@
 
 PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
-## Embedded MCP Apps (Developer Experience)
-
-Interactive React UIs for PagerDuty incident management, embedded directly in the Python MCP server for seamless IDE integration. Manage your full incident lifecycle without leaving your IDE.
-
-**Available Apps:**
-
-### 1. **Incident Command Center** 🚨
-Full incident lifecycle management from your IDE:
-- Real-time incident feed with auto-refresh
-- Deep incident details: timeline, notes, alerts, changes
-- Quick actions: acknowledge, resolve, escalate
-- AI-powered similar incident detection
-- Alert inspection with raw data
-- Runbook links parsed from incident metadata
-
-**Usage in VS Code:** Ask Claude: `Show me the incident command center`
-
-### 2. **On-Call Schedule Visualizer** 📅
-Who's on-call right now across teams and schedules.
-
-**Usage in VS Code:** Ask Claude: `Show me the on-call schedule`
-
-### 3. **Service Health Matrix** 💚
-Service health overview with incident counts and status indicators.
-
-**Usage in VS Code:** Ask Claude: `Show me the service health matrix`
-
-**Architecture:**
-- ✅ Native VS Code integration (MCP resources)
-- ✅ Single process, no HTTP server management
-- ✅ Direct access to all PagerDuty MCP tools
-- ✅ Simple deployment: `uv run pagerduty-mcp`
-
-See [mcp-apps/README.md](mcp-apps/README.md) for development instructions and customization.
-
 ## Prerequisites
 
 *   [asdf-vm](https://asdf-vm.com/) installed.
@@ -169,74 +134,6 @@ You can configure this MCP server to work with Claude Desktop by adding it to Cl
 5.  **Test the integration** by starting a conversation with Claude and asking something like "Show me my latest PagerDuty incidents" or "List my event orchestrations" to verify the MCP server is working.
 
     > **Security Note:** Unlike VS Code's secure input prompts, Claude Desktop requires you to store your API key directly in the configuration file. Ensure this file has appropriate permissions (readable only by your user account) and consider the security implications of storing credentials in plain text.
-
-## Running with Docker
-
-The PagerDuty MCP server can be run in a Docker container, providing an isolated and portable deployment option. The Docker image uses stdio transport for MCP communication.
-
-### Prerequisites
-
-- Docker installed
-- A PagerDuty User API Token (see [Prerequisites](#prerequisites))
-
-### Quick Start
-
-**Build the Docker image:**
-
-```bash
-docker build -t pagerduty-mcp:latest .
-```
-
-**Run in read-only mode (default):**
-
-```bash
-docker run -i --rm \
-  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
-  pagerduty-mcp:latest
-```
-
-**Run with write tools enabled:**
-
-```bash
-docker run -i --rm \
-  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
-  pagerduty-mcp:latest --enable-write-tools
-```
-
-**For EU region:**
-
-```bash
-docker run -i --rm \
-  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
-  -e PAGERDUTY_API_HOST="https://api.eu.pagerduty.com" \
-  pagerduty-mcp:latest
-```
-
-### Using with MCP Clients via Docker
-
-To integrate the Docker container with MCP clients, you can use Docker as the command:
-
-**Claude Desktop example:**
-
-```json
-{
-  "mcpServers": {
-    "pagerduty-mcp": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "PAGERDUTY_USER_API_KEY=your-api-key-here",
-        "pagerduty-mcp:latest"
-      ]
-    }
-  }
-}
-```
-
-> **Note**: The Docker container uses stdio transport, making it compatible with MCP clients that expect standard input/output communication. Ensure you build the image first using `docker build -t pagerduty-mcp:latest .`
 
 ## Set up locally
 

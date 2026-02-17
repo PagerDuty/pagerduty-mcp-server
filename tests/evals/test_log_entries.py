@@ -131,4 +131,39 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         ],
         description="List log entries with both limit and offset for pagination",
     ),
+    LogEntryCompetencyTest(
+        query="Show me only important log entry changes",
+        expected_tools=[
+            {"tool_name": "list_log_entries", "parameters": {"query_model": {"is_overview": True}}}
+        ],
+        description="List log entries with is_overview filter for important changes only",
+    ),
+    LogEntryCompetencyTest(
+        query="Get log entries with incident details included",
+        expected_tools=[
+            {"tool_name": "list_log_entries", "parameters": {"query_model": {"include": ["incidents"]}}}
+        ],
+        description="List log entries with incidents included",
+    ),
+    LogEntryCompetencyTest(
+        query="Show me log entries for teams TEAM1 and TEAM2",
+        expected_tools=[
+            {"tool_name": "list_log_entries", "parameters": {"query_model": {"team_ids": ["TEAM1", "TEAM2"]}}}
+        ],
+        description="List log entries filtered by team IDs",
+    ),
+    LogEntryCompetencyTest(
+        query="List log entries with services and teams included",
+        expected_tools=[
+            {"tool_name": "list_log_entries", "parameters": {"query_model": {"include": ["services", "teams"]}}}
+        ],
+        description="List log entries with multiple include parameters",
+    ),
+    LogEntryCompetencyTest(
+        query="Get log entries in America/New_York timezone",
+        expected_tools=[
+            {"tool_name": "list_log_entries", "parameters": {"query_model": {"time_zone": "America/New_York"}}}
+        ],
+        description="List log entries with timezone specification",
+    ),
 ]

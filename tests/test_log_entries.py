@@ -1,7 +1,7 @@
 """Unit tests for log entry tools."""
 
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch
 
 from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
@@ -290,6 +290,74 @@ class TestLogEntryTools(unittest.TestCase):
 
         self.assertIsNone(query.since)
         self.assertIsNone(query.until)
+
+    def test_log_entry_query_with_is_overview(self):
+        """Test LogEntryQuery with is_overview parameter."""
+        query = LogEntryQuery(is_overview=True)
+        params = query.to_params()
+
+        self.assertTrue("is_overview" in params)
+        self.assertTrue(params["is_overview"])
+
+    def test_log_entry_query_with_include(self):
+        """Test LogEntryQuery with include parameter."""
+        query = LogEntryQuery(include=["incidents", "services", "teams"])
+        params = query.to_params()
+
+        self.assertIn("include[]", params)
+        self.assertEqual(params["include[]"], ["incidents", "services", "teams"])
+
+    def test_log_entry_query_with_team_ids(self):
+        """Test LogEntryQuery with team_ids filter."""
+        query = LogEntryQuery(team_ids=["TEAM1", "TEAM2"])
+        params = query.to_params()
+
+        self.assertIn("team_ids[]", params)
+        self.assertEqual(params["team_ids[]"], ["TEAM1", "TEAM2"])
+
+    def test_log_entry_query_with_time_zone(self):
+        """Test LogEntryQuery with time_zone parameter."""
+        query = LogEntryQuery(time_zone="America/New_York")
+        params = query.to_params()
+
+        self.assertIn("time_zone", params)
+        self.assertEqual(params["time_zone"], "America/New_York")
+
+    def test_log_entry_query_with_total(self):
+        """Test LogEntryQuery with total parameter."""
+        query = LogEntryQuery(total=True)
+        params = query.to_params()
+
+        self.assertIn("total", params)
+        self.assertTrue(params["total"])
+
+    def test_log_entry_query_with_all_filters(self):
+        """Test LogEntryQuery with all filter parameters."""
+        since_date = datetime(2023, 1, 1, tzinfo=timezone.utc)
+        until_date = datetime(2023, 12, 31, tzinfo=timezone.utc)
+
+        query = LogEntryQuery(
+            since=since_date,
+            until=until_date,
+            limit=50,
+            offset=10,
+            is_overview=True,
+            include=["incidents", "teams"],
+            team_ids=["TEAM1"],
+            time_zone="UTC",
+            total=True,
+        )
+        params = query.to_params()
+
+        self.assertEqual(params["since"], since_date.isoformat())
+        self.assertEqual(params["until"], until_date.isoformat())
+        self.assertEqual(params["limit"], 50)
+        self.assertEqual(params["offset"], 10)
+        self.assertTrue(params["is_overview"])
+        self.assertEqual(params["include[]"], ["incidents", "teams"])
+        self.assertEqual(params["team_ids[]"], ["TEAM1"])
+        self.assertEqual(params["time_zone"], "UTC")
+        self.assertTrue(params["total"])
 
 
 if __name__ == "__main__":

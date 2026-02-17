@@ -289,4 +289,4 @@ def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) 
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
 
-    return RelatedIncidentsResponse.from_api_response(response)
+    return RelatedIncidentsResponse.from_api_response(response).model_dump_json()

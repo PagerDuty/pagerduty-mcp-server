@@ -3,7 +3,7 @@
 import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
-
+from tests.context_test_case import ContextTestCase
 from pagerduty_mcp.models import ListResponseModel
 from pagerduty_mcp.models.status_pages import (
     StatusPage,
@@ -42,7 +42,7 @@ from pagerduty_mcp.tools.status_pages import (
 )
 
 
-class TestStatusPagesTools(unittest.TestCase):
+class TestStatusPagesTools(ContextTestCase):
     """Test cases for Status Pages tools."""
 
     @classmethod
@@ -116,9 +116,8 @@ class TestStatusPagesTools(unittest.TestCase):
             "type": "status_page_post_update",
         }
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_pages_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_pages_basic(self, mock_paginate):
         """Test basic Status Pages listing."""
         mock_paginate.return_value = [self.sample_status_page_data]
 
@@ -131,9 +130,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PT4KHLK")
         self.assertEqual(result.response[0].name, "My brand Status Page")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_pages_filter_by_type(self, mock_paginate, mock_get_client):
+    def test_list_status_pages_filter_by_type(self, mock_paginate):
         """Test Status Pages listing with type filter."""
         mock_paginate.return_value = [self.sample_status_page_data]
 
@@ -144,9 +142,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].status_page_type, "private")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_severities_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_page_severities_basic(self, mock_paginate):
         """Test basic Severity listing."""
         mock_paginate.return_value = [self.sample_severity_data]
 
@@ -159,9 +156,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PIJ90N7")
         self.assertEqual(result.response[0].description, "all good")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_severities_filter_by_post_type(self, mock_paginate, mock_get_client):
+    def test_list_status_page_severities_filter_by_post_type(self, mock_paginate):
         """Test Severity listing with post type filter."""
         mock_paginate.return_value = [self.sample_severity_data]
 
@@ -172,9 +168,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].post_type, "incident")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_impacts_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_page_impacts_basic(self, mock_paginate):
         """Test basic Impact listing."""
         mock_paginate.return_value = [self.sample_impact_data]
 
@@ -187,9 +182,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PIJ90N7")
         self.assertEqual(result.response[0].description, "operational")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_impacts_filter_by_post_type(self, mock_paginate, mock_get_client):
+    def test_list_status_page_impacts_filter_by_post_type(self, mock_paginate):
         """Test Impact listing with post type filter."""
         mock_paginate.return_value = [self.sample_impact_data]
 
@@ -200,9 +194,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].post_type, "incident")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_statuses_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_page_statuses_basic(self, mock_paginate):
         """Test basic Status listing."""
         mock_paginate.return_value = [self.sample_status_data]
 
@@ -215,9 +208,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PIJ90N7")
         self.assertEqual(result.response[0].description, "investigating")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_statuses_filter_by_post_type(self, mock_paginate, mock_get_client):
+    def test_list_status_page_statuses_filter_by_post_type(self, mock_paginate):
         """Test Status listing with post type filter."""
         mock_paginate.return_value = [self.sample_status_data]
 
@@ -228,12 +220,9 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].post_type, "incident")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_create_status_page_post_success(self, mock_get_client):
+    def test_create_status_page_post_success(self):
         """Test creating a Status Page Post successfully."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = {"post": self.sample_post_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = {"post": self.sample_post_data}
 
         update = StatusPagePostUpdateRequest(
             message="<p>Scheduled maintenance</p>",
@@ -264,14 +253,11 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result, StatusPagePost)
         self.assertEqual(result.id, "PIJ90N7")
         self.assertEqual(result.title, "maintenance window for database upgrade")
-        mock_client.rpost.assert_called_once()
+        self.mock_client.rpost.assert_called_once()
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_create_status_page_post_unwrapped_response(self, mock_get_client):
+    def test_create_status_page_post_unwrapped_response(self):
         """Test creating a Status Page Post with unwrapped response."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = self.sample_post_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = self.sample_post_data
 
         update = StatusPagePostUpdateRequest(
             message="<p>Scheduled maintenance</p>",
@@ -297,12 +283,9 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result, StatusPagePost)
         self.assertEqual(result.id, "PIJ90N7")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_get_status_page_post_success(self, mock_get_client):
+    def test_get_status_page_post_success(self):
         """Test getting a Status Page Post successfully."""
-        mock_client = Mock()
-        mock_client.rget.return_value = {"post": self.sample_post_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = {"post": self.sample_post_data}
 
         query = StatusPagePostQuery()
         result = get_status_page_post("PR5LMML", "PIJ90N7", query)
@@ -310,29 +293,23 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result, StatusPagePost)
         self.assertEqual(result.id, "PIJ90N7")
         self.assertEqual(result.title, "maintenance window for database upgrade")
-        mock_client.rget.assert_called_once()
+        self.mock_client.rget.assert_called_once()
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_get_status_page_post_with_includes(self, mock_get_client):
+    def test_get_status_page_post_with_includes(self):
         """Test getting a Status Page Post with included resources."""
-        mock_client = Mock()
-        mock_client.rget.return_value = {"post": self.sample_post_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = {"post": self.sample_post_data}
 
         query = StatusPagePostQuery(include=["status_page_post_update"])
         result = get_status_page_post("PR5LMML", "PIJ90N7", query)
 
         self.assertIsInstance(result, StatusPagePost)
         self.assertEqual(result.id, "PIJ90N7")
-        call_args = mock_client.rget.call_args
+        call_args = self.mock_client.rget.call_args
         self.assertIn("params", call_args.kwargs)
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_get_status_page_post_unwrapped_response(self, mock_get_client):
+    def test_get_status_page_post_unwrapped_response(self):
         """Test getting a Status Page Post with unwrapped response."""
-        mock_client = Mock()
-        mock_client.rget.return_value = self.sample_post_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = self.sample_post_data
 
         query = StatusPagePostQuery()
         result = get_status_page_post("PR5LMML", "PIJ90N7", query)
@@ -340,12 +317,9 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result, StatusPagePost)
         self.assertEqual(result.id, "PIJ90N7")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_create_status_page_post_update_success(self, mock_get_client):
+    def test_create_status_page_post_update_success(self):
         """Test creating a Status Page Post Update successfully."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = {"post_update": self.sample_post_update_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = {"post_update": self.sample_post_update_data}
 
         update_request = StatusPagePostUpdateRequest(
             message="<p>Investigation ongoing</p>",
@@ -368,14 +342,11 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result, StatusPagePostUpdate)
         self.assertEqual(result.id, "PXSOCH0")
         self.assertEqual(result.update_frequency_ms, 300000)
-        mock_client.rpost.assert_called_once()
+        self.mock_client.rpost.assert_called_once()
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_create_status_page_post_update_unwrapped_response(self, mock_get_client):
+    def test_create_status_page_post_update_unwrapped_response(self):
         """Test creating a Status Page Post Update with unwrapped response."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = self.sample_post_update_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = self.sample_post_update_data
 
         update_request = StatusPagePostUpdateRequest(
             message="<p>Investigation ongoing</p>",
@@ -393,9 +364,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result, StatusPagePostUpdate)
         self.assertEqual(result.id, "PXSOCH0")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_post_updates_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_page_post_updates_basic(self, mock_paginate):
         """Test basic Post Update listing."""
         mock_paginate.return_value = [self.sample_post_update_data]
 
@@ -407,9 +377,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result.response[0], StatusPagePostUpdate)
         self.assertEqual(result.response[0].id, "PXSOCH0")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_post_updates_filter_by_reviewed_status(self, mock_paginate, mock_get_client):
+    def test_list_status_page_post_updates_filter_by_reviewed_status(self, mock_paginate):
         """Test Post Update listing with reviewed status filter."""
         mock_paginate.return_value = [self.sample_post_update_data]
 
@@ -420,11 +389,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].reviewed_status, "approved")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_create_status_page_post_incident_with_required_fields(self, mock_get_client):
+    def test_create_status_page_post_incident_with_required_fields(self):
         """Test creating an incident post with all required fields (starts_at, ends_at, updates)."""
-        mock_client = Mock()
-
         sample_incident_data = {
             "id": "PINC001",
             "self": "https://api.pagerduty.com/status_pages/P3E5S5D/posts/PINC001",
@@ -437,8 +403,7 @@ class TestStatusPagesTools(unittest.TestCase):
             "updates": [{"id": "PUPD001", "type": "status_page_post_update"}],
         }
 
-        mock_client.rpost.return_value = {"post": sample_incident_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = {"post": sample_incident_data}
 
         update = StatusPagePostUpdateRequest(
             message="<p>Investigating the issue</p>",
@@ -465,9 +430,9 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.id, "PINC001")
         self.assertEqual(result.title, "Hotel Services Affected - Business Impact")
         self.assertEqual(result.post_type, "incident")
-        mock_client.rpost.assert_called_once()
+        self.mock_client.rpost.assert_called_once()
 
-        call_args = mock_client.rpost.call_args
+        call_args = self.mock_client.rpost.call_args
         json_data = call_args.kwargs["json"]
         self.assertEqual(json_data["post"]["title"], "Hotel Services Affected - Business Impact")
         self.assertEqual(json_data["post"]["post_type"], "incident")
@@ -482,12 +447,9 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(json_data["post"]["starts_at"], "2023-12-12T11:00:00")
         self.assertEqual(json_data["post"]["ends_at"], "2023-12-12T12:00:00")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_create_status_page_post_update_simple_message(self, mock_get_client):
+    def test_create_status_page_post_update_simple_message(self):
         """Test creating a post update with required fields and minimal optional fields."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = {"post_update": self.sample_post_update_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = {"post_update": self.sample_post_update_data}
 
         update_request = StatusPagePostUpdateRequest(
             message="Work in progress",
@@ -501,9 +463,9 @@ class TestStatusPagesTools(unittest.TestCase):
 
         self.assertIsInstance(result, StatusPagePostUpdate)
         self.assertEqual(result.id, "PXSOCH0")
-        mock_client.rpost.assert_called_once()
+        self.mock_client.rpost.assert_called_once()
 
-        call_args = mock_client.rpost.call_args
+        call_args = self.mock_client.rpost.call_args
         json_data = call_args.kwargs["json"]
         self.assertEqual(json_data["post_update"]["message"], "Work in progress")
         self.assertIn("status", json_data["post_update"])
@@ -511,12 +473,9 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(json_data["post_update"]["notify_subscribers"], False)
         self.assertEqual(json_data["post_update"]["impacted_services"], [])
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
-    def test_create_status_page_post_update_with_reported_at(self, mock_get_client):
+    def test_create_status_page_post_update_with_reported_at(self):
         """Test creating a post update with reported_at datetime field."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = {"post_update": self.sample_post_update_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = {"post_update": self.sample_post_update_data}
 
         reported_time = datetime(2023, 12, 12, 14, 30, 0)
         update_request = StatusPagePostUpdateRequest(
@@ -531,9 +490,9 @@ class TestStatusPagesTools(unittest.TestCase):
         result = create_status_page_post_update("PR5LMML", "P6F2CJ3", wrapper)
 
         self.assertIsInstance(result, StatusPagePostUpdate)
-        mock_client.rpost.assert_called_once()
+        self.mock_client.rpost.assert_called_once()
 
-        call_args = mock_client.rpost.call_args
+        call_args = self.mock_client.rpost.call_args
         json_data = call_args.kwargs["json"]
         self.assertIn("reported_at", json_data["post_update"])
 

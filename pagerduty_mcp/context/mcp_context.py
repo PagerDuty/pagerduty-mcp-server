@@ -1,5 +1,3 @@
-
-
 from typing_extensions import Optional
 from attr import dataclass
 

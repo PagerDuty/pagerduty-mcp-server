@@ -20,7 +20,6 @@ READ operations are safe to use, but be cautious with WRITE operations as they c
 live environment. Always confirm with the user before using any tool marked as destructive.
 """
 
-
 def add_read_only_tool(mcp_instance: FastMCP, tool: Callable) -> None:
     """Add a read-only tool with appropriate safety annotations.
 
@@ -54,7 +53,6 @@ def run(*, enable_write_tools: bool = False) -> None:
     Args:
         enable_write_tools: Flag to enable write tools
     """
-
     mcp = FastMCP(
         "PagerDuty MCP Server",
         instructions=MCP_SERVER_INSTRUCTIONS,

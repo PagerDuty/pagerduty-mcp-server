@@ -18,61 +18,38 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Strategy registry for built-in strategies
 STRATEGY_REGISTRY = {
     "ApplicationContextStrategy": ApplicationContextStrategy,
     "RequestContextStrategy": RequestContextStrategy,
 }
 
-def _load_strategy_class(strategy_name: str) -> Type[ContextStrategy]:
-    """Load a strategy class by name."""
-    # First check the built-in registry
-    if strategy_name in STRATEGY_REGISTRY:
-        return STRATEGY_REGISTRY[strategy_name]
-
-    # Try to import as a fully qualified module path
-    try:
-        module_path, class_name = strategy_name.rsplit(".", 1)
-        module = import_module(module_path)
-        return getattr(module, class_name)
-    except (ValueError, ImportError, AttributeError) as e:
-        raise ValueError(f"Could not load strategy class '{strategy_name}': {e}")
-
-# Lazy initialization - only create strategy when first accessed
 _context_strategy: Optional[ContextStrategy] = None
-
-def _get_strategy() -> ContextStrategy:
-    """Get or create the context strategy instance."""
-    global _context_strategy
-    if _context_strategy is None:
-        strategy_name = os.getenv("PAGERDUTY_MCP_CONTEXT_STRATEGY", "ApplicationContextStrategy")
-        strategy_class = _load_strategy_class(strategy_name)
-        _context_strategy = strategy_class()
-    return _context_strategy
-
 
 def get_context() -> MCPContext:
     """Get the current MCP request context."""
-    return _get_strategy().get_context()
+    if _context_strategy is None:
+        # Try to initialize strategy based on environment variable
+        strategy_name = os.getenv("MCP_CONTEXT_STRATEGY", "ApplicationContextStrategy")
+        strategy_class = STRATEGY_REGISTRY.get(strategy_name)
+        if strategy_class is None:
+            raise ValueError(f"Invalid MCP_CONTEXT_STRATEGY: {strategy_name}")
+        set_strategy(strategy_class())
+
+    return _context_strategy.get_context()
 
 
 def get_client() -> RestApiV2Client:
     """Get the PagerDuty client using current strategy."""
-    return _get_strategy().get_client()
+    return get_context().client
 
 
 def get_user() -> Optional[User]:
     """Get the user from the current context."""
-    return _get_strategy().get_user()
+    return get_context().client
 
 
-def set_strategy(strategy: ContextStrategy) -> None:
+def set_strategy(strategy: ContextStrategy) -> ContextStrategy | None:
     """Set the context strategy (primarily for testing)."""
     global _context_strategy
     _context_strategy = strategy
-
-
-def reset_strategy() -> None:
-    """Reset the context strategy to None (forces reload from environment)."""
-    global _context_strategy
-    _context_strategy = None
+    return strategy

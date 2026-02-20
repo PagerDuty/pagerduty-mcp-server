@@ -3,7 +3,7 @@ from typing import Any
 
 from mcp.server.fastmcp import Context
 
-from pagerduty_mcp.context import get_client
+from pagerduty_mcp.client import get_client
 from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.models import (
     Incident,

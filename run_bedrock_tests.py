@@ -56,6 +56,6 @@ total_success = sum(r.success for r in log_results) + sum(r.success for r in ale
 print(f"\n\n{'=' * 60}")
 print(f"COMBINED RESULTS")
 print(f"{'=' * 60}")
-print(f"Total tests: {total_success}/{total_tests} ({total_success/total_tests*100:.1f}%)")
+print(f"Total tests: {total_success}/{total_tests} ({total_success / total_tests * 100:.1f}%)")
 print(f"  Log entries: {sum(r.success for r in log_results)}/{len(log_results)}")
 print(f"  Alerts: {sum(r.success for r in alert_results)}/{len(alert_results)}")

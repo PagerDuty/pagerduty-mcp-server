@@ -1,4 +1,3 @@
-
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -7,6 +6,7 @@ from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.context import ContextManager
 from pagerduty_mcp.context.context_strategy import ContextStrategy
 from pagerduty_mcp.models.users import User
+
 
 class TestContextStrategy(ContextStrategy):
     """A simple context strategy for testing purposes."""
@@ -23,6 +23,8 @@ class TestContextStrategy(ContextStrategy):
 
     def with_user(self) -> None:
         self._context.user = MagicMock(User)
+
+
 class ContextTestCase(TestCase):
     def setUp(self):
         self.strategy = TestContextStrategy()
@@ -34,5 +36,3 @@ class ContextTestCase(TestCase):
 
     def with_user(self):
         self.strategy.with_user()
-
-

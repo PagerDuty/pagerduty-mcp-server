@@ -256,7 +256,9 @@ class TestEventOrchestrationTools(ContextTestCase):
         result = get_event_orchestration_router("b02e973d-9620-4e0a-9edc-00fedf7d4694")
 
         # Assert client was called correctly
-        self.mock_client.rget.assert_called_once_with("/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/router")
+        self.mock_client.rget.assert_called_once_with(
+            "/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/router"
+        )
 
         # Assert result
         self.assertIsInstance(result, EventOrchestrationRouter)
@@ -546,7 +548,9 @@ class TestEventOrchestrationTools(ContextTestCase):
         result = append_event_orchestration_router_rule("b02e973d-9620-4e0a-9edc-00fedf7d4694", new_rule)
 
         # Assert GET was called to fetch current config
-        self.mock_client.rget.assert_called_once_with("/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/router")
+        self.mock_client.rget.assert_called_once_with(
+            "/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/router"
+        )
 
         # Assert PUT was called with updated config
         self.mock_client.rput.assert_called_once()
@@ -1046,7 +1050,9 @@ class TestEventOrchestrationTools(ContextTestCase):
 
         result = get_event_orchestration_global("b02e973d-9620-4e0a-9edc-00fedf7d4694")
 
-        self.mock_client.rget.assert_called_once_with("/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/global")
+        self.mock_client.rget.assert_called_once_with(
+            "/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/global"
+        )
 
         self.assertIsInstance(result, EventOrchestrationGlobal)
         self.assertIsNotNone(result.orchestration_path)

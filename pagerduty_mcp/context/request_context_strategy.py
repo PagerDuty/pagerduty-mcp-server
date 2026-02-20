@@ -10,10 +10,7 @@ class RequestContextStrategy(ContextStrategy):
     """Request-scoped context using context vars."""
 
     def __init__(self):
-        self._context_var: ContextVar[Optional[MCPContext]] = ContextVar(
-            'mcp_request_context',
-            default=None
-        )
+        self._context_var: ContextVar[Optional[MCPContext]] = ContextVar("mcp_request_context", default=None)
 
     @property
     def context(self) -> MCPContext:

@@ -791,7 +791,9 @@ class TestIncidentTools(ContextTestCase):
         self.assertEqual(result.total, 2)
         self.assertEqual(result.limit, 5)
         # limit=50 and total=True are now the defaults
-        self.mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={"limit": 50, "total": True})
+        self.mock_client.rget.assert_called_once_with(
+            "/incidents/PINCIDENT123/past_incidents", params={"limit": 50, "total": True}
+        )
 
     def test_get_past_incidents_with_params(self):
         """Test getting past incidents with optional parameters."""

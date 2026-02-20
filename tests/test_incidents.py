@@ -4,9 +4,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from mcp.server.fastmcp import Context
-
-from pagerduty_mcp.context import ContextManager, MCPContext
+from pagerduty_mcp.context import ContextManager
 from pagerduty_mcp.models import (
     MAX_RESULTS,
     Alert,

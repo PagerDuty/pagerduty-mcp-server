@@ -170,7 +170,7 @@ def manage_incidents(
 
 
 def add_responders(
-    incident_id: str, request: IncidentResponderRequest, ctx: Context
+    incident_id: str, request: IncidentResponderRequest
 ) -> IncidentResponderRequestResponse | str:
     """Add responders to an incident.
 
@@ -182,11 +182,11 @@ def add_responders(
     Returns:
         Details of the responder request
     """
-    context_info: MCPContext = ctx.request_context.lifespan_context
-    if context_info.user is None:
+    user = ContextManager.get_user()
+    if user is None:
         return "Cannot add responders with account level auth. Please provide a user token."
 
-    requester_id = context_info.user.id
+    requester_id = user.id
     request.requester_id = requester_id
 
     response = get_client().rpost(f"/incidents/{incident_id}/responder_requests", json=request.model_dump())

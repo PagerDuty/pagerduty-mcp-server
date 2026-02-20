@@ -512,11 +512,9 @@ class TestIncidentTools(unittest.TestCase):
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 0)
 
-    @patch("pagerduty_mcp.tools.incidents.get_client")
-    def test_add_responders_success(self, mock_get_client):
+    def test_add_responders_success(self):
         """Test add_responders successfully."""
         # Setup mock
-        mock_client = Mock()
         mock_response = {
             "responder_request": {
                 "requester": {"id": "PUSER123", "type": "user_reference"},
@@ -525,74 +523,57 @@ class TestIncidentTools(unittest.TestCase):
                 "responder_request_targets": [],
             }
         }
-        mock_client.rpost.return_value = mock_response
-        mock_get_client.return_value = mock_client
+        self.mock_context.client.rpost.return_value = mock_response
 
         # Setup context
-        context = Mock(spec=Context)
-        mcp_context = Mock(spec=MCPContext)
-        user_mock = Mock()
-        user_mock.id = "PUSER123"
-        mcp_context.user = user_mock
-        context.request_context.lifespan_context = mcp_context
+        self.mock_context.user = Mock(id="PUSER123")
 
         # Test - create minimal request
         request = IncidentResponderRequest(requester_id="PUSER123", message="Help needed", responder_request_targets=[])
-        result = add_responders("PINC1", request, context)
+        result = add_responders("PINC1", request)
 
         # Assertions
         self.assertIsInstance(result, IncidentResponderRequestResponse)
-        mock_client.rpost.assert_called_once()
-        call_args = mock_client.rpost.call_args
+        self.mock_context.client.rpost.assert_called_once()
+        call_args = self.mock_context.client.rpost.call_args
         self.assertEqual(call_args[0][0], "/incidents/PINC1/responder_requests")
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_add_responders_no_user_context(self, mock_get_client):
         """Test add_responders with no user context."""
         # Setup context without user
-        context = Mock(spec=Context)
-        mcp_context = Mock(spec=MCPContext)
-        mcp_context.user = None
-        context.request_context.lifespan_context = mcp_context
+        self.mock_context.user = None
 
         # Test
         request = IncidentResponderRequest(requester_id="PUSER123", message="Help needed", responder_request_targets=[])
-        result = add_responders("PINC1", request, context)
+        result = add_responders("PINC1", request)
 
         # Should return error message
         self.assertIsInstance(result, str)
         self.assertIn("Cannot add responders with account level auth", result)
 
-    @patch("pagerduty_mcp.tools.incidents.get_client")
-    def test_add_responders_unexpected_response(self, mock_get_client):
+    def test_add_responders_unexpected_response(self):
         """Test add_responders with unexpected response format."""
         # Setup mock with unexpected response
-        mock_client = Mock()
-        mock_client.rpost.return_value = "Unexpected response"
-        mock_get_client.return_value = mock_client
+        self.mock_context.client.rpost.return_value = "Unexpected response"
 
         # Setup context
-        context = Mock(spec=Context)
-        mcp_context = Mock(spec=MCPContext)
         user_mock = Mock()
         user_mock.id = "PUSER123"
-        mcp_context.user = user_mock
-        context.request_context.lifespan_context = mcp_context
+        self.mock_context.user = user_mock
 
         # Test
         request = IncidentResponderRequest(requester_id="PUSER123", message="Help needed", responder_request_targets=[])
-        result = add_responders("PINC1", request, context)
+        result = add_responders("PINC1", request)
 
         # Should return error message
         self.assertIsInstance(result, str)
         self.assertIn("Unexpected response format", result)
 
-    @patch("pagerduty_mcp.tools.incidents.get_client")
-    def test_add_responders_mixed_targets_payload(self, mock_get_client):
+    def test_add_responders_mixed_targets_payload(self):
         """Ensure payload includes both user and escalation policy targets with proper types."""
         # Setup mock client response to match expected shape
-        mock_client = Mock()
-        mock_client.rpost.return_value = {
+        self.mock_context.client.rpost.return_value = {
             "responder_request": {
                 "requester": {"id": "PUSER123", "type": "user_reference"},
                 "message": "Help needed",
@@ -600,7 +581,6 @@ class TestIncidentTools(unittest.TestCase):
                 "responder_request_targets": [],
             }
         }
-        mock_get_client.return_value = mock_client
 
         # Build request with mixed targets
         from pagerduty_mcp.models import (
@@ -623,18 +603,13 @@ class TestIncidentTools(unittest.TestCase):
         )
 
         # Context with user info
-        context = Mock(spec=Context)
-        mcp_context = Mock(spec=MCPContext)
-        user_mock = Mock()
-        user_mock.id = "PUSER123"
-        mcp_context.user = user_mock
-        context.request_context.lifespan_context = mcp_context
+        self.mock_context.user = Mock(id="PUSER123")
 
         # Execute
-        _ = add_responders("PINC1", request, context)
+        _ = add_responders("PINC1", request)
 
         # Validate payload structure and types
-        call_args = mock_client.rpost.call_args
+        call_args = self.mock_context.client.rpost.call_args
         self.assertEqual(call_args[0][0], "/incidents/PINC1/responder_requests")
         payload = call_args[1]["json"]
         self.assertIn("responder_request_targets", payload)

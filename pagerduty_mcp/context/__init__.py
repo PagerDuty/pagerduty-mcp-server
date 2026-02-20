@@ -1,4 +1,3 @@
-
 from contextvars import Context
 import logging
 import os
@@ -17,6 +16,7 @@ load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class ContextManager:
     """Module-level context management for MCP."""
@@ -54,6 +54,7 @@ class ContextManager:
     def set_strategy(strategy: ContextStrategy) -> None:
         """Set the context strategy directly (primarily for testing)."""
         ContextManager._context_strategy = strategy
+
 
 def get_client():
     """Backwards-compatible helper to get the PagerDuty client from the current context."""

@@ -7,6 +7,7 @@ from pagerduty_mcp.context import ContextManager, get_client, application_contex
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
 from pagerduty_mcp.models.users import User
 
+
 @pytest.fixture
 def prepare_env(monkeypatch):
     """Fixture to set a specific environment variable."""
@@ -16,6 +17,7 @@ def prepare_env(monkeypatch):
     yield
     ContextManager._context_strategy = None
 
+
 @pytest.fixture
 def mock_client(monkeypatch):
     mock_client = MagicMock(RestApiV2Client)
@@ -23,6 +25,7 @@ def mock_client(monkeypatch):
 
     monkeypatch.setattr(application_context_strategy, "PagerdutyMCPClient", lambda _: mock_client)
     return mock_client
+
 
 @pytest.fixture
 def mock_user(mock_client):
@@ -32,6 +35,7 @@ def mock_user(mock_client):
     mock_client.rget.return_value = user_fields
 
     return mock_user
+
 
 class TestApplicationContextStrategy:
     """Test cases for the ApplicationContextStrategy and its integration with MCPContext."""

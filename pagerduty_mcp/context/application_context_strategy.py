@@ -7,10 +7,12 @@ from pagerduty_mcp import DIST_NAME
 from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.context.context_strategy import ContextStrategy
 
+
 class PagerdutyMCPClient(RestApiV2Client):
     @property
     def user_agent(self) -> str:
         return f"{DIST_NAME}/{metadata.version(DIST_NAME)} {super().user_agent}"
+
 
 def create_pd_client() -> RestApiV2Client:
     """Create a PagerDuty client."""

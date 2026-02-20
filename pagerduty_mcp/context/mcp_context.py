@@ -6,6 +6,7 @@ from pagerduty_mcp.models.users import User
 
 class MCPContext:
     """Container for request-scoped context data."""
+
     client: RestApiV2Client
     user: Optional[User] = None
 

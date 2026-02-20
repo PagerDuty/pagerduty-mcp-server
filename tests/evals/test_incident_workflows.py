@@ -84,9 +84,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
     ),
     IncidentWorkflowCompetencyTest(
         query="List incident workflows with name containing 'example'",
-        expected_tools=[
-            {"tool_name": "list_incident_workflows", "parameters": {"query_model": {"query": "example"}}}
-        ],
+        expected_tools=[{"tool_name": "list_incident_workflows", "parameters": {"query_model": {"query": "example"}}}],
         description="List workflows with query filter",
     ),
     IncidentWorkflowCompetencyTest(
@@ -103,9 +101,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
     ),
     IncidentWorkflowCompetencyTest(
         query="Show me incident workflows including team information",
-        expected_tools=[
-            {"tool_name": "list_incident_workflows", "parameters": {"query_model": {"include": ["team"]}}}
-        ],
+        expected_tools=[{"tool_name": "list_incident_workflows", "parameters": {"query_model": {"include": ["team"]}}}],
         description="List workflows with include parameter for team",
     ),
     IncidentWorkflowCompetencyTest(
@@ -130,9 +126,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
                 "tool_name": "start_incident_workflow",
                 "parameters": {
                     "workflow_id": "PSFEVL7",
-                    "instance_request": {
-                        "incident_workflow_instance": {"incident": {"id": "Q1R2DLCB21K7NP"}}
-                    },
+                    "instance_request": {"incident_workflow_instance": {"incident": {"id": "Q1R2DLCB21K7NP"}}},
                 },
             }
         ],
@@ -158,9 +152,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
                 "tool_name": "start_incident_workflow",
                 "parameters": {
                     "workflow_id": "PSFEVL7",
-                    "instance_request": {
-                        "incident_workflow_instance": {"incident": {"id": "Q1R2DLCB21K7NP"}}
-                    },
+                    "instance_request": {"incident_workflow_instance": {"incident": {"id": "Q1R2DLCB21K7NP"}}},
                 },
             }
         ],

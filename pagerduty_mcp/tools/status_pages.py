@@ -134,9 +134,7 @@ def create_status_page_post(status_page_id: str, create_model: StatusPagePostCre
     Returns:
         The created StatusPagePost
     """
-    response = get_client().rpost(
-        f"/status_pages/{status_page_id}/posts", json=create_model.model_dump(mode="json")
-    )
+    response = get_client().rpost(f"/status_pages/{status_page_id}/posts", json=create_model.model_dump(mode="json"))
 
     return StatusPagePost.from_api_response(response)
 

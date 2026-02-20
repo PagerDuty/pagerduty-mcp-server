@@ -31,9 +31,4 @@ class ApplicationContextStrategy(ContextStrategy):
 
     def __init__(self):
         client = create_pd_client()
-        self._context = MCPContext(client)
-
-    @property
-    def context(self) -> MCPContext:
-        """Get the current context."""
-        return self._context
+        self.context = MCPContext(client)

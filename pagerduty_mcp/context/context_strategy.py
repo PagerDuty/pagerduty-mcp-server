@@ -11,3 +11,7 @@ class ContextStrategy(ABC):
     """Abstract base class for context management strategies."""
 
     context: MCPContext
+
+    def use_context(self, context: MCPContext):
+        """Context manager to temporarily set the context for a block of code."""
+        self.context = context

@@ -12,11 +12,11 @@ from pagerduty_mcp.models.users import User
 def prepare_env(monkeypatch):
     """Fixture to set a specific environment variable."""
     monkeypatch.setenv("MCP_CONTEXT_STRATEGY", "RequestContextStrategy")
-
+    yield
     ContextManager._context_strategy = None
 
 @pytest.fixture
-def mock_client():
+def mock_client(monkeypatch):
     mock_client = MagicMock(RestApiV2Client)
     mock_client.headers = {}
 

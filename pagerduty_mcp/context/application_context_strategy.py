@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import os
 
 from importlib import metadata
@@ -40,3 +41,8 @@ class ApplicationContextStrategy(ContextStrategy):
     @property
     def context(self) -> MCPContext:
         return self._context
+
+    @contextmanager
+    def use_context(self, context: MCPContext):
+        self._context = context
+        yield

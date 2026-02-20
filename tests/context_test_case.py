@@ -1,5 +1,7 @@
 from unittest import TestCase
 from unittest.mock import MagicMock
+from contextlib import contextmanager
+
 
 from pagerduty.rest_api_v2_client import RestApiV2Client
 from pagerduty_mcp.context.mcp_context import MCPContext
@@ -20,6 +22,11 @@ class TestContextStrategy(ContextStrategy):
     @property
     def context(self) -> MCPContext:
         return self._context
+
+    @contextmanager
+    def use_context(self, context: MCPContext):
+        self._context = context
+        yield
 
     def with_user(self) -> None:
         self._context.user = MagicMock(User)

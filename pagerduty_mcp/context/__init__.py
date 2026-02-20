@@ -19,7 +19,28 @@ logger = logging.getLogger(__name__)
 
 
 class ContextManager:
-    """Module-level context management for MCP."""
+    """Provides an abstraction for managing the context of the request, like the
+    PagerDuty user and the client used to make backend requests.
+
+    This allows the library to be used for both single and multi-tenant applications,
+    defaulting to a single-tenant application.
+
+    For a single-tenant application, you should set the PAGERDUTY_USER_API_KEY environment
+    variable, and optionally the PAGERDUTY_API_HOST.
+
+    For a multi-tenant application, set MCP_CONTEXT_STRATEGY to "RequestContextStrategy",
+    and use `use_context` helper:
+
+        strategy = ContextManager.get_strategy()
+
+        client = ... build your PagerDuty API client ...
+        # MCPContext will use this client to pre-populate the user, if available
+        context = MCPContext(client=client)
+
+        with strategy.use_context(context):
+            ... yield to your request handler here ...
+            ... any tools that call ContextManager.get_client() ...
+    """
 
     STRATEGY_REGISTRY = {
         "ApplicationContextStrategy": ApplicationContextStrategy,

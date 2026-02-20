@@ -1,11 +1,8 @@
 from datetime import datetime
 from typing import Any
 
-from mcp.server.fastmcp import Context
-
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.context import ContextManager
-from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.models import (
     Incident,
     IncidentCreateRequest,
@@ -177,7 +174,6 @@ def add_responders(
     Args:
         incident_id: The ID of the incident to add responders to
         request: The responder request data containing user IDs and optional message
-        ctx: The context containing the request information
 
     Returns:
         Details of the responder request

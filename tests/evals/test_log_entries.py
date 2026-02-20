@@ -126,7 +126,9 @@ LOG_ENTRY_COMPETENCY_TESTS = [
     ),
     LogEntryCompetencyTest(
         query="Show me the next 100 log entries after offset 50",
-        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {"limit": 100, "offset": 50}}}],
+        expected_tools=[
+            {"tool_name": "list_log_entries", "parameters": {"query_model": {"limit": 100, "offset": 50}}}
+        ],
         description="List log entries with both limit and offset for pagination",
     ),
 ]

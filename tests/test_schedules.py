@@ -2,8 +2,6 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from tests.context_test_case import ContextTestCase
-
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import UserReference
 from pagerduty_mcp.models.schedules import (
@@ -29,7 +27,7 @@ from pagerduty_mcp.tools.schedules import (
 )
 
 
-class TestScheduleTools(ContextTestCase):
+class TestScheduleTools(unittest.TestCase):
     """Test cases for schedule tools."""
 
     @classmethod
@@ -105,9 +103,20 @@ class TestScheduleTools(ContextTestCase):
             "user": {"id": "USER789", "summary": "Holiday Coverage", "type": "user_reference"},
         }
 
+        cls.mock_client = MagicMock()
+
+    def setUp(self):
+        """Reset mock before each test."""
+        self.mock_client.reset_mock()
+        # Clear any side effects
+        self.mock_client.rget.side_effect = None
+        self.mock_client.rpost.side_effect = None
+
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_no_filters(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_no_filters(self, mock_get_client, mock_paginate):
         """Test listing schedules without any filters."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery()
@@ -127,8 +136,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(result.response[1].name, "Secondary On-Call")
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_with_query_filter(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_with_query_filter(self, mock_get_client, mock_paginate):
         """Test listing schedules with query filter."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_schedules_list_response[0]]
 
         query = ScheduleQuery(query="Primary")
@@ -143,8 +154,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(result.response[0].name, "Primary On-Call")
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_with_team_filter(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_with_team_filter(self, mock_get_client, mock_paginate):
         """Test listing schedules with team filter."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery(team_ids=["TEAM123"])
@@ -158,8 +171,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_with_user_filter(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_with_user_filter(self, mock_get_client, mock_paginate):
         """Test listing schedules with user filter."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery(user_ids=["USER123", "USER456"])
@@ -173,8 +188,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_with_include_filter(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_with_include_filter(self, mock_get_client, mock_paginate):
         """Test listing schedules with include filter."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery(include=["schedule_layers"])
@@ -188,8 +205,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_with_all_filters(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_with_all_filters(self, mock_get_client, mock_paginate):
         """Test listing schedules with all filters applied."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_schedules_list_response[0]]
 
         query = ScheduleQuery(
@@ -215,8 +234,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(len(result.response), 1)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_with_custom_limit(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_with_custom_limit(self, mock_get_client, mock_paginate):
         """Test listing schedules with custom limit."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery(limit=50)
@@ -230,8 +251,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_empty_response(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_empty_response(self, mock_get_client, mock_paginate):
         """Test listing schedules when paginate returns empty list."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = ScheduleQuery(query="NonExistentSchedule")
@@ -245,8 +268,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    def test_list_schedules_paginate_error(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_paginate_error(self, mock_get_client, mock_paginate):
         """Test list_schedules when paginate raises an exception."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
         query = ScheduleQuery()
@@ -256,13 +281,16 @@ class TestScheduleTools(ContextTestCase):
 
         self.assertEqual(str(context.exception), "Pagination Error")
 
-    def test_get_schedule_success(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_get_schedule_success(self, mock_get_client):
         """Test successful retrieval of a specific schedule."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_schedule_response
 
         result = get_schedule("SCHED123")
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/schedules/SCHED123")
 
         # Verify result
@@ -274,18 +302,23 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(result.time_zone, "America/New_York")
         self.assertEqual(result.type, "schedule")
 
-    def test_get_schedule_client_error(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_get_schedule_client_error(self, mock_get_client):
         """Test get_schedule when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
             get_schedule("SCHED123")
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/schedules/SCHED123")
 
-    def test_create_schedule_override_success(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_override_success(self, mock_get_client):
         """Test successful creation of schedule override."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rpost.return_value = self.sample_override_response
 
         # Create override request
@@ -299,19 +332,23 @@ class TestScheduleTools(ContextTestCase):
 
         result = create_schedule_override("SCHED123", override_request)
 
+        # Verify API call
+        mock_get_client.assert_called_once()
+
         # Verify that datetime objects were converted to ISO format
         expected_json = override_request.model_dump()
         expected_json["overrides"][0]["start"] = "2024-12-25T00:00:00"
         expected_json["overrides"][0]["end"] = "2024-12-26T00:00:00"
 
-        # Verify API call
         self.mock_client.rpost.assert_called_once_with("/schedules/SCHED123/overrides", json=expected_json)
 
         # Verify result
         self.assertEqual(result, self.sample_override_response)
 
-    def test_create_schedule_override_multiple_overrides(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_override_multiple_overrides(self, mock_get_client):
         """Test creation of schedule override with multiple overrides."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rpost.return_value = [self.sample_override_response, self.sample_override_response]
 
         # Create override request with multiple overrides
@@ -332,6 +369,9 @@ class TestScheduleTools(ContextTestCase):
 
         result = create_schedule_override("SCHED123", override_request)
 
+        # Verify API call
+        mock_get_client.assert_called_once()
+
         # Verify that datetime objects were converted to ISO format for both overrides
         expected_json = override_request.model_dump()
         expected_json["overrides"][0]["start"] = "2024-12-25T00:00:00"
@@ -339,15 +379,16 @@ class TestScheduleTools(ContextTestCase):
         expected_json["overrides"][1]["start"] = "2024-12-30T00:00:00"
         expected_json["overrides"][1]["end"] = "2024-12-31T00:00:00"
 
-        # Verify API call
         self.mock_client.rpost.assert_called_once_with("/schedules/SCHED123/overrides", json=expected_json)
 
         # Verify result
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 2)
 
-    def test_create_schedule_override_client_error(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_override_client_error(self, mock_get_client):
         """Test create_schedule_override when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rpost.side_effect = Exception("API Error")
 
         # Create override request
@@ -363,14 +404,18 @@ class TestScheduleTools(ContextTestCase):
             create_schedule_override("SCHED123", override_request)
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
 
-    def test_list_schedule_users_success(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_users_success(self, mock_get_client):
         """Test successful listing of schedule users."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_users_list_response
 
         result = list_schedule_users("SCHED123")
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/schedules/SCHED123/users")
 
         # Verify result
@@ -382,26 +427,32 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(result.response[0].name, "John Doe")
         self.assertEqual(result.response[1].name, "Jane Smith")
 
-    def test_list_schedule_users_empty_response(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_users_empty_response(self, mock_get_client):
         """Test listing schedule users when schedule has no users."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = []
 
         result = list_schedule_users("SCHED123")
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/schedules/SCHED123/users")
 
         # Verify result
         self.assertEqual(len(result.response), 0)
 
-    def test_list_schedule_users_client_error(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_users_client_error(self, mock_get_client):
         """Test list_schedule_users when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
             list_schedule_users("SCHED123")
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/schedules/SCHED123/users")
 
     def test_schedule_query_to_params_all_fields(self):
@@ -467,8 +518,11 @@ class TestScheduleTools(ContextTestCase):
 
         self.assertEqual(schedule.type, "schedule")
 
-    def test_create_schedule_success(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_success(self, mock_get_client):
         """Test successful schedule creation."""
+        mock_get_client.return_value = self.mock_client
+
         # Create a mock response similar to the API's actual response
         mock_response = {"schedule": self.sample_schedule_response}
         self.mock_client.rpost.return_value = mock_response
@@ -496,6 +550,9 @@ class TestScheduleTools(ContextTestCase):
 
         result = create_schedule(request)
 
+        # Verify API call
+        mock_get_client.assert_called_once()
+
         # Verify API call was made (not checking exact parameters since datetime formatting happens inside)
         self.mock_client.rpost.assert_called_once()
         args, kwargs = self.mock_client.rpost.call_args
@@ -507,8 +564,11 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(result.id, "SCHED123")
         self.assertEqual(result.name, "Primary On-Call")
 
-    def test_create_schedule_with_restrictions(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_with_restrictions(self, mock_get_client):
         """Test schedule creation with restrictions."""
+        mock_get_client.return_value = self.mock_client
+
         # Create a mock response
         mock_response = {"schedule": self.sample_schedule_response}
         self.mock_client.rpost.return_value = mock_response
@@ -543,11 +603,16 @@ class TestScheduleTools(ContextTestCase):
 
         result = create_schedule(request)
 
+        # Verify API call
+        mock_get_client.assert_called_once()
+
         # Verify result
         self.assertIsInstance(result, Schedule)
 
-    def test_create_schedule_api_error(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_api_error(self, mock_get_client):
         """Test create_schedule when API returns an error."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rpost.side_effect = Exception("API Error")
 
         # Create a minimal test schedule
@@ -572,10 +637,13 @@ class TestScheduleTools(ContextTestCase):
             create_schedule(request)
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
         self.mock_client.rpost.assert_called_once()
 
-    def test_create_schedule_direct_response(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_create_schedule_direct_response(self, mock_get_client):
         """Test create_schedule when API returns direct schedule object."""
+        mock_get_client.return_value = self.mock_client
 
         # Create a response without the "schedule" wrapper
         self.mock_client.rpost.return_value = self.sample_schedule_response
@@ -604,8 +672,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertIsInstance(result, Schedule)
         self.assertEqual(result.id, "SCHED123")
 
-    def test_update_schedule(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_update_schedule(self, mock_get_client):
         """Test update_schedule with valid data."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rput.return_value = {"schedule": self.sample_schedule_response}
 
         # Create test data for update
@@ -638,8 +708,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertIsInstance(result, Schedule)
         self.assertEqual(result.id, "SCHED123")
 
-    def test_update_schedule_with_restrictions(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_update_schedule_with_restrictions(self, mock_get_client):
         """Test update_schedule with restrictions."""
+        mock_get_client.return_value = self.mock_client
 
         # Reset any side effects
         self.mock_client.rput.side_effect = None
@@ -692,8 +764,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertEqual(restrictions[1]["type"], "weekly_restriction")
         self.assertEqual(restrictions[1]["start_day_of_week"], 1)
 
-    def test_update_schedule_direct_response(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_update_schedule_direct_response(self, mock_get_client):
         """Test update_schedule when API returns direct schedule object."""
+        mock_get_client.return_value = self.mock_client
 
         # Reset any side effects
         self.mock_client.rput.side_effect = None
@@ -725,8 +799,10 @@ class TestScheduleTools(ContextTestCase):
         self.assertIsInstance(result, Schedule)
         self.assertEqual(result.id, "SCHED123")
 
-    def test_update_schedule_api_error(self):
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_update_schedule_api_error(self, mock_get_client):
         """Test update_schedule when API returns an error."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rput.side_effect = Exception("API Error")
 
         # Create a minimal test schedule for update
@@ -751,6 +827,7 @@ class TestScheduleTools(ContextTestCase):
             update_schedule("SCHED123", request)
 
         self.assertEqual(str(context.exception), "Failed to update schedule SCHED123: API Error")
+        mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once()
 
 

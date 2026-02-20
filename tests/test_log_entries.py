@@ -2,14 +2,13 @@
 
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from tests.context_test_case import ContextTestCase
 from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
 from pagerduty_mcp.tools.log_entries import get_log_entry, list_log_entries
 
 
-class TestLogEntryTools(ContextTestCase):
+class TestLogEntryTools(unittest.TestCase):
     """Test cases for log entry tools."""
 
     @classmethod
@@ -79,10 +78,13 @@ class TestLogEntryTools(ContextTestCase):
             },
         }
 
-    def test_get_log_entry(self):
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_get_log_entry(self, mock_get_client):
         """Test getting a specific log entry."""
         # Arrange
-        self.mock_client.rget.return_value = self.sample_log_entry_data
+        mock_client = Mock()
+        mock_client.rget.return_value = self.sample_log_entry_data
+        mock_get_client.return_value = mock_client
 
         # Act
         result = get_log_entry("PLOGENTRY123")
@@ -92,12 +94,15 @@ class TestLogEntryTools(ContextTestCase):
         self.assertEqual(result.id, "PLOGENTRY123")
         self.assertEqual(result.type, "trigger_log_entry")
         self.assertEqual(result.summary, "Triggered via the website")
-        self.mock_client.rget.assert_called_once_with("/log_entries/PLOGENTRY123")
+        mock_client.rget.assert_called_once_with("/log_entries/PLOGENTRY123")
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
-    def test_list_log_entries(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_log_entries(self, mock_get_client, mock_paginate):
         """Test listing log entries with default time range (last 7 days)."""
         # Arrange
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
         query_model = LogEntryQuery()
@@ -117,9 +122,12 @@ class TestLogEntryTools(ContextTestCase):
         self.assertIsNotNone(query_model.until)
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
-    def test_list_log_entries_with_time_filter(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_log_entries_with_time_filter(self, mock_get_client, mock_paginate):
         """Test listing log entries with time range filter."""
         # Arrange
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data, self.sample_log_entry_data]
 
         since = datetime.now() - timedelta(days=7)
@@ -139,9 +147,12 @@ class TestLogEntryTools(ContextTestCase):
         self.assertEqual(call_args.kwargs["maximum_records"], 50)
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
-    def test_list_log_entries_empty_result(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_log_entries_empty_result(self, mock_get_client, mock_paginate):
         """Test listing log entries when no entries exist."""
         # Arrange
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
         mock_paginate.return_value = []
 
         query_model = LogEntryQuery()
@@ -154,9 +165,12 @@ class TestLogEntryTools(ContextTestCase):
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
-    def test_list_log_entries_with_empty_string_timestamps(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_log_entries_with_empty_string_timestamps(self, mock_get_client, mock_paginate):
         """Test that empty string timestamps are converted to None and then to defaults."""
         # Arrange
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
         # Create query with empty strings (simulating MCP interface behavior)
@@ -174,9 +188,12 @@ class TestLogEntryTools(ContextTestCase):
         self.assertIsNotNone(query_model.until)
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
-    def test_list_log_entries_with_limit_offset(self, mock_paginate):
-        """Test listing log entries with limit and offset."""
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_log_entries_with_pagination(self, mock_get_client, mock_paginate):
+        """Test listing log entries with pagination parameters."""
         # Arrange
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
         query_model = LogEntryQuery(limit=25, offset=10)
@@ -187,10 +204,13 @@ class TestLogEntryTools(ContextTestCase):
         # Assert
         self.assertIsInstance(result, ListResponseModel)
 
-    def test_get_log_entry_with_channel_without_type(self):
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_get_log_entry_with_channel_without_type(self, mock_get_client):
         """Test getting a log entry where channel doesn't have a type field."""
         # Arrange
-        self.mock_client.rget.return_value = self.sample_service_change_log_entry
+        mock_client = Mock()
+        mock_client.rget.return_value = self.sample_service_change_log_entry
+        mock_get_client.return_value = mock_client
 
         # Act
         result = get_log_entry("PLOGENTRY456")
@@ -204,9 +224,12 @@ class TestLogEntryTools(ContextTestCase):
         self.assertIsNone(result.channel.type)
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
-    def test_list_log_entries_mixed_channel_types(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_log_entries_mixed_channel_types(self, mock_get_client, mock_paginate):
         """Test listing log entries with different channel structures."""
         # Arrange
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
         # Mix different log entry types with different channel structures
         mock_paginate.return_value = [
             self.sample_log_entry_data,

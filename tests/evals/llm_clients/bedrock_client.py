@@ -44,22 +44,21 @@ class BedrockClient(LLMClient):
         self.max_retry_delay = max_retry_delay
 
         # Check for bearer token first
-        bearer_token = os.environ.get("AWS_BEARER_TOKEN_BEDROCK", "")
+        bearer_token = os.environ.get('AWS_BEARER_TOKEN_BEDROCK', '')
 
         if bearer_token:
             print(f"[DEBUG] Using bearer token authentication from AWS_BEARER_TOKEN_BEDROCK")
             self.use_bearer_token = True
             # Extract URL from bearer token (format: "bedrock-api-key-{base64_url}")
-            if bearer_token.startswith("bedrock-api-key-"):
+            if bearer_token.startswith('bedrock-api-key-'):
                 import base64
-
-                encoded_url = bearer_token.replace("bedrock-api-key-", "")
-                decoded_url = base64.b64decode(encoded_url).decode("utf-8")
+                encoded_url = bearer_token.replace('bedrock-api-key-', '')
+                decoded_url = base64.b64decode(encoded_url).decode('utf-8')
                 # Add https:// if not present
-                self.bearer_url = decoded_url if decoded_url.startswith("http") else f"https://{decoded_url}"
+                self.bearer_url = decoded_url if decoded_url.startswith('http') else f'https://{decoded_url}'
                 print(f"[DEBUG] Bearer URL endpoint: {self.bearer_url[:60]}...")
             else:
-                self.bearer_url = bearer_token if bearer_token.startswith("http") else f"https://{bearer_token}"
+                self.bearer_url = bearer_token if bearer_token.startswith('http') else f'https://{bearer_token}'
             self.client = None
         else:
             print(f"[DEBUG] Using boto3 IAM authentication")
@@ -74,7 +73,7 @@ class BedrockClient(LLMClient):
                 self.client = boto3.client("bedrock-runtime", region_name=region_name, **kwargs)
 
                 # Debug: Verify credentials using same region
-                sts = boto3.client("sts", region_name=region_name)
+                sts = boto3.client('sts', region_name=region_name)
                 identity = sts.get_caller_identity()
                 print(f"[DEBUG] Authenticated as: {identity['Arn']}")
                 print(f"[DEBUG] Account ID: {identity['Account']}")
@@ -83,9 +82,7 @@ class BedrockClient(LLMClient):
                 session = boto3.Session()
                 credentials = session.get_credentials()
                 print(f"[DEBUG] Credentials type: {type(credentials).__name__}")
-                print(
-                    f"[DEBUG] Access Key ID (first 10 chars): {credentials.access_key[:10] if credentials.access_key else 'None'}"
-                )
+                print(f"[DEBUG] Access Key ID (first 10 chars): {credentials.access_key[:10] if credentials.access_key else 'None'}")
 
             except NoCredentialsError as e:
                 raise RuntimeError(

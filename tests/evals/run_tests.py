@@ -15,17 +15,46 @@ from pydantic import BaseModel
 
 from pagerduty_mcp.server import add_read_only_tool, add_write_tool
 from pagerduty_mcp.tools import read_tools, write_tools
-from tests.evals.competency_test import CompetencyTest
+from pagerduty_mcp_evals.test_cases.agent_competency_test import (
+    AgentCompetencyTest,
+    MockMCPToolInvokationResponse,
+)
 from tests.evals.llm_clients import BedrockClient, LLMClient, OpenAIClient
-from tests.evals.mcp_tool_tracer import MockedMCPServer
-from tests.evals.test_alert_grouping_settings import ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
-from tests.evals.test_change_events import CHANGE_EVENTS_COMPETENCY_TESTS
-from tests.evals.test_event_orchestrations import EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
-from tests.evals.test_incident_workflows import INCIDENT_WORKFLOW_COMPETENCY_TESTS
-from tests.evals.test_incidents import INCIDENT_COMPETENCY_TESTS
-from tests.evals.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
-from tests.evals.test_status_pages import STATUS_PAGES_COMPETENCY_TESTS
-from tests.evals.test_teams import TEAMS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_alert_grouping_settings import ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_change_events import CHANGE_EVENTS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_event_orchestrations import EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_incident_workflows import INCIDENT_WORKFLOW_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_incidents import INCIDENT_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_status_pages import STATUS_PAGES_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_teams import TEAMS_COMPETENCY_TESTS
+
+
+class MockedMCPServer:
+    """Records MCP tool calls and returns configured mock responses."""
+
+    def __init__(self, mock_responses: list[MockMCPToolInvokationResponse] | None = None):
+        self.tool_calls: list[dict[str, Any]] = []
+        self.current_call_index = 0
+        self._mock_responses = mock_responses or []
+
+    def invoke_tool(self, tool_name: str, **parameters) -> Any:
+        self.tool_calls.append(
+            {"tool_name": tool_name, "parameters": parameters, "call_index": self.current_call_index}
+        )
+        self.current_call_index += 1
+        for mock in self._mock_responses:
+            if mock.tool_name != tool_name:
+                continue
+            matcher = mock.parameters
+            if callable(matcher):
+                if matcher(parameters):
+                    return mock.response
+            elif isinstance(matcher, dict):
+                if all(k in parameters and parameters[k] == v for k, v in matcher.items()):
+                    return mock.response
+        return {"status": "success", "message": f"Default mock response for {tool_name}"}
+
 
 test_mapping = {
     "alert-grouping-settings": ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
@@ -107,7 +136,7 @@ class TestAgent:
         self.initial_retry_delay = initial_retry_delay
         self.results = []
         self.mocked_mcp = MockedMCPServer()
-        self.llm = self._initialize_llm(llm_type, aws_region, max_retries, initial_retry_delay)
+        self.llm: LLMClient = self._initialize_llm(llm_type, aws_region, max_retries, initial_retry_delay)
 
     def _initialize_llm(
         self, llm_type: str, aws_region: str, max_retries: int, initial_retry_delay: float
@@ -176,7 +205,16 @@ class TestAgent:
         # Execute the tool call through our mock client
         return self.mocked_mcp.invoke_tool(function_name, **function_args)
 
-    def test_competency(self, test_case: CompetencyTest) -> TestResult | None:
+    def _verify_tool_calls(self, test_case: AgentCompetencyTest, actual_tool_calls: list[dict[str, Any]]) -> bool:
+        """Verify that all expected tool calls were made."""
+        actual_names = {call["tool_name"] for call in actual_tool_calls}
+        for expected in test_case.expected_tool_calls:
+            if expected.name not in actual_names:
+                print(f"Expected tool {expected.name} was not called")
+                return False
+        return True
+
+    def test_competency(self, test_case: AgentCompetencyTest) -> TestResult | None:
         """Test a single competency question.
 
         Args:
@@ -185,12 +223,8 @@ class TestAgent:
         Returns:
             TestResult object with query, expected tools, actual tools, and success
         """
-        # Reset the tool tracer for this test
-        # TODO: add clear method to MockedMCPServer
-        self.mocked_mcp = MockedMCPServer()
-
-        # Register mock responses for the test case
-        test_case.register_mock_responses(self.mocked_mcp)
+        # Reset the tool tracer for this test, loading mock responses from the test case
+        self.mocked_mcp = MockedMCPServer(mock_responses=test_case.mock_responses)
 
         try:
             query = test_case.query
@@ -254,10 +288,13 @@ class TestAgent:
                 break
 
             # Verify the tool calls
-            success = test_case.verify_tool_calls(self.mocked_mcp)
+            success = self._verify_tool_calls(test_case, self.mocked_mcp.tool_calls)
 
-            # Get expected tools in the right format for the result
-            expected_tools = getattr(test_case, "expected_incident_tools", test_case.expected_tools)
+            # Convert expected_tool_calls to dict format for the result
+            expected_tools = [
+                {"tool_name": tc.name, "parameters": tc.parameters or {}}
+                for tc in test_case.expected_tool_calls
+            ]
 
             if response:
                 return TestResult(
@@ -271,8 +308,10 @@ class TestAgent:
 
         except Exception as e:  # noqa: BLE001
             print(f"Error during test: {e!s}")
-            # Get expected tools in the right format for the result
-            expected_tools = getattr(test_case, "expected_incident_tools", test_case.expected_tools)
+            expected_tools = [
+                {"tool_name": tc.name, "parameters": tc.parameters or {}}
+                for tc in test_case.expected_tool_calls
+            ]
 
             return TestResult(
                 query=test_case.query,
@@ -283,7 +322,7 @@ class TestAgent:
                 error=str(e),
             )
 
-    def run_tests(self, test_cases: Sequence[CompetencyTest]) -> list[TestResult]:
+    def run_tests(self, test_cases: Sequence[AgentCompetencyTest]) -> list[TestResult]:
         """Run all specified competency tests.
 
         Args:

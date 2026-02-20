@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from pagerduty_mcp.context import ContextManager
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import UserReference
 from pagerduty_mcp.models.teams import Team, TeamCreate, TeamCreateRequest, TeamMemberAdd, TeamQuery
@@ -16,6 +17,7 @@ from pagerduty_mcp.tools.teams import (
     update_team,
 )
 
+from tests.mock_context_strategy import MockContextStrategy
 
 class TestTeamTools(unittest.TestCase):
     """Test cases for team tools."""
@@ -64,23 +66,17 @@ class TestTeamTools(unittest.TestCase):
             {"user": {"id": "USER456", "summary": "Jane Smith - Team Lead", "type": "user_reference"}},
         ]
 
-        cls.mock_client = MagicMock()
-
     def setUp(self):
         """Reset mock before each test."""
-        self.mock_client.reset_mock()
-        # Clear any side effects
-        self.mock_client.rget.side_effect = None
-        self.mock_client.rpost.side_effect = None
-        self.mock_client.rput.side_effect = None
-        self.mock_client.rdelete.side_effect = None
-        self.mock_client.put.side_effect = None
+        self.mock_client = MagicMock()
+
+        self.mock_strategy = MockContextStrategy()
+        self.mock_strategy.context.client = self.mock_client
+        ContextManager.set_strategy(self.mock_strategy)
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    @patch("pagerduty_mcp.tools.teams.get_client")
-    def test_list_teams_all_scope(self, mock_get_client, mock_paginate):
+    def test_list_teams_all_scope(self, mock_paginate):
         """Test listing teams with 'all' scope."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_teams_list_response
 
         query = TeamQuery(scope="all")
@@ -98,20 +94,14 @@ class TestTeamTools(unittest.TestCase):
         self.assertEqual(result.response[0].name, "Backend Engineering")
         self.assertEqual(result.response[1].name, "DevOps")
 
-    @patch("pagerduty_mcp.tools.teams.get_user_data")
     @patch("pagerduty_mcp.tools.teams.paginate")
-    @patch("pagerduty_mcp.tools.teams.get_client")
-    def test_list_teams_my_scope(self, mock_get_client, mock_paginate, mock_get_user_data):
+    def test_list_teams_my_scope(self, mock_paginate):
         """Test listing teams with 'my' scope."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_teams_list_response
-        mock_get_user_data.return_value = User.model_validate(self.sample_user_data)
+        self.mock_strategy.context.user = User.model_validate(self.sample_user_data)
 
         query = TeamQuery(scope="my")
         result = list_teams(query)
-
-        # Verify get_user_data was called
-        mock_get_user_data.assert_called_once()
 
         # Verify paginate call to get all teams
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params={})

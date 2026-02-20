@@ -4,6 +4,7 @@ from typing import Any
 from mcp.server.fastmcp import Context
 
 from pagerduty_mcp.client import get_client
+from pagerduty_mcp.context import ContextManager
 from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.models import (
     Incident,
@@ -22,7 +23,6 @@ from pagerduty_mcp.models import (
     RelatedIncidentsResponse,
     UserReference,
 )
-from pagerduty_mcp.tools.users import get_user_data
 from pagerduty_mcp.utils import paginate
 
 
@@ -39,7 +39,9 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     params = query_model.to_params()
 
     if query_model.request_scope in ["assigned", "teams"]:
-        user_data = get_user_data()
+        user_data = ContextManager.get_user()
+        if user_data is None:
+            raise RuntimeError(f"User-level authentication is required to fetch {query_model.request_scope} incidents.")
 
         if query_model.request_scope == "assigned":
             params["user_ids[]"] = [user_data.id]
@@ -48,7 +50,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             params["team_ids[]"] = user_team_ids
 
     response = paginate(
-        client=get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
+        client=ContextManager.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
     )
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)

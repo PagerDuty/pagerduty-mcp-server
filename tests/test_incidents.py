@@ -1,13 +1,12 @@
 """Unit tests for incident tools."""
 
-import json
 import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
 
 from mcp.server.fastmcp import Context
 
-from pagerduty_mcp.context import MCPContext
+from pagerduty_mcp.context import ContextManager, MCPContext
 from pagerduty_mcp.models import (
     MAX_RESULTS,
     Alert,
@@ -49,6 +48,8 @@ from pagerduty_mcp.tools.incidents import (
     list_incidents,
     manage_incidents,
 )
+
+from tests.mock_context_strategy import MockContextStrategy
 
 
 class TestIncidentTools(unittest.TestCase):
@@ -169,14 +170,16 @@ class TestIncidentTools(unittest.TestCase):
             ]
         }
 
-    @patch("pagerduty_mcp.tools.incidents.get_client")
-    @patch("pagerduty_mcp.tools.incidents.get_user_data")
+    def setUp(self):
+        """Set up test fixtures before each test method."""
+        self.mock_context = MockContextStrategy()
+        ContextManager.set_strategy(self.mock_context)
+
     @patch("pagerduty_mcp.tools.incidents.paginate")
-    def test_list_incidents_basic(self, mock_paginate, mock_get_user_data, mock_get_client):
+    def test_list_incidents_basic(self, mock_paginate):
         """Test basic incident listing."""
         # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
-        mock_get_user_data.return_value = self.sample_user_data
 
         # Test with basic query
         query = IncidentQuery()
@@ -194,13 +197,12 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(call_args[1]["entity"], "incidents")
         self.assertEqual(call_args[1]["maximum_records"], MAX_RESULTS)
 
-    @patch("pagerduty_mcp.tools.incidents.get_client")
-    @patch("pagerduty_mcp.tools.incidents.get_user_data")
     @patch("pagerduty_mcp.tools.incidents.paginate")
-    def test_list_incidents_all(self, mock_paginate, mock_get_user_data, mock_get_client):
-        """Fetching all incidents shouldn't call sub-tools it doesn't need."""
+    def test_list_incidents_all(self, mock_paginate):
+        """Fetching all incidents doesn't require a user."""
         # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
+        self.mock_context.user = None
 
         # Test with account level query
         query = IncidentQuery(request_scope="all")
@@ -208,16 +210,13 @@ class TestIncidentTools(unittest.TestCase):
 
         # Verify paginate was called without user context
         mock_paginate.assert_called_once()
-        mock_get_user_data.assert_not_called()
 
-    @patch("pagerduty_mcp.tools.incidents.get_client")
-    @patch("pagerduty_mcp.tools.incidents.get_user_data")
     @patch("pagerduty_mcp.tools.incidents.paginate")
-    def test_list_incidents_assigned_scope(self, mock_paginate, mock_get_user_data, mock_get_client):
+    def test_list_incidents_assigned_scope(self, mock_paginate):
         """Test listing incidents with assigned scope."""
         # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
-        mock_get_user_data.return_value = self.sample_user_data
+        self.mock_context.user = self.sample_user_data
 
         # Test with assigned scope
         query = IncidentQuery(request_scope="assigned")
@@ -228,14 +227,13 @@ class TestIncidentTools(unittest.TestCase):
         self.assertIn("user_ids[]", call_args[1]["params"])
         self.assertEqual(call_args[1]["params"]["user_ids[]"], ["PUSER123"])
 
-    @patch("pagerduty_mcp.tools.incidents.get_client")
-    @patch("pagerduty_mcp.tools.incidents.get_user_data")
+
     @patch("pagerduty_mcp.tools.incidents.paginate")
-    def test_list_incidents_teams_scope(self, mock_paginate, mock_get_user_data, mock_get_client):
+    def test_list_incidents_teams_scope(self, mock_paginate):
         """Test listing incidents with teams scope."""
         # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
-        mock_get_user_data.return_value = self.sample_user_data
+        self.mock_context.user = self.sample_user_data
 
         # Test with teams scope
         query = IncidentQuery(request_scope="teams")
@@ -246,11 +244,10 @@ class TestIncidentTools(unittest.TestCase):
         self.assertIn("team_ids[]", call_args[1]["params"])
         self.assertEqual(call_args[1]["params"]["team_ids[]"], ["PTEAM123"])
 
-    @patch("pagerduty_mcp.tools.incidents.get_user_data")
-    def test_list_incidents_user_required_error(self, mock_get_user):
+    def test_list_incidents_user_required_error(self):
         """If the request_scope requires user context but none is available, an error should be raised."""
         # Setup mocks
-        mock_get_user.side_effect = Exception("users/me does not work for account-level tokens")
+        self.mock_context.user = None
 
         # Test with user required query
         query = IncidentQuery(request_scope="assigned")
@@ -258,16 +255,13 @@ class TestIncidentTools(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             list_incidents(query)
 
-        self.assertIn("users/me does not work for account-level tokens", str(context.exception))
+        self.assertIn("User-level authentication is required", str(context.exception))
 
-    @patch("pagerduty_mcp.tools.incidents.get_client")
-    @patch("pagerduty_mcp.tools.incidents.get_user_data")
     @patch("pagerduty_mcp.tools.incidents.paginate")
-    def test_list_incidents_with_filters(self, mock_paginate, mock_get_user_data, mock_get_client):
+    def test_list_incidents_with_filters(self, mock_paginate):
         """Test listing incidents with various filters."""
         # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
-        mock_get_user_data.return_value = self.sample_user_data
 
         # Test with filters
         since_date = datetime(2023, 1, 1)

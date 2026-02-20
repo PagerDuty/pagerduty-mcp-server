@@ -12,7 +12,6 @@ from .alert_grouping_settings import (
 from .alerts import Alert, AlertQuery
 from .base import MAX_RESULTS, ListResponseModel
 from .change_events import ChangeEvent, ChangeEventQuery
-from .context import MCPContext
 from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
 from .event_orchestrations import (
     EventOrchestration,
@@ -165,7 +164,6 @@ __all__ = [
     "ListResponseModel",
     "LogEntry",
     "LogEntryQuery",
-    "MCPContext",
     "Oncall",
     "OncallQuery",
     "OutlierIncidentQuery",

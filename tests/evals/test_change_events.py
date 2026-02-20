@@ -88,7 +88,9 @@ CHANGE_EVENTS_COMPETENCY_TESTS = [
     ),
     ChangeEventsCompetencyTest(
         query="List change events for team TEAM123",
-        expected_tools=[{"tool_name": "list_change_events", "parameters": {"query_model": {"team_ids": ["TEAM123"]}}}],
+        expected_tools=[
+            {"tool_name": "list_change_events", "parameters": {"query_model": {"team_ids": ["TEAM123"]}}}
+        ],
         description="List change events filtered by team",
     ),
     ChangeEventsCompetencyTest(
@@ -142,12 +144,16 @@ CHANGE_EVENTS_COMPETENCY_TESTS = [
     ),
     ChangeEventsCompetencyTest(
         query="List change events related to incident Q3QCNPM78BXOAL",
-        expected_tools=[{"tool_name": "list_incident_change_events", "parameters": {"incident_id": "Q3QCNPM78BXOAL"}}],
+        expected_tools=[
+            {"tool_name": "list_incident_change_events", "parameters": {"incident_id": "Q3QCNPM78BXOAL"}}
+        ],
         description="List change events related to an incident",
     ),
     ChangeEventsCompetencyTest(
         query="Show me what changed before incident Q3QCNPM78BXOAL",
-        expected_tools=[{"tool_name": "list_incident_change_events", "parameters": {"incident_id": "Q3QCNPM78BXOAL"}}],
+        expected_tools=[
+            {"tool_name": "list_incident_change_events", "parameters": {"incident_id": "Q3QCNPM78BXOAL"}}
+        ],
         description="List incident-related change events with natural language",
     ),
     ChangeEventsCompetencyTest(
@@ -159,7 +165,9 @@ CHANGE_EVENTS_COMPETENCY_TESTS = [
     ),
     ChangeEventsCompetencyTest(
         query="Show me changes that may have caused incident Q3QCNPM78BXOAL",
-        expected_tools=[{"tool_name": "list_incident_change_events", "parameters": {"incident_id": "Q3QCNPM78BXOAL"}}],
+        expected_tools=[
+            {"tool_name": "list_incident_change_events", "parameters": {"incident_id": "Q3QCNPM78BXOAL"}}
+        ],
         description="List incident-related change events with causal language",
     ),
 ]

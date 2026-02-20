@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from tests.context_test_case import ContextTestCase
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import UserReference
 from pagerduty_mcp.models.teams import Team, TeamCreate, TeamCreateRequest, TeamMemberAdd, TeamQuery
@@ -18,7 +17,7 @@ from pagerduty_mcp.tools.teams import (
 )
 
 
-class TestTeamTools(ContextTestCase):
+class TestTeamTools(unittest.TestCase):
     """Test cases for team tools."""
 
     @classmethod
@@ -65,9 +64,23 @@ class TestTeamTools(ContextTestCase):
             {"user": {"id": "USER456", "summary": "Jane Smith - Team Lead", "type": "user_reference"}},
         ]
 
+        cls.mock_client = MagicMock()
+
+    def setUp(self):
+        """Reset mock before each test."""
+        self.mock_client.reset_mock()
+        # Clear any side effects
+        self.mock_client.rget.side_effect = None
+        self.mock_client.rpost.side_effect = None
+        self.mock_client.rput.side_effect = None
+        self.mock_client.rdelete.side_effect = None
+        self.mock_client.put.side_effect = None
+
     @patch("pagerduty_mcp.tools.teams.paginate")
-    def test_list_teams_all_scope(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_list_teams_all_scope(self, mock_get_client, mock_paginate):
         """Test listing teams with 'all' scope."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_teams_list_response
 
         query = TeamQuery(scope="all")
@@ -87,8 +100,10 @@ class TestTeamTools(ContextTestCase):
 
     @patch("pagerduty_mcp.tools.teams.get_user_data")
     @patch("pagerduty_mcp.tools.teams.paginate")
-    def test_list_teams_my_scope(self, mock_paginate, mock_get_user_data):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_list_teams_my_scope(self, mock_get_client, mock_paginate, mock_get_user_data):
         """Test listing teams with 'my' scope."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_teams_list_response
         mock_get_user_data.return_value = User.model_validate(self.sample_user_data)
 
@@ -107,8 +122,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(result.response[0].name, "Backend Engineering")
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    def test_list_teams_with_query_filter(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_list_teams_with_query_filter(self, mock_get_client, mock_paginate):
         """Test listing teams with query filter."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_teams_list_response[0]]
 
         query = TeamQuery(query="Backend", scope="all")
@@ -123,8 +140,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(result.response[0].name, "Backend Engineering")
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    def test_list_teams_with_custom_limit(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_list_teams_with_custom_limit(self, mock_get_client, mock_paginate):
         """Test listing teams with custom limit."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_teams_list_response
 
         query = TeamQuery(limit=50, scope="all")
@@ -138,8 +157,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    def test_list_teams_empty_response(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_list_teams_empty_response(self, mock_get_client, mock_paginate):
         """Test listing teams when paginate returns empty list."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = TeamQuery(query="NonExistentTeam", scope="all")
@@ -152,13 +173,16 @@ class TestTeamTools(ContextTestCase):
         # Verify result
         self.assertEqual(len(result.response), 0)
 
-    def test_get_team_success(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_get_team_success(self, mock_get_client):
         """Test successful retrieval of a specific team."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_team_response
 
         result = get_team("TEAM123")
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/teams/TEAM123")
 
         # Verify result
@@ -169,18 +193,23 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(result.summary, "Engineering Team - Backend Services")
         self.assertEqual(result.type, "team")
 
-    def test_get_team_client_error(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_get_team_client_error(self, mock_get_client):
         """Test get_team when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
             get_team("TEAM123")
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/teams/TEAM123")
 
-    def test_create_team_success_wrapped_response(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_create_team_success_wrapped_response(self, mock_get_client):
         """Test successful team creation with wrapped response."""
+        mock_get_client.return_value = self.mock_client
         # API response with team wrapped in 'team' key
         wrapped_response = {"team": self.sample_team_response}
         self.mock_client.rpost.return_value = wrapped_response
@@ -194,6 +223,7 @@ class TestTeamTools(ContextTestCase):
         result = create_team(team_create)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rpost.assert_called_once_with("/teams", json=team_create.model_dump())
 
         # Verify result
@@ -201,8 +231,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(result.id, "TEAM123")
         self.assertEqual(result.name, "Backend Engineering")
 
-    def test_create_team_success_direct_response(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_create_team_success_direct_response(self, mock_get_client):
         """Test successful team creation with direct response."""
+        mock_get_client.return_value = self.mock_client
         # API response directly as team object
         self.mock_client.rpost.return_value = self.sample_team_response
 
@@ -215,6 +247,7 @@ class TestTeamTools(ContextTestCase):
         result = create_team(team_create)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rpost.assert_called_once_with("/teams", json=team_create.model_dump())
 
         # Verify result
@@ -222,8 +255,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(result.id, "TEAM123")
         self.assertEqual(result.name, "Backend Engineering")
 
-    def test_create_team_client_error(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_create_team_client_error(self, mock_get_client):
         """Test create_team when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rpost.side_effect = Exception("API Error")
 
         # Create TeamCreateRequest instance
@@ -234,9 +269,12 @@ class TestTeamTools(ContextTestCase):
             create_team(team_create)
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
 
-    def test_update_team_success_wrapped_response(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_update_team_success_wrapped_response(self, mock_get_client):
         """Test successful team update with wrapped response."""
+        mock_get_client.return_value = self.mock_client
         # API response with team wrapped in 'team' key
         updated_team = self.sample_team_response.copy()
         updated_team["name"] = "Updated Backend Team"
@@ -250,6 +288,7 @@ class TestTeamTools(ContextTestCase):
         result = update_team("TEAM123", team_update)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once_with("/teams/TEAM123", json=team_update.model_dump())
 
         # Verify result
@@ -257,8 +296,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(result.id, "TEAM123")
         self.assertEqual(result.name, "Updated Backend Team")
 
-    def test_update_team_success_direct_response(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_update_team_success_direct_response(self, mock_get_client):
         """Test successful team update with direct response."""
+        mock_get_client.return_value = self.mock_client
         # API response directly as team object
         updated_team = self.sample_team_response.copy()
         updated_team["name"] = "Updated Backend Team"
@@ -271,6 +312,7 @@ class TestTeamTools(ContextTestCase):
         result = update_team("TEAM123", team_update)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once_with("/teams/TEAM123", json=team_update.model_dump())
 
         # Verify result
@@ -278,8 +320,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(result.id, "TEAM123")
         self.assertEqual(result.name, "Updated Backend Team")
 
-    def test_update_team_client_error(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_update_team_client_error(self, mock_get_client):
         """Test update_team when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rput.side_effect = Exception("API Error")
 
         # Create TeamCreateRequest instance
@@ -290,33 +334,41 @@ class TestTeamTools(ContextTestCase):
             update_team("TEAM123", team_update)
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
 
-    def test_delete_team_success(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_delete_team_success(self, mock_get_client):
         """Test successful team deletion."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rdelete.return_value = None
 
         result = delete_team("TEAM123")
 
         # Verify API call
-
+        mock_get_client.assert_called_once()
         self.mock_client.rdelete.assert_called_once_with("/teams/TEAM123")
 
         # Verify result (should be None)
         self.assertIsNone(result)
 
-    def test_delete_team_client_error(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_delete_team_client_error(self, mock_get_client):
         """Test delete_team when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rdelete.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
             delete_team("TEAM123")
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
         self.mock_client.rdelete.assert_called_once_with("/teams/TEAM123")
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    def test_list_team_members_success(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_list_team_members_success(self, mock_get_client, mock_paginate):
         """Test successful listing of team members."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_team_members_response
 
         result = list_team_members("TEAM123")
@@ -332,8 +384,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(result.response[1].id, "USER456")
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    def test_list_team_members_empty_response(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_list_team_members_empty_response(self, mock_get_client, mock_paginate):
         """Test listing team members when team has no members."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         result = list_team_members("TEAM123")
@@ -345,8 +399,10 @@ class TestTeamTools(ContextTestCase):
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    def test_list_team_members_paginate_error(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_list_team_members_paginate_error(self, mock_get_client, mock_paginate):
         """Test list_team_members when paginate raises an exception."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
         with self.assertRaises(Exception) as context:
@@ -354,8 +410,10 @@ class TestTeamTools(ContextTestCase):
 
         self.assertEqual(str(context.exception), "Pagination Error")
 
-    def test_add_team_member_success(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_add_team_member_success(self, mock_get_client):
         """Test successful addition of team member."""
+        mock_get_client.return_value = self.mock_client
         # Mock a successful response
         mock_response = MagicMock()
         mock_response.__bool__ = lambda x: True  # Make response truthy
@@ -365,13 +423,16 @@ class TestTeamTools(ContextTestCase):
         result = add_team_member("TEAM123", member_data)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.put.assert_called_once_with("/teams/TEAM123/users/USER789", json=member_data.model_dump())
 
         # Verify result
         self.assertEqual(result, "Successfully added user to team")
 
-    def test_add_team_member_failure(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_add_team_member_failure(self, mock_get_client):
         """Test failed addition of team member."""
+        mock_get_client.return_value = self.mock_client
         # Mock a failed response
         mock_response = MagicMock()
         mock_response.__bool__ = lambda x: False  # Make response falsy
@@ -382,13 +443,16 @@ class TestTeamTools(ContextTestCase):
         result = add_team_member("TEAM123", member_data)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.put.assert_called_once_with("/teams/TEAM123/users/USER789", json=member_data.model_dump())
 
         # Verify result
         self.assertEqual(result, "Failed to add user to team: User not found")
 
-    def test_add_team_member_client_error(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_add_team_member_client_error(self, mock_get_client):
         """Test add_team_member when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.put.side_effect = Exception("API Error")
 
         member_data = TeamMemberAdd(user_id="USER789", role="manager")
@@ -397,27 +461,34 @@ class TestTeamTools(ContextTestCase):
             add_team_member("TEAM123", member_data)
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
 
-    def test_remove_team_member_success(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_remove_team_member_success(self, mock_get_client):
         """Test successful removal of team member."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rdelete.return_value = None
 
         result = remove_team_member("TEAM123", "USER789")
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rdelete.assert_called_once_with("/teams/TEAM123/users/USER789")
 
         # Verify result (should be None)
         self.assertIsNone(result)
 
-    def test_remove_team_member_client_error(self):
+    @patch("pagerduty_mcp.tools.teams.get_client")
+    def test_remove_team_member_client_error(self, mock_get_client):
         """Test remove_team_member when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rdelete.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
             remove_team_member("TEAM123", "USER789")
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
         self.mock_client.rdelete.assert_called_once_with("/teams/TEAM123/users/USER789")
 
     def test_team_query_to_params_all_fields(self):

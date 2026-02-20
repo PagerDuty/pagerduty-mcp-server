@@ -1,7 +1,6 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from tests.context_test_case import ContextTestCase
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.escalation_policies import EscalationPolicyReference
 from pagerduty_mcp.models.references import TeamReference
@@ -14,7 +13,7 @@ from pagerduty_mcp.tools.services import (
 )
 
 
-class TestServiceTools(ContextTestCase):
+class TestServiceTools(unittest.TestCase):
     """Test cases for service tools."""
 
     @classmethod
@@ -63,9 +62,21 @@ class TestServiceTools(ContextTestCase):
             }
         }
 
+        cls.mock_client = MagicMock()
+
+    def setUp(self):
+        """Reset mock before each test."""
+        self.mock_client.reset_mock()
+        # Clear any side effects
+        self.mock_client.rget.side_effect = None
+        self.mock_client.rpost.side_effect = None
+        self.mock_client.rput.side_effect = None
+
     @patch("pagerduty_mcp.tools.services.paginate")
-    def test_list_services_no_filters(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_no_filters(self, mock_get_client, mock_paginate):
         """Test listing services without any filters."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_services_list_response
 
         query = ServiceQuery()
@@ -84,8 +95,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.response[1].name, "Database Service")
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    def test_list_services_with_query_filter(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_with_query_filter(self, mock_get_client, mock_paginate):
         """Test listing services with query filter."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[0]]
 
         query = ServiceQuery(query="Web")
@@ -100,8 +113,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.response[0].name, "Web Application Service")
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    def test_list_services_with_teams_filter(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_with_teams_filter(self, mock_get_client, mock_paginate):
         """Test listing services with teams filter."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[1]]
 
         query = ServiceQuery(teams_ids=["TEAM2"])
@@ -116,8 +131,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.response[0].name, "Database Service")
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    def test_list_services_with_custom_limit(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_with_custom_limit(self, mock_get_client, mock_paginate):
         """Test listing services with custom limit."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_services_list_response
 
         query = ServiceQuery(limit=50)
@@ -131,8 +148,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    def test_list_services_with_all_filters(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_with_all_filters(self, mock_get_client, mock_paginate):
         """Test listing services with all filters applied."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[0]]
 
         query = ServiceQuery(query="Web", teams_ids=["TEAM1"], limit=10)
@@ -147,8 +166,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.response[0].name, "Web Application Service")
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    def test_list_services_empty_response(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_empty_response(self, mock_get_client, mock_paginate):
         """Test listing services when paginate returns empty list."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = ServiceQuery(query="NonExistentService")
@@ -162,8 +183,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    def test_list_services_paginate_error(self, mock_paginate):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_paginate_error(self, mock_get_client, mock_paginate):
         """Test list_services when paginate raises an exception."""
+        mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
         query = ServiceQuery()
@@ -173,13 +196,16 @@ class TestServiceTools(ContextTestCase):
 
         self.assertEqual(str(context.exception), "Pagination Error")
 
-    def test_get_service_success(self):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_get_service_success(self, mock_get_client):
         """Test successful retrieval of a specific service."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_service_response
 
         result = get_service("SVC123")
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/services/SVC123")
 
         # Verify result
@@ -195,18 +221,23 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.teams[1].id, "TEAM2")
         self.assertEqual(result.type, "service")
 
-    def test_get_service_client_error(self):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_get_service_client_error(self, mock_get_client):
         """Test get_service when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
             get_service("SVC123")
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/services/SVC123")
 
-    def test_create_service_success_wrapped_response(self):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_create_service_success_wrapped_response(self, mock_get_client):
         """Test successful service creation with wrapped response."""
+        mock_get_client.return_value = self.mock_client
         # API response with service wrapped in 'service' key
         wrapped_response = {"service": self.sample_service_response}
         self.mock_client.rpost.return_value = wrapped_response
@@ -222,6 +253,7 @@ class TestServiceTools(ContextTestCase):
         result = create_service(service_create)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rpost.assert_called_once_with("/services", json=service_create.model_dump())
 
         # Verify result
@@ -229,8 +261,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.id, "SVC123")
         self.assertEqual(result.name, "Web Application Service")
 
-    def test_create_service_success_direct_response(self):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_create_service_success_direct_response(self, mock_get_client):
         """Test successful service creation with direct response."""
+        mock_get_client.return_value = self.mock_client
         # API response directly as service object
         self.mock_client.rpost.return_value = self.sample_service_response
 
@@ -245,6 +279,7 @@ class TestServiceTools(ContextTestCase):
         result = create_service(service_create)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rpost.assert_called_once_with("/services", json=service_create.model_dump())
 
         # Verify result
@@ -252,8 +287,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.id, "SVC123")
         self.assertEqual(result.name, "Web Application Service")
 
-    def test_create_service_client_error(self):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_create_service_client_error(self, mock_get_client):
         """Test create_service when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rpost.side_effect = Exception("API Error")
 
         # Create ServiceCreate instance
@@ -267,9 +304,12 @@ class TestServiceTools(ContextTestCase):
             create_service(service_create)
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
 
-    def test_update_service_success_wrapped_response(self):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_update_service_success_wrapped_response(self, mock_get_client):
         """Test successful service update with wrapped response."""
+        mock_get_client.return_value = self.mock_client
         # API response with service wrapped in 'service' key
         updated_service = self.sample_service_response.copy()
         updated_service["name"] = "Updated Service Name"
@@ -289,6 +329,7 @@ class TestServiceTools(ContextTestCase):
         result = update_service("SVC123", service_create)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once_with("/services/SVC123", json=service_create.model_dump())
 
         # Verify result
@@ -296,8 +337,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.id, "SVC123")
         self.assertEqual(result.name, "Updated Service Name")
 
-    def test_update_service_success_direct_response(self):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_update_service_success_direct_response(self, mock_get_client):
         """Test successful service update with direct response."""
+        mock_get_client.return_value = self.mock_client
         # API response directly as service object
         updated_service = self.sample_service_response.copy()
         updated_service["name"] = "Updated Service Name"
@@ -316,6 +359,7 @@ class TestServiceTools(ContextTestCase):
         result = update_service("SVC123", service_create)
 
         # Verify API call
+        mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once_with("/services/SVC123", json=service_create.model_dump())
 
         # Verify result
@@ -323,8 +367,10 @@ class TestServiceTools(ContextTestCase):
         self.assertEqual(result.id, "SVC123")
         self.assertEqual(result.name, "Updated Service Name")
 
-    def test_update_service_client_error(self):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_update_service_client_error(self, mock_get_client):
         """Test update_service when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
         self.mock_client.rput.side_effect = Exception("API Error")
 
         # Create ServiceCreate instance
@@ -341,6 +387,7 @@ class TestServiceTools(ContextTestCase):
             update_service("SVC123", service_create)
 
         self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
 
     def test_service_query_to_params_all_fields(self):
         """Test ServiceQuery.to_params() with all fields set."""

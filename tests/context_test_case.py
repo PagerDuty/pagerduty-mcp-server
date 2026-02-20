@@ -11,12 +11,18 @@ from pagerduty_mcp.models.users import User
 class TestContextStrategy(ContextStrategy):
     """A simple context strategy for testing purposes."""
 
+    _context: MCPContext
+
     def __init__(self):
-        self.context = MagicMock(MCPContext)
-        self.context.client = MagicMock(RestApiV2Client)
+        self._context = MagicMock(MCPContext)
+        self._context.client = MagicMock(RestApiV2Client)
+
+    @property
+    def context(self) -> MCPContext:
+        return self._context
 
     def with_user(self) -> None:
-        self.context.user = MagicMock(User)
+        self._context.user = MagicMock(User)
 class ContextTestCase(TestCase):
     def setUp(self):
         self.strategy = TestContextStrategy()

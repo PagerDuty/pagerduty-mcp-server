@@ -29,6 +29,12 @@ def create_pd_client() -> RestApiV2Client:
 class ApplicationContextStrategy(ContextStrategy):
     """Application-scoped context using instance variables."""
 
+    _context: MCPContext
+
     def __init__(self):
         client = create_pd_client()
-        self.context = MCPContext(client)
+        self._context = MCPContext(client)
+
+    @property
+    def context(self) -> MCPContext:
+        return self._context

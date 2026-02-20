@@ -2,7 +2,6 @@ from typing import Optional
 from contextvars import ContextVar
 from contextlib import contextmanager
 
-from pagerduty.rest_api_v2_client import RestApiV2Client
 from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.context.context_strategy import ContextStrategy
 

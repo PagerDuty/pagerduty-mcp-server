@@ -1,4 +1,4 @@
-from pagerduty_mcp.context import get_client
+from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import EscalationPolicy, EscalationPolicyQuery, ListResponseModel
 from pagerduty_mcp.utils import paginate
 

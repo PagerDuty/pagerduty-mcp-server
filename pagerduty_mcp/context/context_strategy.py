@@ -12,3 +12,8 @@ class ContextStrategy(ABC):
     def context(self) -> MCPContext:
         """Get the current context."""
         pass
+
+    @contextmanager
+    @abstractmethod
+    def use_context(self, context: MCPContext):
+        yield

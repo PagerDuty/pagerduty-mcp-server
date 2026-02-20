@@ -1,11 +1,9 @@
 from typing_extensions import Optional
-from attr import dataclass
 
 from pagerduty.rest_api_v2_client import RestApiV2Client
 from pagerduty_mcp.models.users import User
 
 
-@dataclass
 class MCPContext:
     """Container for request-scoped context data."""
     client: RestApiV2Client

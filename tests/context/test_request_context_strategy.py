@@ -41,12 +41,15 @@ class TestRequestContextStrategy:
 
     def test_use_context_sets_user(self, prepare_env, mock_user, mock_client):
         context = MCPContext(mock_client)
-        with ContextManager.use_context(context):
+        strategy = ContextManager.get_strategy()
+        assert isinstance(strategy, RequestContextStrategy)
+
+        with strategy.use_context(context):
              assert ContextManager.get_user() == mock_user
 
         # indulge my light paranoia
         context = MCPContext(MagicMock(RestApiV2Client))
-        with ContextManager.use_context(context):
+        with strategy.use_context(context):
              assert ContextManager.get_user() == None
 
         with pytest.raises(RuntimeError):
@@ -54,12 +57,15 @@ class TestRequestContextStrategy:
 
     def test_get_client(self, prepare_env, mock_client):
         mock_context = MCPContext(mock_client)
-        with ContextManager.use_context(mock_context):
+        strategy = ContextManager.get_strategy()
+        assert isinstance(strategy, RequestContextStrategy)
+
+        with strategy.use_context(mock_context):
             assert get_client() == mock_context.client
 
         # indulge my light paranoia
         context = MCPContext(MagicMock(RestApiV2Client))
-        with ContextManager.use_context(context):
+        with strategy.use_context(context):
             assert get_client() != mock_context.client
 
         with pytest.raises(RuntimeError):

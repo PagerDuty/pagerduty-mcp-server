@@ -34,9 +34,10 @@ class ContextManager:
         strategy_name = os.getenv("MCP_CONTEXT_STRATEGY", "ApplicationContextStrategy")
         if ContextManager._context_strategy is None:
             strategy_class = ContextManager.STRATEGY_REGISTRY.get(strategy_name)
-            if strategy_class is None:
+            if strategy_class is None or not issubclass(strategy_class, ContextStrategy):
                 raise ValueError(f"Invalid MCP_CONTEXT_STRATEGY: {strategy_name}")
             ContextManager._context_strategy = strategy_class()
+
         return ContextManager._context_strategy
 
     @staticmethod
@@ -51,14 +52,8 @@ class ContextManager:
 
     @staticmethod
     def set_strategy(strategy: ContextStrategy) -> None:
-        """Set the context strategy (primarily for testing)."""
+        """Set the context strategy directly (primarily for testing)."""
         ContextManager._context_strategy = strategy
-
-    @staticmethod
-    def use_context(context: MCPContext) -> Context:
-        """Context manager to temporarily set the context for a block of code."""
-        strategy = ContextManager.get_strategy()
-        return strategy.use_context(context)
 
 def get_client():
     """Backwards-compatible helper to get the PagerDuty client from the current context."""

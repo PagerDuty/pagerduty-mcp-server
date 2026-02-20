@@ -1,9 +1,9 @@
 import pytest
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from pagerduty.rest_api_v2_client import RestApiV2Client
-from pagerduty_mcp.context import ContextManager, get_client
+from pagerduty_mcp.context import ContextManager, get_client, application_context_strategy
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
 from pagerduty_mcp.models.users import User
 
@@ -13,12 +13,15 @@ def prepare_env(monkeypatch):
     monkeypatch.delenv("MCP_CONTEXT_STRATEGY", raising=False)
     monkeypatch.setenv("PAGERDUTY_USER_API_KEY", "test_api_key")
 
+    yield
     ContextManager._context_strategy = None
 
 @pytest.fixture
-def mock_client():
+def mock_client(monkeypatch):
     mock_client = MagicMock(RestApiV2Client)
     mock_client.headers = {}
+
+    monkeypatch.setattr(application_context_strategy, "PagerdutyMCPClient", lambda _: mock_client)
     return mock_client
 
 @pytest.fixture
@@ -33,20 +36,18 @@ def mock_user(mock_client):
 class TestApplicationContextStrategy:
     """Test cases for the ApplicationContextStrategy and its integration with MCPContext."""
 
-    @patch("pagerduty_mcp.context.application_context_strategy.create_pd_client")
-    def test_initialization(self, mock_create_pd_client, prepare_env, mock_client, mock_user):
+    def test_initialization(self, prepare_env, mock_client, mock_user):
         """Test that the ApplicationContextStrategy initializes the context correctly."""
-        mock_create_pd_client.return_value = mock_client
-
         strategy = ContextManager.get_strategy()
         assert isinstance(strategy, ApplicationContextStrategy)
 
         assert strategy.context.client == mock_client
         assert strategy.context.user == mock_user
 
-    @patch("pagerduty_mcp.context.application_context_strategy.create_pd_client")
-    def test_get_client(self, mock_create_pd_client, prepare_env, mock_client):
+    def test_get_client(self, prepare_env, mock_client):
         """Test that the client can be accessed through the context strategy."""
-        mock_create_pd_client.return_value = mock_client
-
         assert get_client() == mock_client
+
+    def test_get_client_no_api_key(self):
+        with pytest.raises(RuntimeError):
+            ContextManager.get_strategy()

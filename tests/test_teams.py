@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from pagerduty_mcp.context import ContextManager
+from pagerduty_mcp.context import MCPContextManager
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import UserReference
 from pagerduty_mcp.models.teams import Team, TeamCreate, TeamCreateRequest, TeamMemberAdd, TeamQuery
@@ -72,7 +72,7 @@ class TestTeamTools(unittest.TestCase):
 
         self.mock_strategy = MockContextStrategy()
         self.mock_strategy.context.client = self.mock_client
-        ContextManager.set_strategy(self.mock_strategy)
+        MCPContextManager.set_strategy(self.mock_strategy)
 
     @patch("pagerduty_mcp.tools.teams.paginate")
     def test_list_teams_all_scope(self, mock_paginate):

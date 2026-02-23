@@ -1,5 +1,5 @@
 from pagerduty_mcp.client import get_client
-from pagerduty_mcp.context import ContextManager
+from pagerduty_mcp.context import MCPContextManager
 from pagerduty_mcp.models import (
     ListResponseModel,
     Team,
@@ -21,7 +21,7 @@ def list_teams(query_model: TeamQuery) -> ListResponseModel[Team]:
     """
     if query_model.scope == "my":
         # get my team references from /users/me
-        user_data = ContextManager.get_user()
+        user_data = MCPContextManager.get_user()
         if user_data is None:
             raise RuntimeError("User-level authentication is required to fetch 'my' teams.")
 
@@ -29,10 +29,10 @@ def list_teams(query_model: TeamQuery) -> ListResponseModel[Team]:
         # Now get all team resources. Paginate limits to 1000 results by default
         # TODO: Alternative approach. Fetch each team by ID.
         # TODO: No way to fetch multiple teams by ID in a single request - API improvement area
-        results = paginate(client=ContextManager.get_client(), entity="teams", params={})
+        results = paginate(client=MCPContextManager.get_client(), entity="teams", params={})
         teams = [Team(**team) for team in results if team["id"] in user_team_ids]
     else:
-        response = paginate(client=ContextManager.get_client(), entity="teams", params=query_model.to_params())
+        response = paginate(client=MCPContextManager.get_client(), entity="teams", params=query_model.to_params())
         teams = [Team(**team) for team in response]
     return ListResponseModel[Team](response=teams)
 

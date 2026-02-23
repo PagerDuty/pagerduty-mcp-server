@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from pagerduty.rest_api_v2_client import RestApiV2Client
-from pagerduty_mcp.context import ContextManager, get_client, application_context_strategy
+from pagerduty_mcp.context import MCPContextManager, get_client, application_context_strategy
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
 from pagerduty_mcp.models.users import User
 
@@ -15,7 +15,7 @@ def prepare_env(monkeypatch):
     monkeypatch.setenv("PAGERDUTY_USER_API_KEY", "test_api_key")
 
     yield
-    ContextManager._context_strategy = None
+    MCPContextManager._context_strategy = None
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ class TestApplicationContextStrategy:
 
     def test_initialization(self, prepare_env, mock_client, mock_user):
         """Test that the ApplicationContextStrategy initializes the context correctly."""
-        strategy = ContextManager.get_strategy()
+        strategy = MCPContextManager.get_strategy()
         assert isinstance(strategy, ApplicationContextStrategy)
 
         assert strategy.context.client == mock_client
@@ -54,4 +54,4 @@ class TestApplicationContextStrategy:
 
     def test_get_client_no_api_key(self):
         with pytest.raises(RuntimeError):
-            ContextManager.get_strategy()
+            MCPContextManager.get_strategy()

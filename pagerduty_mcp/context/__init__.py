@@ -5,6 +5,7 @@ from typing import Optional
 from dotenv import load_dotenv
 
 from pagerduty.rest_api_v2_client import RestApiV2Client
+from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.models.users import User
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
 from pagerduty_mcp.context.request_context_strategy import RequestContextStrategy
@@ -29,15 +30,14 @@ class MCPContextManager:
     For a multi-tenant application, set MCP_CONTEXT_STRATEGY to "RequestContextStrategy",
     and use `use_context` helper:
 
-        strategy = MCPContextManager.get_strategy()
-
         client = ... build your PagerDuty API client ...
         # MCPContext will use this client to pre-populate the user, if available
         context = MCPContext(client=client)
 
-        with strategy.use_context(context):
+        with MCPContextManager.use_context(context):
             ... yield to your request handler here ...
-            ... any tools that call MCPContextManager.get_client() ...
+            ... MCPContextManager.get_client() and .get_user() can now be used the same
+                way as a single-tenant application ...
     """
 
     STRATEGY_REGISTRY = {
@@ -73,6 +73,11 @@ class MCPContextManager:
     def set_strategy(strategy: ContextStrategy) -> None:
         """Set the context strategy directly (primarily for testing)."""
         MCPContextManager._context_strategy = strategy
+
+    @staticmethod
+    def use_context(context: MCPContext):
+        """Helper to use a context with the current strategy."""
+        return MCPContextManager.get_strategy().use_context(context)
 
 
 def get_client():

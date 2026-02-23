@@ -44,5 +44,10 @@ class ApplicationContextStrategy(ContextStrategy):
 
     @contextmanager
     def use_context(self, context: MCPContext):
+        previous_context = self._context
         self._context = context
-        yield
+
+        try:
+            yield
+        finally:
+            self._context = previous_context

@@ -47,6 +47,10 @@ class TestRequestContextStrategy:
         with strategy.use_context(context):
              assert MCPContextManager.get_user() == mock_user
 
+        # also works from manager class
+        with MCPContextManager.use_context(context):
+             assert MCPContextManager.get_user() == mock_user
+
         # indulge my light paranoia
         context = MCPContext(MagicMock(RestApiV2Client))
         with strategy.use_context(context):

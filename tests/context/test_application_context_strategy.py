@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from pagerduty.rest_api_v2_client import RestApiV2Client
-from pagerduty_mcp.context import ContextResolver, get_client, application_context_strategy
+from pagerduty_mcp.context import ContextResolver, application_context_strategy
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
 from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.models.users import User
@@ -12,7 +12,6 @@ from pagerduty_mcp.models.users import User
 @pytest.fixture
 def prepare_env(monkeypatch):
     """Fixture to set a specific environment variable."""
-    monkeypatch.delenv("MCP_CONTEXT_STRATEGY", raising=False)
     monkeypatch.setenv("PAGERDUTY_USER_API_KEY", "test_api_key")
 
     yield
@@ -44,16 +43,15 @@ class TestApplicationContextStrategy:
 
     def test_initialization(self, prepare_env, mock_client, mock_user):
         """Test that the ApplicationContextStrategy initializes the context correctly."""
-        strategy = ContextResolver.get_strategy()
-        assert isinstance(strategy, ApplicationContextStrategy)
+        strategy = ApplicationContextStrategy()
 
         assert strategy.context.client == mock_client
         assert strategy.context.user == mock_user
 
     def test_with_context(self, prepare_env, mock_client, mock_user):
         """Can use with_context as a temporarily override."""
-        strategy = ContextResolver.get_strategy()
-        assert isinstance(strategy, ApplicationContextStrategy)
+        strategy = ApplicationContextStrategy()
+        ContextResolver.set_strategy(strategy)
 
         another_mock_client = MagicMock(RestApiV2Client)
         another_mock_client.headers = {}
@@ -73,10 +71,7 @@ class TestApplicationContextStrategy:
         assert strategy.context.client == mock_client
         assert strategy.context.user == mock_user
 
-    def test_get_client(self, prepare_env, mock_client):
-        """Test the global get_client() helper method."""
-        assert get_client() == mock_client
-
     def test_get_client_no_api_key(self):
         with pytest.raises(RuntimeError):
+            ContextResolver.set_strategy(ApplicationContextStrategy())
             ContextResolver.get_strategy()

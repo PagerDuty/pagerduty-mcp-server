@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Optional
 
 from dotenv import load_dotenv
@@ -7,8 +6,6 @@ from dotenv import load_dotenv
 from pagerduty.rest_api_v2_client import RestApiV2Client
 from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.models.users import User
-from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
-from pagerduty_mcp.context.request_context_strategy import RequestContextStrategy
 from pagerduty_mcp.context.context_strategy import ContextStrategy
 
 load_dotenv()
@@ -18,20 +15,34 @@ logger = logging.getLogger(__name__)
 
 
 class ContextResolver:
-    """Provides an abstraction for managing the context of the request, like the
-    PagerDuty user and the client used to make backend requests.
+    """
+    Creates a common interface for resolving the context of a request.
 
-    This allows the library to be used for both single and multi-tenant applications,
-    defaulting to a single-tenant application.
+    This allows the application to determine things (like whether there is a user currently
+    associated with the context) without needing to know the underlying strategy for how
+    that context is created or accessed.
 
-    For a single-tenant application, you should set the PAGERDUTY_USER_API_KEY environment
-    variable, and optionally the PAGERDUTY_API_HOST.
+    Currently, two strategies are provided:
+    - ApplicationContextStrategy: for single-tenant applications, where the same context is shared
+      across the entire application lifecycle.
+    - RequestContextStrategy: for multi-tenant applications, where a new context is created for
+      each request (e.g. in middleware or an auth provider) and used for the duration of that request.
 
-    For a multi-tenant application, set MCP_CONTEXT_STRATEGY to "RequestContextStrategy",
-    and use `use_context` helper:
+    But conceptually, you could also build other strategies (e.g a cache to avoid repeated API calls,
+    or mocking for tests) and the rest of the application code would not need to be changed.
 
+    A single-tenant application should set the PAGERDUTY_USER_API_KEY environment
+    variable, then initialize the strategy at application startup:
+
+        ContextResolver.set_strategy(ApplicationContextStrategy())
+
+    A multi-tenant application should also use the `use_context` helper at request time:
+
+        # at application startup
+        ContextResolver.set_strategy(RequestContextStrategy())
+
+        # in the request handler (perhaps in middleware or an auth provider)
         client = ... build your PagerDuty API client ...
-        # MCPContext will use this client to pre-populate the user, if available
         context = MCPContext(client=client)
 
         with ContextResolver.use_context(context):
@@ -40,24 +51,25 @@ class ContextResolver:
                 way as a single-tenant application ...
     """
 
-    STRATEGY_REGISTRY = {
-        "ApplicationContextStrategy": ApplicationContextStrategy,
-        "RequestContextStrategy": RequestContextStrategy,
-    }
-
     _context_strategy: Optional[ContextStrategy] = None
+
+    @staticmethod
+    def set_strategy(strategy: ContextStrategy) -> None:
+        """Set the context strategy directly (primarily for testing)."""
+        ContextResolver._context_strategy = strategy
 
     @staticmethod
     def get_strategy() -> ContextStrategy:
         """Get the current context strategy, initializing it if necessary."""
-        strategy_name = os.getenv("MCP_CONTEXT_STRATEGY", "ApplicationContextStrategy")
         if ContextResolver._context_strategy is None:
-            strategy_class = ContextResolver.STRATEGY_REGISTRY.get(strategy_name)
-            if strategy_class is None or not issubclass(strategy_class, ContextStrategy):
-                raise ValueError(f"Invalid MCP_CONTEXT_STRATEGY: {strategy_name}")
-            ContextResolver._context_strategy = strategy_class()
+            raise RuntimeError("No context strategy is available")
 
         return ContextResolver._context_strategy
+
+    @staticmethod
+    def use_context(context: MCPContext):
+        """Helper to use a context with the current strategy."""
+        return ContextResolver.get_strategy().use_context(context)
 
     @staticmethod
     def get_client() -> RestApiV2Client:
@@ -68,18 +80,3 @@ class ContextResolver:
     def get_user() -> Optional[User]:
         """Get the user from the current context."""
         return ContextResolver.get_strategy().context.user
-
-    @staticmethod
-    def set_strategy(strategy: ContextStrategy) -> None:
-        """Set the context strategy directly (primarily for testing)."""
-        ContextResolver._context_strategy = strategy
-
-    @staticmethod
-    def use_context(context: MCPContext):
-        """Helper to use a context with the current strategy."""
-        return ContextResolver.get_strategy().use_context(context)
-
-
-def get_client():
-    """Backwards-compatible helper to get the PagerDuty client from the current context."""
-    return ContextResolver.get_client()

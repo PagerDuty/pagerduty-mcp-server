@@ -1,4 +1,3 @@
-from typing import Optional
 from contextvars import ContextVar
 from contextlib import contextmanager
 
@@ -10,15 +9,12 @@ class RequestContextStrategy(ContextStrategy):
     """Request-scoped context using context vars."""
 
     def __init__(self):
-        self._context_var: ContextVar[Optional[MCPContext]] = ContextVar("mcp_request_context", default=None)
+        self._context_var: ContextVar[MCPContext] = ContextVar("mcp_request_context")
 
     @property
     def context(self) -> MCPContext:
         """Get the current context."""
-        context = self._context_var.get()
-        if context is None:
-            raise RuntimeError("No context set for this request.")
-        return context
+        return self._context_var.get()
 
     @contextmanager
     def use_context(self, context: MCPContext):

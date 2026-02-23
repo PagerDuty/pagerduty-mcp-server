@@ -6,6 +6,8 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 from pagerduty_mcp.tools import read_tools, write_tools
+from pagerduty_mcp.context import ContextResolver
+from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -54,6 +56,8 @@ def run(*, enable_write_tools: bool = False) -> None:
     Args:
         enable_write_tools: Flag to enable write tools
     """
+    ContextResolver.set_strategy(ApplicationContextStrategy())
+
     mcp = FastMCP(
         "PagerDuty MCP Server",
         instructions=MCP_SERVER_INSTRUCTIONS,

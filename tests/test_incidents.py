@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from pagerduty_mcp.context import ContextManager
+from pagerduty_mcp.context import MCPContextManager
 from pagerduty_mcp.models import (
     MAX_RESULTS,
     Alert,
@@ -172,7 +172,7 @@ class TestIncidentTools(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures before each test method."""
         self.mock_context = MockContextStrategy()
-        ContextManager.set_strategy(self.mock_context)
+        MCPContextManager.set_strategy(self.mock_context)
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_basic(self, mock_paginate):

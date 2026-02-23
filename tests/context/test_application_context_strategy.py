@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from pagerduty.rest_api_v2_client import RestApiV2Client
-from pagerduty_mcp.context import MCPContextManager, get_client, application_context_strategy
+from pagerduty_mcp.context import ContextResolver, get_client, application_context_strategy
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
 from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.models.users import User
@@ -16,7 +16,7 @@ def prepare_env(monkeypatch):
     monkeypatch.setenv("PAGERDUTY_USER_API_KEY", "test_api_key")
 
     yield
-    MCPContextManager._context_strategy = None
+    ContextResolver._context_strategy = None
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ class TestApplicationContextStrategy:
 
     def test_initialization(self, prepare_env, mock_client, mock_user):
         """Test that the ApplicationContextStrategy initializes the context correctly."""
-        strategy = MCPContextManager.get_strategy()
+        strategy = ContextResolver.get_strategy()
         assert isinstance(strategy, ApplicationContextStrategy)
 
         assert strategy.context.client == mock_client
@@ -52,7 +52,7 @@ class TestApplicationContextStrategy:
 
     def test_with_context(self, prepare_env, mock_client, mock_user):
         """Can use with_context as a temporarily override."""
-        strategy = MCPContextManager.get_strategy()
+        strategy = ContextResolver.get_strategy()
         assert isinstance(strategy, ApplicationContextStrategy)
 
         another_mock_client = MagicMock(RestApiV2Client)
@@ -65,9 +65,9 @@ class TestApplicationContextStrategy:
             assert strategy.context.user == None
 
         # also works from manager class helpers
-        with MCPContextManager.use_context(another_context):
-            assert MCPContextManager.get_client() == another_mock_client
-            assert MCPContextManager.get_user() == None
+        with ContextResolver.use_context(another_context):
+            assert ContextResolver.get_client() == another_mock_client
+            assert ContextResolver.get_user() == None
 
         # context should be reset after the block
         assert strategy.context.client == mock_client
@@ -79,4 +79,4 @@ class TestApplicationContextStrategy:
 
     def test_get_client_no_api_key(self):
         with pytest.raises(RuntimeError):
-            MCPContextManager.get_strategy()
+            ContextResolver.get_strategy()

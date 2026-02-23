@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class MCPContextManager:
+class ContextResolver:
     """Provides an abstraction for managing the context of the request, like the
     PagerDuty user and the client used to make backend requests.
 
@@ -34,9 +34,9 @@ class MCPContextManager:
         # MCPContext will use this client to pre-populate the user, if available
         context = MCPContext(client=client)
 
-        with MCPContextManager.use_context(context):
+        with ContextResolver.use_context(context):
             ... yield to your request handler here ...
-            ... MCPContextManager.get_client() and .get_user() can now be used the same
+            ... ContextResolver.get_client() and .get_user() can now be used the same
                 way as a single-tenant application ...
     """
 
@@ -51,35 +51,35 @@ class MCPContextManager:
     def get_strategy() -> ContextStrategy:
         """Get the current context strategy, initializing it if necessary."""
         strategy_name = os.getenv("MCP_CONTEXT_STRATEGY", "ApplicationContextStrategy")
-        if MCPContextManager._context_strategy is None:
-            strategy_class = MCPContextManager.STRATEGY_REGISTRY.get(strategy_name)
+        if ContextResolver._context_strategy is None:
+            strategy_class = ContextResolver.STRATEGY_REGISTRY.get(strategy_name)
             if strategy_class is None or not issubclass(strategy_class, ContextStrategy):
                 raise ValueError(f"Invalid MCP_CONTEXT_STRATEGY: {strategy_name}")
-            MCPContextManager._context_strategy = strategy_class()
+            ContextResolver._context_strategy = strategy_class()
 
-        return MCPContextManager._context_strategy
+        return ContextResolver._context_strategy
 
     @staticmethod
     def get_client() -> RestApiV2Client:
         """Get the PagerDuty client from the current context."""
-        return MCPContextManager.get_strategy().context.client
+        return ContextResolver.get_strategy().context.client
 
     @staticmethod
     def get_user() -> Optional[User]:
         """Get the user from the current context."""
-        return MCPContextManager.get_strategy().context.user
+        return ContextResolver.get_strategy().context.user
 
     @staticmethod
     def set_strategy(strategy: ContextStrategy) -> None:
         """Set the context strategy directly (primarily for testing)."""
-        MCPContextManager._context_strategy = strategy
+        ContextResolver._context_strategy = strategy
 
     @staticmethod
     def use_context(context: MCPContext):
         """Helper to use a context with the current strategy."""
-        return MCPContextManager.get_strategy().use_context(context)
+        return ContextResolver.get_strategy().use_context(context)
 
 
 def get_client():
     """Backwards-compatible helper to get the PagerDuty client from the current context."""
-    return MCPContextManager.get_client()
+    return ContextResolver.get_client()

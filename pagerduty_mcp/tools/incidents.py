@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from pagerduty_mcp.client import get_client
-from pagerduty_mcp.context import MCPContextManager
+from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
     GetIncidentQuery,
     Incident,
@@ -37,7 +37,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     params = query_model.to_params()
 
     if query_model.request_scope in ["assigned", "teams"]:
-        user_data = MCPContextManager.get_user()
+        user_data = ContextResolver.get_user()
         if user_data is None:
             raise RuntimeError(f"User-level authentication is required to fetch {query_model.request_scope} incidents.")
 
@@ -48,7 +48,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             params["team_ids[]"] = user_team_ids
 
     response = paginate(
-        client=MCPContextManager.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
+        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
     )
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)
@@ -181,7 +181,7 @@ def add_responders(
     Returns:
         Details of the responder request
     """
-    user = MCPContextManager.get_user()
+    user = ContextResolver.get_user()
     if user is None:
         return "Cannot add responders with account level auth. Please provide a user token."
 

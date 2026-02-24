@@ -83,7 +83,7 @@ class TestTeamTools(unittest.TestCase):
         result = list_teams(query)
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=query.to_params())
+        mock_paginate.assert_called_once_with(entity="teams", params=query.to_params())
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -104,7 +104,7 @@ class TestTeamTools(unittest.TestCase):
         result = list_teams(query)
 
         # Verify paginate call to get all teams
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params={})
+        mock_paginate.assert_called_once_with(entity="teams", params={})
 
         # Verify result - should only include teams user is member of
         self.assertEqual(len(result.response), 1)  # Only TEAM123 matches user's teams
@@ -123,10 +123,8 @@ class TestTeamTools(unittest.TestCase):
         self.assertIn("Cannot fetch 'my' teams", str(context.exception))
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    @patch("pagerduty_mcp.tools.teams.get_client")
-    def test_list_teams_with_query_filter(self, mock_get_client, mock_paginate):
+    def test_list_teams_with_query_filter(self, mock_paginate):
         """Test listing teams with query filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_teams_list_response[0]]
 
         query = TeamQuery(query="Backend", scope="all")
@@ -134,17 +132,15 @@ class TestTeamTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "Backend", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="teams", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].name, "Backend Engineering")
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    @patch("pagerduty_mcp.tools.teams.get_client")
-    def test_list_teams_with_custom_limit(self, mock_get_client, mock_paginate):
+    def test_list_teams_with_custom_limit(self, mock_paginate):
         """Test listing teams with custom limit."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_teams_list_response
 
         query = TeamQuery(limit=50, scope="all")
@@ -152,16 +148,14 @@ class TestTeamTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"limit": 50}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="teams", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    @patch("pagerduty_mcp.tools.teams.get_client")
-    def test_list_teams_empty_response(self, mock_get_client, mock_paginate):
+    def test_list_teams_empty_response(self, mock_paginate):
         """Test listing teams when paginate returns empty list."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = TeamQuery(query="NonExistentTeam", scope="all")
@@ -169,7 +163,7 @@ class TestTeamTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "NonExistentTeam", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="teams", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 0)
@@ -366,16 +360,14 @@ class TestTeamTools(unittest.TestCase):
         self.mock_client.rdelete.assert_called_once_with("/teams/TEAM123")
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    @patch("pagerduty_mcp.tools.teams.get_client")
-    def test_list_team_members_success(self, mock_get_client, mock_paginate):
+    def test_list_team_members_success(self, mock_paginate):
         """Test successful listing of team members."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_team_members_response
 
         result = list_team_members("TEAM123")
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="/teams/TEAM123/members", params={})
+        mock_paginate.assert_called_once_with(entity="/teams/TEAM123/members", params={})
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -385,25 +377,21 @@ class TestTeamTools(unittest.TestCase):
         self.assertEqual(result.response[1].id, "USER456")
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    @patch("pagerduty_mcp.tools.teams.get_client")
-    def test_list_team_members_empty_response(self, mock_get_client, mock_paginate):
+    def test_list_team_members_empty_response(self, mock_paginate):
         """Test listing team members when team has no members."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         result = list_team_members("TEAM123")
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="/teams/TEAM123/members", params={})
+        mock_paginate.assert_called_once_with(entity="/teams/TEAM123/members", params={})
 
         # Verify result
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.teams.paginate")
-    @patch("pagerduty_mcp.tools.teams.get_client")
-    def test_list_team_members_paginate_error(self, mock_get_client, mock_paginate):
+    def test_list_team_members_paginate_error(self, mock_paginate):
         """Test list_team_members when paginate raises an exception."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
         with self.assertRaises(Exception) as context:

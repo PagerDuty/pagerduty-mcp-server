@@ -31,7 +31,6 @@ def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusP
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
         entity="status_pages",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -56,7 +55,6 @@ def list_status_page_severities(
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
         entity=f"/status_pages/{status_page_id}/severities",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -81,7 +79,6 @@ def list_status_page_impacts(
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
         entity=f"/status_pages/{status_page_id}/impacts",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -106,7 +103,6 @@ def list_status_page_statuses(
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
         entity=f"/status_pages/{status_page_id}/statuses",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -205,7 +201,6 @@ def list_status_page_post_updates(
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
         entity=f"/status_pages/{status_page_id}/posts/{post_id}/post_updates",
         params=params,
         maximum_records=query_model.limit or 100,

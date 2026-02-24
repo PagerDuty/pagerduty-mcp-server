@@ -83,9 +83,8 @@ class TestIncidentWorkflowTools(unittest.TestCase):
             },
         }
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_basic(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_basic(self, mock_paginate):
         """Test basic workflow listing."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
@@ -99,9 +98,8 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(result.response[0].name, "Example Incident Workflow")
         self.assertTrue(result.response[0].is_enabled)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_with_query(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_with_query(self, mock_paginate):
         """Test workflow listing with query filter."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
@@ -114,9 +112,8 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(call_args.kwargs["params"]["query"], "example")
         self.assertEqual(call_args.kwargs["maximum_records"], 10)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_with_include(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_with_include(self, mock_paginate):
         """Test workflow listing with include parameter."""
         mock_paginate.return_value = [self.sample_workflow_with_steps]
 
@@ -128,9 +125,8 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(len(result.response[0].steps), 1)
         self.assertEqual(result.response[0].steps[0].name, "Send Status Update")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_empty(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_empty(self, mock_paginate):
         """Test workflow listing with empty results."""
         mock_paginate.return_value = []
 
@@ -139,9 +135,8 @@ class TestIncidentWorkflowTools(unittest.TestCase):
 
         self.assertEqual(len(result.response), 0)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_no_parameters(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_no_parameters(self, mock_paginate):
         """Test workflow listing with no parameters (None)."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
@@ -155,9 +150,8 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         call_args = mock_paginate.call_args
         self.assertEqual(call_args.kwargs["maximum_records"], 100)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_explicit_none(self, mock_paginate, mock_get_client):
+    def test_list_incident_workflows_explicit_none(self, mock_paginate):
         """Test workflow listing with explicit None parameter."""
         mock_paginate.return_value = [self.sample_workflow_data]
 

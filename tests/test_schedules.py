@@ -113,10 +113,8 @@ class TestScheduleTools(unittest.TestCase):
         self.mock_client.rpost.side_effect = None
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_no_filters(self, mock_get_client, mock_paginate):
+    def test_list_schedules_no_filters(self, mock_paginate):
         """Test listing schedules without any filters."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery()
@@ -124,7 +122,7 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="schedules", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -136,10 +134,8 @@ class TestScheduleTools(unittest.TestCase):
         self.assertEqual(result.response[1].name, "Secondary On-Call")
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_with_query_filter(self, mock_get_client, mock_paginate):
+    def test_list_schedules_with_query_filter(self, mock_paginate):
         """Test listing schedules with query filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_schedules_list_response[0]]
 
         query = ScheduleQuery(query="Primary")
@@ -147,17 +143,15 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "Primary", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="schedules", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].name, "Primary On-Call")
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_with_team_filter(self, mock_get_client, mock_paginate):
+    def test_list_schedules_with_team_filter(self, mock_paginate):
         """Test listing schedules with team filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery(team_ids=["TEAM123"])
@@ -165,16 +159,14 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM123"], "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="schedules", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_with_user_filter(self, mock_get_client, mock_paginate):
+    def test_list_schedules_with_user_filter(self, mock_paginate):
         """Test listing schedules with user filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery(user_ids=["USER123", "USER456"])
@@ -182,16 +174,14 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"user_ids[]": ["USER123", "USER456"], "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="schedules", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_with_include_filter(self, mock_get_client, mock_paginate):
+    def test_list_schedules_with_include_filter(self, mock_paginate):
         """Test listing schedules with include filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery(include=["schedule_layers"])
@@ -199,16 +189,14 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"include[]": ["schedule_layers"], "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="schedules", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_with_all_filters(self, mock_get_client, mock_paginate):
+    def test_list_schedules_with_all_filters(self, mock_paginate):
         """Test listing schedules with all filters applied."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_schedules_list_response[0]]
 
         query = ScheduleQuery(
@@ -228,16 +216,14 @@ class TestScheduleTools(unittest.TestCase):
             "include[]": ["schedule_layers"],
             "limit": 50,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="schedules", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_with_custom_limit(self, mock_get_client, mock_paginate):
+    def test_list_schedules_with_custom_limit(self, mock_paginate):
         """Test listing schedules with custom limit."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
         query = ScheduleQuery(limit=50)
@@ -245,16 +231,14 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"limit": 50}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="schedules", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_empty_response(self, mock_get_client, mock_paginate):
+    def test_list_schedules_empty_response(self, mock_paginate):
         """Test listing schedules when paginate returns empty list."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = ScheduleQuery(query="NonExistentSchedule")
@@ -262,16 +246,14 @@ class TestScheduleTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "NonExistentSchedule", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="schedules", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
-    @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_list_schedules_paginate_error(self, mock_get_client, mock_paginate):
+    def test_list_schedules_paginate_error(self, mock_paginate):
         """Test list_schedules when paginate raises an exception."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
         query = ScheduleQuery()

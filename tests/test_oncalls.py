@@ -81,10 +81,8 @@ class TestOncallTools(unittest.TestCase):
         self.mock_client.reset_mock()
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_no_filters(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_no_filters(self, mock_paginate):
         """Test listing oncalls without any filters."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_oncalls_list_response
 
         query = OncallQuery()
@@ -92,7 +90,7 @@ class TestOncallTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"earliest": "true", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -104,10 +102,8 @@ class TestOncallTools(unittest.TestCase):
         self.assertEqual(result.response[1].escalation_level, 2)
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_with_time_zone(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_with_time_zone(self, mock_paginate):
         """Test listing oncalls with time zone filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_oncalls_list_response
 
         query = OncallQuery(time_zone="America/New_York")
@@ -119,16 +115,14 @@ class TestOncallTools(unittest.TestCase):
             "earliest": "true",
             "limit": DEFAULT_PAGINATION_LIMIT,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_with_user_filter(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_with_user_filter(self, mock_paginate):
         """Test listing oncalls with user filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_oncalls_list_response[0]]
 
         query = OncallQuery(user_ids=["USER123"])
@@ -140,17 +134,15 @@ class TestOncallTools(unittest.TestCase):
             "earliest": "true",
             "limit": DEFAULT_PAGINATION_LIMIT,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].user.id, "USER123")
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_with_escalation_policy_filter(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_with_escalation_policy_filter(self, mock_paginate):
         """Test listing oncalls with escalation policy filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_oncalls_list_response[0]]
 
         query = OncallQuery(escalation_policy_ids=["EP123"])
@@ -162,17 +154,15 @@ class TestOncallTools(unittest.TestCase):
             "earliest": "true",
             "limit": DEFAULT_PAGINATION_LIMIT,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].escalation_policy.id, "EP123")
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_with_schedule_filter(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_with_schedule_filter(self, mock_paginate):
         """Test listing oncalls with schedule filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_oncalls_list_response[0]]
 
         query = OncallQuery(schedule_ids=["SCHED123"])
@@ -184,17 +174,15 @@ class TestOncallTools(unittest.TestCase):
             "earliest": "true",
             "limit": DEFAULT_PAGINATION_LIMIT,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].schedule.id, "SCHED123")
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_with_time_range(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_with_time_range(self, mock_paginate):
         """Test listing oncalls with time range filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_oncalls_list_response
 
         since_time = datetime(2023, 12, 1)
@@ -209,16 +197,14 @@ class TestOncallTools(unittest.TestCase):
             "earliest": "true",
             "limit": DEFAULT_PAGINATION_LIMIT,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_with_earliest_false(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_with_earliest_false(self, mock_paginate):
         """Test listing oncalls with earliest set to false."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_oncalls_list_response
 
         query = OncallQuery(earliest=False)
@@ -226,16 +212,14 @@ class TestOncallTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"earliest": "false", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_with_all_filters(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_with_all_filters(self, mock_paginate):
         """Test listing oncalls with all filters applied."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_oncalls_list_response[0]]
 
         since_time = datetime(2023, 12, 1)
@@ -263,16 +247,14 @@ class TestOncallTools(unittest.TestCase):
             "earliest": "true",
             "limit": 50,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_with_custom_limit(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_with_custom_limit(self, mock_paginate):
         """Test listing oncalls with custom limit."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_oncalls_list_response
 
         query = OncallQuery(limit=100)
@@ -280,16 +262,14 @@ class TestOncallTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"earliest": "true", "limit": 100}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_empty_response(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_empty_response(self, mock_paginate):
         """Test listing oncalls when paginate returns empty list."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = OncallQuery(user_ids=["NONEXISTENT_USER"])
@@ -301,16 +281,14 @@ class TestOncallTools(unittest.TestCase):
             "earliest": "true",
             "limit": DEFAULT_PAGINATION_LIMIT,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="oncalls", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
-    @patch("pagerduty_mcp.tools.oncalls.get_client")
-    def test_list_oncalls_paginate_error(self, mock_get_client, mock_paginate):
+    def test_list_oncalls_paginate_error(self, mock_paginate):
         """Test list_oncalls when paginate raises an exception."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
         query = OncallQuery()

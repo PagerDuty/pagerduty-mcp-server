@@ -94,10 +94,8 @@ class TestEscalationPolicyTools(unittest.TestCase):
         self.mock_client.rget.side_effect = None
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_no_filters(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_no_filters(self, mock_paginate):
         """Test listing escalation policies without any filters."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_escalation_policies_list_response
 
         query = EscalationPolicyQuery()
@@ -106,7 +104,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            entity="escalation_policies", params=expected_params
         )
 
         # Verify result
@@ -119,10 +117,8 @@ class TestEscalationPolicyTools(unittest.TestCase):
         self.assertEqual(result.response[1].name, "DevOps Team Escalation")
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_with_query_filter(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_with_query_filter(self, mock_paginate):
         """Test listing escalation policies with query filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_escalation_policies_list_response[0]]
 
         query = EscalationPolicyQuery(query="Engineering")
@@ -131,7 +127,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"query": "Engineering", "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+             entity="escalation_policies", params=expected_params
         )
 
         # Verify result
@@ -139,10 +135,8 @@ class TestEscalationPolicyTools(unittest.TestCase):
         self.assertEqual(result.response[0].name, "Engineering Team Escalation")
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_with_user_filter(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_with_user_filter(self, mock_paginate):
         """Test listing escalation policies with user filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_escalation_policies_list_response
 
         query = EscalationPolicyQuery(user_ids=["USER123", "USER456"])
@@ -151,17 +145,15 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"user_ids[]": ["USER123", "USER456"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            entity="escalation_policies", params=expected_params
         )
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_with_team_filter(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_with_team_filter(self, mock_paginate):
         """Test listing escalation policies with team filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_escalation_policies_list_response
 
         query = EscalationPolicyQuery(team_ids=["TEAM123"])
@@ -170,17 +162,15 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM123"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            entity="escalation_policies", params=expected_params
         )
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_with_include_filter(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_with_include_filter(self, mock_paginate):
         """Test listing escalation policies with include filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_escalation_policies_list_response
 
         query = EscalationPolicyQuery(include=["services", "teams"])
@@ -189,17 +179,15 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"include[]": ["services", "teams"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            entity="escalation_policies", params=expected_params
         )
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_with_all_filters(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_with_all_filters(self, mock_paginate):
         """Test listing escalation policies with all filters applied."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_escalation_policies_list_response[0]]
 
         query = EscalationPolicyQuery(
@@ -220,17 +208,15 @@ class TestEscalationPolicyTools(unittest.TestCase):
             "limit": 50,
         }
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            entity="escalation_policies", params=expected_params
         )
 
         # Verify result
         self.assertEqual(len(result.response), 1)
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_with_custom_limit(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_with_custom_limit(self, mock_paginate):
         """Test listing escalation policies with custom limit."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_escalation_policies_list_response
 
         query = EscalationPolicyQuery(limit=50)
@@ -239,17 +225,15 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"limit": 50}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            entity="escalation_policies", params=expected_params
         )
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_empty_response(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_empty_response(self, mock_paginate):
         """Test listing escalation policies when paginate returns empty list."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = EscalationPolicyQuery(query="NonExistentPolicy")
@@ -258,17 +242,15 @@ class TestEscalationPolicyTools(unittest.TestCase):
         # Verify paginate call
         expected_params = {"query": "NonExistentPolicy", "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params=expected_params
+            entity="escalation_policies", params=expected_params
         )
 
         # Verify result
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
-    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
-    def test_list_escalation_policies_paginate_error(self, mock_get_client, mock_paginate):
+    def test_list_escalation_policies_paginate_error(self, mock_paginate):
         """Test list_escalation_policies when paginate raises an exception."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
         query = EscalationPolicyQuery()

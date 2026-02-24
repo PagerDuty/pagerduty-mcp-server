@@ -24,7 +24,6 @@ def list_incident_workflows(query_model: IncidentWorkflowQuery | None = None) ->
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
         entity="incident_workflows",
         params=params,
         maximum_records=query_model.limit or 100,

@@ -73,17 +73,15 @@ class TestServiceTools(unittest.TestCase):
         self.mock_client.rput.side_effect = None
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    @patch("pagerduty_mcp.tools.services.get_client")
-    def test_list_services_no_filters(self, mock_get_client, mock_paginate):
+    def test_list_services_no_filters(self, mock_paginate):
         """Test listing services without any filters."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_services_list_response
 
         query = ServiceQuery()
         result = list_services(query)
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=query.to_params())
+        mock_paginate.assert_called_once_with(entity="services", params=query.to_params())
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -95,10 +93,8 @@ class TestServiceTools(unittest.TestCase):
         self.assertEqual(result.response[1].name, "Database Service")
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    @patch("pagerduty_mcp.tools.services.get_client")
-    def test_list_services_with_query_filter(self, mock_get_client, mock_paginate):
+    def test_list_services_with_query_filter(self, mock_paginate):
         """Test listing services with query filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[0]]
 
         query = ServiceQuery(query="Web")
@@ -106,17 +102,15 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "Web", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="services", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].name, "Web Application Service")
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    @patch("pagerduty_mcp.tools.services.get_client")
-    def test_list_services_with_teams_filter(self, mock_get_client, mock_paginate):
+    def test_list_services_with_teams_filter(self, mock_paginate):
         """Test listing services with teams filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[1]]
 
         query = ServiceQuery(teams_ids=["TEAM2"])
@@ -124,17 +118,15 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM2"], "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="services", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].name, "Database Service")
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    @patch("pagerduty_mcp.tools.services.get_client")
-    def test_list_services_with_custom_limit(self, mock_get_client, mock_paginate):
+    def test_list_services_with_custom_limit(self, mock_paginate):
         """Test listing services with custom limit."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_services_list_response
 
         query = ServiceQuery(limit=50)
@@ -142,16 +134,14 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"limit": 50}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with( entity="services", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    @patch("pagerduty_mcp.tools.services.get_client")
-    def test_list_services_with_all_filters(self, mock_get_client, mock_paginate):
+    def test_list_services_with_all_filters(self, mock_paginate):
         """Test listing services with all filters applied."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[0]]
 
         query = ServiceQuery(query="Web", teams_ids=["TEAM1"], limit=10)
@@ -159,17 +149,15 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "Web", "team_ids[]": ["TEAM1"], "limit": 10}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="services", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].name, "Web Application Service")
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    @patch("pagerduty_mcp.tools.services.get_client")
-    def test_list_services_empty_response(self, mock_get_client, mock_paginate):
+    def test_list_services_empty_response(self, mock_paginate):
         """Test listing services when paginate returns empty list."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
         query = ServiceQuery(query="NonExistentService")
@@ -177,16 +165,14 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "NonExistentService", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(entity="services", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.services.paginate")
-    @patch("pagerduty_mcp.tools.services.get_client")
-    def test_list_services_paginate_error(self, mock_get_client, mock_paginate):
+    def test_list_services_paginate_error(self, mock_paginate):
         """Test list_services when paginate raises an exception."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
         query = ServiceQuery()

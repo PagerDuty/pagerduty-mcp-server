@@ -17,7 +17,6 @@ def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[Chang
     """
     params = query_model.to_params()
     response = paginate(
-        client=get_client(),
         entity="change_events",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -56,7 +55,6 @@ def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -
     """
     params = query_model.to_params()
     response = paginate(
-        client=get_client(),
         entity=f"services/{service_id}/change_events",
         params=params,
         maximum_records=query_model.limit or 100,
@@ -80,7 +78,6 @@ def list_incident_change_events(incident_id: str, limit: int | None = None) -> L
         params["limit"] = limit
 
     response = paginate(
-        client=get_client(),
         entity=f"incidents/{incident_id}/related_change_events",
         params=params,
         maximum_records=limit or 100,

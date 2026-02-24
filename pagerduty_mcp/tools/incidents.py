@@ -46,8 +46,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             user_team_ids = [team.id for team in user_data.teams]
             params["team_ids[]"] = user_team_ids
 
-    response = paginate(
-        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
+    response = paginate(entity="incidents", params=params, maximum_records=query_model.limit or 100
     )
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)

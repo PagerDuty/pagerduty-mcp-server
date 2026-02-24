@@ -99,10 +99,8 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         self.mock_client.rdelete.side_effect = None
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.paginate")
-    @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
-    def test_list_alert_grouping_settings_no_filters(self, mock_get_client, mock_paginate):
+    def test_list_alert_grouping_settings_no_filters(self, mock_paginate):
         """Test listing alert grouping settings without any filters."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_list_response
 
         query = AlertGroupingSettingQuery()
@@ -110,7 +108,6 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
 
         # Verify paginate call
         mock_paginate.assert_called_once_with(
-            client=self.mock_client,
             entity="alert_grouping_settings",
             params=query.to_params(),
             maximum_records=query.limit or 1000,
@@ -127,10 +124,8 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         self.assertEqual(result.response[2].id, "PAGS789")
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.paginate")
-    @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
-    def test_list_alert_grouping_settings_with_service_filter(self, mock_get_client, mock_paginate):
+    def test_list_alert_grouping_settings_with_service_filter(self, mock_paginate):
         """Test listing alert grouping settings with service filter."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_alert_grouping_setting]
 
         query = AlertGroupingSettingQuery(service_ids=["PSERVICE1"])
@@ -138,7 +133,6 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
 
         # Verify paginate call with correct parameters
         mock_paginate.assert_called_once_with(
-            client=self.mock_client,
             entity="alert_grouping_settings",
             params={"service_ids[]": ["PSERVICE1"], "limit": 20},
             maximum_records=20,
@@ -149,10 +143,8 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PAGS123")
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.paginate")
-    @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
-    def test_list_alert_grouping_settings_with_limit(self, mock_get_client, mock_paginate):
+    def test_list_alert_grouping_settings_with_limit(self, mock_paginate):
         """Test listing alert grouping settings with custom limit."""
-        mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_list_response[:2]
 
         query = AlertGroupingSettingQuery(limit=50)
@@ -160,7 +152,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
 
         # Verify paginate call with custom limit
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="alert_grouping_settings", params={"limit": 50}, maximum_records=50
+            entity="alert_grouping_settings", params={"limit": 50}, maximum_records=50
         )
 
         # Verify result

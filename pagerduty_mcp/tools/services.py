@@ -12,7 +12,7 @@ def list_services(query_model: ServiceQuery) -> ListResponseModel[Service]:
     Returns:
         List of services matching the query parameters
     """
-    response = paginate(client=get_client(), entity="services", params=query_model.to_params())
+    response = paginate(entity="services", params=query_model.to_params())
     services = [Service(**service) for service in response]
     return ListResponseModel[Service](response=services)
 

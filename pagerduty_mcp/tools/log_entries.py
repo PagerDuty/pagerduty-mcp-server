@@ -42,7 +42,6 @@ def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
         entity="log_entries",
         params=params,
         maximum_records=query_model.limit or 100,

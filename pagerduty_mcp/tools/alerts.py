@@ -31,7 +31,6 @@ def list_alerts_from_incident(incident_id: str, query_model: AlertQuery) -> List
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(),
         entity=f"incidents/{incident_id}/alerts",
         params=params,
         maximum_records=query_model.limit or 100,

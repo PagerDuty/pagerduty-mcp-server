@@ -116,9 +116,8 @@ class TestStatusPagesTools(unittest.TestCase):
             "type": "status_page_post_update",
         }
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_pages_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_pages_basic(self, mock_paginate):
         """Test basic Status Pages listing."""
         mock_paginate.return_value = [self.sample_status_page_data]
 
@@ -131,9 +130,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PT4KHLK")
         self.assertEqual(result.response[0].name, "My brand Status Page")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_pages_filter_by_type(self, mock_paginate, mock_get_client):
+    def test_list_status_pages_filter_by_type(self, mock_paginate):
         """Test Status Pages listing with type filter."""
         mock_paginate.return_value = [self.sample_status_page_data]
 
@@ -144,9 +142,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].status_page_type, "private")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_severities_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_page_severities_basic(self, mock_paginate):
         """Test basic Severity listing."""
         mock_paginate.return_value = [self.sample_severity_data]
 
@@ -159,9 +156,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PIJ90N7")
         self.assertEqual(result.response[0].description, "all good")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_severities_filter_by_post_type(self, mock_paginate, mock_get_client):
+    def test_list_status_page_severities_filter_by_post_type(self, mock_paginate):
         """Test Severity listing with post type filter."""
         mock_paginate.return_value = [self.sample_severity_data]
 
@@ -172,9 +168,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].post_type, "incident")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_impacts_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_page_impacts_basic(self, mock_paginate):
         """Test basic Impact listing."""
         mock_paginate.return_value = [self.sample_impact_data]
 
@@ -187,9 +182,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PIJ90N7")
         self.assertEqual(result.response[0].description, "operational")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_impacts_filter_by_post_type(self, mock_paginate, mock_get_client):
+    def test_list_status_page_impacts_filter_by_post_type(self, mock_paginate):
         """Test Impact listing with post type filter."""
         mock_paginate.return_value = [self.sample_impact_data]
 
@@ -200,9 +194,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].post_type, "incident")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_statuses_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_page_statuses_basic(self, mock_paginate):
         """Test basic Status listing."""
         mock_paginate.return_value = [self.sample_status_data]
 
@@ -215,9 +208,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PIJ90N7")
         self.assertEqual(result.response[0].description, "investigating")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_statuses_filter_by_post_type(self, mock_paginate, mock_get_client):
+    def test_list_status_page_statuses_filter_by_post_type(self, mock_paginate):
         """Test Status listing with post type filter."""
         mock_paginate.return_value = [self.sample_status_data]
 
@@ -393,9 +385,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result, StatusPagePostUpdate)
         self.assertEqual(result.id, "PXSOCH0")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_post_updates_basic(self, mock_paginate, mock_get_client):
+    def test_list_status_page_post_updates_basic(self, mock_paginate):
         """Test basic Post Update listing."""
         mock_paginate.return_value = [self.sample_post_update_data]
 
@@ -407,9 +398,8 @@ class TestStatusPagesTools(unittest.TestCase):
         self.assertIsInstance(result.response[0], StatusPagePostUpdate)
         self.assertEqual(result.response[0].id, "PXSOCH0")
 
-    @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
-    def test_list_status_page_post_updates_filter_by_reviewed_status(self, mock_paginate, mock_get_client):
+    def test_list_status_page_post_updates_filter_by_reviewed_status(self, mock_paginate):
         """Test Post Update listing with reviewed status filter."""
         mock_paginate.return_value = [self.sample_post_update_data]
 

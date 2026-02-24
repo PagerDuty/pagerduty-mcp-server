@@ -1261,14 +1261,10 @@ class TestAlertTools(unittest.TestCase):
         mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/alerts/PALERT123")
 
     @patch("pagerduty_mcp.tools.alerts.paginate")
-    @patch("pagerduty_mcp.tools.alerts.get_client")
-    def test_list_alerts_from_incident(self, mock_get_client, mock_paginate):
+    def test_list_alerts_from_incident(self, mock_paginate):
         """Test listing alerts for an incident."""
         # Arrange
-        mock_client = Mock()
-        mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_alert_data]
-
         query_model = AlertQuery(limit=10, offset=0)
 
         # Act
@@ -1282,12 +1278,9 @@ class TestAlertTools(unittest.TestCase):
         mock_paginate.assert_called_once()
 
     @patch("pagerduty_mcp.tools.alerts.paginate")
-    @patch("pagerduty_mcp.tools.alerts.get_client")
-    def test_list_alerts_from_incident_empty_result(self, mock_get_client, mock_paginate):
+    def test_list_alerts_from_incident_empty_result(self, mock_paginate):
         """Test listing alerts when no alerts exist."""
         # Arrange
-        mock_client = Mock()
-        mock_get_client.return_value = mock_client
         mock_paginate.return_value = []
 
         query_model = AlertQuery()

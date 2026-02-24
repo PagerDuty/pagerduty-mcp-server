@@ -22,9 +22,7 @@ def list_alert_grouping_settings(query_model: AlertGroupingSettingQuery) -> List
     """
     params = query_model.to_params()
 
-    response = paginate(
-        client=get_client(), entity="alert_grouping_settings", params=params, maximum_records=query_model.limit or 1000
-    )
+    response = paginate(entity="alert_grouping_settings", params=params, maximum_records=query_model.limit or 1000)
 
     settings = [AlertGroupingSetting(**setting) for setting in response]
     return ListResponseModel[AlertGroupingSetting](response=settings)

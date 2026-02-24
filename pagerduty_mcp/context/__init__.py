@@ -32,7 +32,7 @@ class ContextResolver:
     or mocking for tests) and the rest of the application code would not need to be changed.
 
     A single-tenant application should set the PAGERDUTY_USER_API_KEY environment
-    variable, then initialize the strategy at application startup:
+    variable (and perhaps, PAGERDUTY_API_HOST), then initialize the strategy at application startup:
 
         ContextResolver.set_strategy(ApplicationContextStrategy())
 
@@ -51,16 +51,14 @@ class ContextResolver:
                 way as a single-tenant application ...
     """
 
-    _context_strategy: Optional[ContextStrategy] = None
+    _context_strategy: Optional[ContextStrategy]
 
     @staticmethod
     def set_strategy(strategy: ContextStrategy) -> None:
-        """Set the context strategy directly (primarily for testing)."""
         ContextResolver._context_strategy = strategy
 
     @staticmethod
     def get_strategy() -> ContextStrategy:
-        """Get the current context strategy, initializing it if necessary."""
         if ContextResolver._context_strategy is None:
             raise RuntimeError("No context strategy is available")
 
@@ -68,15 +66,14 @@ class ContextResolver:
 
     @staticmethod
     def use_context(context: MCPContext):
-        """Helper to use a context with the current strategy."""
         return ContextResolver.get_strategy().use_context(context)
 
     @staticmethod
     def get_client() -> RestApiV2Client:
-        """Get the PagerDuty client from the current context."""
+        """A shortcut to a PagerDuty client instance for API calls."""
         return ContextResolver.get_strategy().context.client
 
     @staticmethod
     def get_user() -> Optional[User]:
-        """Get the user from the current context."""
+        """A shortcut to the current PagerDuty user (if available)."""
         return ContextResolver.get_strategy().context.user

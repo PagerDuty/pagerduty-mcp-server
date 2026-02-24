@@ -39,7 +39,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     if query_model.request_scope in ["assigned", "teams"]:
         user_data = ContextResolver.get_user()
         if user_data is None:
-            raise RuntimeError(f"User-level authentication is required to fetch {query_model.request_scope} incidents.")
+            raise ValueError(f"Cannot filter incidents by \"{query_model.request_scope}\" with account-level auth. Please provide a user token, or scope the request differently.")
 
         if query_model.request_scope == "assigned":
             params["user_ids[]"] = [user_data.id]

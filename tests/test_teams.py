@@ -111,6 +111,17 @@ class TestTeamTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "TEAM123")
         self.assertEqual(result.response[0].name, "Backend Engineering")
 
+    def test_list_teams_my_scope_no_user(self):
+        """Test listing teams with 'my' scope when no user is in context."""
+        self.mock_strategy.context.user = None  # Ensure no user in context
+
+        query = TeamQuery(scope="my")
+
+        with self.assertRaises(ValueError) as context:
+            list_teams(query)
+
+        self.assertIn("Cannot fetch 'my' teams", str(context.exception))
+
     @patch("pagerduty_mcp.tools.teams.paginate")
     @patch("pagerduty_mcp.tools.teams.get_client")
     def test_list_teams_with_query_filter(self, mock_get_client, mock_paginate):

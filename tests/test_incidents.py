@@ -250,10 +250,10 @@ class TestIncidentTools(unittest.TestCase):
         # Test with user required query
         query = IncidentQuery(request_scope="assigned")
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(ValueError) as context:
             list_incidents(query)
 
-        self.assertIn("User-level authentication is required", str(context.exception))
+        self.assertIn("Cannot filter incidents", str(context.exception))
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_with_filters(self, mock_paginate):

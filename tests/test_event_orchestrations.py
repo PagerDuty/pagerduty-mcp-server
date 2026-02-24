@@ -1,6 +1,9 @@
 import unittest
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+from pagerduty_mcp.context import ContextResolver
+from tests.mock_context_strategy import MockContextStrategy
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.event_orchestrations import (
@@ -135,6 +138,11 @@ class TestEventOrchestrationTools(unittest.TestCase):
             }
         }
 
+    def setUp(self):
+        """Reset mock before each test."""
+        self.mock_strategy = MockContextStrategy()
+        ContextResolver.set_strategy(self.mock_strategy)
+
     def test_event_orchestration_query_model(self):
         """Test EventOrchestrationQuery model functionality."""
         # Test default values
@@ -212,13 +220,11 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(len(result.response), 0)
         mock_paginate.assert_called_once()
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_get_event_orchestration_success(self, mock_get_client):
+    def test_get_event_orchestration_success(self):
         """Test successful get_event_orchestration call."""
         # Mock the client response
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rget.return_value = {"orchestration": self.sample_orchestration_response}
-        mock_get_client.return_value = mock_client
 
         # Call function
         result = get_event_orchestration("b02e973d-9620-4e0a-9edc-00fedf7d4694")
@@ -235,13 +241,11 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(result.team.id, "PQYP5MN")
         self.assertEqual(len(result.integrations), 1)
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_get_event_orchestration_direct_response(self, mock_get_client):
+    def test_get_event_orchestration_direct_response(self):
         """Test get_event_orchestration with direct response (no wrapper)."""
         # Mock the client response without wrapper
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rget.return_value = self.sample_orchestration_response
-        mock_get_client.return_value = mock_client
 
         # Call function
         result = get_event_orchestration("b02e973d-9620-4e0a-9edc-00fedf7d4694")
@@ -251,13 +255,11 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(result.id, "b02e973d-9620-4e0a-9edc-00fedf7d4694")
         self.assertEqual(result.name, "Shopping Cart Orchestration")
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_get_event_orchestration_router_success(self, mock_get_client):
+    def test_get_event_orchestration_router_success(self):
         """Test successful get_event_orchestration_router call."""
         # Mock the client response
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rget.return_value = self.sample_router_response
-        mock_get_client.return_value = mock_client
 
         # Call function
         result = get_event_orchestration_router("b02e973d-9620-4e0a-9edc-00fedf7d4694")
@@ -383,8 +385,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertIsInstance(orchestration.created_at, datetime)
         self.assertIsInstance(orchestration.updated_at, datetime)
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_get_event_orchestration_router_direct_response(self, mock_get_client):
+    def test_get_event_orchestration_router_direct_response(self):
         """Test get_event_orchestration_router handles direct API responses correctly."""
         # API response without orchestration_path wrapper
         direct_router_response = {
@@ -416,9 +417,8 @@ class TestEventOrchestrationTools(unittest.TestCase):
             "version": "abc123def456ghi789jkl012mno345pqr",
         }
 
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rget.return_value = direct_router_response
-        mock_get_client.return_value = mock_client
 
         result = get_event_orchestration_router("b02e973d-9620-4e0a-9edc-00fedf7d4694")
 
@@ -474,13 +474,11 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(len(router.orchestration_path.sets), 0)  # Should handle empty sets
         self.assertEqual(router.orchestration_path.catch_all.actions.route_to, "unrouted")
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_update_event_orchestration_router_success(self, mock_get_client):
+    def test_update_event_orchestration_router_success(self):
         """Test successful update_event_orchestration_router call."""
         # Mock the client response
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rput.return_value = self.sample_router_response
-        mock_get_client.return_value = mock_client
 
         # Create update request using factory method to exclude readonly fields
         from pagerduty_mcp.models.event_orchestrations import EventOrchestrationPath
@@ -501,14 +499,12 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(result.orchestration_path.type, "router")
         self.assertEqual(result.orchestration_path.parent.id, "b02e973d-9620-4e0a-9edc-00fedf7d4694")
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_update_event_orchestration_router_direct_response(self, mock_get_client):
+    def test_update_event_orchestration_router_direct_response(self):
         """Test update_event_orchestration_router with direct API response (no wrapper)."""
         # Mock the client to return direct response format
         direct_response = self.sample_router_response["orchestration_path"]
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rput.return_value = direct_response
-        mock_get_client.return_value = mock_client
 
         # Create update request using factory method to exclude readonly fields
         from pagerduty_mcp.models.event_orchestrations import EventOrchestrationPath
@@ -524,13 +520,10 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(result.orchestration_path.type, "router")
         self.assertEqual(result.orchestration_path.parent.id, "b02e973d-9620-4e0a-9edc-00fedf7d4694")
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_append_event_orchestration_router_rule_success(self, mock_get_client):
+    def test_append_event_orchestration_router_rule_success(self):
         """Test successful append_event_orchestration_router_rule call."""
-        # Mock the client responses
-        mock_client = MagicMock()
-
         # Mock GET response (current router config)
+        mock_client = self.mock_strategy.client
         mock_client.rget.return_value = self.sample_router_response
 
         # Mock PUT response (updated router config with new rule)
@@ -554,7 +547,6 @@ class TestEventOrchestrationTools(unittest.TestCase):
             }
         }
         mock_client.rput.return_value = updated_response
-        mock_get_client.return_value = mock_client
 
         # Create new rule request
         new_rule = EventOrchestrationRuleCreateRequest(
@@ -589,8 +581,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertIsInstance(result, EventOrchestrationRouter)
         self.assertEqual(len(result.orchestration_path.sets[0].rules), 3)
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_append_event_orchestration_router_rule_empty_rules(self, mock_get_client):
+    def test_append_event_orchestration_router_rule_empty_rules(self):
         """Test append_event_orchestration_router_rule with empty existing rules."""
         # Create router response with empty rules
         empty_router_response = {
@@ -613,7 +604,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         }
 
         # Mock the client responses
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rget.return_value = empty_router_response
 
         # Mock PUT response with the new rule added
@@ -636,7 +627,6 @@ class TestEventOrchestrationTools(unittest.TestCase):
             }
         }
         mock_client.rput.return_value = updated_response
-        mock_get_client.return_value = mock_client
 
         # Create new rule request
         new_rule = EventOrchestrationRuleCreateRequest(
@@ -844,9 +834,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         # we're mixing objects and dicts before model validation
 
     # Tests for Service Orchestration
-
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_get_event_orchestration_service_success(self, mock_get_client):
+    def test_get_event_orchestration_service_success(self):
         """Test successful get_event_orchestration_service call with wrapped response."""
         sample_service_orchestration_response = {
             "orchestration_path": {
@@ -889,9 +877,8 @@ class TestEventOrchestrationTools(unittest.TestCase):
             }
         }
 
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.jget.return_value = sample_service_orchestration_response
-        mock_get_client.return_value = mock_client
 
         result = get_event_orchestration_service("PC2D9ML")
 
@@ -905,8 +892,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(len(result.orchestration_path.sets), 1)
         self.assertEqual(result.orchestration_path.sets[0].id, "start")
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_get_event_orchestration_service_direct_response(self, mock_get_client):
+    def test_get_event_orchestration_service_direct_response(self):
         """Test get_event_orchestration_service with direct response (no wrapper)."""
         sample_direct_response = {
             "type": "service",
@@ -937,9 +923,8 @@ class TestEventOrchestrationTools(unittest.TestCase):
             "version": "version123",
         }
 
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.jget.return_value = sample_direct_response
-        mock_get_client.return_value = mock_client
 
         result = get_event_orchestration_service("PC2D9ML")
 
@@ -1023,8 +1008,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
     # Tests for Global Orchestration
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_get_event_orchestration_global_success(self, mock_get_client):
+    def test_get_event_orchestration_global_success(self):
         """Test successful get_event_orchestration_global call with wrapped response."""
         sample_global_orchestration_response = {
             "orchestration_path": {
@@ -1073,9 +1057,8 @@ class TestEventOrchestrationTools(unittest.TestCase):
             }
         }
 
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rget.return_value = sample_global_orchestration_response
-        mock_get_client.return_value = mock_client
 
         result = get_event_orchestration_global("b02e973d-9620-4e0a-9edc-00fedf7d4694")
 
@@ -1095,8 +1078,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(drop_rule.label, "Drop all events from the very-noisy monitoring tool")
         self.assertTrue(drop_rule.actions.drop_event)
 
-    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
-    def test_get_event_orchestration_global_direct_response(self, mock_get_client):
+    def test_get_event_orchestration_global_direct_response(self):
         """Test get_event_orchestration_global with direct response (no wrapper)."""
         sample_direct_response = {
             "type": "global",
@@ -1125,9 +1107,8 @@ class TestEventOrchestrationTools(unittest.TestCase):
             "version": "version456",
         }
 
-        mock_client = MagicMock()
+        mock_client = self.mock_strategy.client
         mock_client.rget.return_value = sample_direct_response
-        mock_get_client.return_value = mock_client
 
         result = get_event_orchestration_global("GLOBAL123")
 

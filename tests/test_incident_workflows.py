@@ -1,7 +1,10 @@
 """Unit tests for incident workflow tools."""
 
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
+from pagerduty_mcp.context import ContextResolver
+from tests.mock_context_strategy import MockContextStrategy
 
 from pagerduty_mcp.models import (
     IncidentReference,
@@ -83,6 +86,13 @@ class TestIncidentWorkflowTools(unittest.TestCase):
             },
         }
 
+    def setUp(self):
+        """Set up test fixtures before each test method."""
+        strategy = MockContextStrategy()
+        self.mock_client = strategy.client
+
+        ContextResolver.set_strategy(strategy)
+
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
     def test_list_incident_workflows_basic(self, mock_paginate):
         """Test basic workflow listing."""
@@ -163,12 +173,9 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         call_args = mock_paginate.call_args
         self.assertEqual(call_args.kwargs["maximum_records"], 100)
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_get_incident_workflow_success(self, mock_get_client):
+    def test_get_incident_workflow_success(self):
         """Test getting a specific workflow successfully."""
-        mock_client = Mock()
-        mock_client.rget.return_value = self.sample_workflow_with_steps
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = self.sample_workflow_with_steps
 
         result = get_incident_workflow("PSFEVL7")
 
@@ -177,14 +184,11 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(result.name, "Example Incident Workflow")
         self.assertIsNotNone(result.steps)
         self.assertEqual(len(result.steps), 1)
-        mock_client.rget.assert_called_once_with("/incident_workflows/PSFEVL7")
+        self.mock_client.rget.assert_called_once_with("/incident_workflows/PSFEVL7")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_get_incident_workflow_wrapped_response(self, mock_get_client):
+    def test_get_incident_workflow_wrapped_response(self):
         """Test getting a workflow with wrapped response."""
-        mock_client = Mock()
-        mock_client.rget.return_value = {"incident_workflow": self.sample_workflow_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = {"incident_workflow": self.sample_workflow_data}
 
         result = get_incident_workflow("PSFEVL7")
 
@@ -192,24 +196,18 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(result.id, "PSFEVL7")
         self.assertEqual(result.name, "Example Incident Workflow")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_get_incident_workflow_unwrapped_response(self, mock_get_client):
+    def test_get_incident_workflow_unwrapped_response(self):
         """Test getting a workflow with unwrapped response."""
-        mock_client = Mock()
-        mock_client.rget.return_value = self.sample_workflow_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rget.return_value = self.sample_workflow_data
 
         result = get_incident_workflow("PSFEVL7")
 
         self.assertIsInstance(result, IncidentWorkflow)
         self.assertEqual(result.id, "PSFEVL7")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_start_incident_workflow_success(self, mock_get_client):
+    def test_start_incident_workflow_success(self):
         """Test starting a workflow successfully."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = self.sample_instance_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = self.sample_instance_data
 
         incident_ref = IncidentReference(id="Q1R2DLCB21K7NP")
         instance_create = IncidentWorkflowInstanceCreate(incident=incident_ref)
@@ -220,14 +218,11 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertIsInstance(result, IncidentWorkflowInstance)
         self.assertEqual(result.id, "P3SNKQS")
         self.assertEqual(result.incident.id, "Q1R2DLCB21K7NP")
-        mock_client.rpost.assert_called_once()
+        self.mock_client.rpost.assert_called_once()
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_start_incident_workflow_wrapped_response(self, mock_get_client):
+    def test_start_incident_workflow_wrapped_response(self):
         """Test starting a workflow with wrapped response."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = {"incident_workflow_instance": self.sample_instance_data}
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = {"incident_workflow_instance": self.sample_instance_data}
 
         incident_ref = IncidentReference(id="Q1R2DLCB21K7NP")
         instance_create = IncidentWorkflowInstanceCreate(incident=incident_ref)
@@ -238,12 +233,9 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertIsInstance(result, IncidentWorkflowInstance)
         self.assertEqual(result.id, "P3SNKQS")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_start_incident_workflow_unwrapped_response(self, mock_get_client):
+    def test_start_incident_workflow_unwrapped_response(self):
         """Test starting a workflow with unwrapped response."""
-        mock_client = Mock()
-        mock_client.rpost.return_value = self.sample_instance_data
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = self.sample_instance_data
 
         incident_ref = IncidentReference(id="Q1R2DLCB21K7NP")
         instance_create = IncidentWorkflowInstanceCreate(incident=incident_ref)
@@ -254,14 +246,11 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertIsInstance(result, IncidentWorkflowInstance)
         self.assertEqual(result.id, "P3SNKQS")
 
-    @patch("pagerduty_mcp.tools.incident_workflows.get_client")
-    def test_start_incident_workflow_with_custom_id(self, mock_get_client):
+    def test_start_incident_workflow_with_custom_id(self):
         """Test starting a workflow with custom instance ID."""
-        mock_client = Mock()
         instance_data_with_custom_id = self.sample_instance_data.copy()
         instance_data_with_custom_id["id"] = "CUSTOM123"
-        mock_client.rpost.return_value = instance_data_with_custom_id
-        mock_get_client.return_value = mock_client
+        self.mock_client.rpost.return_value = instance_data_with_custom_id
 
         incident_ref = IncidentReference(id="Q1R2DLCB21K7NP")
         instance_create = IncidentWorkflowInstanceCreate(id="CUSTOM123", incident=incident_ref)

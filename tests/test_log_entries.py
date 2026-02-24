@@ -2,7 +2,10 @@
 
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
+from pagerduty_mcp.context import ContextResolver
+from tests.mock_context_strategy import MockContextStrategy
 
 from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
 from pagerduty_mcp.tools.log_entries import get_log_entry, list_log_entries
@@ -78,13 +81,17 @@ class TestLogEntryTools(unittest.TestCase):
             },
         }
 
-    @patch("pagerduty_mcp.tools.log_entries.get_client")
-    def test_get_log_entry(self, mock_get_client):
+    def setUp(self):
+        """Set up test fixtures before each test method."""
+        # Set up a mock context resolver for tools that require it
+        self.mock_context = MockContextStrategy()
+        ContextResolver.set_strategy(self.mock_context)
+
+    def test_get_log_entry(self):
         """Test getting a specific log entry."""
         # Arrange
-        mock_client = Mock()
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = self.sample_log_entry_data
-        mock_get_client.return_value = mock_client
 
         # Act
         result = get_log_entry("PLOGENTRY123")
@@ -188,13 +195,11 @@ class TestLogEntryTools(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, ListResponseModel)
 
-    @patch("pagerduty_mcp.tools.log_entries.get_client")
-    def test_get_log_entry_with_channel_without_type(self, mock_get_client):
+    def test_get_log_entry_with_channel_without_type(self):
         """Test getting a log entry where channel doesn't have a type field."""
         # Arrange
-        mock_client = Mock()
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = self.sample_service_change_log_entry
-        mock_get_client.return_value = mock_client
 
         # Act
         result = get_log_entry("PLOGENTRY456")

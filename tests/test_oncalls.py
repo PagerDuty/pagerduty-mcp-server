@@ -1,13 +1,15 @@
 import unittest
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.oncalls import Oncall, OncallQuery
 from pagerduty_mcp.tools.oncalls import list_oncalls
 
 
-class TestOncallTools(unittest.TestCase):
+class TestOncallTools(ContextTestCase):
     """Test cases for oncall tools."""
 
     @classmethod
@@ -73,12 +75,6 @@ class TestOncallTools(unittest.TestCase):
                 "end": "2023-12-15T00:00:00Z",
             },
         ]
-
-        cls.mock_client = MagicMock()
-
-    def setUp(self):
-        """Reset mock before each test."""
-        self.mock_client.reset_mock()
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
     def test_list_oncalls_no_filters(self, mock_paginate):

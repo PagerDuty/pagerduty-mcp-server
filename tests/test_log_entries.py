@@ -4,14 +4,13 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
 from pagerduty_mcp.tools.log_entries import get_log_entry, list_log_entries
 
 
-class TestLogEntryTools(unittest.TestCase):
+class TestLogEntryTools(ContextTestCase):
     """Test cases for log entry tools."""
 
     @classmethod
@@ -80,12 +79,6 @@ class TestLogEntryTools(unittest.TestCase):
                 "type": "service_reference",
             },
         }
-
-    def setUp(self):
-        """Set up test fixtures before each test method."""
-        # Set up a mock context resolver for tools that require it
-        self.mock_context = MockContextStrategy()
-        ContextResolver.set_strategy(self.mock_context)
 
     def test_get_log_entry(self):
         """Test getting a specific log entry."""

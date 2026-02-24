@@ -2,10 +2,9 @@
 
 import unittest
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models import ListResponseModel
 from pagerduty_mcp.models.status_pages import (
@@ -45,7 +44,7 @@ from pagerduty_mcp.tools.status_pages import (
 )
 
 
-class TestStatusPagesTools(unittest.TestCase):
+class TestStatusPagesTools(ContextTestCase):
     """Test cases for Status Pages tools."""
 
     @classmethod
@@ -118,12 +117,6 @@ class TestStatusPagesTools(unittest.TestCase):
             "reported_at": "2023-12-12T10:08:19Z",
             "type": "status_page_post_update",
         }
-
-    def setUp(self):
-        """Set up test fixtures before each test method."""
-        # Set up a mock context resolver for tools that require it
-        self.mock_context = MockContextStrategy()
-        ContextResolver.set_strategy(self.mock_context)
 
     @patch("pagerduty_mcp.tools.status_pages.paginate")
     def test_list_status_pages_basic(self, mock_paginate):

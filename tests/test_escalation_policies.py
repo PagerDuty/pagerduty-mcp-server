@@ -1,8 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.escalation_policies import (
@@ -17,7 +16,7 @@ from pagerduty_mcp.tools.escalation_policies import (
 )
 
 
-class TestEscalationPolicyTools(unittest.TestCase):
+class TestEscalationPolicyTools(ContextTestCase):
     """Test cases for escalation policy tools."""
 
     @classmethod
@@ -87,13 +86,6 @@ class TestEscalationPolicyTools(unittest.TestCase):
                 "num_loops": 1,
             },
         ]
-
-    def setUp(self):
-        """Reset mock before each test."""
-        strategy = MockContextStrategy()
-        ContextResolver.set_strategy(strategy)
-
-        self.mock_client = strategy.client
 
     @patch("pagerduty_mcp.tools.escalation_policies.paginate")
     def test_list_escalation_policies_no_filters(self, mock_paginate):

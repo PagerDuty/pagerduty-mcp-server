@@ -3,8 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models import (
     IncidentReference,
@@ -22,7 +21,7 @@ from pagerduty_mcp.tools.incident_workflows import (
 )
 
 
-class TestIncidentWorkflowTools(unittest.TestCase):
+class TestIncidentWorkflowTools(ContextTestCase):
     """Test cases for incident workflow tools."""
 
     @classmethod
@@ -85,13 +84,6 @@ class TestIncidentWorkflowTools(unittest.TestCase):
                 "html_url": "https://subdomain.pagerduty.com/incidents/PT4KHLK",
             },
         }
-
-    def setUp(self):
-        """Set up test fixtures before each test method."""
-        strategy = MockContextStrategy()
-        self.mock_client = strategy.client
-
-        ContextResolver.set_strategy(strategy)
 
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
     def test_list_incident_workflows_basic(self, mock_paginate):

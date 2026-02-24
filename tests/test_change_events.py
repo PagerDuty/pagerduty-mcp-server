@@ -2,8 +2,7 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.change_events import (
@@ -19,7 +18,7 @@ from pagerduty_mcp.tools.change_events import (
 )
 
 
-class TestChangeEventTools(unittest.TestCase):
+class TestChangeEventTools(ContextTestCase):
     """Test cases for change event tools."""
 
     @classmethod
@@ -88,13 +87,6 @@ class TestChangeEventTools(unittest.TestCase):
                 "type": "change_event",
             },
         ]
-
-    def setUp(self):
-        """Reset mock before each test."""
-        strategy = MockContextStrategy()
-        ContextResolver.set_strategy(strategy)
-
-        self.mock_client = strategy.client
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
     def test_list_change_events_no_filters(self, mock_paginate):

@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import UserReference
 from pagerduty_mcp.models.teams import Team, TeamCreate, TeamCreateRequest, TeamMemberAdd, TeamQuery
@@ -17,9 +16,9 @@ from pagerduty_mcp.tools.teams import (
     update_team,
 )
 
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
-class TestTeamTools(unittest.TestCase):
+class TestTeamTools(ContextTestCase):
     """Test cases for team tools."""
 
     @classmethod
@@ -66,14 +65,6 @@ class TestTeamTools(unittest.TestCase):
             {"user": {"id": "USER456", "summary": "Jane Smith - Team Lead", "type": "user_reference"}},
         ]
 
-    def setUp(self):
-        """Reset mock before each test."""
-        self.mock_client = MagicMock()
-
-        self.mock_strategy = MockContextStrategy()
-        self.mock_strategy.context.client = self.mock_client
-        ContextResolver.set_strategy(self.mock_strategy)
-
     @patch("pagerduty_mcp.tools.teams.paginate")
     def test_list_teams_all_scope(self, mock_paginate):
         """Test listing teams with 'all' scope."""
@@ -98,7 +89,7 @@ class TestTeamTools(unittest.TestCase):
     def test_list_teams_my_scope(self, mock_paginate):
         """Test listing teams with 'my' scope."""
         mock_paginate.return_value = self.sample_teams_list_response
-        self.mock_strategy.context.user = User.model_validate(self.sample_user_data)
+        self.mock_context.user = User.model_validate(self.sample_user_data)
 
         query = TeamQuery(scope="my")
         result = list_teams(query)
@@ -113,7 +104,7 @@ class TestTeamTools(unittest.TestCase):
 
     def test_list_teams_my_scope_no_user(self):
         """Test listing teams with 'my' scope when no user is in context."""
-        self.mock_strategy.context.user = None  # Ensure no user in context
+        self.mock_context.user = None  # Ensure no user in context
 
         query = TeamQuery(scope="my")
 

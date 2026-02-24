@@ -3,8 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models import (
     AlertGroupingSetting,
@@ -28,7 +27,7 @@ from pagerduty_mcp.tools.alert_grouping_settings import (
 )
 
 
-class TestAlertGroupingSettingsTools(unittest.TestCase):
+class TestAlertGroupingSettingsTools(ContextTestCase):
     """Test cases for alert grouping settings tools."""
 
     @classmethod
@@ -89,12 +88,6 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
             cls.sample_time_based_setting,
             cls.sample_intelligent_setting,
         ]
-
-    def setUp(self):
-        """Reset mock before each test."""
-        strategy = MockContextStrategy()
-        ContextResolver.set_strategy(strategy)
-        self.mock_client = strategy.client
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.paginate")
     def test_list_alert_grouping_settings_no_filters(self, mock_paginate):

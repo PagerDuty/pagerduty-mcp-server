@@ -4,8 +4,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
@@ -50,10 +49,7 @@ from pagerduty_mcp.tools.incidents import (
     manage_incidents,
 )
 
-from tests.mock_context_strategy import MockContextStrategy
-
-
-class TestIncidentTools(unittest.TestCase):
+class TestIncidentTools(ContextTestCase):
     """Test cases for incident tools."""
 
     @classmethod
@@ -170,11 +166,6 @@ class TestIncidentTools(unittest.TestCase):
                 },
             ]
         }
-
-    def setUp(self):
-        """Set up test fixtures before each test method."""
-        self.mock_context = MockContextStrategy()
-        ContextResolver.set_strategy(self.mock_context)
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_basic(self, mock_paginate):
@@ -1152,7 +1143,7 @@ class TestIncidentTools(unittest.TestCase):
         )
 
 
-class TestAlertTools(unittest.TestCase):
+class TestAlertTools(ContextTestCase):
     """Test cases for alert tools."""
 
     @classmethod
@@ -1192,11 +1183,6 @@ class TestAlertTools(unittest.TestCase):
             "severity": "critical",
             "suppressed": False,
         }
-
-    def setUp(self):
-        """Set up test fixtures before each test method."""
-        self.mock_context = MockContextStrategy()
-        ContextResolver.set_strategy(self.mock_context)
 
     def test_get_alert_from_incident(self):
         """Test getting a specific alert from an incident."""

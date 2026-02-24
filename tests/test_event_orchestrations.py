@@ -2,8 +2,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.event_orchestrations import (
@@ -28,7 +27,7 @@ from pagerduty_mcp.tools.event_orchestrations import (
 )
 
 
-class TestEventOrchestrationTools(unittest.TestCase):
+class TestEventOrchestrationTools(ContextTestCase):
     """Test cases for event orchestration tools."""
 
     @classmethod
@@ -138,11 +137,6 @@ class TestEventOrchestrationTools(unittest.TestCase):
             }
         }
 
-    def setUp(self):
-        """Reset mock before each test."""
-        self.mock_strategy = MockContextStrategy()
-        ContextResolver.set_strategy(self.mock_strategy)
-
     def test_event_orchestration_query_model(self):
         """Test EventOrchestrationQuery model functionality."""
         # Test default values
@@ -223,7 +217,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
     def test_get_event_orchestration_success(self):
         """Test successful get_event_orchestration call."""
         # Mock the client response
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = {"orchestration": self.sample_orchestration_response}
 
         # Call function
@@ -244,7 +238,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
     def test_get_event_orchestration_direct_response(self):
         """Test get_event_orchestration with direct response (no wrapper)."""
         # Mock the client response without wrapper
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = self.sample_orchestration_response
 
         # Call function
@@ -258,7 +252,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
     def test_get_event_orchestration_router_success(self):
         """Test successful get_event_orchestration_router call."""
         # Mock the client response
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = self.sample_router_response
 
         # Call function
@@ -417,7 +411,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
             "version": "abc123def456ghi789jkl012mno345pqr",
         }
 
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = direct_router_response
 
         result = get_event_orchestration_router("b02e973d-9620-4e0a-9edc-00fedf7d4694")
@@ -477,7 +471,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
     def test_update_event_orchestration_router_success(self):
         """Test successful update_event_orchestration_router call."""
         # Mock the client response
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rput.return_value = self.sample_router_response
 
         # Create update request using factory method to exclude readonly fields
@@ -503,7 +497,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         """Test update_event_orchestration_router with direct API response (no wrapper)."""
         # Mock the client to return direct response format
         direct_response = self.sample_router_response["orchestration_path"]
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rput.return_value = direct_response
 
         # Create update request using factory method to exclude readonly fields
@@ -523,7 +517,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
     def test_append_event_orchestration_router_rule_success(self):
         """Test successful append_event_orchestration_router_rule call."""
         # Mock GET response (current router config)
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = self.sample_router_response
 
         # Mock PUT response (updated router config with new rule)
@@ -604,7 +598,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         }
 
         # Mock the client responses
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = empty_router_response
 
         # Mock PUT response with the new rule added
@@ -877,7 +871,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
             }
         }
 
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.jget.return_value = sample_service_orchestration_response
 
         result = get_event_orchestration_service("PC2D9ML")
@@ -923,7 +917,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
             "version": "version123",
         }
 
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.jget.return_value = sample_direct_response
 
         result = get_event_orchestration_service("PC2D9ML")
@@ -1057,7 +1051,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
             }
         }
 
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = sample_global_orchestration_response
 
         result = get_event_orchestration_global("b02e973d-9620-4e0a-9edc-00fedf7d4694")
@@ -1107,7 +1101,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
             "version": "version456",
         }
 
-        mock_client = self.mock_strategy.client
+        mock_client = self.mock_context.client
         mock_client.rget.return_value = sample_direct_response
 
         result = get_event_orchestration_global("GLOBAL123")

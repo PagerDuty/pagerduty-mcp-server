@@ -2,8 +2,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from pagerduty_mcp.context import ContextResolver
-from tests.mock_context_strategy import MockContextStrategy
+from tests.context_test_case import ContextTestCase
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import UserReference
@@ -30,7 +29,7 @@ from pagerduty_mcp.tools.schedules import (
 )
 
 
-class TestScheduleTools(unittest.TestCase):
+class TestScheduleTools(ContextTestCase):
     """Test cases for schedule tools."""
 
     @classmethod
@@ -105,13 +104,6 @@ class TestScheduleTools(unittest.TestCase):
             "end": "2023-12-26T00:00:00Z",
             "user": {"id": "USER789", "summary": "Holiday Coverage", "type": "user_reference"},
         }
-
-    def setUp(self):
-        """Reset mock before each test."""
-        mock_strategy = MockContextStrategy()
-        ContextResolver.set_strategy(mock_strategy)
-
-        self.mock_client = mock_strategy.client
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
     def test_list_schedules_no_filters(self, mock_paginate):

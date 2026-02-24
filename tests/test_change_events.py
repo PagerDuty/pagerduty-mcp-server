@@ -1,6 +1,9 @@
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+from pagerduty_mcp.context import ContextResolver
+from tests.mock_context_strategy import MockContextStrategy
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.change_events import (
@@ -86,13 +89,12 @@ class TestChangeEventTools(unittest.TestCase):
             },
         ]
 
-        cls.mock_client = MagicMock()
-
     def setUp(self):
         """Reset mock before each test."""
-        self.mock_client.reset_mock()
-        # Clear any side effects
-        self.mock_client.rget.side_effect = None
+        strategy = MockContextStrategy()
+        ContextResolver.set_strategy(strategy)
+
+        self.mock_client = strategy.client
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
     def test_list_change_events_no_filters(self, mock_paginate):
@@ -227,10 +229,8 @@ class TestChangeEventTools(unittest.TestCase):
         # Verify result
         self.assertEqual(len(result.response), 0)
 
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_get_change_event_success_wrapped_response(self, mock_get_client):
+    def test_get_change_event_success_wrapped_response(self):
         """Test successful retrieval of a specific change event with wrapped response."""
-        mock_get_client.return_value = self.mock_client
         # API response with change_event wrapped in 'change_event' key
         wrapped_response = {"change_event": self.sample_change_event_response}
         self.mock_client.rget.return_value = wrapped_response
@@ -238,7 +238,6 @@ class TestChangeEventTools(unittest.TestCase):
         result = get_change_event("01G6B73PTIFH786FXPLPEKWG5I")
 
         # Verify API call
-        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/change_events/01G6B73PTIFH786FXPLPEKWG5I")
 
         # Verify result
@@ -255,17 +254,14 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(result.custom_details["description"], "This is a test change event sent via the Events API v2")
         self.assertEqual(result.type, "change_event")
 
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_get_change_event_success_direct_response(self, mock_get_client):
+    def test_get_change_event_success_direct_response(self):
         """Test successful retrieval of a specific change event with direct response."""
-        mock_get_client.return_value = self.mock_client
         # API response directly as change event object
         self.mock_client.rget.return_value = self.sample_change_event_response
 
         result = get_change_event("01G6B73PTIFH786FXPLPEKWG5I")
 
         # Verify API call
-        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/change_events/01G6B73PTIFH786FXPLPEKWG5I")
 
         # Verify result
@@ -273,17 +269,14 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(result.id, "01G6B73PTIFH786FXPLPEKWG5I")
         self.assertEqual(result.summary, "Test change event from MCP server")
 
-    @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_get_change_event_client_error(self, mock_get_client):
+    def test_get_change_event_client_error(self):
         """Test get_change_event when client raises an exception."""
-        mock_get_client.return_value = self.mock_client
         self.mock_client.rget.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
             get_change_event("01G6B73PTIFH786FXPLPEKWG5I")
 
         self.assertEqual(str(context.exception), "API Error")
-        mock_get_client.assert_called_once()
         self.mock_client.rget.assert_called_once_with("/change_events/01G6B73PTIFH786FXPLPEKWG5I")
 
     @patch("pagerduty_mcp.tools.change_events.paginate")

@@ -1,6 +1,5 @@
 """Unit tests for incident tools."""
 
-import json
 import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
@@ -973,7 +972,9 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(result.total, 2)
         self.assertEqual(result.limit, 5)
         # limit=50 and total=True are now the defaults
-        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={"limit": 50, "total": True})
+        mock_client.rget.assert_called_once_with(
+            "/incidents/PINCIDENT123/past_incidents", params={"limit": 50, "total": True}
+        )
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_past_incidents_with_params(self, mock_get_client):

@@ -107,7 +107,7 @@ class GetIncidentQuery(BaseModel):
         default=None,
         description="List of additional information to include in the response. "
         "Available options: 'users', 'services', 'assignments', 'acknowledgers', 'custom_fields', "
-        "'teams', 'escalation_policies', 'log_entries', 'notes', 'urgencies', 'priorities'",
+        "'teams', 'escalation_policies', 'notes', 'urgencies', 'priorities'",
     )
 
     def to_params(self) -> dict[str, Any]:

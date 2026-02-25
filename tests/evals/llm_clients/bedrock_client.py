@@ -5,7 +5,6 @@ import os
 import time
 import uuid
 from typing import Any
-from urllib.parse import unquote
 
 import boto3
 import httpx
@@ -47,7 +46,7 @@ class BedrockClient(LLMClient):
         bearer_token = os.environ.get('AWS_BEARER_TOKEN_BEDROCK', '')
 
         if bearer_token:
-            print(f"[DEBUG] Using bearer token authentication from AWS_BEARER_TOKEN_BEDROCK")
+            print("[DEBUG] Using bearer token authentication from AWS_BEARER_TOKEN_BEDROCK")
             self.use_bearer_token = True
             # Extract URL from bearer token (format: "bedrock-api-key-{base64_url}")
             if bearer_token.startswith('bedrock-api-key-'):
@@ -61,7 +60,7 @@ class BedrockClient(LLMClient):
                 self.bearer_url = bearer_token if bearer_token.startswith('http') else f'https://{bearer_token}'
             self.client = None
         else:
-            print(f"[DEBUG] Using boto3 IAM authentication")
+            print("[DEBUG] Using boto3 IAM authentication")
             self.use_bearer_token = False
             self.bearer_url = None
 
@@ -82,7 +81,8 @@ class BedrockClient(LLMClient):
                 session = boto3.Session()
                 credentials = session.get_credentials()
                 print(f"[DEBUG] Credentials type: {type(credentials).__name__}")
-                print(f"[DEBUG] Access Key ID (first 10 chars): {credentials.access_key[:10] if credentials.access_key else 'None'}")
+                access_key_preview = credentials.access_key[:10] if credentials.access_key else "None"
+                print(f"[DEBUG] Access Key ID (first 10 chars): {access_key_preview}")
 
             except NoCredentialsError as e:
                 raise RuntimeError(
@@ -254,10 +254,9 @@ class BedrockClient(LLMClient):
                     if response.status_code == 200:
                         bedrock_response = response.json()
                         return self._convert_response_from_bedrock(bedrock_response)
-                    else:
-                        error_data = response.json() if response.text else {}
-                        error_message = error_data.get("message", response.text)
-                        raise Exception(f"Bedrock HTTP error ({response.status_code}): {error_message}")
+                    error_data = response.json() if response.text else {}
+                    error_message = error_data.get("message", response.text)
+                    raise Exception(f"Bedrock HTTP error ({response.status_code}): {error_message}")
 
             except httpx.HTTPStatusError as e:
                 error_message = str(e)
@@ -275,7 +274,7 @@ class BedrockClient(LLMClient):
                 raise Exception(f"Bedrock HTTP error: {error_message}") from e
 
             except Exception as e:
-                raise Exception(f"Bedrock request failed: {str(e)}") from e
+                raise Exception(f"Bedrock request failed: {e!s}") from e
 
         if last_exception:
             raise Exception(f"Bedrock API call failed after retries: {last_exception}") from last_exception

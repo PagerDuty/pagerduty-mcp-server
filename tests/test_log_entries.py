@@ -1,7 +1,7 @@
 """Unit tests for log entry tools."""
 
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import Mock, patch
 
 from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
@@ -333,8 +333,8 @@ class TestLogEntryTools(unittest.TestCase):
 
     def test_log_entry_query_with_all_filters(self):
         """Test LogEntryQuery with all filter parameters."""
-        since_date = datetime(2023, 1, 1, tzinfo=timezone.utc)
-        until_date = datetime(2023, 12, 31, tzinfo=timezone.utc)
+        since_date = datetime(2023, 1, 1, tzinfo=UTC)
+        until_date = datetime(2023, 12, 31, tzinfo=UTC)
 
         query = LogEntryQuery(
             since=since_date,

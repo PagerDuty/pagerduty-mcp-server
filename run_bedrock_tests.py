@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 """Wrapper script to run eval tests with Bedrock using proper model configuration."""
 
-import sys
 from tests.evals.run_tests import TestAgent
-from tests.evals.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
 from tests.evals.test_incidents import INCIDENT_COMPETENCY_TESTS
+from tests.evals.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
 
 # Bedrock model to use
 BEDROCK_MODEL = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
@@ -54,7 +53,7 @@ agent.generate_report("test_results_alerts.json")
 total_tests = len(log_results) + len(alert_results)
 total_success = sum(r.success for r in log_results) + sum(r.success for r in alert_results)
 print(f"\n\n{'=' * 60}")
-print(f"COMBINED RESULTS")
+print("COMBINED RESULTS")
 print(f"{'=' * 60}")
 print(f"Total tests: {total_success}/{total_tests} ({total_success/total_tests*100:.1f}%)")
 print(f"  Log entries: {sum(r.success for r in log_results)}/{len(log_results)}")

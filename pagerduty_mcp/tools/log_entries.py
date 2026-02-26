@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
@@ -35,9 +35,9 @@ def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
     """
     # Default to last 7 days if no time range specified
     if query_model.since is None:
-        query_model.since = datetime.now(timezone.utc) - timedelta(days=7)
+        query_model.since = datetime.now(UTC) - timedelta(days=7)
     if query_model.until is None:
-        query_model.until = datetime.now(timezone.utc)
+        query_model.until = datetime.now(UTC)
 
     params = query_model.to_params()
 

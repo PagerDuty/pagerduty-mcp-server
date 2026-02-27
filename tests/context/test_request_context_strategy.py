@@ -65,6 +65,21 @@ class TestRequestContextStrategy:
         with strategy.use_context(context):
             assert ContextResolver.get_client() != mock_context.client
 
+    def test_does_not_crash_if_user_throws_exception(self, prepare_env, mock_client):
+        # if the client throws an exception while trying to build the user (e.g. for an
+        # account-level API token), do not crash at application startup
+        def _raise_exception():
+            raise Exception("This should not be called")
+
+        mock_context = MCPContext(mock_client)
+        mock_client.rget.side_effect = _raise_exception
+        strategy = RequestContextStrategy()
+
+        ContextResolver.set_strategy(strategy)
+
+        with strategy.use_context(mock_context):
+            assert ContextResolver.get_user() == None
+
     def test_raises_when_no_context(self, prepare_env):
         ContextResolver.set_strategy(RequestContextStrategy())
 

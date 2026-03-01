@@ -71,7 +71,7 @@ class TestApplicationContextStrategy:
         assert strategy.context.client == mock_client
         assert strategy.context.user == mock_user
 
-    def test_get_client_no_api_key(self):
+    def test_get_client_no_api_key(self, monkeypatch):
+        monkeypatch.delenv("PAGERDUTY_USER_API_KEY", raising=False)
         with pytest.raises(RuntimeError):
-            ContextResolver.set_strategy(ApplicationContextStrategy())
-            ContextResolver.get_strategy()
+            ApplicationContextStrategy()

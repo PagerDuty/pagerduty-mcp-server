@@ -23,7 +23,9 @@ def list_teams(query_model: TeamQuery) -> ListResponseModel[Team]:
         # get my team references from /users/me
         user_data = ContextResolver.get_user()
         if user_data is None:
-            raise ValueError("Cannot fetch 'my' teams with account-level auth. Please provide a user token, or scope the request differently.")
+            raise ValueError(
+                "Cannot fetch 'my' teams with account-level auth. Please provide a user token, or scope the request differently."
+            )
 
         user_team_ids = [team.id for team in user_data.teams]
         # Now get all team resources. Paginate limits to 1000 results by default

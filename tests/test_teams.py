@@ -19,6 +19,7 @@ from pagerduty_mcp.tools.teams import (
 
 from tests.mock_context_strategy import MockContextStrategy
 
+
 class TestTeamTools(unittest.TestCase):
     """Test cases for team tools."""
 

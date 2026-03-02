@@ -1,12 +1,10 @@
 import logging
-from typing import Optional, ContextManager
+from contextlib import AbstractContextManager
 
 from dotenv import load_dotenv
-
 from pagerduty.rest_api_v2_client import RestApiV2Client
-from pagerduty_mcp.context.mcp_context import MCPContext
-from pagerduty_mcp.models.users import User
-from pagerduty_mcp.context.context_strategy import ContextStrategy
+
+from pagerduty_mcp.context.context_strategy import ContextData, ContextStrategy, ContextUser
 
 load_dotenv()
 
@@ -15,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class ContextResolver:
-    """
-    Creates a common interface for resolving the context of a request.
+    """Creates a common interface for resolving the context of a request.
 
     This allows the application to determine things (like whether there is a user currently
     associated with the context) without needing to know the underlying strategy for how
@@ -51,7 +48,7 @@ class ContextResolver:
                 way as a single-tenant application ...
     """
 
-    _context_strategy: Optional[ContextStrategy]
+    _context_strategy: ContextStrategy | None
 
     @staticmethod
     def set_strategy(strategy: ContextStrategy) -> None:
@@ -64,7 +61,7 @@ class ContextResolver:
         return ContextResolver._context_strategy
 
     @staticmethod
-    def use_context(context: MCPContext) -> ContextManager[MCPContext]:
+    def use_context(context: ContextData) -> AbstractContextManager[ContextData]:
         return ContextResolver.get_strategy().use_context(context)
 
     @staticmethod
@@ -73,6 +70,6 @@ class ContextResolver:
         return ContextResolver.get_strategy().context.client
 
     @staticmethod
-    def get_user() -> Optional[User]:
+    def get_user() -> ContextUser | None:
         """A shortcut to the current PagerDuty user (if available)."""
         return ContextResolver.get_strategy().context.user

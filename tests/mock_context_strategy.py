@@ -1,15 +1,15 @@
-
-
 from contextlib import contextmanager
 from unittest.mock import MagicMock
 
 from pagerduty.rest_api_v2_client import RestApiV2Client
-from pagerduty_mcp.context.context_strategy import ContextStrategy
+
+from pagerduty_mcp.context.context_strategy import ContextData, ContextStrategy
 from pagerduty_mcp.context.mcp_context import MCPContext
 
 
 class MockContextStrategy(ContextStrategy):
     """A mock context strategy for testing purposes."""
+
     def __init__(self):
         self._context = MagicMock(MCPContext)
         self._client = MagicMock(RestApiV2Client)
@@ -17,7 +17,7 @@ class MockContextStrategy(ContextStrategy):
         self._context.client = self._client
 
     @property
-    def context(self) -> MCPContext:
+    def context(self) -> ContextData:
         """Return the current context."""
         return self._context
 
@@ -43,7 +43,7 @@ class MockContextStrategy(ContextStrategy):
         self._context.user = value
 
     @contextmanager
-    def use_context(self, context: MCPContext):
+    def use_context(self, context: ContextData):
         """Mock implementation of use_context."""
         self._context = context
-        yield
+        yield context

@@ -39,7 +39,9 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     if query_model.request_scope in ["assigned", "teams"]:
         user_data = ContextResolver.get_user()
         if user_data is None:
-            raise ValueError(f"Cannot filter incidents by \"{query_model.request_scope}\" with account-level auth. Please provide a user token, or scope the request differently.")
+            raise ValueError(
+                f'Cannot filter incidents by "{query_model.request_scope}" with account-level auth. Please provide a user token, or scope the request differently.'
+            )
 
         if query_model.request_scope == "assigned":
             params["user_ids[]"] = [user_data.id]
@@ -169,9 +171,7 @@ def manage_incidents(
     return ListResponseModel[Incident](response=[])
 
 
-def add_responders(
-    incident_id: str, request: IncidentResponderRequest
-) -> IncidentResponderRequestResponse | str:
+def add_responders(incident_id: str, request: IncidentResponderRequest) -> IncidentResponderRequestResponse | str:
     """Add responders to an incident.
 
     Args:

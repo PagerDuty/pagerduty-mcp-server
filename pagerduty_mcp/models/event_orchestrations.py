@@ -28,7 +28,8 @@ class EventOrchestration(BaseModel):
         description="List of integrations for the orchestration", default=None, json_schema_extra={"readOnly": True}
     )
     routes: int | None = Field(
-        description="Number of different Service Orchestration being routed to", json_schema_extra={"readOnly": True},
+        description="Number of different Service Orchestration being routed to",
+        json_schema_extra={"readOnly": True},
         default=None,
     )
     created_at: datetime = Field(

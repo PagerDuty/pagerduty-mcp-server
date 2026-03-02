@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 from pagerduty.rest_api_v2_client import RestApiV2Client
 from pagerduty_mcp.context import ContextResolver, application_context_strategy
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
+from pagerduty_mcp.context.context_strategy import ContextUser
 from pagerduty_mcp.context.mcp_context import MCPContext
-from pagerduty_mcp.models.users import User
 
 
 @pytest.fixture
@@ -30,8 +30,8 @@ def mock_client(monkeypatch):
 
 @pytest.fixture
 def mock_user(mock_client):
-    user_fields = {"email": "test@example.com", "name": "blah", "role": "admin", "teams": []}
-    mock_user = User(**user_fields)
+    user_fields = {"id": "PXXXXX", "email": "test@example.com"}
+    mock_user = ContextUser(**user_fields)
 
     mock_client.rget.return_value = user_fields
 
@@ -60,12 +60,12 @@ class TestApplicationContextStrategy:
         # should use the new context within the block
         with strategy.use_context(another_context):
             assert strategy.context.client == another_mock_client
-            assert strategy.context.user == None
+            assert strategy.context.user is None
 
         # also works from manager class helpers
         with ContextResolver.use_context(another_context):
             assert ContextResolver.get_client() == another_mock_client
-            assert ContextResolver.get_user() == None
+            assert ContextResolver.get_user() is None
 
         # context should be reset after the block
         assert strategy.context.client == mock_client

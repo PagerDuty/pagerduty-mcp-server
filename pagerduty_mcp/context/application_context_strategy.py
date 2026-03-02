@@ -1,12 +1,12 @@
-from contextlib import contextmanager
 import os
-
+from contextlib import contextmanager
 from importlib import metadata
+
 from pagerduty.rest_api_v2_client import RestApiV2Client
 
 from pagerduty_mcp import DIST_NAME
+from pagerduty_mcp.context.context_strategy import ContextData, ContextStrategy
 from pagerduty_mcp.context.mcp_context import MCPContext
-from pagerduty_mcp.context.context_strategy import ContextStrategy
 
 
 class PagerdutyMCPClient(RestApiV2Client):
@@ -36,18 +36,18 @@ class ApplicationContextStrategy(ContextStrategy):
 
     def __init__(self):
         client = create_pd_client()
-        self._context = MCPContext(client)
+        self._context = MCPContext.build_from_client(client)
 
     @property
-    def context(self) -> MCPContext:
+    def context(self) -> ContextData:
         return self._context
 
     @contextmanager
-    def use_context(self, context: MCPContext):
+    def use_context(self, context: ContextData):
         previous_context = self._context
-        self._context = context
+        self._context = MCPContext(context.client, context.user)
 
         try:
-            yield
+            yield context
         finally:
             self._context = previous_context

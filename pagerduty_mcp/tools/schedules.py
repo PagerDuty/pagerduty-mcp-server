@@ -38,6 +38,11 @@ def get_schedule(schedule_id: str) -> Schedule:
 def create_schedule_override(schedule_id: str, override_request: ScheduleOverrideCreate) -> dict | list:
     """Create an override for a schedule.
 
+    The override_request must use the key 'overrides' containing an array of override objects,
+    each with 'start', 'end', and 'user' fields. The 'user' field must include both 'id' and
+    'type' set to 'user_reference'. Example: {"overrides": [{"start": "...", "end": "...",
+    "user": {"id": "PXXXXXX", "type": "user_reference"}}]}
+
     Args:
         schedule_id: The ID of the schedule to override
         override_request: Data for the schedule override
@@ -69,6 +74,8 @@ def list_schedule_users(schedule_id: str) -> ListResponseModel[User]:
 
 def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
     """Create a new on-call schedule.
+
+    Each schedule layer requires a 'name' field to identify the layer.
 
     Args:
         create_model: The schedule creation data

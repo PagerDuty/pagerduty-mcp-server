@@ -145,12 +145,16 @@ def manage_incidents(
 
     Use this tool when you want to bulk update incidents.
 
+    This tool accepts flat fields on the manage_request model: 'incident_ids' (list of IDs),
+    plus optional 'status', 'urgency', 'assignement' (UserReference with 'id'), and
+    'escalation_level' (int). It does NOT use the nested PagerDuty API format directly.
+
     Args:
         manage_request: The request model containing the incident IDs and the fields to update
             (status, urgency, assignment, escalation level)
 
     Returns:
-        The updated incident
+        The updated incidents
     """
     response = None
     if manage_request.status:

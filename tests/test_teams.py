@@ -349,8 +349,8 @@ class TestTeamTools(unittest.TestCase):
         mock_get_client.assert_called_once()
         self.mock_client.rdelete.assert_called_once_with("/teams/TEAM123")
 
-        # Verify result (should be None)
-        self.assertIsNone(result)
+        # Verify result returns confirmation string
+        self.assertEqual(result, "Successfully deleted team TEAM123")
 
     @patch("pagerduty_mcp.tools.teams.get_client")
     def test_delete_team_client_error(self, mock_get_client):
@@ -476,8 +476,8 @@ class TestTeamTools(unittest.TestCase):
         mock_get_client.assert_called_once()
         self.mock_client.rdelete.assert_called_once_with("/teams/TEAM123/users/USER789")
 
-        # Verify result (should be None)
-        self.assertIsNone(result)
+        # Verify result returns confirmation string
+        self.assertEqual(result, "Successfully removed user USER789 from team TEAM123")
 
     @patch("pagerduty_mcp.tools.teams.get_client")
     def test_remove_team_member_client_error(self, mock_get_client):

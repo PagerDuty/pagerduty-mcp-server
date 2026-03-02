@@ -1,18 +1,63 @@
-from contextlib import contextmanager
 import os
-
+import re
+from contextlib import contextmanager
 from importlib import metadata
+
+from pagerduty.errors import Error as PDError
+from pagerduty.errors import HttpError as PDHttpError
 from pagerduty.rest_api_v2_client import RestApiV2Client
 
 from pagerduty_mcp import DIST_NAME
-from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.context.context_strategy import ContextStrategy
+from pagerduty_mcp.context.mcp_context import MCPContext
+
+# Pattern to match internal URLs in error messages (e.g. from Kubernetes service mesh)
+_INTERNAL_URL_PATTERN = re.compile(
+    r"(GET|POST|PUT|DELETE|PATCH)\s+https?://\S+:"
+)
 
 
 class PagerdutyMCPClient(RestApiV2Client):
     @property
     def user_agent(self) -> str:
         return f"{DIST_NAME}/{metadata.version(DIST_NAME)} {super().user_agent}"
+
+    @staticmethod
+    def _sanitize_error_message(message: str) -> str:
+        """Strip internal URLs from error messages, keeping method, status code, and body."""
+        return _INTERNAL_URL_PATTERN.sub(r"\1 PagerDuty API:", message)
+
+    def rget(self, *args, **kwargs) -> dict | list:
+        try:
+            return super().rget(*args, **kwargs)
+        except PDHttpError as e:
+            raise type(e)(self._sanitize_error_message(str(e)), e.response) from e
+        except PDError as e:
+            raise type(e)(self._sanitize_error_message(str(e))) from e
+
+    def rpost(self, *args, **kwargs) -> dict | list:
+        try:
+            return super().rpost(*args, **kwargs)
+        except PDHttpError as e:
+            raise type(e)(self._sanitize_error_message(str(e)), e.response) from e
+        except PDError as e:
+            raise type(e)(self._sanitize_error_message(str(e))) from e
+
+    def rput(self, *args, **kwargs) -> dict | list:
+        try:
+            return super().rput(*args, **kwargs)
+        except PDHttpError as e:
+            raise type(e)(self._sanitize_error_message(str(e)), e.response) from e
+        except PDError as e:
+            raise type(e)(self._sanitize_error_message(str(e))) from e
+
+    def rdelete(self, *args, **kwargs):
+        try:
+            return super().rdelete(*args, **kwargs)
+        except PDHttpError as e:
+            raise type(e)(self._sanitize_error_message(str(e)), e.response) from e
+        except PDError as e:
+            raise type(e)(self._sanitize_error_message(str(e))) from e
 
 
 def create_pd_client() -> RestApiV2Client:

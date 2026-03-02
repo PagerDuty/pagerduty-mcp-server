@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Any
 
-from mcp.server.fastmcp import Context
-
 from pagerduty_mcp.client import get_client
+from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
     GetIncidentQuery,
     Incident,
@@ -14,7 +13,6 @@ from pagerduty_mcp.models import (
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
-    MCPContext,
     OutlierIncidentQuery,
     OutlierIncidentResponse,
     PastIncidentsQuery,
@@ -23,7 +21,6 @@ from pagerduty_mcp.models import (
     RelatedIncidentsResponse,
     UserReference,
 )
-from pagerduty_mcp.tools.users import get_user_data
 from pagerduty_mcp.utils import paginate
 
 
@@ -40,7 +37,9 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     params = query_model.to_params()
 
     if query_model.request_scope in ["assigned", "teams"]:
-        user_data = get_user_data()
+        user_data = ContextResolver.get_user()
+        if user_data is None:
+            raise ValueError(f"Cannot filter incidents by \"{query_model.request_scope}\" with account-level auth. Please provide a user token, or scope the request differently.")
 
         if query_model.request_scope == "assigned":
             params["user_ids[]"] = [user_data.id]
@@ -49,7 +48,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             params["team_ids[]"] = user_team_ids
 
     response = paginate(
-        client=get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
+        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
     )
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)
@@ -171,23 +170,22 @@ def manage_incidents(
 
 
 def add_responders(
-    incident_id: str, request: IncidentResponderRequest, ctx: Context
+    incident_id: str, request: IncidentResponderRequest
 ) -> IncidentResponderRequestResponse | str:
     """Add responders to an incident.
 
     Args:
         incident_id: The ID of the incident to add responders to
         request: The responder request data containing user IDs and optional message
-        ctx: The context containing the request information
 
     Returns:
         Details of the responder request
     """
-    context_info: MCPContext = ctx.request_context.lifespan_context
-    if context_info.user is None:
+    user = ContextResolver.get_user()
+    if user is None:
         return "Cannot add responders with account level auth. Please provide a user token."
 
-    requester_id = context_info.user.id
+    requester_id = user.id
     request.requester_id = requester_id
 
     response = get_client().rpost(f"/incidents/{incident_id}/responder_requests", json=request.model_dump())

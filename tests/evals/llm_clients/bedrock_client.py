@@ -81,8 +81,7 @@ class BedrockClient(LLMClient):
                 session = boto3.Session()
                 credentials = session.get_credentials()
                 print(f"[DEBUG] Credentials type: {type(credentials).__name__}")
-                access_key_preview = credentials.access_key[:10] if credentials.access_key else "None"
-                print(f"[DEBUG] Access Key ID (first 10 chars): {access_key_preview}")
+                print(f"[DEBUG] Access Key ID (first 10 chars): {credentials.access_key[:10] if credentials.access_key else 'None'}")
 
             except NoCredentialsError as e:
                 raise RuntimeError(

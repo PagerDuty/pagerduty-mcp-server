@@ -91,101 +91,158 @@ from .teams import (
 )
 from .users import get_user_data, list_users
 
-# Read-only tools (safe, non-destructive operations)
-read_tools = [
-    # Alert Grouping Settings
-    list_alert_grouping_settings,
-    get_alert_grouping_setting,
-    # Alerts
-    list_alerts_from_incident,
-    get_alert_from_incident,
-    # Change Events
-    list_change_events,
-    get_change_event,
-    list_service_change_events,
-    list_incident_change_events,
-    # Incidents
-    list_incidents,
-    get_incident,
-    get_outlier_incident,
-    get_past_incidents,
-    get_related_incidents,
-    list_incident_notes,
-    # Incident Workflows
-    list_incident_workflows,
-    get_incident_workflow,
-    # Services
-    list_services,
-    get_service,
-    # Teams
-    list_teams,
-    get_team,
-    list_team_members,
-    # Users
-    get_user_data,
-    list_users,
-    # Schedules
-    list_schedules,
-    get_schedule,
-    list_schedule_users,
-    # On-calls
-    list_oncalls,
-    # Log Entries
-    list_log_entries,
-    get_log_entry,
-    # Escalation Policies
-    list_escalation_policies,
-    get_escalation_policy,
-    # Event Orchestrations
-    list_event_orchestrations,
-    get_event_orchestration,
-    get_event_orchestration_router,
-    get_event_orchestration_service,
-    get_event_orchestration_global,
-    # Status Pages
-    list_status_pages,
-    list_status_page_severities,
-    list_status_page_impacts,
-    list_status_page_statuses,
-    get_status_page_post,
-    list_status_page_post_updates,
-]
+# Tool categories mapping category name -> {"read": [...], "write": [...]}
+TOOL_CATEGORIES: dict[str, dict[str, list]] = {
+    "alert_grouping": {
+        "read": [
+            list_alert_grouping_settings,
+            get_alert_grouping_setting,
+        ],
+        "write": [
+            create_alert_grouping_setting,
+            update_alert_grouping_setting,
+            delete_alert_grouping_setting,
+        ],
+    },
+    "alerts": {
+        "read": [
+            list_alerts_from_incident,
+            get_alert_from_incident,
+        ],
+        "write": [],
+    },
+    "change_events": {
+        "read": [
+            list_change_events,
+            get_change_event,
+            list_service_change_events,
+            list_incident_change_events,
+        ],
+        "write": [],
+    },
+    "escalation_policies": {
+        "read": [
+            list_escalation_policies,
+            get_escalation_policy,
+        ],
+        "write": [
+            # Escalation Policies - currently disabled
+            # create_escalation_policy,
+        ],
+    },
+    "event_orchestrations": {
+        "read": [
+            list_event_orchestrations,
+            get_event_orchestration,
+            get_event_orchestration_router,
+            get_event_orchestration_service,
+            get_event_orchestration_global,
+        ],
+        "write": [
+            update_event_orchestration_router,
+            append_event_orchestration_router_rule,
+        ],
+    },
+    "incident_workflows": {
+        "read": [
+            list_incident_workflows,
+            get_incident_workflow,
+        ],
+        "write": [
+            start_incident_workflow,
+        ],
+    },
+    "incidents": {
+        "read": [
+            list_incidents,
+            get_incident,
+            get_outlier_incident,
+            get_past_incidents,
+            get_related_incidents,
+            list_incident_notes,
+        ],
+        "write": [
+            create_incident,
+            manage_incidents,
+            add_responders,
+            add_note_to_incident,
+        ],
+    },
+    "log_entries": {
+        "read": [
+            list_log_entries,
+            get_log_entry,
+        ],
+        "write": [],
+    },
+    "oncalls": {
+        "read": [
+            list_oncalls,
+        ],
+        "write": [],
+    },
+    "schedules": {
+        "read": [
+            list_schedules,
+            get_schedule,
+            list_schedule_users,
+        ],
+        "write": [
+            create_schedule,
+            create_schedule_override,
+            update_schedule,
+        ],
+    },
+    "services": {
+        "read": [
+            list_services,
+            get_service,
+        ],
+        "write": [
+            create_service,
+            update_service,
+        ],
+    },
+    "status_pages": {
+        "read": [
+            list_status_pages,
+            list_status_page_severities,
+            list_status_page_impacts,
+            list_status_page_statuses,
+            get_status_page_post,
+            list_status_page_post_updates,
+        ],
+        "write": [
+            create_status_page_post,
+            create_status_page_post_update,
+        ],
+    },
+    "teams": {
+        "read": [
+            list_teams,
+            get_team,
+            list_team_members,
+        ],
+        "write": [
+            create_team,
+            update_team,
+            delete_team,
+            add_team_member,
+            remove_team_member,
+        ],
+    },
+    "users": {
+        "read": [
+            get_user_data,
+            list_users,
+        ],
+        "write": [],
+    },
+}
 
-# Write tools (potentially dangerous operations that modify state)
-write_tools = [
-    # Alert Grouping Settings
-    create_alert_grouping_setting,
-    update_alert_grouping_setting,
-    delete_alert_grouping_setting,
-    # Incidents
-    create_incident,
-    manage_incidents,
-    add_responders,
-    add_note_to_incident,
-    # Incident Workflows
-    start_incident_workflow,
-    # Services
-    create_service,
-    update_service,
-    # Teams
-    create_team,
-    update_team,
-    delete_team,
-    add_team_member,
-    remove_team_member,
-    # Schedules
-    create_schedule,
-    create_schedule_override,
-    update_schedule,
-    # Event Orchestrations
-    update_event_orchestration_router,
-    append_event_orchestration_router_rule,
-    # Status Pages
-    create_status_page_post,
-    create_status_page_post_update,
-    # Escalation Policies - currently disabled
-    # create_escalation_policy,
-]
+VALID_CATEGORIES: frozenset[str] = frozenset(TOOL_CATEGORIES.keys())
 
-# All tools (combined list for backward compatibility)
+# Derive flat lists for backward compatibility
+read_tools = [tool for cat in TOOL_CATEGORIES.values() for tool in cat["read"]]
+write_tools = [tool for cat in TOOL_CATEGORIES.values() for tool in cat["write"]]
 all_tools = read_tools + write_tools

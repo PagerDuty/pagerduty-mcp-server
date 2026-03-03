@@ -80,13 +80,17 @@ def update_team(team_id: str, update_model: TeamCreateRequest) -> Team:
     return Team.model_validate(response)
 
 
-def delete_team(team_id: str) -> None:
+def delete_team(team_id: str) -> str:
     """Delete a team.
 
     Args:
         team_id: The ID of the team to delete
+
+    Returns:
+        Confirmation message
     """
     get_client().rdelete(f"/teams/{team_id}")
+    return f"Successfully deleted team {team_id}"
 
 
 def list_team_members(team_id: str) -> ListResponseModel[UserReference]:
@@ -120,12 +124,15 @@ def add_team_member(team_id: str, member_data: TeamMemberAdd) -> str:
     return f"Failed to add user to team: {response.reason}"
 
 
-def remove_team_member(team_id: str, user_id: str) -> None:
+def remove_team_member(team_id: str, user_id: str) -> str:
     """Remove a user from a team.
 
     Args:
         team_id: The ID of the team to remove the user from
         user_id: The ID of the user to remove
+
+    Returns:
+        Confirmation message
     """
     get_client().rdelete(f"/teams/{team_id}/users/{user_id}")
-    # The API doesn't return any content for successful deletion
+    return f"Successfully removed user {user_id} from team {team_id}"

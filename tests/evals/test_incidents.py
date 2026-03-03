@@ -404,4 +404,37 @@ INCIDENT_COMPETENCY_TESTS = [
         ],
         description="Get specific alert using natural language query",
     ),
+    # Issue #4: manage_incidents uses flat fields (incident_ids + status/urgency/etc)
+    IncidentCompetencyTest(
+        query="Resolve incidents 123 and 456",
+        expected_tools=[
+            {
+                "tool_name": "manage_incidents",
+                "parameters": {"manage_request": {"incident_ids": ["123", "456"], "status": "resolved"}},
+            }
+        ],
+        description="Resolve multiple incidents using flat field format",
+    ),
+    IncidentCompetencyTest(
+        query="Change the urgency of incident ABC123 to low",
+        expected_tools=[
+            {
+                "tool_name": "manage_incidents",
+                "parameters": {"manage_request": {"incident_ids": ["ABC123"], "urgency": "low"}},
+            }
+        ],
+        description="Change incident urgency using flat field format",
+    ),
+    IncidentCompetencyTest(
+        query="Reassign incident 789 to user USER456",
+        expected_tools=[
+            {
+                "tool_name": "manage_incidents",
+                "parameters": {
+                    "manage_request": {"incident_ids": ["789"], "assignement": {"id": "USER456"}},
+                },
+            }
+        ],
+        description="Reassign incident using flat field format with UserReference",
+    ),
 ]

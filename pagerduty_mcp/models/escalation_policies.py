@@ -39,8 +39,9 @@ class EscalationPolicyReference(BaseModel):
     id: str = Field(description="The ID of the escalation policy")
     summary: str | None = Field(
         default=None,
-        description="A short-form, server-generated string that provides succinct information"
-        " about the escalation policy. Optional for create/update operations.",
+        exclude=True,
+        description="Read-only. A short-form, server-generated string that provides succinct"
+        " information about the escalation policy.",
     )
 
     @computed_field

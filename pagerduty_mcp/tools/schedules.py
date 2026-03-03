@@ -38,10 +38,8 @@ def get_schedule(schedule_id: str) -> Schedule:
 def create_schedule_override(schedule_id: str, override_request: ScheduleOverrideCreate) -> dict | list:
     """Create an override for a schedule.
 
-    The override_request must use the key 'overrides' containing an array of override objects,
-    each with 'start', 'end', and 'user' fields. The 'user' field must include both 'id' and
-    'type' set to 'user_reference'. Example: {"overrides": [{"start": "...", "end": "...",
-    "user": {"id": "PXXXXXX", "type": "user_reference"}}]}
+    The override_request contains an 'overrides' array. Each override requires
+    'start' (ISO datetime), 'end' (ISO datetime), and 'user_id' (the user's PagerDuty ID).
 
     Args:
         schedule_id: The ID of the schedule to override
@@ -54,6 +52,7 @@ def create_schedule_override(schedule_id: str, override_request: ScheduleOverrid
     for override in request_data["overrides"]:
         override["start"] = override["start"].isoformat()
         override["end"] = override["end"].isoformat()
+        override["user"] = {"id": override.pop("user_id"), "type": "user_reference"}
 
     return get_client().rpost(f"/schedules/{schedule_id}/overrides", json=request_data)
 

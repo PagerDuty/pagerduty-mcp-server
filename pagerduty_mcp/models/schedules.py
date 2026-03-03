@@ -115,7 +115,7 @@ class ScheduleQuery(BaseModel):
 class Override(BaseModel):
     start: datetime = Field(description="The start time of the override")
     end: datetime = Field(description="The end time of the override")
-    user: UserReference = Field(description="The user for the override")
+    user_id: str = Field(description="The ID of the user for this override")
 
 
 class ScheduleOverrideCreate(BaseModel):

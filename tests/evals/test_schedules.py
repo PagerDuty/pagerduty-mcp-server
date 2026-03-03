@@ -78,7 +78,7 @@ SCHEDULES_COMPETENCY_TESTS = [
                             {
                                 "start": "2024-01-15T09:00:00Z",
                                 "end": "2024-01-15T17:00:00Z",
-                                "user": {"id": "USER123", "type": "user_reference"},
+                                "user_id": "USER123",
                             }
                         ]
                     },

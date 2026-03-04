@@ -920,11 +920,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = PastIncidentsQuery()
-        result_json = get_past_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = PastIncidentsResponse.model_validate_json(result_json)
+        result = get_past_incidents("PINCIDENT123", query)
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -946,11 +942,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test with limit and total parameters
         query = PastIncidentsQuery(limit=10, total=True)
-        result_json = get_past_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = PastIncidentsResponse.model_validate_json(result_json)
+        result = get_past_incidents("PINCIDENT123", query)
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -971,11 +963,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = RelatedIncidentsQuery()
-        result_json = get_related_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = RelatedIncidentsResponse.model_validate_json(result_json)
+        result = get_related_incidents("PINCIDENT123", query)
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -994,11 +982,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test with additional_details parameter
         query = RelatedIncidentsQuery(additional_details=["incident"])
-        result_json = get_related_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = RelatedIncidentsResponse.model_validate_json(result_json)
+        result = get_related_incidents("PINCIDENT123", query)
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -1063,11 +1047,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = RelatedIncidentsQuery()
-        result_json = get_related_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = RelatedIncidentsResponse.model_validate_json(result_json)
+        result = get_related_incidents("PINCIDENT123", query)
 
         # Should return empty related incidents response
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -1120,11 +1100,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = PastIncidentsQuery(limit=10)
-        result_json = get_past_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = PastIncidentsResponse.model_validate_json(result_json)
+        result = get_past_incidents("PINCIDENT123", query)
 
         # Should return empty past incidents response with correct default values
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -1162,11 +1138,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = PastIncidentsQuery(limit=10)
-        result_json = get_past_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = PastIncidentsResponse.model_validate_json(result_json)
+        result = get_past_incidents("PINCIDENT123", query)
 
         # Should parse unwrapped list correctly
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -1223,11 +1195,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = RelatedIncidentsQuery()
-        result_json = get_related_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = RelatedIncidentsResponse.model_validate_json(result_json)
+        result = get_related_incidents("PINCIDENT123", query)
 
         # Should parse unwrapped list correctly
         self.assertIsInstance(result, RelatedIncidentsResponse)

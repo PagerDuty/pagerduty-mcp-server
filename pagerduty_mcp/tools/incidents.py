@@ -145,12 +145,16 @@ def manage_incidents(
 
     Use this tool when you want to bulk update incidents.
 
+    This tool accepts flat fields on the manage_request model: 'incident_ids' (list of IDs),
+    plus optional 'status', 'urgency', 'assignment' (UserReference with 'id'), and
+    'escalation_level' (int). It does NOT use the nested PagerDuty API format directly.
+
     Args:
         manage_request: The request model containing the incident IDs and the fields to update
             (status, urgency, assignment, escalation level)
 
     Returns:
-        The updated incident
+        The updated incidents
     """
     response = None
     if manage_request.status:
@@ -270,7 +274,7 @@ def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> Pas
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/past_incidents", params=params)
 
-    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit).model_dump_json()
+    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit)
 
 
 def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
@@ -290,4 +294,4 @@ def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) 
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
 
-    return RelatedIncidentsResponse.from_api_response(response).model_dump_json()
+    return RelatedIncidentsResponse.from_api_response(response)

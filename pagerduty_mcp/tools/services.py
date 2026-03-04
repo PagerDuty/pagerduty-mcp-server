@@ -34,10 +34,14 @@ def get_service(service_id: str) -> Service:
 def create_service(service_data: ServiceCreate) -> Service:
     """Create a new service.
 
+    The escalation_policy reference only requires the 'id' field. The 'summary'
+    field is server-generated and optional for create operations.
+
+    Example escalation_policy: {"id": "PXXXXXX"}
+
     Args:
         service_data: The data for the new service.
         Do not include the ID in the data since it is auto-generated.
-        Always include the summary field for all references if available.
 
     Returns:
         The created service

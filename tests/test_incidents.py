@@ -630,6 +630,28 @@ class TestIncidentTools(unittest.TestCase):
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 0)
 
+    def test_add_responders_injects_requester_id_from_context(self):
+        """Test that add_responders injects requester_id into the payload from user context."""
+        mock_response = {
+            "responder_request": {
+                "requester": {"id": "PUSER123", "type": "user_reference"},
+                "message": "Help needed",
+                "requested_at": "2023-01-01T00:00:00Z",
+                "responder_request_targets": [],
+            }
+        }
+        self.mock_context.client.rpost.return_value = mock_response
+        self.mock_context.user = Mock(id="PUSER123")
+
+        request = IncidentResponderRequest(message="Help needed", responder_request_targets=[])
+        result = add_responders("PINC1", request)
+
+        # requester_id should have been injected into the API payload
+        call_args = self.mock_context.client.rpost.call_args
+        payload = call_args[1]["json"]
+        self.assertEqual(payload["requester_id"], "PUSER123")
+        self.assertIsInstance(result, IncidentResponderRequestResponse)
+
     def test_add_responders_success(self):
         """Test add_responders successfully."""
         # Setup mock
@@ -647,7 +669,7 @@ class TestIncidentTools(unittest.TestCase):
         self.mock_context.user = Mock(id="PUSER123")
 
         # Test - create minimal request
-        request = IncidentResponderRequest(requester_id="PUSER123", message="Help needed", responder_request_targets=[])
+        request = IncidentResponderRequest(message="Help needed", responder_request_targets=[])
         result = add_responders("PINC1", request)
 
         # Assertions
@@ -663,7 +685,7 @@ class TestIncidentTools(unittest.TestCase):
         self.mock_context.user = None
 
         # Test
-        request = IncidentResponderRequest(requester_id="PUSER123", message="Help needed", responder_request_targets=[])
+        request = IncidentResponderRequest(message="Help needed", responder_request_targets=[])
         result = add_responders("PINC1", request)
 
         # Should return error message
@@ -681,7 +703,7 @@ class TestIncidentTools(unittest.TestCase):
         self.mock_context.user = user_mock
 
         # Test
-        request = IncidentResponderRequest(requester_id="PUSER123", message="Help needed", responder_request_targets=[])
+        request = IncidentResponderRequest(message="Help needed", responder_request_targets=[])
         result = add_responders("PINC1", request)
 
         # Should return error message
@@ -715,7 +737,6 @@ class TestIncidentTools(unittest.TestCase):
         )
 
         request = IncidentResponderRequest(
-            requester_id="PUSER123",
             message="Help needed",
             responder_request_targets=[user_target, ep_target],
         )
@@ -920,11 +941,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = PastIncidentsQuery()
-        result_json = get_past_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = PastIncidentsResponse.model_validate_json(result_json)
+        result = get_past_incidents("PINCIDENT123", query)
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -946,11 +963,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test with limit and total parameters
         query = PastIncidentsQuery(limit=10, total=True)
-        result_json = get_past_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = PastIncidentsResponse.model_validate_json(result_json)
+        result = get_past_incidents("PINCIDENT123", query)
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -971,11 +984,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = RelatedIncidentsQuery()
-        result_json = get_related_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = RelatedIncidentsResponse.model_validate_json(result_json)
+        result = get_related_incidents("PINCIDENT123", query)
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -994,11 +1003,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test with additional_details parameter
         query = RelatedIncidentsQuery(additional_details=["incident"])
-        result_json = get_related_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = RelatedIncidentsResponse.model_validate_json(result_json)
+        result = get_related_incidents("PINCIDENT123", query)
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -1063,11 +1068,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = RelatedIncidentsQuery()
-        result_json = get_related_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = RelatedIncidentsResponse.model_validate_json(result_json)
+        result = get_related_incidents("PINCIDENT123", query)
 
         # Should return empty related incidents response
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -1120,11 +1121,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = PastIncidentsQuery(limit=10)
-        result_json = get_past_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = PastIncidentsResponse.model_validate_json(result_json)
+        result = get_past_incidents("PINCIDENT123", query)
 
         # Should return empty past incidents response with correct default values
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -1162,11 +1159,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = PastIncidentsQuery(limit=10)
-        result_json = get_past_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = PastIncidentsResponse.model_validate_json(result_json)
+        result = get_past_incidents("PINCIDENT123", query)
 
         # Should parse unwrapped list correctly
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -1223,11 +1216,7 @@ class TestIncidentTools(unittest.TestCase):
 
         # Test
         query = RelatedIncidentsQuery()
-        result_json = get_related_incidents("PINCIDENT123", query)
-
-        # Parse JSON result
-        self.assertIsInstance(result_json, str)
-        result = RelatedIncidentsResponse.model_validate_json(result_json)
+        result = get_related_incidents("PINCIDENT123", query)
 
         # Should parse unwrapped list correctly
         self.assertIsInstance(result, RelatedIncidentsResponse)

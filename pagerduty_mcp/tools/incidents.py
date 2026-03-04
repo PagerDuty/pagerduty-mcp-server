@@ -189,10 +189,10 @@ def add_responders(
     if user is None:
         return "Cannot add responders with account level auth. Please provide a user token."
 
-    requester_id = user.id
-    request.requester_id = requester_id
+    payload = request.model_dump()
+    payload["requester_id"] = user.id
 
-    response = get_client().rpost(f"/incidents/{incident_id}/responder_requests", json=request.model_dump())
+    response = get_client().rpost(f"/incidents/{incident_id}/responder_requests", json=payload)
     if type(response) is dict and "responder_request" in response:
         # If the response is a dict with a responder_request key, return the model
         return IncidentResponderRequestResponse.model_validate(response["responder_request"])
@@ -274,7 +274,7 @@ def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> Pas
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/past_incidents", params=params)
 
-    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit).model_dump_json()
+    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit)
 
 
 def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
@@ -294,4 +294,4 @@ def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) 
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
 
-    return RelatedIncidentsResponse.from_api_response(response).model_dump_json()
+    return RelatedIncidentsResponse.from_api_response(response)

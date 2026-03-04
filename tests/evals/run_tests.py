@@ -19,15 +19,8 @@ from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
     MockMCPToolInvocationResponse,
 )
+from pagerduty_mcp_evals.test_cases.test_cases_builder import TestCasesBuilder
 from tests.evals.llm_clients import BedrockClient, LLMClient, OpenAIClient
-from pagerduty_mcp_evals.test_cases.test_alert_grouping_settings import ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_change_events import CHANGE_EVENTS_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_event_orchestrations import EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_incident_workflows import INCIDENT_WORKFLOW_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_incidents import INCIDENT_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_status_pages import STATUS_PAGES_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_teams import TEAMS_COMPETENCY_TESTS
 
 
 class MockedMCPServer:
@@ -55,27 +48,6 @@ class MockedMCPServer:
                     return mock.response
         return {"status": "success", "message": f"Default mock response for {tool_name}"}
 
-
-test_mapping = {
-    "alert-grouping-settings": ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
-    "change-events": CHANGE_EVENTS_COMPETENCY_TESTS,
-    "incidents": INCIDENT_COMPETENCY_TESTS,
-    "incident-workflows": INCIDENT_WORKFLOW_COMPETENCY_TESTS,
-    "log-entries": LOG_ENTRY_COMPETENCY_TESTS,
-    "teams": TEAMS_COMPETENCY_TESTS,
-    "event-orchestrations": EVENT_ORCHESTRATIONS_COMPETENCY_TESTS,
-    "status-pages": STATUS_PAGES_COMPETENCY_TESTS,
-    "all": (
-        INCIDENT_COMPETENCY_TESTS
-        + TEAMS_COMPETENCY_TESTS
-        + ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
-        + EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
-        + INCIDENT_WORKFLOW_COMPETENCY_TESTS
-        + STATUS_PAGES_COMPETENCY_TESTS
-        + CHANGE_EVENTS_COMPETENCY_TESTS
-        + LOG_ENTRY_COMPETENCY_TESTS
-    ),
-}
 
 load_dotenv()
 
@@ -428,7 +400,7 @@ def main():
     args = parser.parse_args()
 
     # Select test cases based on domain
-    test_cases = test_mapping.get(args.domain, [])
+    test_cases = TestCasesBuilder().create_test_cases().get(args.domain, [])
 
     if not test_cases:
         print(f"No test cases available for domain: {args.domain}")

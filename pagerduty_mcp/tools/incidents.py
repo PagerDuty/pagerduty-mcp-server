@@ -189,10 +189,10 @@ def add_responders(
     if user is None:
         return "Cannot add responders with account level auth. Please provide a user token."
 
-    requester_id = user.id
-    request.requester_id = requester_id
+    payload = request.model_dump()
+    payload["requester_id"] = user.id
 
-    response = get_client().rpost(f"/incidents/{incident_id}/responder_requests", json=request.model_dump())
+    response = get_client().rpost(f"/incidents/{incident_id}/responder_requests", json=payload)
     if type(response) is dict and "responder_request" in response:
         # If the response is a dict with a responder_request key, return the model
         return IncidentResponderRequestResponse.model_validate(response["responder_request"])

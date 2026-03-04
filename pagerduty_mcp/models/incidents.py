@@ -268,10 +268,6 @@ class ResponderRequestTarget(BaseModel):
 
 
 class IncidentResponderRequest(BaseModel):
-    requester_id: str | None = Field(
-        default=None,
-        description="User ID of the requester. Automatically populated from the current user context.",
-    )
     message: str = Field(
         description="Optional message to include with the responder request",
     )

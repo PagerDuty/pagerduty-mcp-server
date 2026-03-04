@@ -630,6 +630,35 @@ class TestIncidentTools(unittest.TestCase):
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 0)
 
+    def test_add_responders_requester_id_optional(self):
+        """Test that requester_id defaults to None and is not required by callers."""
+        # Creating without requester_id should not raise
+        request = IncidentResponderRequest(message="Help needed", responder_request_targets=[])
+        self.assertIsNone(request.requester_id)
+
+    def test_add_responders_auto_populates_requester_id(self):
+        """Test that add_responders auto-populates requester_id from user context."""
+        mock_response = {
+            "responder_request": {
+                "requester": {"id": "PUSER123", "type": "user_reference"},
+                "message": "Help needed",
+                "requested_at": "2023-01-01T00:00:00Z",
+                "responder_request_targets": [],
+            }
+        }
+        self.mock_context.client.rpost.return_value = mock_response
+        self.mock_context.user = Mock(id="PUSER123")
+
+        # Create request WITHOUT requester_id
+        request = IncidentResponderRequest(message="Help needed", responder_request_targets=[])
+        self.assertIsNone(request.requester_id)
+
+        result = add_responders("PINC1", request)
+
+        # requester_id should have been populated from user context
+        self.assertEqual(request.requester_id, "PUSER123")
+        self.assertIsInstance(result, IncidentResponderRequestResponse)
+
     def test_add_responders_success(self):
         """Test add_responders successfully."""
         # Setup mock

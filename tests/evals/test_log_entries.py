@@ -126,23 +126,17 @@ LOG_ENTRY_COMPETENCY_TESTS = [
     ),
     LogEntryCompetencyTest(
         query="Show me the next 100 log entries after offset 50",
-        expected_tools=[
-            {"tool_name": "list_log_entries", "parameters": {"query_model": {"limit": 100, "offset": 50}}}
-        ],
+        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {"limit": 100, "offset": 50}}}],
         description="List log entries with both limit and offset for pagination",
     ),
     LogEntryCompetencyTest(
         query="Show me only important log entry changes",
-        expected_tools=[
-            {"tool_name": "list_log_entries", "parameters": {"query_model": {"is_overview": True}}}
-        ],
+        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {"is_overview": True}}}],
         description="List log entries with is_overview filter for important changes only",
     ),
     LogEntryCompetencyTest(
         query="Get log entries with incident details included",
-        expected_tools=[
-            {"tool_name": "list_log_entries", "parameters": {"query_model": {"include": ["incidents"]}}}
-        ],
+        expected_tools=[{"tool_name": "list_log_entries", "parameters": {"query_model": {"include": ["incidents"]}}}],
         description="List log entries with incidents included",
     ),
     LogEntryCompetencyTest(

@@ -1,5 +1,3 @@
-
-
 from contextlib import contextmanager
 from unittest.mock import MagicMock
 
@@ -10,6 +8,7 @@ from pagerduty_mcp.context.mcp_context import MCPContext
 
 class MockContextStrategy(ContextStrategy):
     """A mock context strategy for testing purposes."""
+
     def __init__(self):
         self._context = MagicMock(MCPContext)
         self._client = MagicMock(RestApiV2Client)

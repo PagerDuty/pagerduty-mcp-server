@@ -264,9 +264,7 @@ class StatusPagePost(BaseModel):
 
 class StatusPagePostUpdateRequest(BaseModel):
     message: str = Field(description="The message of the Post Update")
-    status: StatusPageStatusReference = Field(
-        description="Status Page Status reference (required when creating posts)"
-    )
+    status: StatusPageStatusReference = Field(description="Status Page Status reference (required when creating posts)")
     severity: StatusPageSeverityReference = Field(
         description="Status Page Severity reference (required when creating posts)"
     )
@@ -301,8 +299,7 @@ class StatusPagePostCreateRequest(BaseModel):
     post_type: Literal["incident", "maintenance"] = Field(description="The type of the Post")
     starts_at: datetime = Field(
         description=(
-            "The date and time the Post intent becomes effective "
-            "(required for both incident and maintenance posts)"
+            "The date and time the Post intent becomes effective (required for both incident and maintenance posts)"
         )
     )
     ends_at: datetime = Field(
@@ -313,9 +310,7 @@ class StatusPagePostCreateRequest(BaseModel):
             "Post Updates to be associated with a Post. At least one update is required when creating a post."
         ),
     )
-    status_page: StatusPageReference = Field(
-        description="Status Page reference"
-    )
+    status_page: StatusPageReference = Field(description="Status Page reference")
 
     @computed_field
     @property

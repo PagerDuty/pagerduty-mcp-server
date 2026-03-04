@@ -8,11 +8,13 @@ from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.context.request_context_strategy import RequestContextStrategy
 from pagerduty_mcp.models.users import User
 
+
 @pytest.fixture
 def prepare_env(monkeypatch):
     """Fixture to set a specific environment variable."""
     yield
     ContextResolver._context_strategy = None
+
 
 @pytest.fixture
 def mock_client(monkeypatch):
@@ -21,6 +23,7 @@ def mock_client(monkeypatch):
 
     monkeypatch.setattr(application_context_strategy, "PagerdutyMCPClient", lambda _: mock_client)
     return mock_client
+
 
 @pytest.fixture
 def mock_user(mock_client):
@@ -31,6 +34,7 @@ def mock_user(mock_client):
 
     return mock_user
 
+
 class TestRequestContextStrategy:
     """Test cases for the RequestContextStrategy and its integration with MCPContext."""
 
@@ -40,16 +44,16 @@ class TestRequestContextStrategy:
         ContextResolver.set_strategy(strategy)
 
         with strategy.use_context(context):
-             assert ContextResolver.get_user() == mock_user
+            assert ContextResolver.get_user() == mock_user
 
         # also works from manager class
         with ContextResolver.use_context(context):
-             assert ContextResolver.get_user() == mock_user
+            assert ContextResolver.get_user() == mock_user
 
         # indulge my light paranoia
         context = MCPContext(MagicMock(RestApiV2Client))
         with strategy.use_context(context):
-             assert ContextResolver.get_user() == None
+            assert ContextResolver.get_user() == None
 
     def test_get_client(self, prepare_env, mock_client):
         mock_context = MCPContext(mock_client)

@@ -35,7 +35,7 @@ def create_service(service_data: ServiceCreate) -> Service:
     """Create a new service.
 
     The escalation_policy reference only requires the 'id' field. The 'summary'
-    field is server-generated and optional for create operations.
+    field is server-generated and ignored for object references.
 
     Example escalation_policy: {"id": "PXXXXXX"}
 

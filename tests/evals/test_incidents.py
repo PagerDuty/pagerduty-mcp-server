@@ -137,6 +137,29 @@ class IncidentCompetencyTest(CompetencyTest):
                 "suppressed": False,
             },
         )
+        mcp.register_mock_response(
+            "add_responders",
+            lambda params: True,
+            {
+                "responder_request": {
+                    "requester": {"id": "USER123", "type": "user_reference", "summary": "John Doe"},
+                    "requested_at": "2023-01-01T12:00:00Z",
+                    "message": "Need help with this incident",
+                    "responder_request_targets": [
+                        {
+                            "responder_request_target": {
+                                "id": "USER456",
+                                "type": "user_reference",
+                                "incident_responders": {
+                                    "state": "pending",
+                                    "user": {"id": "USER456", "type": "user_reference", "summary": "Jane Smith"},
+                                },
+                            }
+                        }
+                    ],
+                }
+            },
+        )
 
 
 # Define the competency test cases
@@ -436,5 +459,80 @@ INCIDENT_COMPETENCY_TESTS = [
             }
         ],
         description="Reassign incident using flat field format with UserReference",
+    ),
+    # Issue #1: add_responders - requester_id is auto-populated, LLM should NOT provide it
+    IncidentCompetencyTest(
+        query="Add user USER456 as a responder to incident 123 with the message 'Need help with this incident'",
+        expected_tools=[
+            {
+                "tool_name": "add_responders",
+                "parameters": {
+                    "incident_id": "123",
+                    "request": {
+                        "message": "Need help with this incident",
+                        "responder_request_targets": [
+                            {
+                                "responder_request_target": {
+                                    "id": "USER456",
+                                    "type": "user_reference",
+                                }
+                            }
+                        ],
+                    },
+                },
+            }
+        ],
+        description="Add a user responder to an incident (requester_id auto-populated)",
+    ),
+    IncidentCompetencyTest(
+        query="Request escalation policy EP123 as responder for incident ABC456",
+        expected_tools=[
+            {
+                "tool_name": "add_responders",
+                "parameters": {
+                    "incident_id": "ABC456",
+                    "request": {
+                        "responder_request_targets": [
+                            {
+                                "responder_request_target": {
+                                    "id": "EP123",
+                                    "type": "escalation_policy_reference",
+                                }
+                            }
+                        ],
+                    },
+                },
+            }
+        ],
+        description="Add an escalation policy as responder to an incident",
+    ),
+    IncidentCompetencyTest(
+        query="Add users USER111 and USER222 as responders to incident 999 with the message 'All hands on deck'",
+        expected_tools=[
+            {
+                "tool_name": "add_responders",
+                "parameters": {
+                    "incident_id": "999",
+                    "request": {
+                        "message": "All hands on deck",
+                        "responder_request_targets": [
+                            {
+                                "responder_request_target": {
+                                    "id": "USER111",
+                                    "type": "user_reference",
+                                }
+                            },
+                            {
+                                "responder_request_target": {
+                                    "id": "USER222",
+                                    "type": "user_reference",
+                                }
+                            },
+                        ],
+                    },
+                },
+            }
+        ],
+        description="Add multiple user responders to an incident",
     ),
 ]

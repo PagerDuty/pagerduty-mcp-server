@@ -17,7 +17,7 @@ from pagerduty_mcp.server import add_read_only_tool, add_write_tool
 from pagerduty_mcp.tools import read_tools, write_tools
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
-    MockMCPToolInvokationResponse,
+    MockMCPToolInvocationResponse,
 )
 from tests.evals.llm_clients import BedrockClient, LLMClient, OpenAIClient
 from pagerduty_mcp_evals.test_cases.test_alert_grouping_settings import ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
@@ -33,7 +33,7 @@ from pagerduty_mcp_evals.test_cases.test_teams import TEAMS_COMPETENCY_TESTS
 class MockedMCPServer:
     """Records MCP tool calls and returns configured mock responses."""
 
-    def __init__(self, mock_responses: list[MockMCPToolInvokationResponse] | None = None):
+    def __init__(self, mock_responses: list[MockMCPToolInvocationResponse] | None = None):
         self.tool_calls: list[dict[str, Any]] = []
         self.current_call_index = 0
         self._mock_responses = mock_responses or []

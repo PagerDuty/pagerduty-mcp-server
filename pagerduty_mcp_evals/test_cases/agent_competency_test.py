@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 
 @dataclass
-class MockMCPToolInvokationResponse:
+class MockMCPToolInvocationResponse:
     tool_name: str
     parameters: dict[str, Any] | Callable
     response: Any
@@ -34,7 +34,7 @@ class AgentCompetencyTest:
         description: str | None = None,
         max_conversation_turns: int = 5,
         model: str = "gpt-4o",
-        mock_responses: list[MockMCPToolInvokationResponse] | None = None,
+        mock_responses: list[MockMCPToolInvocationResponse] | None = None,
     ):
         """Initialize an agent competency test case.
 

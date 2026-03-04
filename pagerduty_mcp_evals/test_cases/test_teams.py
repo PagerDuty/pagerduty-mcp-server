@@ -2,7 +2,7 @@
 
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
-    MockMCPToolInvokationResponse,
+    MockMCPToolInvocationResponse,
     MockToolCall,
 )
 
@@ -12,17 +12,17 @@ class TeamsCompetencyTest(AgentCompetencyTest):
 
     def __init__(self, **kwargs) -> None:
         mock_responses = [
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_teams",
                 parameters=lambda params: True,
                 response={"response": [{"id": "TEAM123", "name": "Dev Team"}]},
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_services",
                 parameters=lambda params: True,
                 response={"response": [{"id": "SVC123", "name": "Web Service"}]},
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_users",
                 parameters=lambda params: params.get("query") == "Sara Connor",
                 response={
@@ -35,7 +35,7 @@ class TeamsCompetencyTest(AgentCompetencyTest):
                     ]
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_users",
                 parameters=lambda params: params.get("query") == "Kyle Reese",
                 response={"response": [{"id": "USER456", "name": "Kyle Reese"}]},

@@ -2,7 +2,7 @@
 
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
-    MockMCPToolInvokationResponse,
+    MockMCPToolInvocationResponse,
     MockToolCall,
 )
 
@@ -13,7 +13,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
     def __init__(self, **kwargs) -> None:
         mock_responses = [
         # Mock response for listing event orchestrations
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_event_orchestrations",
                 parameters=lambda params: True,
                 response={
@@ -37,7 +37,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
 
         # Mock response for getting a specific event orchestration
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="get_event_orchestration",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH123",
                 response={
@@ -52,7 +52,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
 
         # Mock response for getting event orchestration router ORCH123
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="get_event_orchestration_router",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH123",
                 response={
@@ -83,7 +83,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
 
         # Mock response for getting event orchestration router ORCH456
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="get_event_orchestration_router",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH456",
                 response={
@@ -108,7 +108,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
 
         # Mock response for updating event orchestration router
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="update_event_orchestration_router",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH123",
                 response={
@@ -135,7 +135,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
 
         # Mock response for appending event orchestration router rule
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="append_event_orchestration_router_rule",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH123",
                 response={

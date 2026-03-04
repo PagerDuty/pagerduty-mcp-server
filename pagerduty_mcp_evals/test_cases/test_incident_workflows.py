@@ -2,7 +2,7 @@
 
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
-    MockMCPToolInvokationResponse,
+    MockMCPToolInvocationResponse,
     MockToolCall,
 )
 
@@ -12,7 +12,7 @@ class IncidentWorkflowCompetencyTest(AgentCompetencyTest):
 
     def __init__(self, **kwargs) -> None:
         mock_responses = [
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_incident_workflows",
                 parameters=lambda params: True,
                 response={
@@ -28,7 +28,7 @@ class IncidentWorkflowCompetencyTest(AgentCompetencyTest):
                     ]
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="get_incident_workflow",
                 parameters=lambda params: True,
                 response={
@@ -59,7 +59,7 @@ class IncidentWorkflowCompetencyTest(AgentCompetencyTest):
                     ],
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="start_incident_workflow",
                 parameters=lambda params: True,
                 response={

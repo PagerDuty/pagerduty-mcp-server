@@ -2,7 +2,7 @@
 
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
-    MockMCPToolInvokationResponse,
+    MockMCPToolInvocationResponse,
     MockToolCall,
 )
 
@@ -13,7 +13,7 @@ class AlertGroupingSettingsCompetencyTest(AgentCompetencyTest):
     def __init__(self, **kwargs) -> None:
         mock_responses = [
         # Mock services for service lookup scenarios
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_services",
                 parameters=lambda params: True,
                 response={
@@ -26,20 +26,20 @@ class AlertGroupingSettingsCompetencyTest(AgentCompetencyTest):
             ),
 
         # Mock service lookup by name
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_services",
                 parameters=lambda params: params.get("query_model", {}).get("query") == "Web Service",
                 response={"response": [{"id": "SVC123", "name": "Web Service", "summary": "Main web application service"}]},
             ),
 
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_services",
                 parameters=lambda params: params.get("query_model", {}).get("query") == "Database Service",
                 response={"response": [{"id": "SVC456", "name": "Database Service", "summary": "Primary database service"}]},
             ),
 
         # Mock existing alert grouping settings for lookup scenarios
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_alert_grouping_settings",
                 parameters=lambda params: True,
                 response={
@@ -63,7 +63,7 @@ class AlertGroupingSettingsCompetencyTest(AgentCompetencyTest):
             ),
 
         # Mock specific alert grouping setting lookup
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="get_alert_grouping_setting",
                 parameters=lambda params: params.get("setting_id") == "PAGS123",
                 response={
@@ -77,7 +77,7 @@ class AlertGroupingSettingsCompetencyTest(AgentCompetencyTest):
             ),
 
         # Mock alert grouping settings filtered by service
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_alert_grouping_settings",
                 parameters=lambda params: params.get("query_model", {}).get("service_ids") == ["SVC123"],
                 response={

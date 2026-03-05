@@ -20,6 +20,10 @@
         {
           "type": "positional",
           "value": "--enable-write-tools"
+        },
+        {
+          "type": "positional",
+          "value": "--disabled-tool-categories"
         }
       ],
       "environmentVariables": [

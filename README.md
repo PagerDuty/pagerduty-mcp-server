@@ -168,6 +168,14 @@ docker run -i --rm \
   pagerduty-mcp:latest --enable-write-tools
 ```
 
+**Run with specific tool categories disabled:**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  pagerduty-mcp:latest --enable-write-tools --disabled-tool-categories "status_pages,change_events"
+```
+
 **For EU region:**
 
 ```bash
@@ -264,6 +272,33 @@ To integrate the Docker container with MCP clients, you can use Docker as the co
 This section describes the tools provided by the PagerDuty MCP server. They are categorized based on whether they only read data or can modify data in your PagerDuty account.
 
 > **Important:** By default, the MCP server only exposes read-only tools. To enable tools that can modify your PagerDuty account (write-mode tools), you must explicitly start the server with the `--enable-write-tools` flag. This helps prevent accidental changes to your PagerDuty data.
+
+### Filtering Tool Categories
+
+You can disable entire categories of tools using the `--disabled-tool-categories` flag with a comma-separated list of category names. This is useful when your LLM performs better with fewer tools, or when you simply don't need certain PagerDuty capabilities.
+
+**Example — disable status pages, change events, and alert grouping:**
+
+```json
+{
+  "mcpServers": {
+    "pagerduty-mcp": {
+      "command": "uvx",
+      "args": [
+        "pagerduty-mcp",
+        "--enable-write-tools",
+        "--disabled-tool-categories",
+        "status_pages,change_events,alert_grouping"
+      ],
+      "env": {
+        "PAGERDUTY_USER_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+**Valid category names:** `alert_grouping`, `alerts`, `change_events`, `escalation_policies`, `event_orchestrations`, `incident_workflows`, `incidents`, `log_entries`, `oncalls`, `schedules`, `services`, `status_pages`, `teams`, `users`
 
 | Tool                   | Area               | Description                                         | Read-only |
 |------------------------|--------------------|-----------------------------------------------------|-----------|

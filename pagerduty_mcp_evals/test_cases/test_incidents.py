@@ -147,6 +147,33 @@ class IncidentCompetencyTest(AgentCompetencyTest):
                     "suppressed": False,
                 },
             ),
+            MockMCPToolInvocationResponse(
+                tool_name="add_responders",
+                parameters=lambda params: True,
+                response={
+                    "responder_request": {
+                        "requester": {"id": "USER123", "type": "user_reference", "summary": "John Doe"},
+                        "requested_at": "2023-01-01T12:00:00Z",
+                        "message": "Need help with this incident",
+                        "responder_request_targets": [
+                            {
+                                "responder_request_target": {
+                                    "id": "USER456",
+                                    "type": "user_reference",
+                                    "incident_responders": {
+                                        "state": "pending",
+                                        "user": {
+                                            "id": "USER456",
+                                            "type": "user_reference",
+                                            "summary": "Jane Smith",
+                                        },
+                                    },
+                                }
+                            }
+                        ],
+                    }
+                },
+            ),
         ]
         super().__init__(mock_responses=mock_responses, **kwargs)
 
@@ -196,6 +223,55 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(name="get_incident", parameters={"incident_id": "123"})
         ],
         description="Get specific incident by number",
+    ),
+    IncidentCompetencyTest(
+        query="Get incident 123 with user details",
+        expected_tool_calls=[
+            MockToolCall(
+                name="get_incident",
+                parameters={"incident_id": "123", "query_model": {"include": ["users"]}},
+            )
+        ],
+        description="Get incident with users included",
+    ),
+    IncidentCompetencyTest(
+        query="Show me incident ABC456 with teams and services",
+        expected_tool_calls=[
+            MockToolCall(
+                name="get_incident",
+                parameters={
+                    "incident_id": "ABC456",
+                    "query_model": {"include": ["teams", "services"]},
+                },
+            )
+        ],
+        description="Get incident with multiple includes (teams and services)",
+    ),
+    IncidentCompetencyTest(
+        query="Get incident 789 including escalation policies and log entries",
+        expected_tool_calls=[
+            MockToolCall(
+                name="get_incident",
+                parameters={
+                    "incident_id": "789",
+                    "query_model": {"include": ["escalation_policies", "log_entries"]},
+                },
+            )
+        ],
+        description="Get incident with escalation policies and log entries",
+    ),
+    IncidentCompetencyTest(
+        query="Show me all details for incident XYZ999 including users, teams, notes, and assignments",
+        expected_tool_calls=[
+            MockToolCall(
+                name="get_incident",
+                parameters={
+                    "incident_id": "XYZ999",
+                    "query_model": {"include": ["users", "teams", "notes", "assignments"]},
+                },
+            )
+        ],
+        description="Get incident with comprehensive includes (users, teams, notes, assignments)",
     ),
     IncidentCompetencyTest(
         query="Create an incident with title 'Testing MCP' for service with ID 1234 with high urgency",
@@ -410,5 +486,120 @@ INCIDENT_COMPETENCY_TESTS = [
             )
         ],
         description="List alerts for incident with sorting (LLM filters client-side)",
+    ),
+    # Issue #4: manage_incidents uses flat fields (incident_ids + status/urgency/etc)
+    IncidentCompetencyTest(
+        query="Resolve incidents 123 and 456",
+        expected_tool_calls=[
+            MockToolCall(
+                name="manage_incidents",
+                parameters={
+                    "manage_request": {"incident_ids": ["123", "456"], "status": "resolved"}
+                },
+            )
+        ],
+        description="Resolve multiple incidents using flat field format",
+    ),
+    IncidentCompetencyTest(
+        query="Change the urgency of incident ABC123 to low",
+        expected_tool_calls=[
+            MockToolCall(
+                name="manage_incidents",
+                parameters={
+                    "manage_request": {"incident_ids": ["ABC123"], "urgency": "low"}
+                },
+            )
+        ],
+        description="Change incident urgency using flat field format",
+    ),
+    IncidentCompetencyTest(
+        query="Reassign incident 789 to user USER456",
+        expected_tool_calls=[
+            MockToolCall(
+                name="manage_incidents",
+                parameters={
+                    "manage_request": {
+                        "incident_ids": ["789"],
+                        "assignement": {"id": "USER456"},
+                    }
+                },
+            )
+        ],
+        description="Reassign incident using flat field format with UserReference",
+    ),
+    # Issue #1: add_responders - requester_id is auto-populated, LLM should NOT provide it
+    IncidentCompetencyTest(
+        query="Add user USER456 as a responder to incident 123 with the message 'Need help with this incident'",
+        expected_tool_calls=[
+            MockToolCall(
+                name="add_responders",
+                parameters={
+                    "incident_id": "123",
+                    "request": {
+                        "message": "Need help with this incident",
+                        "responder_request_targets": [
+                            {
+                                "responder_request_target": {
+                                    "id": "USER456",
+                                    "type": "user_reference",
+                                }
+                            }
+                        ],
+                    },
+                },
+            )
+        ],
+        description="Add a user responder to an incident (requester_id auto-populated)",
+    ),
+    IncidentCompetencyTest(
+        query="Request escalation policy EP123 as responder for incident ABC456",
+        expected_tool_calls=[
+            MockToolCall(
+                name="add_responders",
+                parameters={
+                    "incident_id": "ABC456",
+                    "request": {
+                        "responder_request_targets": [
+                            {
+                                "responder_request_target": {
+                                    "id": "EP123",
+                                    "type": "escalation_policy_reference",
+                                }
+                            }
+                        ],
+                    },
+                },
+            )
+        ],
+        description="Add an escalation policy as responder to an incident",
+    ),
+    IncidentCompetencyTest(
+        query="Add users USER111 and USER222 as responders to incident 999 with the message 'All hands on deck'",
+        expected_tool_calls=[
+            MockToolCall(
+                name="add_responders",
+                parameters={
+                    "incident_id": "999",
+                    "request": {
+                        "message": "All hands on deck",
+                        "responder_request_targets": [
+                            {
+                                "responder_request_target": {
+                                    "id": "USER111",
+                                    "type": "user_reference",
+                                }
+                            },
+                            {
+                                "responder_request_target": {
+                                    "id": "USER222",
+                                    "type": "user_reference",
+                                }
+                            },
+                        ],
+                    },
+                },
+            )
+        ],
+        description="Add multiple user responders to an incident",
     ),
 ]

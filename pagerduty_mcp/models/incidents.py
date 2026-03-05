@@ -98,6 +98,25 @@ class IncidentQuery(BaseModel):
         return params
 
 
+class GetIncidentQuery(BaseModel):
+    """Query model for retrieving a specific incident with optional parameters."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    include: list[str] | None = Field(
+        default=None,
+        description="List of additional information to include in the response. "
+        "Available options: 'users', 'services', 'assignments', 'acknowledgers', 'custom_fields', "
+        "'teams', 'escalation_policies', 'notes', 'urgencies', 'priorities'",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.include:
+            params["include[]"] = self.include
+        return params
+
+
 class OutlierIncidentQuery(BaseModel):
     """Query model for retrieving outlier incident information."""
 
@@ -249,7 +268,6 @@ class ResponderRequestTarget(BaseModel):
 
 
 class IncidentResponderRequest(BaseModel):
-    requester_id: str | None = Field(description="User ID of the requester")
     message: str = Field(
         description="Optional message to include with the responder request",
     )

@@ -89,14 +89,14 @@ def update_alert_grouping_setting(
     return AlertGroupingSetting.model_validate(response)
 
 
-def delete_alert_grouping_setting(setting_id: str) -> None:
+def delete_alert_grouping_setting(setting_id: str) -> str:
     """Delete an alert grouping setting.
 
     Args:
         setting_id: The ID of the alert grouping setting to delete
 
     Returns:
-        None (successful deletion returns no content)
+        Confirmation message
     """
     get_client().rdelete(f"/alert_grouping_settings/{setting_id}")
-    # The API returns 204 No Content for successful deletion
+    return f"Successfully deleted alert grouping setting {setting_id}"

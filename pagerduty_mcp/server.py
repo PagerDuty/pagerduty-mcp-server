@@ -1,15 +1,13 @@
 import logging
-from collections.abc import AsyncIterator, Callable
-from contextlib import asynccontextmanager
+from collections.abc import Callable
 
 import typer
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
-from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import MCPContext
 from pagerduty_mcp.tools import read_tools, write_tools
-from pagerduty_mcp.utils import get_mcp_context
+from pagerduty_mcp.context import ContextResolver
+from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -23,21 +21,6 @@ requests using the user id.
 READ operations are safe to use, but be cautious with WRITE operations as they can modify the
 live environment. Always confirm with the user before using any tool marked as destructive.
 """
-
-
-@asynccontextmanager
-async def app_lifespan(server: FastMCP) -> AsyncIterator[MCPContext]:
-    """Lifespan context manager for the MCP server.
-
-    Args:
-        server: The MCP server instance
-    Returns:
-        An asynchronous iterator yielding the MCP context.
-    """
-    try:
-        yield get_mcp_context(client=get_client())
-    finally:
-        pass
 
 
 def add_read_only_tool(mcp_instance: FastMCP, tool: Callable) -> None:
@@ -73,9 +56,10 @@ def run(*, enable_write_tools: bool = False) -> None:
     Args:
         enable_write_tools: Flag to enable write tools
     """
+    ContextResolver.set_strategy(ApplicationContextStrategy())
+
     mcp = FastMCP(
         "PagerDuty MCP Server",
-        lifespan=app_lifespan,
         instructions=MCP_SERVER_INSTRUCTIONS,
     )
     for tool in read_tools:

@@ -85,6 +85,26 @@ class LogEntryQuery(BaseModel):
         default=0,
         description="Offset for pagination",
     )
+    is_overview: bool | None = Field(
+        default=None,
+        description="If true, returns only the most important changes to the incident",
+    )
+    include: list[str] | None = Field(
+        default=None,
+        description="Array of additional models to include. Options: 'incidents', 'services', 'channels', 'teams'",
+    )
+    team_ids: list[str] | None = Field(
+        default=None,
+        description="Filter log entries by team IDs",
+    )
+    time_zone: str | None = Field(
+        default=None,
+        description="Time zone for the results (e.g., 'America/New_York', 'UTC')",
+    )
+    total: bool | None = Field(
+        default=None,
+        description="Include total count of log entries in the response",
+    )
 
     @field_validator("since", "until", mode="before")
     @classmethod
@@ -106,5 +126,15 @@ class LogEntryQuery(BaseModel):
             params["limit"] = self.limit
         if self.offset is not None:
             params["offset"] = self.offset
+        if self.is_overview is not None:
+            params["is_overview"] = self.is_overview
+        if self.include:
+            params["include[]"] = self.include
+        if self.team_ids:
+            params["team_ids[]"] = self.team_ids
+        if self.time_zone is not None:
+            params["time_zone"] = self.time_zone
+        if self.total is not None:
+            params["total"] = self.total
 
         return params

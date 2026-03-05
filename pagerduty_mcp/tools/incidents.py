@@ -1,10 +1,10 @@
 from datetime import datetime
 from typing import Any
 
-from mcp.server.fastmcp import Context
-
 from pagerduty_mcp.client import get_client
+from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
+    GetIncidentQuery,
     Incident,
     IncidentCreateRequest,
     IncidentManageRequest,
@@ -13,7 +13,6 @@ from pagerduty_mcp.models import (
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
-    MCPContext,
     OutlierIncidentQuery,
     OutlierIncidentResponse,
     PastIncidentsQuery,
@@ -22,7 +21,6 @@ from pagerduty_mcp.models import (
     RelatedIncidentsResponse,
     UserReference,
 )
-from pagerduty_mcp.tools.users import get_user_data
 from pagerduty_mcp.utils import paginate
 
 
@@ -39,7 +37,9 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
     params = query_model.to_params()
 
     if query_model.request_scope in ["assigned", "teams"]:
-        user_data = get_user_data()
+        user_data = ContextResolver.get_user()
+        if user_data is None:
+            raise ValueError(f"Cannot filter incidents by \"{query_model.request_scope}\" with account-level auth. Please provide a user token, or scope the request differently.")
 
         if query_model.request_scope == "assigned":
             params["user_ids[]"] = [user_data.id]
@@ -48,22 +48,24 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             params["team_ids[]"] = user_team_ids
 
     response = paginate(
-        client=get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
+        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
     )
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)
 
 
-def get_incident(incident_id: str) -> Incident:
+def get_incident(incident_id: str, query_model: GetIncidentQuery | None = None) -> Incident:
     """Get a specific incident.
 
     Args:
         incident_id: The ID or number of the incident to retrieve.
+        query_model: Optional query parameters for additional information to include
 
     Returns:
         Incident details
     """
-    response = get_client().rget(f"/incidents/{incident_id}")
+    params = query_model.to_params() if query_model else {}
+    response = get_client().rget(f"/incidents/{incident_id}", params=params)
     return Incident.model_validate(response)
 
 
@@ -143,12 +145,16 @@ def manage_incidents(
 
     Use this tool when you want to bulk update incidents.
 
+    This tool accepts flat fields on the manage_request model: 'incident_ids' (list of IDs),
+    plus optional 'status', 'urgency', 'assignment' (UserReference with 'id'), and
+    'escalation_level' (int). It does NOT use the nested PagerDuty API format directly.
+
     Args:
         manage_request: The request model containing the incident IDs and the fields to update
             (status, urgency, assignment, escalation level)
 
     Returns:
-        The updated incident
+        The updated incidents
     """
     response = None
     if manage_request.status:
@@ -168,26 +174,25 @@ def manage_incidents(
 
 
 def add_responders(
-    incident_id: str, request: IncidentResponderRequest, ctx: Context
+    incident_id: str, request: IncidentResponderRequest
 ) -> IncidentResponderRequestResponse | str:
     """Add responders to an incident.
 
     Args:
         incident_id: The ID of the incident to add responders to
         request: The responder request data containing user IDs and optional message
-        ctx: The context containing the request information
 
     Returns:
         Details of the responder request
     """
-    context_info: MCPContext = ctx.request_context.lifespan_context
-    if context_info.user is None:
+    user = ContextResolver.get_user()
+    if user is None:
         return "Cannot add responders with account level auth. Please provide a user token."
 
-    requester_id = context_info.user.id
-    request.requester_id = requester_id
+    payload = request.model_dump()
+    payload["requester_id"] = user.id
 
-    response = get_client().rpost(f"/incidents/{incident_id}/responder_requests", json=request.model_dump())
+    response = get_client().rpost(f"/incidents/{incident_id}/responder_requests", json=payload)
     if type(response) is dict and "responder_request" in response:
         # If the response is a dict with a responder_request key, return the model
         return IncidentResponderRequestResponse.model_validate(response["responder_request"])
@@ -269,7 +274,7 @@ def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> Pas
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/past_incidents", params=params)
 
-    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit).model_dump_json()
+    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit)
 
 
 def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
@@ -289,4 +294,4 @@ def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) 
     params = query_model.to_params()
     response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
 
-    return RelatedIncidentsResponse.from_api_response(response).model_dump_json()
+    return RelatedIncidentsResponse.from_api_response(response)

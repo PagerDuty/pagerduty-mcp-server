@@ -366,8 +366,8 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         mock_get_client.assert_called_once()
         self.mock_client.rdelete.assert_called_once_with("/alert_grouping_settings/PAGS123")
 
-        # Verify result (should be None)
-        self.assertIsNone(result)
+        # Verify result returns confirmation string
+        self.assertEqual(result, "Successfully deleted alert grouping setting PAGS123")
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
     def test_delete_alert_grouping_setting_client_error(self, mock_get_client):

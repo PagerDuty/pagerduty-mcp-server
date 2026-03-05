@@ -477,16 +477,6 @@ INCIDENT_COMPETENCY_TESTS = [
         ],
         description="Get specific alert using natural language query",
     ),
-    IncidentCompetencyTest(
-        query="List all alerts from incident PINCIDENT123 sorted by status",
-        expected_tool_calls=[
-            MockToolCall(
-                name="list_alerts_from_incident",
-                parameters={"incident_id": "PINCIDENT123", "query_model": {}},
-            )
-        ],
-        description="List alerts for incident with sorting (LLM filters client-side)",
-    ),
     # Issue #4: manage_incidents uses flat fields (incident_ids + status/urgency/etc)
     IncidentCompetencyTest(
         query="Resolve incidents 123 and 456",

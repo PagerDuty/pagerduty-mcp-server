@@ -101,7 +101,6 @@ dev = [
     "boto3~=1.35",
     "coverage~=7.8",
     "deepdiff~=8.5",
-    "ipykernel~=6.29",
     "openai~=1.84",
     "pyright~=1.1",
     "pytest~=8.3",

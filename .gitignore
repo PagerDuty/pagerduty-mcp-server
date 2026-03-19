@@ -193,3 +193,8 @@ cython_debug/
 .cursorignore
 .cursorindexingignoretest_results_*.json
 test_run_output.log
+
+# Docusaurus website
+website/node_modules/
+website/build/
+website/.docusaurus/

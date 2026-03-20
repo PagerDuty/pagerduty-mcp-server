@@ -278,6 +278,21 @@ class TestEscalationPolicyTools(unittest.TestCase):
 
         self.assertEqual(str(context.exception), "Pagination Error")
 
+    @patch("pagerduty_mcp.tools.escalation_policies.paginate")
+    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
+    def test_list_escalation_policies_without_query_model(self, mock_get_client, mock_paginate):
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = []
+
+        result = list_escalation_policies()
+
+        self.assertEqual(result.response, [])
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client,
+            entity="escalation_policies",
+            params=EscalationPolicyQuery().to_params(),
+        )
+
     @patch("pagerduty_mcp.tools.escalation_policies.get_client")
     def test_get_escalation_policy_success(self, mock_get_client):
         """Test successful retrieval of a specific escalation policy."""

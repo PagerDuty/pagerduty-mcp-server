@@ -279,6 +279,24 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(params["since"], since_date.isoformat())
         self.assertEqual(params["urgencies[]"], ["high"])
 
+    @patch("pagerduty_mcp.tools.incidents.ContextResolver")
+    @patch("pagerduty_mcp.tools.incidents.paginate")
+    def test_list_incidents_without_query_model(self, mock_paginate, mock_context_resolver):
+        mock_client = Mock()
+        mock_context_resolver.get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_incidents()
+
+        self.assertEqual(result.response, [])
+        default_query = IncidentQuery()
+        mock_paginate.assert_called_once_with(
+            client=mock_client,
+            entity="incidents",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
+
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_incident_success(self, mock_get_client):
         """Test getting a specific incident successfully."""
@@ -1407,6 +1425,24 @@ class TestAlertTools(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 0)
+
+    @patch("pagerduty_mcp.tools.alerts.paginate")
+    @patch("pagerduty_mcp.tools.alerts.get_client")
+    def test_list_alerts_from_incident_without_query_model(self, mock_get_client, mock_paginate):
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_alerts_from_incident("PINCIDENT123")
+
+        self.assertEqual(result.response, [])
+        default_query = AlertQuery()
+        mock_paginate.assert_called_once_with(
+            client=mock_client,
+            entity="incidents/PINCIDENT123/alerts",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
 
 
 if __name__ == "__main__":

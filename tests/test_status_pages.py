@@ -543,6 +543,96 @@ class TestStatusPagesTools(unittest.TestCase):
         )
         self.assertEqual(json_data["post_update"]["reported_at"], "2023-12-12T14:30:00")
 
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_list_status_pages_without_query_model(self, mock_get_client, mock_paginate):
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_status_pages()
+
+        self.assertEqual(result.response, [])
+        default_query = StatusPageQuery()
+        mock_paginate.assert_called_once_with(
+            client=mock_client,
+            entity="status_pages",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
+
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_list_status_page_severities_without_query_model(self, mock_get_client, mock_paginate):
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_status_page_severities("PQ8W0D0")
+
+        self.assertEqual(result.response, [])
+        default_query = StatusPageSeverityQuery()
+        mock_paginate.assert_called_once_with(
+            client=mock_client,
+            entity="/status_pages/PQ8W0D0/severities",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
+
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_list_status_page_impacts_without_query_model(self, mock_get_client, mock_paginate):
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_status_page_impacts("PQ8W0D0")
+
+        self.assertEqual(result.response, [])
+        default_query = StatusPageImpactQuery()
+        mock_paginate.assert_called_once_with(
+            client=mock_client,
+            entity="/status_pages/PQ8W0D0/impacts",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
+
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_list_status_page_statuses_without_query_model(self, mock_get_client, mock_paginate):
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_status_page_statuses("PQ8W0D0")
+
+        self.assertEqual(result.response, [])
+        default_query = StatusPageStatusQuery()
+        mock_paginate.assert_called_once_with(
+            client=mock_client,
+            entity="/status_pages/PQ8W0D0/statuses",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
+
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_list_status_page_post_updates_without_query_model(self, mock_get_client, mock_paginate):
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_status_page_post_updates("PR5LMML", "PIJ90N7")
+
+        self.assertEqual(result.response, [])
+        default_query = StatusPagePostUpdateQuery()
+        mock_paginate.assert_called_once_with(
+            client=mock_client,
+            entity="/status_pages/PR5LMML/posts/PIJ90N7/post_updates",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

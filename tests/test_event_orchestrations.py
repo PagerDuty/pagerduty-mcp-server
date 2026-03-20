@@ -1212,6 +1212,22 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(global_orch.orchestration_path.type, "global")
         self.assertEqual(global_orch.orchestration_path.parent.id, "GLOBAL123")
 
+    @patch("pagerduty_mcp.tools.event_orchestrations.paginate")
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_list_event_orchestrations_without_query_model(self, mock_get_client, mock_paginate):
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_event_orchestrations()
+
+        self.assertEqual(result.response, [])
+        mock_paginate.assert_called_once_with(
+            client=mock_client,
+            entity="event_orchestrations",
+            params=EventOrchestrationQuery().to_params(),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

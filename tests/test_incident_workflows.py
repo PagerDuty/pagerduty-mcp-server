@@ -153,7 +153,7 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PSFEVL7")
         mock_paginate.assert_called_once()
         call_args = mock_paginate.call_args
-        self.assertEqual(call_args.kwargs["maximum_records"], 100)
+        self.assertEqual(call_args.kwargs["maximum_records"], IncidentWorkflowQuery().limit)
 
     @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
@@ -167,7 +167,7 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertEqual(len(result.response), 1)
         mock_paginate.assert_called_once()
         call_args = mock_paginate.call_args
-        self.assertEqual(call_args.kwargs["maximum_records"], 100)
+        self.assertEqual(call_args.kwargs["maximum_records"], IncidentWorkflowQuery().limit)
 
     @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     def test_get_incident_workflow_success(self, mock_get_client):

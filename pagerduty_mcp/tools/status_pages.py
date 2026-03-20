@@ -1,5 +1,5 @@
 from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import ListResponseModel
+from pagerduty_mcp.models import ListResponseModel, MAX_RESULTS
 from pagerduty_mcp.models.status_pages import (
     StatusPage,
     StatusPageImpact,
@@ -19,7 +19,7 @@ from pagerduty_mcp.models.status_pages import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusPage]:
+def list_status_pages(query_model: StatusPageQuery | None = None) -> ListResponseModel[StatusPage]:
     """List Status Pages with optional filtering.
 
     Args:
@@ -28,13 +28,14 @@ def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusP
     Returns:
         List of StatusPage objects matching the query parameters
     """
+    query_model = query_model or StatusPageQuery()
     params = query_model.to_params()
 
     response = paginate(
         client=get_client(),
         entity="status_pages",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
 
     status_pages = [StatusPage(**item) for item in response]
@@ -42,7 +43,7 @@ def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusP
 
 
 def list_status_page_severities(
-    status_page_id: str, query_model: StatusPageSeverityQuery
+    status_page_id: str, query_model: StatusPageSeverityQuery | None = None
 ) -> ListResponseModel[StatusPageSeverity]:
     """List Severities for a Status Page by Status Page ID.
 
@@ -53,13 +54,14 @@ def list_status_page_severities(
     Returns:
         List of StatusPageSeverity objects for the given Status Page
     """
+    query_model = query_model or StatusPageSeverityQuery()
     params = query_model.to_params()
 
     response = paginate(
         client=get_client(),
         entity=f"/status_pages/{status_page_id}/severities",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
 
     severities = [StatusPageSeverity(**item) for item in response]
@@ -67,7 +69,7 @@ def list_status_page_severities(
 
 
 def list_status_page_impacts(
-    status_page_id: str, query_model: StatusPageImpactQuery
+    status_page_id: str, query_model: StatusPageImpactQuery | None = None
 ) -> ListResponseModel[StatusPageImpact]:
     """List Impacts for a Status Page by Status Page ID.
 
@@ -78,13 +80,14 @@ def list_status_page_impacts(
     Returns:
         List of StatusPageImpact objects for the given Status Page
     """
+    query_model = query_model or StatusPageImpactQuery()
     params = query_model.to_params()
 
     response = paginate(
         client=get_client(),
         entity=f"/status_pages/{status_page_id}/impacts",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
 
     impacts = [StatusPageImpact(**item) for item in response]
@@ -92,7 +95,7 @@ def list_status_page_impacts(
 
 
 def list_status_page_statuses(
-    status_page_id: str, query_model: StatusPageStatusQuery
+    status_page_id: str, query_model: StatusPageStatusQuery | None = None
 ) -> ListResponseModel[StatusPageStatus]:
     """List Statuses for a Status Page by Status Page ID.
 
@@ -103,13 +106,14 @@ def list_status_page_statuses(
     Returns:
         List of StatusPageStatus objects for the given Status Page
     """
+    query_model = query_model or StatusPageStatusQuery()
     params = query_model.to_params()
 
     response = paginate(
         client=get_client(),
         entity=f"/status_pages/{status_page_id}/statuses",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
 
     statuses = [StatusPageStatus(**item) for item in response]
@@ -190,7 +194,7 @@ def create_status_page_post_update(
 
 
 def list_status_page_post_updates(
-    status_page_id: str, post_id: str, query_model: StatusPagePostUpdateQuery
+    status_page_id: str, post_id: str, query_model: StatusPagePostUpdateQuery | None = None
 ) -> ListResponseModel[StatusPagePostUpdate]:
     """List Post Updates for a Status Page by Status Page ID and Post ID.
 
@@ -202,13 +206,14 @@ def list_status_page_post_updates(
     Returns:
         List of StatusPagePostUpdate objects for the given Post
     """
+    query_model = query_model or StatusPagePostUpdateQuery()
     params = query_model.to_params()
 
     response = paginate(
         client=get_client(),
         entity=f"/status_pages/{status_page_id}/posts/{post_id}/post_updates",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
 
     post_updates = [StatusPagePostUpdate(**item) for item in response]

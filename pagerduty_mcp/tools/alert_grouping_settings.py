@@ -7,11 +7,14 @@ from pagerduty_mcp.models import (
     AlertGroupingSettingQuery,
     AlertGroupingSettingUpdateRequest,
     ListResponseModel,
+    MAX_RESULTS,
 )
 from pagerduty_mcp.utils import paginate
 
 
-def list_alert_grouping_settings(query_model: AlertGroupingSettingQuery) -> ListResponseModel[AlertGroupingSetting]:
+def list_alert_grouping_settings(
+    query_model: AlertGroupingSettingQuery | None = None,
+) -> ListResponseModel[AlertGroupingSetting]:
     """List all alert grouping settings with optional filtering.
 
     Args:
@@ -20,10 +23,11 @@ def list_alert_grouping_settings(query_model: AlertGroupingSettingQuery) -> List
     Returns:
         List of alert grouping settings matching the query parameters
     """
+    query_model = query_model or AlertGroupingSettingQuery()
     params = query_model.to_params()
 
     response = paginate(
-        client=get_client(), entity="alert_grouping_settings", params=params, maximum_records=query_model.limit or 1000
+        client=get_client(), entity="alert_grouping_settings", params=params, maximum_records=query_model.limit or MAX_RESULTS
     )
 
     settings = [AlertGroupingSetting(**setting) for setting in response]

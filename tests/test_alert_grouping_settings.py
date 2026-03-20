@@ -445,6 +445,23 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         with self.assertRaises(ValueError):
             TimeGroupingConfig(timeout=100000)  # Above maximum
 
+    @patch("pagerduty_mcp.tools.alert_grouping_settings.paginate")
+    @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
+    def test_list_alert_grouping_settings_without_query_model(self, mock_get_client, mock_paginate):
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = []
+
+        result = list_alert_grouping_settings()
+
+        self.assertEqual(result.response, [])
+        default_query = AlertGroupingSettingQuery()
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client,
+            entity="alert_grouping_settings",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

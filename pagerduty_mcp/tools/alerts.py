@@ -1,5 +1,5 @@
 from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import Alert, AlertQuery, ListResponseModel
+from pagerduty_mcp.models import Alert, AlertQuery, ListResponseModel, MAX_RESULTS
 from pagerduty_mcp.utils import paginate
 
 
@@ -17,7 +17,7 @@ def get_alert_from_incident(incident_id: str, alert_id: str) -> Alert:
     return Alert.model_validate(response)
 
 
-def list_alerts_from_incident(incident_id: str, query_model: AlertQuery) -> ListResponseModel[Alert]:
+def list_alerts_from_incident(incident_id: str, query_model: AlertQuery | None = None) -> ListResponseModel[Alert]:
     """List alerts for a specific incident.
 
     Args:
@@ -28,13 +28,14 @@ def list_alerts_from_incident(incident_id: str, query_model: AlertQuery) -> List
         List of Alert objects for the incident
 
     """
+    query_model = query_model or AlertQuery()
     params = query_model.to_params()
 
     response = paginate(
         client=get_client(),
         entity=f"incidents/{incident_id}/alerts",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
     alerts = [Alert(**alert) for alert in response]
     return ListResponseModel[Alert](response=alerts)

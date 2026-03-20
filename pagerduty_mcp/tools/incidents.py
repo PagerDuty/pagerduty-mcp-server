@@ -13,6 +13,7 @@ from pagerduty_mcp.models import (
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
+    MAX_RESULTS,
     OutlierIncidentQuery,
     OutlierIncidentResponse,
     PastIncidentsQuery,
@@ -24,7 +25,7 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
+def list_incidents(query_model: IncidentQuery | None = None) -> ListResponseModel[Incident]:
     """List incidents with optional filtering.
 
     Args:
@@ -34,6 +35,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
         List of Incident objects matching the query parameters
 
     """
+    query_model = query_model or IncidentQuery()
     params = query_model.to_params()
 
     if query_model.request_scope in ["assigned", "teams"]:
@@ -48,7 +50,7 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
             params["team_ids[]"] = user_team_ids
 
     response = paginate(
-        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
+        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or MAX_RESULTS
     )
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)

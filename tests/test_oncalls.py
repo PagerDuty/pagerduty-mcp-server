@@ -400,6 +400,17 @@ class TestOncallTools(unittest.TestCase):
         query = OncallQuery()
         self.assertEqual(query.limit, DEFAULT_PAGINATION_LIMIT)
 
+    @patch("pagerduty_mcp.tools.oncalls.paginate")
+    @patch("pagerduty_mcp.tools.oncalls.get_client")
+    def test_list_oncalls_without_query_model(self, mock_get_client, mock_paginate):
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = []
+
+        result = list_oncalls()
+
+        self.assertEqual(result.response, [])
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=OncallQuery().to_params())
+
 
 if __name__ == "__main__":
     unittest.main()

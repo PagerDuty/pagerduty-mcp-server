@@ -117,9 +117,12 @@ class TestLogEntryTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PLOGENTRY123")
         mock_paginate.assert_called_once()
 
-        # Verify that default timestamps were set (last 7 days)
-        self.assertIsNotNone(query_model.since)
-        self.assertIsNotNone(query_model.until)
+        # Verify that default timestamps were injected into params, not into the query object
+        call_args = mock_paginate.call_args
+        self.assertIn("since", call_args.kwargs["params"])
+        self.assertIn("until", call_args.kwargs["params"])
+        self.assertIsNone(query_model.since)
+        self.assertIsNone(query_model.until)
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
@@ -183,9 +186,13 @@ class TestLogEntryTools(unittest.TestCase):
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
 
-        # Verify that empty strings were converted to None and then to default values
-        self.assertIsNotNone(query_model.since)
-        self.assertIsNotNone(query_model.until)
+        # Verify that empty strings were converted to None and default timestamps
+        # injected into params without mutating the query object
+        call_args = mock_paginate.call_args
+        self.assertIn("since", call_args.kwargs["params"])
+        self.assertIn("until", call_args.kwargs["params"])
+        self.assertIsNone(query_model.since)
+        self.assertIsNone(query_model.until)
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
@@ -358,6 +365,24 @@ class TestLogEntryTools(unittest.TestCase):
         self.assertEqual(params["team_ids[]"], ["TEAM1"])
         self.assertEqual(params["time_zone"], "UTC")
         self.assertTrue(params["total"])
+
+    @patch("pagerduty_mcp.tools.log_entries.paginate")
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_log_entries_without_query_model(self, mock_get_client, mock_paginate):
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = []
+
+        result = list_log_entries()
+
+        self.assertEqual(result.response, [])
+        mock_paginate.assert_called_once()
+        call_args = mock_paginate.call_args
+        self.assertEqual(call_args.kwargs["client"], mock_client)
+        self.assertEqual(call_args.kwargs["entity"], "log_entries")
+        self.assertIn("since", call_args.kwargs["params"])
+        self.assertIn("until", call_args.kwargs["params"])
+        self.assertEqual(call_args.kwargs["maximum_records"], LogEntryQuery().limit)
 
 
 if __name__ == "__main__":

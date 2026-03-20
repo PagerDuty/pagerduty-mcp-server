@@ -840,6 +840,17 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once()
 
+    @patch("pagerduty_mcp.tools.schedules.paginate")
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedules_without_query_model(self, mock_get_client, mock_paginate):
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = []
+
+        result = list_schedules()
+
+        self.assertEqual(result.response, [])
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=ScheduleQuery().to_params())
+
 
 if __name__ == "__main__":
     unittest.main()

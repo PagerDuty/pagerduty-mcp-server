@@ -439,6 +439,17 @@ class TestServiceTools(unittest.TestCase):
 
         self.assertEqual(service.type, "service")
 
+    @patch("pagerduty_mcp.tools.services.paginate")
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_without_query_model(self, mock_get_client, mock_paginate):
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = []
+
+        result = list_services()
+
+        self.assertEqual(result.response, [])
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=ServiceQuery().to_params())
+
 
 if __name__ == "__main__":
     unittest.main()

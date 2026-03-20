@@ -5,6 +5,7 @@ from pagerduty_mcp.models import (
     IncidentWorkflowInstanceRequest,
     IncidentWorkflowQuery,
     ListResponseModel,
+    MAX_RESULTS,
 )
 from pagerduty_mcp.utils import paginate
 
@@ -13,7 +14,7 @@ def list_incident_workflows(query_model: IncidentWorkflowQuery | None = None) ->
     """List incident workflows with optional filtering.
 
     Args:
-        query_model: Optional filtering parameters. If None, returns the first page with default limit of 100.
+        query_model: Optional filtering parameters. If None, uses default query parameters.
 
     Returns:
         List of IncidentWorkflow objects matching the query parameters
@@ -27,7 +28,7 @@ def list_incident_workflows(query_model: IncidentWorkflowQuery | None = None) ->
         client=get_client(),
         entity="incident_workflows",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
 
     workflows = [IncidentWorkflow(**item) for item in response]

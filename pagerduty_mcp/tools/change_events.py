@@ -1,9 +1,9 @@
 from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import ChangeEvent, ChangeEventQuery, ListResponseModel
+from pagerduty_mcp.models import ChangeEvent, ChangeEventQuery, ListResponseModel, MAX_RESULTS
 from pagerduty_mcp.utils import paginate
 
 
-def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[ChangeEvent]:
+def list_change_events(query_model: ChangeEventQuery | None = None) -> ListResponseModel[ChangeEvent]:
     """List all change events with optional filtering.
 
     Change Events represent changes to systems, services, and applications that
@@ -15,12 +15,13 @@ def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[Chang
     Returns:
         List of ChangeEvent objects matching the query parameters
     """
+    query_model = query_model or ChangeEventQuery()
     params = query_model.to_params()
     response = paginate(
         client=get_client(),
         entity="change_events",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
     change_events = [ChangeEvent(**change_event) for change_event in response]
     return ListResponseModel[ChangeEvent](response=change_events)
@@ -44,7 +45,9 @@ def get_change_event(change_event_id: str) -> ChangeEvent:
     return ChangeEvent.model_validate(response)
 
 
-def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -> ListResponseModel[ChangeEvent]:
+def list_service_change_events(
+    service_id: str, query_model: ChangeEventQuery | None = None
+) -> ListResponseModel[ChangeEvent]:
     """List all change events for a specific service.
 
     Args:
@@ -54,12 +57,13 @@ def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -
     Returns:
         List of ChangeEvent objects associated with the service
     """
+    query_model = query_model or ChangeEventQuery()
     params = query_model.to_params()
     response = paginate(
         client=get_client(),
         entity=f"services/{service_id}/change_events",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=query_model.limit or MAX_RESULTS,
     )
     change_events = [ChangeEvent(**change_event) for change_event in response]
     return ListResponseModel[ChangeEvent](response=change_events)
@@ -83,7 +87,7 @@ def list_incident_change_events(incident_id: str, limit: int | None = None) -> L
         client=get_client(),
         entity=f"incidents/{incident_id}/related_change_events",
         params=params,
-        maximum_records=limit or 100,
+        maximum_records=limit or MAX_RESULTS,
     )
     change_events = [ChangeEvent(**change_event) for change_event in response]
     return ListResponseModel[ChangeEvent](response=change_events)

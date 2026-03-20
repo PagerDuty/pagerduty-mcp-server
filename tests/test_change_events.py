@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
-from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
+from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAX_RESULTS, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.change_events import (
     ChangeEvent,
     ChangeEventQuery,
@@ -382,7 +382,7 @@ class TestChangeEventTools(unittest.TestCase):
             client=self.mock_client,
             entity="incidents/INC123/related_change_events",
             params=expected_params,
-            maximum_records=100,
+            maximum_records=MAX_RESULTS,
         )
 
         # Verify result
@@ -471,6 +471,40 @@ class TestChangeEventTools(unittest.TestCase):
         )
 
         self.assertEqual(change_event.type, "change_event")
+
+    @patch("pagerduty_mcp.tools.change_events.paginate")
+    @patch("pagerduty_mcp.tools.change_events.get_client")
+    def test_list_change_events_without_query_model(self, mock_get_client, mock_paginate):
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = []
+
+        result = list_change_events()
+
+        self.assertEqual(result.response, [])
+        default_query = ChangeEventQuery()
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client,
+            entity="change_events",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
+
+    @patch("pagerduty_mcp.tools.change_events.paginate")
+    @patch("pagerduty_mcp.tools.change_events.get_client")
+    def test_list_service_change_events_without_query_model(self, mock_get_client, mock_paginate):
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = []
+
+        result = list_service_change_events("SERVICE123")
+
+        self.assertEqual(result.response, [])
+        default_query = ChangeEventQuery()
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client,
+            entity="services/SERVICE123/change_events",
+            params=default_query.to_params(),
+            maximum_records=default_query.limit,
+        )
 
 
 if __name__ == "__main__":

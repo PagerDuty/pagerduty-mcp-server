@@ -539,6 +539,15 @@ class TestTeamTools(unittest.TestCase):
 
         self.assertEqual(team.type, "team")
 
+    @patch("pagerduty_mcp.tools.teams.paginate")
+    def test_list_teams_without_query_model(self, mock_paginate):
+        mock_paginate.return_value = []
+
+        result = list_teams()
+
+        self.assertEqual(result.response, [])
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=TeamQuery().to_params())
+
 
 if __name__ == "__main__":
     unittest.main()

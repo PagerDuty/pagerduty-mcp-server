@@ -290,6 +290,16 @@ class TestUserTools(unittest.TestCase):
         # Verify result
         self.assertEqual(len(result.response), 2)
 
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_list_users_without_query_model(self, mock_get_client):
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = []
+
+        result = list_users()
+
+        self.assertEqual(result.response, [])
+        self.mock_client.rget.assert_called_once_with("/users", params=UserQuery().to_params())
+
 
 if __name__ == "__main__":
     unittest.main()

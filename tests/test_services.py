@@ -1,13 +1,14 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
+from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT, DependencyList, Relationship
 from pagerduty_mcp.models.escalation_policies import EscalationPolicyReference
 from pagerduty_mcp.models.references import TeamReference
 from pagerduty_mcp.models.services import Service, ServiceCreate, ServiceQuery
 from pagerduty_mcp.tools.services import (
     create_service,
     get_service,
+    get_technical_service_dependencies,
     list_services,
     update_service,
 )
@@ -68,6 +69,7 @@ class TestServiceTools(unittest.TestCase):
         """Reset mock before each test."""
         self.mock_client.reset_mock()
         # Clear any side effects
+        self.mock_client.get.side_effect = None
         self.mock_client.rget.side_effect = None
         self.mock_client.rpost.side_effect = None
         self.mock_client.rput.side_effect = None
@@ -438,6 +440,77 @@ class TestServiceTools(unittest.TestCase):
         )
 
         self.assertEqual(service.type, "service")
+
+    # -------------------------------------------------------------------------
+    # get_technical_service_dependencies
+    # -------------------------------------------------------------------------
+
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_get_technical_service_dependencies_returns_relationships(self, mock_get_client):
+        """Test fetching technical service dependencies returns all relationships."""
+        mock_get_client.return_value = self.mock_client
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "relationships": [
+                {
+                    "id": "DEP001",
+                    "type": "service_dependency",
+                    "supporting_service": {"id": "SVC123", "type": "technical_service_reference"},
+                    "dependent_service": {"id": "BS789", "type": "business_service_reference"},
+                },
+                {
+                    "id": "DEP002",
+                    "type": "service_dependency",
+                    "supporting_service": {"id": "SVC456", "type": "technical_service_reference"},
+                    "dependent_service": {"id": "SVC123", "type": "technical_service_reference"},
+                },
+            ]
+        }
+        self.mock_client.get.return_value = mock_response
+
+        result = get_technical_service_dependencies("SVC123")
+
+        self.mock_client.get.assert_called_once_with("/service_dependencies/technical_services/SVC123")
+        self.assertIsInstance(result, DependencyList)
+        self.assertEqual(len(result.relationships), 2)
+        self.assertIsInstance(result.relationships[0], Relationship)
+        self.assertEqual(result.relationships[0].id, "DEP001")
+
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_get_technical_service_dependencies_empty(self, mock_get_client):
+        """Test fetching technical service dependencies for a service with none."""
+        mock_get_client.return_value = self.mock_client
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"relationships": []}
+        self.mock_client.get.return_value = mock_response
+
+        result = get_technical_service_dependencies("SVC999")
+
+        self.assertIsInstance(result, DependencyList)
+        self.assertEqual(len(result.relationships), 0)
+
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_get_technical_service_dependencies_uses_correct_endpoint(self, mock_get_client):
+        """Test that the correct API endpoint is called for technical service dependencies."""
+        mock_get_client.return_value = self.mock_client
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"relationships": []}
+        self.mock_client.get.return_value = mock_response
+
+        get_technical_service_dependencies("SVCABC")
+
+        self.mock_client.get.assert_called_once_with("/service_dependencies/technical_services/SVCABC")
+
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_get_technical_service_dependencies_client_error(self, mock_get_client):
+        """Test get_technical_service_dependencies propagates client exceptions."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.get.side_effect = Exception("Network Error")
+
+        with self.assertRaises(Exception) as ctx:
+            get_technical_service_dependencies("SVC123")
+
+        self.assertEqual(str(ctx.exception), "Network Error")
 
 
 if __name__ == "__main__":

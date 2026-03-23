@@ -37,3 +37,14 @@ class ListResponseModel[T: BaseModel](BaseModel):
                 " records not included in this response."
             )
         return "\n".join(summary)
+
+
+class Relationship(BaseModel):
+    id: str | None = None
+    supporting_service: dict | None = None
+    dependent_service: dict | None = None
+    type: str | None = None
+
+
+class DependencyList(BaseModel):
+    relationships: list[Relationship]

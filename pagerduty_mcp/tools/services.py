@@ -1,5 +1,6 @@
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import ListResponseModel, Service, ServiceCreate, ServiceQuery
+from pagerduty_mcp.models.base import DependencyList, Relationship
 from pagerduty_mcp.utils import paginate
 
 
@@ -66,3 +67,22 @@ def update_service(service_id: str, service_data: ServiceCreate) -> Service:
         return Service.model_validate(response["service"])
 
     return Service.model_validate(response)
+
+
+def get_technical_service_dependencies(service_id: str) -> DependencyList:
+    """Get dependencies for a technical service.
+
+    Uses GET /service_dependencies/technical_services/{id} to return all service
+    relationships where this technical service is either the dependent or supporting service.
+
+    Args:
+        service_id: The ID of the technical service
+
+    Returns:
+        DependencyList containing the service relationships
+    """
+    client = get_client()
+    resp = client.get(f"/service_dependencies/technical_services/{service_id}")
+    rels = resp.json().get("relationships", [])
+    relationships = [Relationship(**rel) for rel in rels]
+    return DependencyList(relationships=relationships)

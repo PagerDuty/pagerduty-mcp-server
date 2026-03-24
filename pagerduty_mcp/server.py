@@ -23,6 +23,7 @@ app = typer.Typer()
 SERVICE_HEALTH_MATRIX_VIEW_URI = "ui://service-health-matrix/grid.html"
 INCIDENT_COMMAND_CENTER_URI = "ui://incident-command-center/dashboard.html"
 ONCALL_SCHEDULE_VISUALIZER_URI = "ui://oncall-schedule-visualizer/calendar.html"
+SERVICE_DEPENDENCY_GRAPH_URI = "ui://service-dependency-graph/graph.html"
 
 MCP_SERVER_INSTRUCTIONS = """
 When the user asks for information about their resources, first get the user data and scope any
@@ -206,6 +207,50 @@ def add_oncall_schedule_visualizer(mcp_instance: FastMCP) -> None:
         return html_path.read_text(encoding="utf-8")
 
 
+def add_service_dependency_graph(mcp_instance: FastMCP) -> None:
+    """Add Service Dependency Graph MCP App resource.
+
+    The UI directly calls existing MCP tools:
+    - list_services
+    - list_service_change_events
+
+    Args:
+        mcp_instance: The MCP server instance
+    """
+
+    @mcp_instance.tool(
+        meta={
+            "ui": {"resourceUri": SERVICE_DEPENDENCY_GRAPH_URI},
+            "ui/resourceUri": SERVICE_DEPENDENCY_GRAPH_URI,
+        }
+    )
+    def service_dependency_graph() -> list[TextContent]:
+        """Service Dependency Graph - Interactive graph of service dependencies.
+
+        Shows services and their relationships. The UI calls existing
+        MCP tools (list_services, etc.) to fetch data.
+
+        Returns:
+            Text content indicating the UI is ready
+        """
+        return [
+            TextContent(
+                type="text",
+                text="Service Dependency Graph UI initialized. The UI will call existing MCP tools to fetch data."
+            )
+        ]
+
+    @mcp_instance.resource(
+        SERVICE_DEPENDENCY_GRAPH_URI,
+        mime_type="text/html",
+        description="Service Dependency Graph - Interactive graph of service dependencies"
+    )
+    def service_dependency_graph_view() -> str:
+        """Service Dependency Graph UI resource."""
+        html_path = pathlib.Path(__file__).parent / "service_dependency_graph_view.html"
+        return html_path.read_text(encoding="utf-8")
+
+
 @app.command()
 def run(*, enable_write_tools: bool = False) -> None:
     """Run the MCP server with the specified configuration.
@@ -229,5 +274,6 @@ def run(*, enable_write_tools: bool = False) -> None:
     add_service_health_matrix(mcp)
     add_incident_command_center(mcp)
     add_oncall_schedule_visualizer(mcp)
+    add_service_dependency_graph(mcp)
 
     mcp.run()

@@ -64,9 +64,14 @@ from .schedules import (
     list_schedules,
     update_schedule,
 )
+from .business_services import (
+    get_business_service_dependencies,
+    list_business_services,
+)
 from .services import (
     create_service,
     get_service,
+    get_technical_service_dependencies,
     list_services,
     update_service,
 )
@@ -117,9 +122,13 @@ read_tools = [
     get_incident_workflow,
     # Priorities
     list_priorities,
+    # Business Services
+    list_business_services,
+    get_business_service_dependencies,
     # Services
     list_services,
     get_service,
+    get_technical_service_dependencies,
     # Teams
     list_teams,
     get_team,

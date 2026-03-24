@@ -1,3 +1,5 @@
+import json
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import ListResponseModel, Service, ServiceCreate, ServiceQuery
 from pagerduty_mcp.utils import paginate
@@ -48,6 +50,21 @@ def create_service(service_data: ServiceCreate) -> str:
         return Service.model_validate(response["service"]).model_dump_json()
 
     return Service.model_validate(response).model_dump_json()
+
+
+def get_technical_service_dependencies(service_id: str) -> str:
+    """Get dependencies for a technical service.
+
+    Args:
+        service_id: The ID of the technical service
+
+    Returns:
+        JSON string with relationships list
+    """
+    client = get_client()
+    resp = client.get(f"/service_dependencies/technical_services/{service_id}")
+    data = resp.json()
+    return json.dumps({"relationships": data.get("relationships", [])})
 
 
 def update_service(service_id: str, service_data: ServiceCreate) -> str:

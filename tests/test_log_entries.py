@@ -98,6 +98,24 @@ class TestLogEntryTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_log_entries_no_query_model(self, mock_get_client, mock_paginate):
+        """Test that list_log_entries can be called with no arguments (no query_model)."""
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = [self.sample_log_entry_data]
+
+        result = list_log_entries()
+
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+        mock_paginate.assert_called_once()
+        # Verify the default 7-day window was applied
+        call_args = mock_paginate.call_args
+        self.assertIn("since", call_args[1]["params"])
+        self.assertIn("until", call_args[1]["params"])
+
+    @patch("pagerduty_mcp.tools.log_entries.paginate")
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
     def test_list_log_entries(self, mock_get_client, mock_paginate):
         """Test listing log entries with default time range (last 7 days)."""
         # Arrange

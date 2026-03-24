@@ -82,6 +82,19 @@ class TestOncallTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
     @patch("pagerduty_mcp.tools.oncalls.get_client")
+    def test_list_oncalls_no_query_model(self, mock_get_client, mock_paginate):
+        """Test that list_oncalls can be called with no arguments (no query_model)."""
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = self.sample_oncalls_list_response
+
+        result = list_oncalls()
+
+        expected_params = {"earliest": "true", "limit": DEFAULT_PAGINATION_LIMIT}
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.oncalls.paginate")
+    @patch("pagerduty_mcp.tools.oncalls.get_client")
     def test_list_oncalls_no_filters(self, mock_get_client, mock_paginate):
         """Test listing oncalls without any filters."""
         mock_get_client.return_value = self.mock_client

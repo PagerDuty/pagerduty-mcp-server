@@ -11,12 +11,14 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_schedules(query_model: ScheduleQuery) -> ListResponseModel[Schedule]:
+def list_schedules(query_model: ScheduleQuery | None = None) -> ListResponseModel[Schedule]:
     """List schedules with optional filtering.
 
     Returns:
         List of schedules matching the query parameters
     """
+    if query_model is None:
+        query_model = ScheduleQuery()
     response = paginate(client=get_client(), entity="schedules", params=query_model.to_params())
     schedules = [Schedule(**schedule) for schedule in response]
     return ListResponseModel[Schedule](response=schedules)

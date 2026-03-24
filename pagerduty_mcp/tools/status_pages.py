@@ -19,7 +19,7 @@ from pagerduty_mcp.models.status_pages import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusPage]:
+def list_status_pages(query_model: StatusPageQuery | None = None) -> ListResponseModel[StatusPage]:
     """List Status Pages with optional filtering.
 
     Args:
@@ -28,6 +28,8 @@ def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusP
     Returns:
         List of StatusPage objects matching the query parameters
     """
+    if query_model is None:
+        query_model = StatusPageQuery()
     params = query_model.to_params()
 
     response = paginate(
@@ -42,7 +44,7 @@ def list_status_pages(query_model: StatusPageQuery) -> ListResponseModel[StatusP
 
 
 def list_status_page_severities(
-    status_page_id: str, query_model: StatusPageSeverityQuery
+    status_page_id: str, query_model: StatusPageSeverityQuery | None = None
 ) -> ListResponseModel[StatusPageSeverity]:
     """List Severities for a Status Page by Status Page ID.
 
@@ -53,6 +55,8 @@ def list_status_page_severities(
     Returns:
         List of StatusPageSeverity objects for the given Status Page
     """
+    if query_model is None:
+        query_model = StatusPageSeverityQuery()
     params = query_model.to_params()
 
     response = paginate(
@@ -67,7 +71,7 @@ def list_status_page_severities(
 
 
 def list_status_page_impacts(
-    status_page_id: str, query_model: StatusPageImpactQuery
+    status_page_id: str, query_model: StatusPageImpactQuery | None = None
 ) -> ListResponseModel[StatusPageImpact]:
     """List Impacts for a Status Page by Status Page ID.
 
@@ -78,6 +82,8 @@ def list_status_page_impacts(
     Returns:
         List of StatusPageImpact objects for the given Status Page
     """
+    if query_model is None:
+        query_model = StatusPageImpactQuery()
     params = query_model.to_params()
 
     response = paginate(
@@ -92,7 +98,7 @@ def list_status_page_impacts(
 
 
 def list_status_page_statuses(
-    status_page_id: str, query_model: StatusPageStatusQuery
+    status_page_id: str, query_model: StatusPageStatusQuery | None = None
 ) -> ListResponseModel[StatusPageStatus]:
     """List Statuses for a Status Page by Status Page ID.
 
@@ -103,6 +109,8 @@ def list_status_page_statuses(
     Returns:
         List of StatusPageStatus objects for the given Status Page
     """
+    if query_model is None:
+        query_model = StatusPageStatusQuery()
     params = query_model.to_params()
 
     response = paginate(
@@ -190,7 +198,7 @@ def create_status_page_post_update(
 
 
 def list_status_page_post_updates(
-    status_page_id: str, post_id: str, query_model: StatusPagePostUpdateQuery
+    status_page_id: str, post_id: str, query_model: StatusPagePostUpdateQuery | None = None
 ) -> ListResponseModel[StatusPagePostUpdate]:
     """List Post Updates for a Status Page by Status Page ID and Post ID.
 
@@ -202,6 +210,8 @@ def list_status_page_post_updates(
     Returns:
         List of StatusPagePostUpdate objects for the given Post
     """
+    if query_model is None:
+        query_model = StatusPagePostUpdateQuery()
     params = query_model.to_params()
 
     response = paginate(

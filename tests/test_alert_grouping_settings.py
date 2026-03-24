@@ -100,6 +100,19 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.paginate")
     @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
+    def test_list_alert_grouping_settings_no_query_model(self, mock_get_client, mock_paginate):
+        """Test that list_alert_grouping_settings can be called with no arguments (no query_model)."""
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = self.sample_list_response
+
+        result = list_alert_grouping_settings()
+
+        mock_paginate.assert_called_once()
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 3)
+
+    @patch("pagerduty_mcp.tools.alert_grouping_settings.paginate")
+    @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
     def test_list_alert_grouping_settings_no_filters(self, mock_get_client, mock_paginate):
         """Test listing alert grouping settings without any filters."""
         mock_get_client.return_value = self.mock_client

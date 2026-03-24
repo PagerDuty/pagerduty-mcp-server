@@ -96,6 +96,40 @@ class TestChangeEventTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
     @patch("pagerduty_mcp.tools.change_events.get_client")
+    def test_list_change_events_no_query_model(self, mock_get_client, mock_paginate):
+        """Test that list_change_events can be called with no arguments (no query_model)."""
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = self.sample_change_events_list_response
+
+        result = list_change_events()
+
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client,
+            entity="change_events",
+            params={"limit": DEFAULT_PAGINATION_LIMIT},
+            maximum_records=DEFAULT_PAGINATION_LIMIT,
+        )
+        self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.change_events.paginate")
+    @patch("pagerduty_mcp.tools.change_events.get_client")
+    def test_list_service_change_events_no_query_model(self, mock_get_client, mock_paginate):
+        """Test that list_service_change_events can be called without query_model."""
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = self.sample_change_events_list_response
+
+        result = list_service_change_events("P43PBXB")
+
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client,
+            entity="services/P43PBXB/change_events",
+            params={"limit": DEFAULT_PAGINATION_LIMIT},
+            maximum_records=DEFAULT_PAGINATION_LIMIT,
+        )
+        self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.change_events.paginate")
+    @patch("pagerduty_mcp.tools.change_events.get_client")
     def test_list_change_events_no_filters(self, mock_get_client, mock_paginate):
         """Test listing change events without any filters."""
         mock_get_client.return_value = self.mock_client

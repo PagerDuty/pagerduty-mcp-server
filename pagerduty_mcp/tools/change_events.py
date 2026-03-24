@@ -3,7 +3,7 @@ from pagerduty_mcp.models import ChangeEvent, ChangeEventQuery, ListResponseMode
 from pagerduty_mcp.utils import paginate
 
 
-def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[ChangeEvent]:
+def list_change_events(query_model: ChangeEventQuery | None = None) -> ListResponseModel[ChangeEvent]:
     """List all change events with optional filtering.
 
     Change Events represent changes to systems, services, and applications that
@@ -15,6 +15,8 @@ def list_change_events(query_model: ChangeEventQuery) -> ListResponseModel[Chang
     Returns:
         List of ChangeEvent objects matching the query parameters
     """
+    if query_model is None:
+        query_model = ChangeEventQuery()
     params = query_model.to_params()
     response = paginate(
         client=get_client(),
@@ -44,7 +46,9 @@ def get_change_event(change_event_id: str) -> ChangeEvent:
     return ChangeEvent.model_validate(response)
 
 
-def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -> ListResponseModel[ChangeEvent]:
+def list_service_change_events(
+    service_id: str, query_model: ChangeEventQuery | None = None
+) -> ListResponseModel[ChangeEvent]:
     """List all change events for a specific service.
 
     Args:
@@ -54,6 +58,8 @@ def list_service_change_events(service_id: str, query_model: ChangeEventQuery) -
     Returns:
         List of ChangeEvent objects associated with the service
     """
+    if query_model is None:
+        query_model = ChangeEventQuery()
     params = query_model.to_params()
     response = paginate(
         client=get_client(),

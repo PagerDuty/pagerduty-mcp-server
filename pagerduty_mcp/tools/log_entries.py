@@ -18,7 +18,7 @@ def get_log_entry(log_entry_id: str) -> LogEntry:
     return LogEntry.model_validate(response)
 
 
-def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
+def list_log_entries(query_model: LogEntryQuery | None = None) -> ListResponseModel[LogEntry]:
     """List all log entries across the account.
 
     Log entries are records of all events on your account. This function allows you
@@ -33,6 +33,8 @@ def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
         List of LogEntry objects matching the query parameters
 
     """
+    if query_model is None:
+        query_model = LogEntryQuery()
     # Default to last 7 days if no time range specified
     if query_model.since is None:
         query_model.since = datetime.now(UTC) - timedelta(days=7)

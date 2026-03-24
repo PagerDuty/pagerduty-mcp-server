@@ -3,7 +3,7 @@ from pagerduty_mcp.models import ListResponseModel, Service, ServiceCreate, Serv
 from pagerduty_mcp.utils import paginate
 
 
-def list_services(query_model: ServiceQuery) -> ListResponseModel[Service]:
+def list_services(query_model: ServiceQuery | None = None) -> ListResponseModel[Service]:
     """List all services.
 
     Args:
@@ -12,6 +12,8 @@ def list_services(query_model: ServiceQuery) -> ListResponseModel[Service]:
     Returns:
         List of services matching the query parameters
     """
+    if query_model is None:
+        query_model = ServiceQuery()
     response = paginate(client=get_client(), entity="services", params=query_model.to_params())
     services = [Service(**service) for service in response]
     return ListResponseModel[Service](response=services)

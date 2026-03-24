@@ -89,6 +89,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 convention = "google"
 ignore-var-parameters = true
 
+[tool.pytest.ini_options]
+norecursedirs = ["tests/evals"]
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"

@@ -11,7 +11,7 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_teams(query_model: TeamQuery) -> ListResponseModel[Team]:
+def list_teams(query_model: TeamQuery | None = None) -> ListResponseModel[Team]:
     """List teams based on the provided query model.
 
     Args:
@@ -19,6 +19,8 @@ def list_teams(query_model: TeamQuery) -> ListResponseModel[Team]:
     Returns:
         List of teams.
     """
+    if query_model is None:
+        query_model = TeamQuery()
     if query_model.scope == "my":
         # get my team references from /users/me
         user_data = ContextResolver.get_user()

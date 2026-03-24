@@ -75,6 +75,16 @@ class TestTeamTools(unittest.TestCase):
         ContextResolver.set_strategy(self.mock_strategy)
 
     @patch("pagerduty_mcp.tools.teams.paginate")
+    def test_list_teams_no_query_model(self, mock_paginate):
+        """Test that list_teams can be called with no arguments (no query_model), defaults to 'all' scope."""
+        mock_paginate.return_value = self.sample_teams_list_response
+
+        result = list_teams()
+
+        mock_paginate.assert_called_once()
+        self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.teams.paginate")
     def test_list_teams_all_scope(self, mock_paginate):
         """Test listing teams with 'all' scope."""
         mock_paginate.return_value = self.sample_teams_list_response

@@ -24,7 +24,7 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
+def list_incidents(query_model: IncidentQuery | None = None) -> ListResponseModel[Incident]:
     """List incidents with optional filtering.
 
     Args:
@@ -34,6 +34,8 @@ def list_incidents(query_model: IncidentQuery) -> ListResponseModel[Incident]:
         List of Incident objects matching the query parameters
 
     """
+    if query_model is None:
+        query_model = IncidentQuery()
     params = query_model.to_params()
 
     if query_model.request_scope in ["assigned", "teams"]:

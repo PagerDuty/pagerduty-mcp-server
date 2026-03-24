@@ -4,13 +4,15 @@ from pagerduty_mcp.utils import paginate
 
 
 def list_escalation_policies(
-    query_model: EscalationPolicyQuery,
+    query_model: EscalationPolicyQuery | None = None,
 ) -> ListResponseModel[EscalationPolicy]:
     """List escalation policies with optional filtering.
 
     Returns:
         List of escalation policies matching the query parameters
     """
+    if query_model is None:
+        query_model = EscalationPolicyQuery()
     response = paginate(client=get_client(), entity="escalation_policies", params=query_model.to_params())
     policies = [EscalationPolicy(**policy) for policy in response]
     return ListResponseModel[EscalationPolicy](response=policies)

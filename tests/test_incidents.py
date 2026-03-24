@@ -175,6 +175,20 @@ class TestIncidentTools(unittest.TestCase):
         ContextResolver.set_strategy(self.mock_context)
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
+    def test_list_incidents_no_query_model(self, mock_paginate):
+        """Test that list_incidents can be called with no arguments (no query_model)."""
+        mock_paginate.return_value = [self.sample_incident_data]
+
+        result = list_incidents()
+
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+        self.assertIsInstance(result.response[0], Incident)
+        mock_paginate.assert_called_once()
+        call_args = mock_paginate.call_args
+        self.assertEqual(call_args[1]["entity"], "incidents")
+
+    @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_basic(self, mock_paginate):
         """Test basic incident listing."""
         # Setup mocks

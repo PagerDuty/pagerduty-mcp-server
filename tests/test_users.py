@@ -91,6 +91,18 @@ class TestUserTools(unittest.TestCase):
         self.mock_client.rget.assert_called_once_with("/users/me")
 
     @patch("pagerduty_mcp.tools.users.get_client")
+    def test_list_users_no_query_model(self, mock_get_client):
+        """Test that list_users can be called with no arguments (no query_model)."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = self.sample_users_list_response
+
+        result = list_users()
+
+        expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
+        self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
+        self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.users.get_client")
     def test_list_users_no_filters(self, mock_get_client):
         """Test listing users without any filters."""
         mock_get_client.return_value = self.mock_client

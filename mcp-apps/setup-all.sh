@@ -7,8 +7,8 @@ set -e
 echo "🚀 Setting up PagerDuty MCP Apps..."
 echo ""
 
-APPS=("incident-command-center" "oncall-schedule-visualizer" "service-health-matrix")
-PORTS=("3001" "3002" "3003")
+APPS=("incident-command-center" "oncall-schedule-visualizer" "service-health-matrix" "service-dependency-graph" "oncall-compensation")
+PORTS=("3001" "3002" "3003" "3004" "3005")
 
 # Install dependencies
 echo "📦 Installing dependencies..."

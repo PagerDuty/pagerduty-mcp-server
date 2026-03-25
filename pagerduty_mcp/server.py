@@ -24,6 +24,7 @@ SERVICE_HEALTH_MATRIX_VIEW_URI = "ui://service-health-matrix/grid.html"
 INCIDENT_COMMAND_CENTER_URI = "ui://incident-command-center/dashboard.html"
 ONCALL_SCHEDULE_VISUALIZER_URI = "ui://oncall-schedule-visualizer/calendar.html"
 SERVICE_DEPENDENCY_GRAPH_URI = "ui://service-dependency-graph/graph.html"
+ONCALL_COMPENSATION_URI = "ui://oncall-compensation/report.html"
 
 MCP_SERVER_INSTRUCTIONS = """
 When the user asks for information about their resources, first get the user data and scope any
@@ -251,6 +252,51 @@ def add_service_dependency_graph(mcp_instance: FastMCP) -> None:
         return html_path.read_text(encoding="utf-8")
 
 
+def add_oncall_compensation(mcp_instance: FastMCP) -> None:
+    """Add Oncall Compensation Report MCP App resource.
+
+    The UI directly calls existing MCP tools:
+    - list_users, list_teams
+    - list_schedules, list_oncalls
+    - list_incidents
+
+    Args:
+        mcp_instance: The MCP server instance
+    """
+
+    @mcp_instance.tool(
+        meta={
+            "ui": {"resourceUri": ONCALL_COMPENSATION_URI},
+            "ui/resourceUri": ONCALL_COMPENSATION_URI,
+        }
+    )
+    def oncall_compensation() -> list[TextContent]:
+        """Oncall Compensation Report - Shows per-user oncall hours and incident stats.
+
+        Shows per-user oncall hours, incident count, incident response hours,
+        and interruption rate over a configurable date range.
+
+        Returns:
+            Text content indicating the UI is ready
+        """
+        return [
+            TextContent(
+                type="text",
+                text="Oncall Compensation Report UI initialized. The UI will call existing MCP tools to fetch data."
+            )
+        ]
+
+    @mcp_instance.resource(
+        ONCALL_COMPENSATION_URI,
+        mime_type="text/html",
+        description="Oncall Compensation Report - Interactive report of on-call compensation"
+    )
+    def oncall_compensation_view() -> str:
+        """Oncall Compensation Report UI resource."""
+        html_path = pathlib.Path(__file__).parent / "oncall_compensation_view.html"
+        return html_path.read_text(encoding="utf-8")
+
+
 @app.command()
 def run(*, enable_write_tools: bool = False) -> None:
     """Run the MCP server with the specified configuration.
@@ -275,5 +321,6 @@ def run(*, enable_write_tools: bool = False) -> None:
     add_incident_command_center(mcp)
     add_oncall_schedule_visualizer(mcp)
     add_service_dependency_graph(mcp)
+    add_oncall_compensation(mcp)
 
     mcp.run()

@@ -30,6 +30,11 @@ class IncidentQuery(BaseModel):
     service_ids: list[str] | None = Field(description="Filter incidents by service IDs", default=None)
     teams_ids: list[str] | None = Field(description="Filter incidents by team IDs", default=None)
     urgencies: list[Urgency] | None = Field(description="Filter incidents by urgency", default=None)
+    date_range: Literal["all"] | None = Field(
+        default=None,
+        description="When set to 'all', the since and until parameters and defaults are ignored. "
+        "Use this to retrieve incidents across all time ranges.",
+    )
     request_scope: IncidentRequestScope = Field(
         description="Filter incidents by request . Either all, my teams or assigned to me",
         default="all",
@@ -37,8 +42,8 @@ class IncidentQuery(BaseModel):
     limit: int | None = Field(
         ge=1,
         le=MAX_RESULTS,
-        default=MAX_RESULTS,
-        description="Maximum number of results to return. The maximum is 1000",
+        default=100,
+        description="Maximum number of results to return. Default is 100, maximum is 1000.",
     )
     sort_by: (
         list[
@@ -93,6 +98,8 @@ class IncidentQuery(BaseModel):
             params["user_ids[]"] = self.user_ids
         if self.urgencies:
             params["urgencies[]"] = self.urgencies
+        if self.date_range:
+            params["date_range"] = self.date_range
         if self.sort_by:
             params["sort_by"] = ",".join(self.sort_by)
         return params
@@ -140,14 +147,14 @@ class PastIncidentsQuery(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     limit: int = Field(
-        default=50,
+        default=5,
         ge=1,
         le=999,
-        description="The number of results to be returned in the response. Default is 50, maximum is 999.",
+        description="The number of results to be returned in the response. Default is 5, maximum is 999.",
     )
     total: bool = Field(
-        default=True,
-        description="Include the total number of Past Incidents in the response. Default is True.",
+        default=False,
+        description="Include the total number of Past Incidents in the response. Default is False.",
     )
 
     def to_params(self) -> dict[str, Any]:
@@ -176,7 +183,15 @@ class RelatedIncidentsQuery(BaseModel):
 
 
 # TODO: This should be moved to its own file
+class AssignmentInput(BaseModel):
+    """Assignment for creating/updating incidents (no 'at' field required)."""
+
+    assignee: UserReference = Field(description="The user to assign to the incident")
+
+
 class Assignment(BaseModel):
+    """Assignment as returned by the API (includes timestamp)."""
+
     at: datetime = Field(description="Time at which the assignment was created.")
     assignee: UserReference = Field(description="The user assigned to the incident")
 
@@ -222,6 +237,12 @@ class IncidentCreate(BaseModel):
         default=None,
         description="The body of the incident. This is a free-form text field that can be used to "
         "provide additional details about the incident.",
+    )
+    assignments: list[AssignmentInput] | None = Field(
+        default=None,
+        description="List of assignees for the incident. Each assignment requires an 'assignee' "
+        "with 'id' (user ID) and 'type' set to 'user_reference'. When provided, only the assigned "
+        "user(s) receive the initial notification instead of the default service owner.",
     )
 
     @computed_field

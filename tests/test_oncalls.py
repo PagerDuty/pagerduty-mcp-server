@@ -414,5 +414,75 @@ class TestOncallTools(unittest.TestCase):
         self.assertEqual(query.limit, DEFAULT_PAGINATION_LIMIT)
 
 
+    @patch("pagerduty_mcp.tools.oncalls.paginate")
+    @patch("pagerduty_mcp.tools.oncalls.get_client")
+    def test_list_oncalls_with_service_ids(self, mock_get_client, mock_paginate):
+        """Test listing oncalls filtered by service IDs (resolves to EP IDs)."""
+        mock_client = MagicMock()
+        mock_client.rget.return_value = {
+            "id": "PSVC123",
+            "name": "My Service",
+            "escalation_policy": {
+                "id": "EP_RESOLVED",
+                "summary": "Resolved EP",
+            },
+        }
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = self.sample_oncalls_list_response
+
+        query = OncallQuery(service_ids=["PSVC123"])
+        result = list_oncalls(query)
+
+        # Verify service was resolved
+        mock_client.rget.assert_called_once_with("/services/PSVC123")
+
+        # Verify EP ID was passed to paginate
+        call_args = mock_paginate.call_args
+        params = call_args[1]["params"]
+        self.assertIn("escalation_policy_ids[]", params)
+        self.assertIn("EP_RESOLVED", params["escalation_policy_ids[]"])
+
+        self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.oncalls.paginate")
+    @patch("pagerduty_mcp.tools.oncalls.get_client")
+    def test_list_oncalls_with_service_ids_and_ep_ids(self, mock_get_client, mock_paginate):
+        """Test listing oncalls with both service_ids and escalation_policy_ids merges correctly."""
+        mock_client = MagicMock()
+        mock_client.rget.return_value = {
+            "id": "PSVC123",
+            "name": "My Service",
+            "escalation_policy": {
+                "id": "EP_FROM_SERVICE",
+                "summary": "EP from Service",
+            },
+        }
+        mock_get_client.return_value = mock_client
+        mock_paginate.return_value = self.sample_oncalls_list_response
+
+        query = OncallQuery(escalation_policy_ids=["EP_EXPLICIT"], service_ids=["PSVC123"])
+        list_oncalls(query)
+
+        call_args = mock_paginate.call_args
+        params = call_args[1]["params"]
+        ep_ids = params["escalation_policy_ids[]"]
+        self.assertIn("EP_EXPLICIT", ep_ids)
+        self.assertIn("EP_FROM_SERVICE", ep_ids)
+        self.assertEqual(len(ep_ids), 2)
+
+    @patch("pagerduty_mcp.tools.oncalls.get_client")
+    def test_list_oncalls_service_not_found(self, mock_get_client):
+        """Test listing oncalls with invalid service ID propagates error."""
+        mock_client = MagicMock()
+        mock_client.rget.side_effect = Exception("Service not found")
+        mock_get_client.return_value = mock_client
+
+        query = OncallQuery(service_ids=["INVALID_SVC"])
+        with self.assertRaises(Exception) as context:
+            list_oncalls(query)
+
+        self.assertEqual(str(context.exception), "Service not found")
+
+
 if __name__ == "__main__":
     unittest.main()

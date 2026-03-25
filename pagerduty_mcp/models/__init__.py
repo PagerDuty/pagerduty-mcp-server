@@ -43,6 +43,8 @@ from .incident_workflows import (
     Step,
 )
 from .incidents import (
+    Assignment,
+    AssignmentInput,
     GetIncidentQuery,
     Incident,
     IncidentCreate,
@@ -124,6 +126,8 @@ __all__ = [
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
     "AlertQuery",
+    "Assignment",
+    "AssignmentInput",
     "ChangeEvent",
     "ChangeEventQuery",
     "ContentBasedConfig",

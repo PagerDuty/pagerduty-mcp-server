@@ -109,51 +109,13 @@ function IncidentCommandCenter() {
     },
   });
 
-  // Get initial host context and handle container dimensions
+  // Get initial host context and apply theme
   useEffect(() => {
     if (app) {
       const context = app.getHostContext();
       setHostContext(context);
-
-      // Apply theme from VS Code
       const theme = context?.theme || 'light';
-      console.log("[IncidentCommandCenter] Theme from VS Code:", theme);
       document.documentElement.setAttribute('data-theme', theme);
-
-      // Handle container dimensions per MCP Apps spec
-      const dims = context?.containerDimensions;
-      console.log("[IncidentCommandCenter] Container dimensions:", dims);
-
-      const root = document.documentElement;
-      
-      // Always use full viewport height to ensure internal scrolling works
-      root.style.height = "100vh";
-      root.style.minHeight = "100vh";
-      document.body.style.height = "100vh";
-      console.log("[IncidentCommandCenter] Using full viewport height");
-
-      if (dims) {
-        // Handle width constraints if present
-        if ("width" in dims && dims.width) {
-          root.style.width = "100vw";
-        } else if ("maxWidth" in dims && dims.maxWidth) {
-          root.style.maxWidth = `${dims.maxWidth}px`;
-          root.style.margin = "0 auto"; // Center it
-        }
-      } else {
-        // No dimensions specified, use full viewport
-        console.log("[IncidentCommandCenter] No container dimensions, using full viewport");
-        document.documentElement.style.minHeight = "600px";
-      }
-
-      // Request reasonable minimum height for dashboard (even with 1 incident)
-      console.log("[IncidentCommandCenter] Requesting minimum height of 500px");
-      app.notification({
-        method: "ui/notifications/size-changed",
-        params: { height: 500 }
-      }).catch((err: Error) => {
-        console.log("[IncidentCommandCenter] Size change not supported:", err.message);
-      });
     }
   }, [app]);
 

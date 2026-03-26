@@ -536,6 +536,11 @@ function HealthCheckMatrix() {
     );
   }
 
+  const handleToggleFullscreen = async () => {
+    if (!app) return;
+    await app.requestDisplayMode({ mode: hostContext?.displayMode === "fullscreen" ? "inline" : "fullscreen" });
+  };
+
   return (
     <MatrixView
       data={data}
@@ -544,6 +549,7 @@ function HealthCheckMatrix() {
       selectedObject={selectedObject}
       setSelectedObject={setSelectedObject}
       onRefresh={fetchData}
+      onToggleFullscreen={handleToggleFullscreen}
       hostContext={hostContext}
       error={error}
       loading={loading}
@@ -559,6 +565,7 @@ interface MatrixViewProps {
   selectedObject: string | null;
   setSelectedObject: (id: string | null) => void;
   onRefresh: () => void;
+  onToggleFullscreen: () => void;
   hostContext?: McpUiHostContext;
   error: string | null;
   loading: boolean;
@@ -571,6 +578,7 @@ function MatrixView({
   selectedObject,
   setSelectedObject,
   onRefresh,
+  onToggleFullscreen,
   hostContext,
   error,
   loading,
@@ -616,9 +624,18 @@ function MatrixView({
             </span>
           </div>
         </div>
-        <button className="refresh-btn" onClick={onRefresh} disabled={loading}>
-          🔄 Refresh
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button
+            className="btn-expand"
+            onClick={onToggleFullscreen}
+            title={hostContext?.displayMode === "fullscreen" ? "Exit fullscreen" : "Expand to fullscreen"}
+          >
+            {hostContext?.displayMode === "fullscreen" ? "⤡" : "⤢"}
+          </button>
+          <button className="refresh-btn" onClick={onRefresh} disabled={loading}>
+            🔄 Refresh
+          </button>
+        </div>
       </header>
 
       {error && (

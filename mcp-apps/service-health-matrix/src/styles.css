@@ -12,6 +12,8 @@ body {
   color: #1a202c;
 }
 
+#root { width: 100%; min-height: 580px; }
+
 /* Loading & Error */
 .loading-container,
 .error-container {
@@ -160,6 +162,23 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
 }
+
+.btn-expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 15px;
+  color: #718096;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.btn-expand:hover { background: #edf2f7; border-color: #a0aec0; color: #2d3748; }
 
 /* Team Filters */
 .team-filters {

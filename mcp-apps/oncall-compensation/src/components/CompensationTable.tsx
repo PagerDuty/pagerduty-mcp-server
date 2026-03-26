@@ -65,7 +65,13 @@ function renderCell(r: UserCompensationRecord, key: SortKey) {
         <td key={key}>
           <div className="user-cell">
             <span className="user-name">{r.userName}</span>
-            {r.teamName && <span className="user-team">{r.teamName}</span>}
+            {r.teamName && (() => {
+              const teams = r.teamName.split(", ");
+              const label = teams.length > 1
+                ? `${teams[0]}  +${teams.length - 1} more`
+                : teams[0];
+              return <span className="user-team" title={r.teamName}>{label}</span>;
+            })()}
           </div>
         </td>
       );

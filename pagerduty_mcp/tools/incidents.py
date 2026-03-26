@@ -6,7 +6,7 @@ from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
     GetIncidentQuery,
     Incident,
-    IncidentCreateRequest,
+    IncidentCreate,
     IncidentManageRequest,
     IncidentNote,
     IncidentQuery,
@@ -71,13 +71,13 @@ def get_incident(incident_id: str, query_model: GetIncidentQuery | None = None) 
     return Incident.model_validate(response)
 
 
-def create_incident(create_model: IncidentCreateRequest) -> Incident:
+def create_incident(incident: IncidentCreate) -> Incident:
     """Create an incident.
 
     Returns:
         The created incident
     """
-    response = get_client().rpost("/incidents", json=create_model.model_dump(exclude_none=True))
+    response = get_client().rpost("/incidents", json={"incident": incident.model_dump(exclude_none=True)})
 
     return Incident.model_validate(response)
 

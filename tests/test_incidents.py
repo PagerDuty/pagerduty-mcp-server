@@ -14,7 +14,6 @@ from pagerduty_mcp.models import (
     GetIncidentQuery,
     Incident,
     IncidentCreate,
-    IncidentCreateRequest,
     IncidentManageRequest,
     IncidentNote,
     IncidentQuery,
@@ -477,10 +476,9 @@ class TestIncidentTools(unittest.TestCase):
         incident_data = IncidentCreate(
             title="Test Incident", service=ServiceReference(id="PSERVICE123"), urgency="high"
         )
-        create_request = IncidentCreateRequest(incident=incident_data)
 
         # Test
-        result = create_incident(create_request)
+        result = create_incident(incident_data)
 
         # Assertions
         self.assertIsInstance(result, Incident)
@@ -506,9 +504,8 @@ class TestIncidentTools(unittest.TestCase):
             urgency="high",
             assignments=[assignment],
         )
-        create_request = IncidentCreateRequest(incident=incident_data)
 
-        result = create_incident(create_request)
+        result = create_incident(incident_data)
 
         self.assertIsInstance(result, Incident)
         mock_client.rpost.assert_called_once()

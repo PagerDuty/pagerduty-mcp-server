@@ -145,6 +145,31 @@ html, body {
   flex-shrink: 0;
 }
 
+/* Summary toggle button */
+.btn-summary-toggle {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  height: 28px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-summary-toggle:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  color: var(--text-secondary);
+}
+
+.btn-summary-toggle.active {
+  color: var(--text-secondary);
+}
+
 /* Business Hours config button in header */
 .btn-bh-config {
   display: flex;

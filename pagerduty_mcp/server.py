@@ -107,7 +107,7 @@ def add_service_health_matrix(mcp_instance: FastMCP) -> None:
 
     @mcp_instance.resource(
         SERVICE_HEALTH_MATRIX_VIEW_URI,
-        mime_type="text/html",
+        mime_type="text/html;profile=mcp-app",
         description="Service Health Matrix interactive UI"
     )
     def service_health_matrix_view() -> str:
@@ -154,7 +154,7 @@ def add_incident_command_center(mcp_instance: FastMCP) -> None:
 
     @mcp_instance.resource(
         INCIDENT_COMMAND_CENTER_URI,
-        mime_type="text/html",
+        mime_type="text/html;profile=mcp-app",
         description="Incident Command Center - Interactive incident management UI"
     )
     def incident_command_center_view() -> str:
@@ -199,7 +199,7 @@ def add_oncall_schedule_visualizer(mcp_instance: FastMCP) -> None:
 
     @mcp_instance.resource(
         ONCALL_SCHEDULE_VISUALIZER_URI,
-        mime_type="text/html",
+        mime_type="text/html;profile=mcp-app",
         description="On-Call Schedule Visualizer - Interactive calendar view of on-call schedules"
     )
     def oncall_schedule_visualizer_view() -> str:
@@ -243,7 +243,7 @@ def add_service_dependency_graph(mcp_instance: FastMCP) -> None:
 
     @mcp_instance.resource(
         SERVICE_DEPENDENCY_GRAPH_URI,
-        mime_type="text/html",
+        mime_type="text/html;profile=mcp-app",
         description="Service Dependency Graph - Interactive graph of service dependencies"
     )
     def service_dependency_graph_view() -> str:
@@ -288,7 +288,7 @@ def add_oncall_compensation(mcp_instance: FastMCP) -> None:
 
     @mcp_instance.resource(
         ONCALL_COMPENSATION_URI,
-        mime_type="text/html",
+        mime_type="text/html;profile=mcp-app",
         description="Oncall Compensation Report - Interactive report of on-call compensation"
     )
     def oncall_compensation_view() -> str:

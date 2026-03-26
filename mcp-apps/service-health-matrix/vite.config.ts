@@ -11,6 +11,14 @@ const isDevelopment = process.env.NODE_ENV === "development";
 
 export default defineConfig({
   plugins: [react(), viteSingleFile()],
+  resolve: {
+    alias: {
+      "react": "preact/compat",
+      "react-dom/test-utils": "preact/test-utils",
+      "react-dom": "preact/compat",
+      "react/jsx-runtime": "preact/jsx-runtime",
+    },
+  },
   build: {
     sourcemap: isDevelopment ? "inline" : undefined,
     cssMinify: !isDevelopment,

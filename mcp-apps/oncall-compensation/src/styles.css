@@ -145,6 +145,76 @@ html, body {
   flex-shrink: 0;
 }
 
+/* Business Hours config button in header */
+.btn-bh-config {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  height: 28px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-bh-config:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.btn-bh-config.active,
+.btn-bh-config:focus {
+  background: var(--accent-blue-bg);
+  border-color: rgba(137, 180, 250, 0.4);
+  color: var(--accent-blue);
+  outline: none;
+}
+
+.btn-bh-config:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Business Hours config modal */
+.bh-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 60px;
+}
+
+.bh-modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 640px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.bh-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bh-modal-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
 /* Controls bar — filters only */
 .controls {
   display: flex;
@@ -246,7 +316,7 @@ html, body {
 }
 
 .card-value {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.1;

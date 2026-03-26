@@ -5,6 +5,8 @@ interface Props {
   config: BusinessHoursConfig;
   onChange: (config: BusinessHoursConfig) => void;
   disabled?: boolean;
+  /** When false, render only the panel content (no toggle button). Used when hosted inside a modal. */
+  showToggle?: boolean;
 }
 
 const DAY_LABELS: { idx: number; short: string }[] = [
@@ -68,7 +70,7 @@ const TIMEZONES = [
   "Pacific/Honolulu",
 ];
 
-export function BusinessHoursConfig({ config, onChange, disabled }: Props) {
+export function BusinessHoursConfig({ config, onChange, disabled, showToggle = true }: Props) {
   const [open, setOpen] = useState(false);
   const [holidayInput, setHolidayInput] = useState("");
 
@@ -103,6 +105,98 @@ export function BusinessHoursConfig({ config, onChange, disabled }: Props) {
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const tzOptions = Array.from(new Set([browserTz, ...TIMEZONES])).sort();
 
+  const panel = (
+    <div className="bh-panel">
+      {/* Row 1: Hours + Timezone */}
+      <div className="bh-row">
+        <label className="bh-label">Business Hours</label>
+        <div className="bh-hours-wrap">
+          <select
+            className="bh-select"
+            value={config.startHour}
+            onChange={(e) => update({ startHour: parseInt(e.target.value, 10) })}
+          >
+            {HOURS.map((h) => (
+              <option key={h} value={h}>{formatHour(h)}</option>
+            ))}
+          </select>
+          <span className="bh-to">to</span>
+          <select
+            className="bh-select"
+            value={config.endHour}
+            onChange={(e) => update({ endHour: parseInt(e.target.value, 10) })}
+          >
+            {HOURS.map((h) => (
+              <option key={h} value={h}>{formatHour(h)}</option>
+            ))}
+          </select>
+        </div>
+
+        <label className="bh-label" style={{ marginLeft: 20 }}>Timezone</label>
+        <select
+          className="bh-select bh-select--tz"
+          value={config.timezone}
+          onChange={(e) => update({ timezone: e.target.value })}
+        >
+          {tzOptions.map((tz) => (
+            <option key={tz} value={tz}>{tz}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Row 2: Work days */}
+      <div className="bh-row">
+        <label className="bh-label">Work Days</label>
+        <div className="bh-days">
+          {DAY_LABELS.map(({ idx, short }) => (
+            <button
+              key={idx}
+              className={["bh-day-btn", config.workDays.has(idx) ? "bh-day-btn--on" : ""].filter(Boolean).join(" ")}
+              onClick={() => toggleDay(idx)}
+            >
+              {short}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Row 3: Holidays */}
+      <div className="bh-row bh-row--holidays">
+        <label className="bh-label">Holidays</label>
+        <div className="bh-holiday-input-wrap">
+          <input
+            type="date"
+            className="bh-date-input"
+            value={holidayInput}
+            onChange={(e) => setHolidayInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addHoliday()}
+          />
+          <button className="bh-add-btn" onClick={addHoliday} disabled={!holidayInput}>
+            Add
+          </button>
+        </div>
+        {sortedHolidays.length > 0 && (
+          <div className="bh-holiday-chips">
+            {sortedHolidays.map((date) => (
+              <span key={date} className="bh-holiday-chip">
+                {date}
+                <button
+                  className="bh-chip-remove"
+                  onClick={() => removeHoliday(date)}
+                  aria-label={`Remove ${date}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (!showToggle) return panel;
+
   return (
     <div className="bh-config-root">
       <button
@@ -120,96 +214,7 @@ export function BusinessHoursConfig({ config, onChange, disabled }: Props) {
           {formatHour(config.startHour)}–{formatHour(config.endHour)} · {config.timezone}
         </span>
       </button>
-
-      {open && (
-        <div className="bh-panel">
-          {/* Row 1: Hours + Timezone */}
-          <div className="bh-row">
-            <label className="bh-label">Business Hours</label>
-            <div className="bh-hours-wrap">
-              <select
-                className="bh-select"
-                value={config.startHour}
-                onChange={(e) => update({ startHour: parseInt(e.target.value, 10) })}
-              >
-                {HOURS.map((h) => (
-                  <option key={h} value={h}>{formatHour(h)}</option>
-                ))}
-              </select>
-              <span className="bh-to">to</span>
-              <select
-                className="bh-select"
-                value={config.endHour}
-                onChange={(e) => update({ endHour: parseInt(e.target.value, 10) })}
-              >
-                {HOURS.map((h) => (
-                  <option key={h} value={h}>{formatHour(h)}</option>
-                ))}
-              </select>
-            </div>
-
-            <label className="bh-label" style={{ marginLeft: 20 }}>Timezone</label>
-            <select
-              className="bh-select bh-select--tz"
-              value={config.timezone}
-              onChange={(e) => update({ timezone: e.target.value })}
-            >
-              {tzOptions.map((tz) => (
-                <option key={tz} value={tz}>{tz}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Row 2: Work days */}
-          <div className="bh-row">
-            <label className="bh-label">Work Days</label>
-            <div className="bh-days">
-              {DAY_LABELS.map(({ idx, short }) => (
-                <button
-                  key={idx}
-                  className={["bh-day-btn", config.workDays.has(idx) ? "bh-day-btn--on" : ""].filter(Boolean).join(" ")}
-                  onClick={() => toggleDay(idx)}
-                >
-                  {short}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Row 3: Holidays */}
-          <div className="bh-row bh-row--holidays">
-            <label className="bh-label">Holidays</label>
-            <div className="bh-holiday-input-wrap">
-              <input
-                type="date"
-                className="bh-date-input"
-                value={holidayInput}
-                onChange={(e) => setHolidayInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addHoliday()}
-              />
-              <button className="bh-add-btn" onClick={addHoliday} disabled={!holidayInput}>
-                Add
-              </button>
-            </div>
-            {sortedHolidays.length > 0 && (
-              <div className="bh-holiday-chips">
-                {sortedHolidays.map((date) => (
-                  <span key={date} className="bh-holiday-chip">
-                    {date}
-                    <button
-                      className="bh-chip-remove"
-                      onClick={() => removeHoliday(date)}
-                      aria-label={`Remove ${date}`}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {open && panel}
     </div>
   );
 }

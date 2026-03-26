@@ -60,6 +60,7 @@ function App() {
   );
   const [colPickerOpen, setColPickerOpen] = useState(false);
   const [bhConfig, setBhConfig] = useState<BusinessHoursConfig>(defaultBHConfig);
+  const [bhModalOpen, setBhModalOpen] = useState(false);
 
   useEffect(() => {
     if (!app) return;
@@ -196,6 +197,19 @@ function App() {
             onChange={(e) => setUntil(e.target.value)}
             disabled={loading}
           />
+          <button
+            className={["btn-bh-config", bhModalOpen ? "active" : ""].filter(Boolean).join(" ")}
+            onClick={() => setBhModalOpen((o) => !o)}
+            disabled={loading}
+            title="Configure business hours"
+          >
+            ⚙ Business Hours
+            {bhConfig.holidays.size > 0 && (
+              <span className="bh-badge" style={{ marginLeft: 4 }}>
+                {bhConfig.holidays.size}
+              </span>
+            )}
+          </button>
         </div>
 
         <button
@@ -208,12 +222,22 @@ function App() {
         </button>
       </header>
 
-      {/* Business Hours Config panel */}
-      <BusinessHoursConfigPanel
-        config={bhConfig}
-        onChange={setBhConfig}
-        disabled={loading}
-      />
+      {/* Business Hours Config modal */}
+      {bhModalOpen && (
+        <div className="bh-modal-backdrop" onClick={() => setBhModalOpen(false)}>
+          <div className="bh-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="bh-modal-header">
+              <span className="bh-modal-title">Business Hours Configuration</span>
+              <button className="btn-close" onClick={() => setBhModalOpen(false)}>×</button>
+            </div>
+            <BusinessHoursConfigPanel
+              config={bhConfig}
+              onChange={setBhConfig}
+              showToggle={false}
+            />
+          </div>
+        </div>
+      )}
 
       {!hasShiftsData && !loading && data && (
         <div className="bh-no-shifts-warn">

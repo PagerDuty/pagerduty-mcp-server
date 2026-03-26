@@ -9,10 +9,11 @@ from pagerduty_mcp.models import (
     MAX_RESULTS,
     Alert,
     AlertQuery,
+    Assignment,
+    AssignmentInput,
     GetIncidentQuery,
     Incident,
     IncidentCreate,
-    IncidentCreateRequest,
     IncidentManageRequest,
     IncidentNote,
     IncidentQuery,
@@ -47,7 +48,6 @@ from pagerduty_mcp.tools.incidents import (
     list_incidents,
     manage_incidents,
 )
-
 from tests.mock_context_strategy import MockContextStrategy
 
 
@@ -208,7 +208,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_paginate.assert_called_once()
         call_args = mock_paginate.call_args
         self.assertEqual(call_args[1]["entity"], "incidents")
-        self.assertEqual(call_args[1]["maximum_records"], MAX_RESULTS)
+        self.assertEqual(call_args[1]["maximum_records"], 100)
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_all(self, mock_paginate):
@@ -292,6 +292,28 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(params["statuses[]"], ["triggered", "acknowledged"])
         self.assertEqual(params["since"], since_date.isoformat())
         self.assertEqual(params["urgencies[]"], ["high"])
+
+    @patch("pagerduty_mcp.tools.incidents.paginate")
+    def test_list_incidents_with_date_range(self, mock_paginate):
+        """Test listing incidents with date_range parameter."""
+        mock_paginate.return_value = [self.sample_incident_data]
+
+        since_date = datetime(2023, 1, 1)
+        until_date = datetime(2023, 6, 1)
+        query = IncidentQuery(since=since_date, until=until_date, date_range="all")
+        _ = list_incidents(query)
+
+        call_args = mock_paginate.call_args
+        params = call_args[1]["params"]
+        self.assertEqual(params["date_range"], "all")
+        self.assertEqual(params["since"], since_date.isoformat())
+        self.assertEqual(params["until"], until_date.isoformat())
+
+    def test_incident_query_date_range_default(self):
+        """Test that date_range defaults to None (backwards compatible)."""
+        query = IncidentQuery()
+        params = query.to_params()
+        self.assertNotIn("date_range", params)
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_incident_success(self, mock_get_client):
@@ -454,10 +476,9 @@ class TestIncidentTools(unittest.TestCase):
         incident_data = IncidentCreate(
             title="Test Incident", service=ServiceReference(id="PSERVICE123"), urgency="high"
         )
-        create_request = IncidentCreateRequest(incident=incident_data)
 
         # Test
-        result = create_incident(create_request)
+        result = create_incident(incident_data)
 
         # Assertions
         self.assertIsInstance(result, Incident)
@@ -466,6 +487,33 @@ class TestIncidentTools(unittest.TestCase):
         call_args = mock_client.rpost.call_args
         self.assertEqual(call_args[0][0], "/incidents")
         self.assertIn("json", call_args[1])
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_create_incident_with_assignee(self, mock_get_client):
+        """Test creating an incident with an assignee."""
+        mock_client = Mock()
+        mock_client.rpost.return_value = self.sample_incident_data
+        mock_get_client.return_value = mock_client
+
+        assignment = AssignmentInput(
+            assignee=UserReference(id="PUSER456", type="user_reference"),
+        )
+        incident_data = IncidentCreate(
+            title="Test Incident",
+            service=ServiceReference(id="PSERVICE123"),
+            urgency="high",
+            assignments=[assignment],
+        )
+
+        result = create_incident(incident_data)
+
+        self.assertIsInstance(result, Incident)
+        mock_client.rpost.assert_called_once()
+        call_args = mock_client.rpost.call_args
+        payload = call_args[1]["json"]
+        self.assertIn("assignments", payload["incident"])
+        self.assertEqual(len(payload["incident"]["assignments"]), 1)
+        self.assertEqual(payload["incident"]["assignments"][0]["assignee"]["id"], "PUSER456")
 
     def test_generate_manage_request(self):
         """Test _generate_manage_request helper function."""
@@ -964,8 +1012,8 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(result.past_incidents[0].score, 46.8249)
         self.assertEqual(result.total, 2)
         self.assertEqual(result.limit, 5)
-        # limit=50 and total=True are now the defaults
-        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={"limit": 50, "total": True})
+        # limit=5 and total=False are the API defaults
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={"limit": 5, "total": False})
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_past_incidents_with_params(self, mock_get_client):

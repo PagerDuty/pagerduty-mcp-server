@@ -325,15 +325,13 @@ export function GraphCanvas({ businessServices, technicalServices, relationships
 
   const nodeById = new Map(nodes.map(n => [n.id, n]));
 
-  // Auto-fit once when nodes first load
+  // Auto-fit once when nodes first load — always fit all nodes on initial render
   useEffect(() => {
     if (hasFitted.current) return;
     if (nodes.length === 0) return;
     if (containerSize.w <= 400 && containerSize.h <= 300) return;
     hasFitted.current = true;
-    const impacted = nodes.filter(n => n.urgency !== "none");
-    const targets = impacted.length > 0 ? impacted : nodes;
-    setTransform(fitTransform(targets, containerSize.w, containerSize.h));
+    setTransform(fitTransform(nodes, containerSize.w, containerSize.h));
   }, [nodes, containerSize]);
 
   const prevCount = useRef(allServiceIds.length);

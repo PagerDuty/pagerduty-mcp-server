@@ -454,6 +454,43 @@ html, body {
 
 .sort-arrow { margin-left: 4px; opacity: 0.7; }
 
+/* Column info icon + tooltip */
+.col-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+  cursor: default;
+  vertical-align: middle;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.col-info:hover { opacity: 1; }
+.col-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  width: 220px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  text-align: left;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  white-space: normal;
+}
+.col-info:hover .col-tooltip { display: block; }
+
 .comp-table td {
   padding: 9px 12px;
   border-bottom: 1px solid var(--border-subtle);

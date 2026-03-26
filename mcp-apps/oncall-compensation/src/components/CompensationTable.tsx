@@ -29,27 +29,28 @@ interface Props {
 export interface ColDef {
   key: SortKey;
   label: string;
+  description: string;
   align?: "right";
   toggleable: boolean;
   group?: "bh"; // business-hours group gets a subtle visual distinction
 }
 
 export const ALL_COLS: ColDef[] = [
-  { key: "userName",                    label: "User",              toggleable: false },
-  { key: "scheduledHours",              label: "Oncall Hrs",        align: "right", toggleable: true },
-  { key: "incidentCount",               label: "Incidents",         align: "right", toggleable: true },
-  { key: "highUrgencyCount",            label: "High Urgency",      align: "right", toggleable: true },
-  { key: "incidentHours",               label: "Response Hrs",      align: "right", toggleable: true },
-  { key: "interruptionRate",            label: "Rate /hr",          align: "right", toggleable: true },
-  { key: "offHourInterruptions",        label: "Off-Hr Intrs",      align: "right", toggleable: true },
-  { key: "sleepHourInterruptions",      label: "Sleep Intrs",       align: "right", toggleable: true },
-  { key: "businessHourInterruptions",   label: "BH Intrs",          align: "right", toggleable: true },
+  { key: "userName",                    label: "User",              description: "User name and their team memberships.",                                                                                          toggleable: false },
+  { key: "scheduledHours",              label: "Oncall Hrs",        description: "Total hours scheduled on-call during the selected period, from PagerDuty Analytics.",                                           align: "right", toggleable: true },
+  { key: "incidentCount",               label: "Incidents",         description: "Total number of incidents this user was involved in during the period.",                                                         align: "right", toggleable: true },
+  { key: "highUrgencyCount",            label: "High Urgency",      description: "Number of high-urgency incidents assigned to this user.",                                                                        align: "right", toggleable: true },
+  { key: "incidentHours",               label: "Response Hrs",      description: "Total time engaged in incident response — from incident creation to resolution, capped at 24h per incident.",                   align: "right", toggleable: true },
+  { key: "interruptionRate",            label: "Rate /hr",          description: "Interruptions per on-call hour (total interruptions ÷ scheduled hours). Higher values indicate more frequent paging.",           align: "right", toggleable: true },
+  { key: "offHourInterruptions",        label: "Off-Hr Intrs",      description: "Interruptions that occurred outside of business hours, as defined by PagerDuty Analytics (evenings and early mornings).",       align: "right", toggleable: true },
+  { key: "sleepHourInterruptions",      label: "Sleep Intrs",       description: "Interruptions during typical sleep hours (roughly 10pm–8am), from PagerDuty Analytics.",                                        align: "right", toggleable: true },
+  { key: "businessHourInterruptions",   label: "BH Intrs",          description: "Interruptions that occurred during standard business hours, from PagerDuty Analytics.",                                          align: "right", toggleable: true },
   // Business-hours config derived columns
-  { key: "outsideHours",                label: "Outside BH Hrs",    align: "right", toggleable: true, group: "bh" },
-  { key: "weekendHours",                label: "Weekend Hrs",       align: "right", toggleable: true, group: "bh" },
-  { key: "holidayHours",                label: "Holiday Hrs",       align: "right", toggleable: true, group: "bh" },
-  { key: "maxConsecutiveOutsideHours",  label: "Max Consec. Hrs",   align: "right", toggleable: true, group: "bh" },
-  { key: "uniquePeriodsOutside",        label: "Unique Periods",    align: "right", toggleable: true, group: "bh" },
+  { key: "outsideHours",                label: "Outside BH Hrs",    description: "Total on-call hours outside your configured business hours (days + time window). Computed from raw shift windows + BH config.",  align: "right", toggleable: true, group: "bh" },
+  { key: "weekendHours",                label: "Weekend Hrs",        description: "On-call hours that fell on weekend days, based on your configured work days.",                                                   align: "right", toggleable: true, group: "bh" },
+  { key: "holidayHours",                label: "Holiday Hrs",        description: "On-call hours that fell on configured holidays.",                                                                                align: "right", toggleable: true, group: "bh" },
+  { key: "maxConsecutiveOutsideHours",  label: "Max Consec. Hrs",   description: "Longest single unbroken stretch of on-call time outside business hours. Useful for identifying sustained out-of-hours burden.",  align: "right", toggleable: true, group: "bh" },
+  { key: "uniquePeriodsOutside",        label: "Unique Periods",    description: "Number of distinct separate windows where this user was on-call outside business hours. High count = frequently interrupted.",    align: "right", toggleable: true, group: "bh" },
 ];
 
 const HIGH_RATE_THRESHOLD = 0.5;
@@ -204,6 +205,10 @@ export function CompensationTable({
                   {sortDir === "desc" ? "↓" : "↑"}
                 </span>
               )}
+              <span className="col-info" onClick={(e) => e.stopPropagation()}>
+                ⓘ
+                <span className="col-tooltip">{col.description}</span>
+              </span>
             </th>
           ))}
         </tr>

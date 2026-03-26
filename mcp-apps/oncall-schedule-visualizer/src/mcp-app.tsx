@@ -199,6 +199,11 @@ function OnCallCalendar() {
     );
   }
 
+  const handleToggleFullscreen = async () => {
+    if (!app) return;
+    await app.requestDisplayMode({ mode: hostContext?.displayMode === "fullscreen" ? "inline" : "fullscreen" });
+  };
+
   return (
     <CalendarView
       data={data}
@@ -206,6 +211,7 @@ function OnCallCalendar() {
       setSelectedTeams={setSelectedTeams}
       onViewChange={handleViewChange}
       onCreateOverride={handleCreateOverride}
+      onToggleFullscreen={handleToggleFullscreen}
       hostContext={hostContext}
       error={error}
     />
@@ -219,6 +225,7 @@ interface CalendarViewProps {
   setSelectedTeams: (teams: string[]) => void;
   onViewChange: (view: "week" | "month") => void;
   onCreateOverride: (scheduleId: string, shift: Shift) => void;
+  onToggleFullscreen: () => void;
   hostContext?: McpUiHostContext;
   error: string | null;
 }
@@ -229,6 +236,7 @@ function CalendarView({
   setSelectedTeams,
   onViewChange,
   onCreateOverride,
+  onToggleFullscreen,
   hostContext,
   error,
 }: CalendarViewProps) {
@@ -279,6 +287,13 @@ function CalendarView({
             <option value="America/Los_Angeles">Pacific</option>
           </select>
         </div>
+        <button
+          className="btn-expand"
+          onClick={onToggleFullscreen}
+          title={hostContext?.displayMode === "fullscreen" ? "Exit fullscreen" : "Expand to fullscreen"}
+        >
+          {hostContext?.displayMode === "fullscreen" ? "⤡" : "⤢"}
+        </button>
       </header>
 
       {error && (

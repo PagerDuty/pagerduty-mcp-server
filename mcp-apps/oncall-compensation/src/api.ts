@@ -28,6 +28,7 @@ export interface UserCompensationRecord {
   userId: string;
   userName: string;
   teamId?: string;
+  teamIds: string[];
   teamName?: string;
 
   // Oncall hours — from Analytics (authoritative)
@@ -223,8 +224,13 @@ export async function fetchCompensationData(
     }
   }
 
-  // Build final records from analytics data
-  const records: UserCompensationRecord[] = [];
+  // Build final records from analytics data.
+  // get_responder_metrics returns one entry per user per team, so we merge
+  // all team rows for the same user into a single record:
+  //   - hours: take the max (same schedule repeated across teams, not additive)
+  //   - interruptions/incidents: sum across teams (team-scoped counts)
+  //   - teams: collect all team names
+  const mergedMap = new Map<string, UserCompensationRecord>();
 
   for (const m of metricsData?.response ?? []) {
     const userId: string = String(m.responder_id ?? "");
@@ -241,48 +247,80 @@ export async function fetchCompensationData(
     const incidentHours = Number(((m.total_engaged_seconds ?? 0) / 3600).toFixed(2));
     const incidentCount = m.total_incident_count ?? 0;
     const meanTimeToAckSeconds = m.mean_time_to_acknowledge_seconds ?? 0;
-    const interruptionRate =
-      scheduledHours > 0
-        ? Number((totalInterruptions / scheduledHours).toFixed(3))
-        : 0;
 
     const teamId: string | undefined = m.team_id ?? undefined;
     const teamName: string | undefined =
       (teamId ? teamsMap.get(teamId) : undefined) ?? m.team_name ?? undefined;
 
-    const incidents = userIncidents.get(userId) ?? [];
-    const highUrgencyCount = incidents.filter((i) => i.urgency === "high").length;
-    const lowUrgencyCount = incidents.filter((i) => i.urgency === "low").length;
-    const oncallShifts = userShifts.get(userId) ?? [];
+    const existing = mergedMap.get(userId);
+    if (existing) {
+      // Merge: max hours, sum interruptions/incidents, append team name
+      existing.scheduledHours = Math.max(existing.scheduledHours, scheduledHours);
+      existing.scheduledHoursL1 = Math.max(existing.scheduledHoursL1, scheduledHoursL1);
+      existing.scheduledHoursL2Plus = Math.max(existing.scheduledHoursL2Plus, scheduledHoursL2Plus);
+      existing.totalInterruptions += totalInterruptions;
+      existing.businessHourInterruptions += businessHourInterruptions;
+      existing.offHourInterruptions += offHourInterruptions;
+      existing.sleepHourInterruptions += sleepHourInterruptions;
+      existing.incidentCount += incidentCount;
+      existing.incidentHours = Number((existing.incidentHours + incidentHours).toFixed(2));
+      if (meanTimeToAckSeconds > 0 && existing.meanTimeToAckSeconds === 0) {
+        existing.meanTimeToAckSeconds = meanTimeToAckSeconds;
+      }
+      if (teamId && !existing.teamIds.includes(teamId)) {
+        existing.teamIds.push(teamId);
+      }
+      if (teamName && !existing.teamName?.includes(teamName)) {
+        existing.teamName = existing.teamName ? `${existing.teamName}, ${teamName}` : teamName;
+      }
+    } else {
+      const incidents = userIncidents.get(userId) ?? [];
+      const highUrgencyCount = incidents.filter((i) => i.urgency === "high").length;
+      const lowUrgencyCount = incidents.filter((i) => i.urgency === "low").length;
+      const oncallShifts = userShifts.get(userId) ?? [];
+      const interruptionRate =
+        scheduledHours > 0
+          ? Number((totalInterruptions / scheduledHours).toFixed(3))
+          : 0;
 
-    records.push({
-      userId,
-      userName: m.responder_name ?? "Unknown User",
-      teamId,
-      teamName,
-      scheduledHours,
-      scheduledHoursL1,
-      scheduledHoursL2Plus,
-      incidentCount,
-      incidentHours,
-      interruptionRate,
-      totalInterruptions,
-      businessHourInterruptions,
-      offHourInterruptions,
-      sleepHourInterruptions,
-      meanTimeToAckSeconds,
-      highUrgencyCount,
-      lowUrgencyCount,
-      incidents,
-      oncallShifts,
-      // Outside hours default to 0 — computed in the app via useMemo
-      outsideHours: 0,
-      weekendHours: 0,
-      holidayHours: 0,
-      maxConsecutiveOutsideHours: 0,
-      uniquePeriodsOutside: 0,
-    });
+      mergedMap.set(userId, {
+        userId,
+        userName: m.responder_name ?? "Unknown User",
+        teamId,
+        teamIds: teamId ? [teamId] : [],
+        teamName,
+        scheduledHours,
+        scheduledHoursL1,
+        scheduledHoursL2Plus,
+        incidentCount,
+        incidentHours,
+        interruptionRate,
+        totalInterruptions,
+        businessHourInterruptions,
+        offHourInterruptions,
+        sleepHourInterruptions,
+        meanTimeToAckSeconds,
+        highUrgencyCount,
+        lowUrgencyCount,
+        incidents,
+        oncallShifts,
+        outsideHours: 0,
+        weekendHours: 0,
+        holidayHours: 0,
+        maxConsecutiveOutsideHours: 0,
+        uniquePeriodsOutside: 0,
+      });
+    }
   }
+
+  // Recalculate interruptionRate after all team rows are merged
+  const records: UserCompensationRecord[] = Array.from(mergedMap.values()).map((r) => ({
+    ...r,
+    interruptionRate:
+      r.scheduledHours > 0
+        ? Number((r.totalInterruptions / r.scheduledHours).toFixed(3))
+        : 0,
+  }));
 
   // Default sort: highest scheduled hours first
   records.sort((a, b) => b.scheduledHours - a.scheduledHours);

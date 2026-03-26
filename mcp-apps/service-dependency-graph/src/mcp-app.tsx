@@ -22,6 +22,14 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [displayMode, setDisplayMode] = useState<"inline" | "fullscreen" | "pip">("inline");
+
+  useEffect(() => {
+    if (!app) return;
+    app.onhostcontextchanged = (ctx) => {
+      if (ctx.displayMode) setDisplayMode(ctx.displayMode);
+    };
+  }, [app]);
 
   useEffect(() => {
     if (!app) return;
@@ -71,6 +79,17 @@ function App() {
           <LegendItem color="#3d4166" label="Technical Service" />
           <LegendItem color="#f38ba8" bg="#3d1520" label="Active Incident" />
         </div>
+
+        <button
+          className="btn-expand"
+          onClick={async () => {
+            if (!app) return;
+            await app.requestDisplayMode({ mode: displayMode === "fullscreen" ? "inline" : "fullscreen" });
+          }}
+          title={displayMode === "fullscreen" ? "Exit fullscreen" : "Expand to fullscreen"}
+        >
+          {displayMode === "fullscreen" ? "⤡" : "⤢"}
+        </button>
 
         <div className="pd-badge">
           <span className="pd-dot" />

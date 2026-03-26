@@ -356,6 +356,16 @@ function IncidentDashboard({
             <span className="auto-refresh">🔄 Auto-refresh ON</span>
           )}
         </div>
+        <button
+          className="btn-expand"
+          onClick={async () => {
+            if (!app) return;
+            await app.requestDisplayMode({ mode: hostContext?.displayMode === "fullscreen" ? "inline" : "fullscreen" });
+          }}
+          title={hostContext?.displayMode === "fullscreen" ? "Exit fullscreen" : "Expand to fullscreen"}
+        >
+          {hostContext?.displayMode === "fullscreen" ? "⤡" : "⤢"}
+        </button>
       </header>
 
       {error && (

@@ -62,6 +62,14 @@ function App() {
   const [bhConfig, setBhConfig] = useState<BusinessHoursConfig>(defaultBHConfig);
   const [bhModalOpen, setBhModalOpen] = useState(false);
   const [showSummary, setShowSummary] = useState(true);
+  const [displayMode, setDisplayMode] = useState<"inline" | "fullscreen" | "pip">("inline");
+
+  useEffect(() => {
+    if (!app) return;
+    app.onhostcontextchanged = (ctx) => {
+      if (ctx.displayMode) setDisplayMode(ctx.displayMode);
+    };
+  }, [app]);
 
   useEffect(() => {
     if (!app) return;
@@ -134,7 +142,7 @@ function App() {
     }
 
     if (teamFilter) {
-      list = list.filter((r) => r.teamId === teamFilter);
+      list = list.filter((r) => r.teamIds.includes(teamFilter));
     }
 
     return [...list].sort((a, b) => {
@@ -212,6 +220,17 @@ function App() {
             )}
           </button>
         </div>
+
+        <button
+          className="btn-expand"
+          onClick={async () => {
+            if (!app) return;
+            await app.requestDisplayMode({ mode: displayMode === "fullscreen" ? "inline" : "fullscreen" });
+          }}
+          title={displayMode === "fullscreen" ? "Exit fullscreen" : "Expand to fullscreen"}
+        >
+          {displayMode === "fullscreen" ? "⤡" : "⤢"}
+        </button>
 
         <button
           className="btn-refresh-header"

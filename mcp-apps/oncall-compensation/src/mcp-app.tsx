@@ -61,6 +61,7 @@ function App() {
   const [colPickerOpen, setColPickerOpen] = useState(false);
   const [bhConfig, setBhConfig] = useState<BusinessHoursConfig>(defaultBHConfig);
   const [bhModalOpen, setBhModalOpen] = useState(false);
+  const [showSummary, setShowSummary] = useState(true);
 
   useEffect(() => {
     if (!app) return;
@@ -247,6 +248,13 @@ function App() {
 
       {/* Controls — team filter + search */}
       <div className="controls">
+        <button
+          className={["btn-summary-toggle", showSummary ? "active" : ""].filter(Boolean).join(" ")}
+          onClick={() => setShowSummary((s) => !s)}
+          title={showSummary ? "Hide summary" : "Show summary"}
+        >
+          {showSummary ? "▲ Summary" : "▼ Summary"}
+        </button>
         {(data?.teams.length ?? 0) > 0 && (
           <select
             value={teamFilter}
@@ -278,7 +286,7 @@ function App() {
       </div>
 
       {/* Summary strip — cards + column picker */}
-      <div className="summary-strip">
+      {showSummary && <div className="summary-strip">
         <SummaryCards records={filteredRecords} />
         <div className="summary-actions">
           <div style={{ position: "relative" }}>
@@ -297,7 +305,7 @@ function App() {
             />
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Main content */}
       <div className="main-content">

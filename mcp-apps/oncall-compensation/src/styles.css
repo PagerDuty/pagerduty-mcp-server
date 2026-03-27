@@ -476,17 +476,17 @@ html, body {
   transform: translateX(-50%);
   z-index: 200;
   width: 220px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: #1e2433;
+  border: 1px solid #3a4155;
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 11px;
   font-weight: 400;
-  color: var(--text-secondary);
+  color: #c8cfe0;
   line-height: 1.5;
   text-align: left;
   pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
   white-space: normal;
 }
 .col-info:hover .col-tooltip { display: block; }

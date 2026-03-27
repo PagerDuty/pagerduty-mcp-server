@@ -293,8 +293,8 @@ html, body {
 .search-wrap {
   position: relative;
   flex: 1;
-  min-width: 160px;
-  max-width: 280px;
+  min-width: 120px;
+  max-width: 200px;
 }
 
 .search-wrap input {

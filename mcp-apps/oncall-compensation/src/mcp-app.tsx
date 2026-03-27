@@ -232,14 +232,6 @@ function App() {
           {displayMode === "fullscreen" ? "⤡" : "⤢"}
         </button>
 
-        <button
-          className="btn-refresh-header"
-          disabled={loading}
-          onClick={doRefresh}
-        >
-          <span className="pd-dot" />
-          {loading ? "Loading…" : "Refresh"}
-        </button>
       </header>
 
       {/* Business Hours Config modal */}
@@ -302,6 +294,15 @@ function App() {
             disabled={loading}
           />
         </div>
+
+        <button
+          className="btn-refresh-header"
+          disabled={loading}
+          onClick={doRefresh}
+        >
+          <span className="pd-dot" />
+          {loading ? "Loading…" : "Refresh"}
+        </button>
       </div>
 
       {/* Summary strip — cards + column picker */}

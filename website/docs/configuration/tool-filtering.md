@@ -12,6 +12,10 @@ This guide explains how to filter tools using [`mcp-proxy`](https://github.com/T
 This solution addresses the request in [GitHub Issue #68](https://github.com/PagerDuty/pagerduty-mcp-server/issues/68): *"Can we add a flag to filter MCP tools by area?"* While native filtering is not yet built into the server, the `mcp-proxy` approach provides an effective workaround.
 :::
 
+:::caution Local Server Only
+Tool filtering via `mcp-proxy` is **not available for the [Remote MCP Server](../remote-server/setup)**. The proxy works by wrapping a local subprocess — it cannot intercept a remotely-hosted connection.
+:::
+
 ## How It Works
 
 ```

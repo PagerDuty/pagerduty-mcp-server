@@ -20,27 +20,12 @@ For the most up-to-date setup instructions, refer to the [PagerDuty MCP API docu
 Unlike the local server that runs as a subprocess on your machine, the remote server:
 
 - Is hosted and maintained by PagerDuty
-- Uses **OAuth 2.0** for authentication — no API tokens to manage locally
-- Exposes tools via a remote HTTP/SSE endpoint
+- Exposes tools via a remote HTTP endpoint
 - Requires no local Python installation or `uvx`
 
 ## Setup Steps
 
-### 1. Authorize via OAuth
-
-Navigate to the PagerDuty MCP API page to initiate the OAuth flow. You will be redirected to authorize the MCP client with your PagerDuty account.
-
-The OAuth flow grants the remote server permission to act on your behalf using your PagerDuty account credentials.
-
-### 2. Get the Remote Endpoint URL
-
-After authorization, you will receive a remote MCP endpoint URL in the format:
-
-```
-https://mcp.pagerduty.com/sse
-```
-
-### 3. Configure Your MCP Client
+### Configure Your MCP Client
 
 #### Cursor
 
@@ -50,7 +35,7 @@ Add to `~/.cursor/mcp.json` or `.cursor/mcp.json`:
 {
   "mcpServers": {
     "pagerduty": {
-      "url": "https://mcp.pagerduty.com/sse"
+      "url": "https://mcp.pagerduty.com/mcp"
     }
   }
 }
@@ -65,8 +50,8 @@ Add to `settings.json`:
   "mcp": {
     "servers": {
       "pagerduty": {
-        "type": "sse",
-        "url": "https://mcp.pagerduty.com/sse"
+        "type": "http",
+        "url": "https://mcp.pagerduty.com/mcp"
       }
     }
   }
@@ -78,8 +63,6 @@ Add to `settings.json`:
 | Feature | Remote Server | Local Server |
 |---------|--------------|-------------|
 | Installation required | None | Python + uv or Docker |
-| Authentication | OAuth 2.0 | API Token (`PAGERDUTY_USER_API_KEY`) |
-| Write tools | Configured at OAuth level | `--enable-write-tools` flag |
 | Tool filtering | Not supported | Via `mcp-proxy` |
 | EU region support | Automatic | `PAGERDUTY_API_HOST` env var |
 | Offline use | No | Yes |
@@ -87,13 +70,11 @@ Add to `settings.json`:
 ## Limitations
 
 - **Tool filtering** via [`mcp-proxy`](../configuration/tool-filtering) is not available for the remote server (the proxy approach requires a local subprocess to intercept)
-- Write access depends on the OAuth app permissions granted during authorization
-- The remote server does not support the `--enable-write-tools` flag
 
 ## Troubleshooting
 
 If you cannot connect to the remote server:
 
-1. Verify your OAuth authorization is still valid — re-authorize if the token has expired
-2. Check that your MCP client supports remote/SSE-based MCP connections
+1. Verify your PagerDuty User Token is still valid — re-generate a new one. [More details here](https://developer.pagerduty.com/docs/authentication).
+2. Check that your MCP client supports remote/HTTP-based MCP connections
 3. Consult the [PagerDuty Developer Portal](https://developer.pagerduty.com/api-reference/d71edf8527b5e-pager-duty-mcp-api) for the latest endpoint URLs and requirements

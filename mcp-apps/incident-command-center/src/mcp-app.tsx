@@ -608,7 +608,9 @@ ${runbookUrls.length > 0 ? runbookUrls.map(url => `- ${url}`).join('\n') : 'No r
         content: [
           {
             type: "text",
-            text: `Triage this incident and search for relevant logs to diagnose the root cause.
+            text: `If the \`pagerduty-advance-mcp-server\` is available as an MCP tool, use its \`sre_agent_tool\` with incident_id: ${fullIncident.id} to triage this incident.
+
+If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident by searching for relevant logs to diagnose the root cause.
 
 When searching logs, use whichever integration is connected to this account.
 Here are the vendor-specific inputs you MUST collect or infer from the incident

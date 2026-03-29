@@ -608,9 +608,58 @@ ${runbookUrls.length > 0 ? runbookUrls.map(url => `- ${url}`).join('\n') : 'No r
         content: [
           {
             type: "text",
-            text: `Please triage this PagerDuty incident using the PagerDuty Advance MCP server. Use the sre_agent_tool from the pagerduty-advance-mcp server with the following incident ID: ${fullIncident.id}
+            text: `Triage this incident and search for relevant logs to diagnose the root cause.
 
-This tool requires the incident_id parameter. Please run it to get SRE agent analysis and recommendations for this incident.`,
+When searching logs, use whichever integration is connected to this account.
+Here are the vendor-specific inputs you MUST collect or infer from the incident
+context before executing a search:
+
+## Datadog
+- **Query**: Datadog query syntax (e.g., \`service:api status:error\`)
+- **Time range**: ISO 8601 or relative (\`now-1h\`)
+
+## Grafana (Loki)
+- **Datasource**: REQUIRED — Loki datasource name or UID (e.g., \`loki-prod-usw2\`)
+- **Query**: LogQL (e.g., \`{namespace="default"} |= "error"\`)
+- **Time range**: ISO 8601 or Grafana relative (\`now-1h\`)
+
+## AWS CloudWatch
+- **Log groups**: REQUIRED — comma-separated (e.g., \`/aws/lambda/my-function\`)
+- **Query**: CloudWatch Insights query or search terms
+- **Region**: AWS region (e.g., \`us-west-2\`)
+- **Time range**: ISO 8601
+
+## New Relic
+- **Query**: NRQL (e.g., \`SELECT * WHERE entity.name = 'my-service'\`), excluding FROM/SINCE/UNTIL/LIMIT
+- **Time range**: ISO 8601 or relative (\`2d (Past 2 Days)\`, \`Now\`)
+
+## Dynatrace
+- **Query**: Dynatrace search query language (e.g., \`content:"error" AND status:"ERROR"\`)
+- **Time range**: ISO 8601 or relative (\`1h (Past 1 Hour)\`, \`Now\`)
+
+## Elasticsearch
+- **Index pattern**: REQUIRED — (e.g., \`filebeat-*\`, \`app-logs-*\`, \`databases\`)
+- **Query**: Lucene, KQL, EQL, or Query DSL syntax
+- **Query type**: \`Lucene\` (default), \`KQL\`, \`EQL\`, or \`Query DSL\`
+- **Time range**: ISO 8601 (filtered via @timestamp)
+
+## Sumo Logic
+- **Query**: Sumo Logic query language (e.g., \`_sourceCategory=prod/app error\`)
+- **Time range**: ISO 8601 or relative (\`1h (Past 1 Hour)\`, \`Now\`)
+
+## Splunk
+- **Query**: SPL with time range embedded (e.g., \`index=main sourcetype=syslog error earliest=-1h latest=now\`)
+- **Time range**: ISO 8601 (for tracking); actual filtering is in the SPL query
+
+## Instructions
+
+1. Start with /triage to analyze the incident context, alerts, and any available runbook
+2. Identify which log vendor(s) are connected to this account
+3. If the alert payload or runbook contains specific log queries, use them EXACTLY
+4. If required parameters are missing (marked REQUIRED above), ASK the user — do not guess
+5. Search logs using the appropriate vendor tool
+6. Correlate log findings with the alert data to identify root cause
+7. Recommend remediation steps, quoting runbook procedures verbatim when available`,
           },
         ],
       });

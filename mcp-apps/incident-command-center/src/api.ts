@@ -57,12 +57,15 @@ export async function fetchIncidents(
   try {
     console.log("[API] Calling list_incidents with:", filters);
 
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
     const result = await app.callServerTool({
       name: "list_incidents",
       arguments: {
         query_model: {
           status: filters.status,
           urgencies: filters.urgency.length > 0 ? filters.urgency : undefined,
+          since: since7d,
           limit: 100,
         },
       },

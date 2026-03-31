@@ -75,12 +75,12 @@ Add to `settings.json`:
       "pagerduty": {
         "type": "http",
         "url": "https://mcp.pagerduty.com/mcp",
-        // for OAuth, don't do anything here
+        // for OAuth, leave the headers section commented out or delete it
         //   you will be prompted for client credentials when starting the server
         // uncomment to be prompted for an API key
-    		// 	"headers": {
-    		// 		"Authorization": "Token token=${input:pagerduty-api-key}"
-    		// 	}
+		// 	"headers": {
+		// 		"Authorization": "Token token=${input:pagerduty-api-key}"
+		// 	}
       }
     }
   },
@@ -95,7 +95,7 @@ Add to `settings.json`:
 }
 ```
 
-For OAuth, leave the headers section commented out -- Visual Studio Code will prompt you for the OAuth credentials, and provide the necessary redirect URIs.
+For OAuth, leave the headers section commented out or delete it -- Visual Studio Code will prompt you for the OAuth credentials, and provide the necessary redirect URIs.
 
 #### Claude
 

@@ -248,6 +248,11 @@ function IncidentDashboard({
   error,
 }: IncidentDashboardProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [urgencyFilter, setUrgencyFilter] = useState<string>("all");
+  const [timeRange, setTimeRange] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   console.log("[IncidentDashboard] Rendering with data:", data);
 
@@ -289,6 +294,31 @@ function IncidentDashboard({
     );
   }
 
+  const timeRangeMs: Record<string, number> = {
+    "1h": 60 * 60 * 1000,
+    "4h": 4 * 60 * 60 * 1000,
+    "24h": 24 * 60 * 60 * 1000,
+    "7d": 7 * 24 * 60 * 60 * 1000,
+  };
+
+  const filteredIncidents = (data.incidents || [])
+    .filter((incident) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        incident.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(incident.incident_number).includes(searchQuery);
+      const matchesStatus = statusFilter === "all" || incident.status === statusFilter;
+      const matchesUrgency = urgencyFilter === "all" || incident.urgency === urgencyFilter;
+      const matchesTime =
+        timeRange === "all" ||
+        Date.now() - new Date(incident.created_at).getTime() <= timeRangeMs[timeRange];
+      return matchesSearch && matchesStatus && matchesUrgency && matchesTime;
+    })
+    .sort((a, b) => {
+      const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortOrder === "desc" ? -diff : diff;
+    });
+
   console.log("[IncidentDashboard] Rendering dashboard with", data.incidents.length, "incidents");
 
   return (
@@ -309,7 +339,9 @@ function IncidentDashboard({
         </div>
         <div className="header-meta">
           <span className="incident-count">
-            {data.incidents.length} Active Incidents
+            {filteredIncidents.length === data.incidents.length
+              ? `${data.incidents.length} Active Incidents`
+              : `${filteredIncidents.length} of ${data.incidents.length} Incidents`}
           </span>
           <span className="last-update">
             Updated: {formatTimestamp(data.metadata.timestamp)}
@@ -317,17 +349,63 @@ function IncidentDashboard({
           {data.filters.auto_refresh && (
             <span className="auto-refresh">🔄 Auto-refresh ON</span>
           )}
+          <button
+            className="btn-expand"
+            onClick={async () => {
+              if (!app) return;
+              await app.requestDisplayMode({ mode: hostContext?.displayMode === "fullscreen" ? "inline" : "fullscreen" });
+            }}
+            title={hostContext?.displayMode === "fullscreen" ? "Exit fullscreen" : "Expand to fullscreen"}
+          >
+            {hostContext?.displayMode === "fullscreen" ? "⤡" : "⤢"}
+          </button>
         </div>
-        <button
-          className="btn-expand"
-          onClick={async () => {
-            if (!app) return;
-            await app.requestDisplayMode({ mode: hostContext?.displayMode === "fullscreen" ? "inline" : "fullscreen" });
-          }}
-          title={hostContext?.displayMode === "fullscreen" ? "Exit fullscreen" : "Expand to fullscreen"}
-        >
-          {hostContext?.displayMode === "fullscreen" ? "⤡" : "⤢"}
-        </button>
+        {/* Search and Filters */}
+        <div className="header-controls">
+          <input
+            className="incident-search"
+            type="text"
+            placeholder="Search incidents..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <select
+            className="time-range-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="triggered">Triggered</option>
+            <option value="acknowledged">Acknowledged</option>
+          </select>
+          <select
+            className="time-range-select"
+            value={urgencyFilter}
+            onChange={(e) => setUrgencyFilter(e.target.value)}
+          >
+            <option value="all">Any Urgency</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+          <select
+            className="time-range-select"
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+          >
+            <option value="all">All Time</option>
+            <option value="1h">Last 1h</option>
+            <option value="4h">Last 4h</option>
+            <option value="24h">Last 24h</option>
+            <option value="7d">Last 7d</option>
+          </select>
+          <button
+            className="sort-btn"
+            onClick={() => setSortOrder((o) => (o === "desc" ? "asc" : "desc"))}
+            title={sortOrder === "desc" ? "Newest first" : "Oldest first"}
+          >
+            {sortOrder === "desc" ? "↓" : "↑"}
+          </button>
+        </div>
       </header>
 
       {error && (
@@ -340,13 +418,22 @@ function IncidentDashboard({
       <div className="dashboard-content">
         {/* Incident List */}
         <div className="incident-list">
-          {data.incidents.length === 0 ? (
+          {filteredIncidents.length === 0 ? (
             <div className="empty-state">
-              <p>🎉 No active incidents</p>
-              <p className="empty-subtext">All systems operational</p>
+              {data.incidents.length === 0 ? (
+                <>
+                  <p>🎉 No active incidents</p>
+                  <p className="empty-subtext">All systems operational</p>
+                </>
+              ) : (
+                <>
+                  <p>🔍 No incidents match your filters</p>
+                  <p className="empty-subtext">Try adjusting the search or filters</p>
+                </>
+              )}
             </div>
           ) : (
-            data.incidents.map((incident) => (
+            filteredIncidents.map((incident) => (
               <IncidentCard
                 key={incident.id}
                 incident={incident}
@@ -610,58 +697,9 @@ ${runbookUrls.length > 0 ? runbookUrls.map(url => `- ${url}`).join('\n') : 'No r
             type: "text",
             text: `If the \`pagerduty-advance-mcp-server\` is available as an MCP tool, use its \`sre_agent_tool\` with incident_id: ${fullIncident.id} to triage this incident.
 
-If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident by searching for relevant logs to diagnose the root cause.
+If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident using the following two-step sequence:
 
-When searching logs, use whichever integration is connected to this account.
-Here are the vendor-specific inputs you MUST collect or infer from the incident
-context before executing a search:
-
-## Datadog
-- **Query**: Datadog query syntax (e.g., \`service:api status:error\`)
-- **Time range**: ISO 8601 or relative (\`now-1h\`)
-
-## Grafana (Loki)
-- **Datasource**: REQUIRED — Loki datasource name or UID (e.g., \`loki-prod-usw2\`)
-- **Query**: LogQL (e.g., \`{namespace="default"} |= "error"\`)
-- **Time range**: ISO 8601 or Grafana relative (\`now-1h\`)
-
-## AWS CloudWatch
-- **Log groups**: REQUIRED — comma-separated (e.g., \`/aws/lambda/my-function\`)
-- **Query**: CloudWatch Insights query or search terms
-- **Region**: AWS region (e.g., \`us-west-2\`)
-- **Time range**: ISO 8601
-
-## New Relic
-- **Query**: NRQL (e.g., \`SELECT * WHERE entity.name = 'my-service'\`), excluding FROM/SINCE/UNTIL/LIMIT
-- **Time range**: ISO 8601 or relative (\`2d (Past 2 Days)\`, \`Now\`)
-
-## Dynatrace
-- **Query**: Dynatrace search query language (e.g., \`content:"error" AND status:"ERROR"\`)
-- **Time range**: ISO 8601 or relative (\`1h (Past 1 Hour)\`, \`Now\`)
-
-## Elasticsearch
-- **Index pattern**: REQUIRED — (e.g., \`filebeat-*\`, \`app-logs-*\`, \`databases\`)
-- **Query**: Lucene, KQL, EQL, or Query DSL syntax
-- **Query type**: \`Lucene\` (default), \`KQL\`, \`EQL\`, or \`Query DSL\`
-- **Time range**: ISO 8601 (filtered via @timestamp)
-
-## Sumo Logic
-- **Query**: Sumo Logic query language (e.g., \`_sourceCategory=prod/app error\`)
-- **Time range**: ISO 8601 or relative (\`1h (Past 1 Hour)\`, \`Now\`)
-
-## Splunk
-- **Query**: SPL with time range embedded (e.g., \`index=main sourcetype=syslog error earliest=-1h latest=now\`)
-- **Time range**: ISO 8601 (for tracking); actual filtering is in the SPL query
-
-## Instructions
-
-1. Start with /triage to analyze the incident context, alerts, and any available runbook
-2. Identify which log vendor(s) are connected to this account
-3. If the alert payload or runbook contains specific log queries, use them EXACTLY
-4. If required parameters are missing (marked REQUIRED above), ASK the user — do not guess
-5. Search logs using the appropriate vendor tool
-6. Correlate log findings with the alert data to identify root cause
-7. Recommend remediation steps, quoting runbook procedures verbatim when available`,
+/triage ${fullIncident.id} and search logs`,
           },
         ],
       });

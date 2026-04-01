@@ -914,12 +914,12 @@ body {
 
 .modal-footer {
   padding: 16px 24px;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--border-primary);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   flex-shrink: 0;
-  background: white;
+  background: var(--bg-primary);
 }
 
 .btn-primary,

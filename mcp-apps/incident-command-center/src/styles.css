@@ -574,7 +574,6 @@ body {
   flex-wrap: nowrap;
   margin-top: 12px;
   visibility: visible !important;
-  overflow-x: auto;
 }
 
 .action-btn {

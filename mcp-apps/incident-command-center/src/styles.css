@@ -1843,6 +1843,21 @@ body {
   word-break: break-word;
 }
 
+.action-btn.triage-advance {
+  background: #048a24;
+  color: #fff;
+  border-color: #048a24;
+}
+.action-btn.triage-advance:hover:not(:disabled) {
+  background: #036b1c;
+  border-color: #036b1c;
+  color: #fff;
+}
+.action-btn.triage-advance.loading {
+  background: #999;
+  border-color: #999;
+}
+
 .action-btn.details {
   background: var(--bg-primary);
   color: #0d6efd;

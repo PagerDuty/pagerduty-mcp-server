@@ -1844,13 +1844,13 @@ body {
 }
 
 .action-btn.triage-advance {
-  background: #048a24;
+  background: #005a2f;
   color: #fff;
-  border-color: #048a24;
+  border-color: #005a2f;
 }
 .action-btn.triage-advance:hover:not(:disabled) {
-  background: #036b1c;
-  border-color: #036b1c;
+  background: #048a24;
+  border-color: #048a24;
   color: #fff;
 }
 .action-btn.triage-advance.loading {

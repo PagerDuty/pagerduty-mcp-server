@@ -699,7 +699,7 @@ ${runbookUrls.length > 0 ? runbookUrls.map(url => `- ${url}`).join('\n') : 'No r
 
 If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident using the following two-step sequence:
 
-/triage ${fullIncident.id} and search logs`,
+"triage ${fullIncident.id} and search logs"`,
           },
         ],
       });

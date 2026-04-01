@@ -62,6 +62,18 @@
   border-color: #606060;
 }
 
+:root[data-theme="dark"] .action-btn.triage-advance {
+  background: #005a2f;
+  border-color: #005a2f;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .action-btn.triage-advance:hover:not(:disabled) {
+  background: #048a24;
+  border-color: #048a24;
+  color: #fff;
+}
+
 /* Better card visibility in dark mode */
 :root[data-theme="dark"] .incident-card {
   background: #252526;

@@ -787,14 +787,9 @@ If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident using
           {isTriaging ? "⏳" : "🤖"} Triage Locally
         </button>
         <button
-          className="action-btn triage-advance"
+          className={`action-btn triage-advance${isTriagingAdvance ? " loading" : ""}`}
           onClick={handleTriageWithAdvance}
           disabled={isLoading || isTriagingAdvance}
-          style={{
-            background: isTriagingAdvance ? "#999" : "#048a24",
-            color: "#fff",
-            border: "none",
-          }}
         >
           {isTriagingAdvance ? "⏳ Triaging..." : "✨ Triage with SRE Agent"}
         </button>

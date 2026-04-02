@@ -340,3 +340,7 @@ PagerDuty's MCP server is an open-source project, and as such, we offer only com
 ## Contributing
 
 If you are interested in contributing to this project, please refer to our [Contributing Guidelines](https://github.com/pagerduty/pagerduty-mcp-server/blob/main/CONTRIBUTING.md).
+
+## Alternative License
+
+If you do not want to license this under the current open source license, contact PagerDuty Sales to acquire this software under a paid, proprietary license.

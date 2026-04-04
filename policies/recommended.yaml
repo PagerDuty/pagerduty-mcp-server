@@ -1,0 +1,179 @@
+version: "1"
+description: "PagerDuty MCP — recommended policy. Rate limits on incident management, blocks auto-resolve of P1s, reads allowed freely."
+default: allow
+
+tools:
+  # Incident management — highest risk
+  # manage_incidents can acknowledge, resolve, reassign, and change urgency.
+  # An agent auto-resolving a P1 can mask a real outage.
+  manage_incidents:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "3/minute"
+        on_deny: "Slow down — max 3 incident updates per minute"
+      - name: "hourly-cap"
+        rate_limit: "20/hour"
+        on_deny: "Hourly incident management limit (20) reached"
+
+  create_incident:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "2/minute"
+        on_deny: "Slow down — max 2 incident creations per minute"
+      - name: "hourly-cap"
+        rate_limit: "10/hour"
+        on_deny: "Hourly incident creation limit (10) reached — creating incidents pages on-call staff"
+
+  add_responders:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "3/minute"
+        on_deny: "Slow down — max 3 responder additions per minute"
+      - name: "hourly-cap"
+        rate_limit: "15/hour"
+        on_deny: "Hourly responder addition limit (15) reached — each addition pages someone"
+
+  start_incident_workflow:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "2/minute"
+        on_deny: "Slow down — max 2 workflow triggers per minute"
+      - name: "hourly-cap"
+        rate_limit: "10/hour"
+        on_deny: "Hourly workflow trigger limit (10) reached"
+
+  # Event orchestration — changes routing rules
+  update_event_orchestration_router:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "5/hour"
+        on_deny: "Max 5 orchestration router updates per hour — changes affect alert routing"
+
+  append_event_orchestration_router_rule:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "10/hour"
+        on_deny: "Max 10 routing rule additions per hour"
+
+  # Schedule changes — affects who is on-call
+  create_schedule_override:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "2/minute"
+        on_deny: "Slow down — max 2 schedule overrides per minute"
+      - name: "hourly-cap"
+        rate_limit: "10/hour"
+        on_deny: "Hourly schedule override limit (10) reached — overrides change who is on-call"
+
+  create_schedule:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "5/hour"
+        on_deny: "Max 5 schedule creations per hour"
+
+  update_schedule:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "10/hour"
+        on_deny: "Max 10 schedule updates per hour"
+
+  # Service and team management
+  create_service:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "10/hour"
+        on_deny: "Max 10 service creations per hour"
+
+  update_service:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "15/hour"
+        on_deny: "Max 15 service updates per hour"
+
+  create_team:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "5/hour"
+        on_deny: "Max 5 team creations per hour"
+
+  update_team:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "10/hour"
+        on_deny: "Max 10 team updates per hour"
+
+  add_team_member:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "20/hour"
+        on_deny: "Max 20 team member additions per hour"
+
+  # Destructive — tight limits
+  delete_team:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "1/minute"
+        on_deny: "Max 1 team deletion per minute"
+      - name: "daily-cap"
+        rate_limit: "5/day"
+        on_deny: "Daily team deletion limit (5) reached"
+
+  remove_team_member:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "3/minute"
+        on_deny: "Slow down — max 3 member removals per minute"
+      - name: "hourly-cap"
+        rate_limit: "15/hour"
+        on_deny: "Hourly member removal limit (15) reached"
+
+  delete_alert_grouping_setting:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "5/hour"
+        on_deny: "Max 5 alert grouping deletions per hour"
+
+  # Status pages — public-facing
+  create_status_page_post:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "2/minute"
+        on_deny: "Slow down — max 2 status page posts per minute"
+      - name: "hourly-cap"
+        rate_limit: "10/hour"
+        on_deny: "Hourly status page post limit (10) reached — posts are publicly visible"
+
+  create_status_page_post_update:
+    rules:
+      - name: "burst-limit"
+        rate_limit: "3/minute"
+        on_deny: "Slow down — max 3 status page updates per minute"
+      - name: "hourly-cap"
+        rate_limit: "20/hour"
+        on_deny: "Hourly status page update limit (20) reached"
+
+  # Low-risk writes
+  add_note_to_incident:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "30/hour"
+        on_deny: "Max 30 incident notes per hour"
+
+  create_alert_grouping_setting:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "10/hour"
+        on_deny: "Max 10 alert grouping setting creations per hour"
+
+  update_alert_grouping_setting:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "10/hour"
+        on_deny: "Max 10 alert grouping setting updates per hour"
+
+  # Global safety net
+  "*":
+    rules:
+      - name: "global-rate-limit"
+        rate_limit: "120/minute"
+        on_deny: "Global rate limit — max 120 tool calls per minute across all PagerDuty tools"

@@ -1,0 +1,63 @@
+version: "1"
+description: "PagerDuty MCP — permissive policy. All tools allowed. Rate limits on acknowledge, resolve, and incident creation."
+default: allow
+
+tools:
+  # Incident management — rate limited even in permissive mode
+  manage_incidents:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "30/hour"
+        on_deny: "Max 30 incident updates per hour"
+
+  create_incident:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "20/hour"
+        on_deny: "Max 20 incident creations per hour"
+
+  add_responders:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "20/hour"
+        on_deny: "Max 20 responder additions per hour"
+
+  start_incident_workflow:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "15/hour"
+        on_deny: "Max 15 workflow triggers per hour"
+
+  # Schedule overrides — affects on-call
+  create_schedule_override:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "20/hour"
+        on_deny: "Max 20 schedule overrides per hour"
+
+  # Destructive — rate limited
+  delete_team:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "5/hour"
+        on_deny: "Max 5 team deletions per hour"
+
+  remove_team_member:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "20/hour"
+        on_deny: "Max 20 member removals per hour"
+
+  # Status pages — public-facing
+  create_status_page_post:
+    rules:
+      - name: "rate-limit"
+        rate_limit: "15/hour"
+        on_deny: "Max 15 status page posts per hour"
+
+  # Global safety net
+  "*":
+    rules:
+      - name: "global-rate-limit"
+        rate_limit: "180/minute"
+        on_deny: "Global rate limit — max 180 tool calls per minute"

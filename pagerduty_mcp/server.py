@@ -20,7 +20,6 @@ logging.basicConfig(level=logging.WARNING)
 app = typer.Typer()
 
 # MCP App URIs
-SERVICE_HEALTH_MATRIX_VIEW_URI = "ui://service-health-matrix/grid.html"
 INCIDENT_COMMAND_CENTER_URI = "ui://incident-command-center/dashboard.html"
 ONCALL_SCHEDULE_VISUALIZER_URI = "ui://oncall-schedule-visualizer/calendar.html"
 SERVICE_DEPENDENCY_GRAPH_URI = "ui://service-dependency-graph/graph.html"
@@ -74,46 +73,6 @@ def add_write_tool(mcp_instance: FastMCP, tool: Callable) -> None:
         tool,
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False),
     )
-
-
-def add_service_health_matrix(mcp_instance: FastMCP) -> None:
-    """Add Service Health Matrix MCP App tool and resource.
-
-    Args:
-        mcp_instance: The MCP server instance
-    """
-
-    @mcp_instance.tool(
-        meta={
-            "ui": {"resourceUri": SERVICE_HEALTH_MATRIX_VIEW_URI},
-            "ui/resourceUri": SERVICE_HEALTH_MATRIX_VIEW_URI,  # legacy support
-        }
-    )
-    def service_health_matrix() -> list[TextContent]:
-        """PagerDuty Health Check Matrix - Comprehensive health check analysis organized by object type.
-
-        The UI will call list_services, list_users, list_teams, list_escalation_policies,
-        list_schedules, and list_incidents tools to fetch real data.
-
-        Returns:
-            Text content indicating the UI is ready
-        """
-        return [
-            TextContent(
-                type="text",
-                text="Health Check Matrix UI initialized. Fetching data from PagerDuty..."
-            )
-        ]
-
-    @mcp_instance.resource(
-        SERVICE_HEALTH_MATRIX_VIEW_URI,
-        mime_type="text/html;profile=mcp-app",
-        description="Service Health Matrix interactive UI"
-    )
-    def service_health_matrix_view() -> str:
-        """Service Health Matrix UI resource."""
-        html_path = pathlib.Path(__file__).parent / "service_health_matrix_view.html"
-        return html_path.read_text(encoding="utf-8")
 
 
 def add_incident_command_center(mcp_instance: FastMCP) -> None:
@@ -317,7 +276,6 @@ def run(*, enable_write_tools: bool = False) -> None:
             add_write_tool(mcp, tool)
 
     # Add MCP Apps
-    add_service_health_matrix(mcp)
     add_incident_command_center(mcp)
     add_oncall_schedule_visualizer(mcp)
     add_service_dependency_graph(mcp)

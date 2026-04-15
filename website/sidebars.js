@@ -85,6 +85,9 @@ const sidebars = {
       items: [
         'experimental/overview',
         'experimental/incident-command-center',
+        'experimental/oncall-schedule-visualizer',
+        'experimental/oncall-compensation',
+        'experimental/service-dependency-graph',
       ],
     },
     {

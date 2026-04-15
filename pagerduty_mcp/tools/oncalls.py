@@ -7,12 +7,12 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_oncalls(query_model: OncallQuery) -> ListResponseModel[Oncall]:
+def list_oncalls(query_model: OncallQuery) -> str:
     """List on-call schedules with optional filtering.
 
     Returns:
-        List of on-call schedules matching the query parameters
+        JSON string of ListResponseModel containing Oncall objects
     """
     response = paginate(client=get_client(), entity="oncalls", params=query_model.to_params())
     oncalls = [Oncall(**oncall) for oncall in response]
-    return ListResponseModel[Oncall](response=oncalls)
+    return ListResponseModel[Oncall](response=oncalls).model_dump_json()

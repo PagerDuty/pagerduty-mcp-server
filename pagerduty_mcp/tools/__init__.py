@@ -9,6 +9,7 @@ from .alerts import (
     get_alert_from_incident,
     list_alerts_from_incident,
 )
+from .analytics import get_responder_metrics
 from .change_events import (
     get_change_event,
     list_change_events,
@@ -55,6 +56,7 @@ from .log_entries import (
     list_log_entries,
 )
 from .oncalls import list_oncalls
+from .priorities import list_priorities
 from .schedules import (
     create_schedule,
     create_schedule_override,
@@ -63,9 +65,14 @@ from .schedules import (
     list_schedules,
     update_schedule,
 )
+from .business_services import (
+    get_business_service_dependencies,
+    list_business_services,
+)
 from .services import (
     create_service,
     get_service,
+    get_technical_service_dependencies,
     list_services,
     update_service,
 )
@@ -114,9 +121,15 @@ read_tools = [
     # Incident Workflows
     list_incident_workflows,
     get_incident_workflow,
+    # Priorities
+    list_priorities,
+    # Business Services
+    list_business_services,
+    get_business_service_dependencies,
     # Services
     list_services,
     get_service,
+    get_technical_service_dependencies,
     # Teams
     list_teams,
     get_team,
@@ -128,6 +141,8 @@ read_tools = [
     list_schedules,
     get_schedule,
     list_schedule_users,
+    # Analytics
+    get_responder_metrics,
     # On-calls
     list_oncalls,
     # Log Entries

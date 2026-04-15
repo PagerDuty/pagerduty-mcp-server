@@ -4,6 +4,41 @@
 
 PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
+## Embedded MCP Apps (Developer Experience)
+
+Interactive React UIs for PagerDuty incident management, embedded directly in the Python MCP server for seamless IDE integration. Manage your full incident lifecycle without leaving your IDE.
+
+**Available Apps:**
+
+### 1. **Incident Command Center** 🚨
+Full incident lifecycle management from your IDE:
+- Real-time incident feed with auto-refresh
+- Deep incident details: timeline, notes, alerts, changes
+- Quick actions: acknowledge, resolve, escalate
+- AI-powered similar incident detection
+- Alert inspection with raw data
+- Runbook links parsed from incident metadata
+
+**Usage in VS Code:** Ask Claude: `Show me the incident command center`
+
+### 2. **On-Call Schedule Visualizer** 📅
+Who's on-call right now across teams and schedules.
+
+**Usage in VS Code:** Ask Claude: `Show me the on-call schedule`
+
+### 3. **Service Health Matrix** 💚
+Service health overview with incident counts and status indicators.
+
+**Usage in VS Code:** Ask Claude: `Show me the service health matrix`
+
+**Architecture:**
+- ✅ Native VS Code integration (MCP resources)
+- ✅ Single process, no HTTP server management
+- ✅ Direct access to all PagerDuty MCP tools
+- ✅ Simple deployment: `uv run pagerduty-mcp`
+
+See [mcp-apps/README.md](mcp-apps/README.md) for development instructions and customization.
+
 ## Prerequisites
 
 *   [asdf-vm](https://asdf-vm.com/) installed.

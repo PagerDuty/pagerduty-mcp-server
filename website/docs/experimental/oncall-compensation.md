@@ -68,7 +68,6 @@ Click the column picker to toggle columns on or off. Useful for exporting a focu
 
 Click any row to open the user detail modal. It shows the full breakdown for that person — their schedule shifts, incident list, and out-of-hours periods in detail.
 
-![User detail modal](/img/ocr-user-detail.png)
 
 ## How it works
 

@@ -23,7 +23,6 @@ MCP Apps is an ecosystem-wide extension to the Model Context Protocol, not a Pag
 | App | Description |
 |-----|-------------|
 | [Incident Command Center](./incident-command-center) | An interactive incident management dashboard — view, triage, and act on incidents without leaving your IDE |
-| [On-Call Schedule Visualizer](./oncall-schedule-visualizer) | A color-coded calendar of on-call schedules across teams — with timezone support and in-place override creation |
 | [On-Call Compensation Report](./oncall-compensation) | A sortable breakdown of on-call burden per person — hours, incidents, off-hours interruptions, and configurable business-hours metrics |
 | [Service Dependency Graph](./service-dependency-graph) | An interactive node graph of your service topology — business services, technical services, dependencies, and active incident impact |
 

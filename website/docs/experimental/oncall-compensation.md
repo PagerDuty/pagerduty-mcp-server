@@ -12,8 +12,6 @@ The **On-Call Compensation Report** is an interactive data table that breaks dow
 
 The report opens with a summary row of fleet-wide stats at the top, followed by a sortable table with one row per user.
 
-![Summary cards and compensation table](/img/ocr-table.png)
-
 ### Summary cards
 
 | Card | What it shows |

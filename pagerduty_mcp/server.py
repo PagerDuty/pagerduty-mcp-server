@@ -24,6 +24,9 @@ INCIDENT_COMMAND_CENTER_URI = "ui://incident-command-center/dashboard.html"
 ONCALL_SCHEDULE_VISUALIZER_URI = "ui://oncall-schedule-visualizer/calendar.html"
 SERVICE_DEPENDENCY_GRAPH_URI = "ui://service-dependency-graph/graph.html"
 ONCALL_COMPENSATION_URI = "ui://oncall-compensation/report.html"
+SHIFT_COVERAGE_WIZARD_URI = "ui://shift-coverage-wizard/wizard.html"
+POST_MORTEM_BUILDER_URI = "ui://post-mortem-builder/builder.html"
+OPERATIONS_INTELLIGENCE_URI = "ui://operations-intelligence/dashboard.html"
 
 MCP_SERVER_INSTRUCTIONS = """
 When the user asks for information about their resources, first get the user data and scope any
@@ -256,6 +259,145 @@ def add_oncall_compensation(mcp_instance: FastMCP) -> None:
         return html_path.read_text(encoding="utf-8")
 
 
+def add_shift_coverage_wizard(mcp_instance: FastMCP) -> None:
+    """Add Shift Coverage Wizard MCP App resource.
+
+    The UI directly calls existing MCP tools:
+    - get_user_data
+    - list_oncalls, list_schedules, list_schedule_users
+    - create_schedule_override
+
+    Args:
+        mcp_instance: The MCP server instance
+    """
+
+    @mcp_instance.tool(
+        meta={
+            "ui": {"resourceUri": SHIFT_COVERAGE_WIZARD_URI},
+            "ui/resourceUri": SHIFT_COVERAGE_WIZARD_URI,
+        }
+    )
+    def shift_coverage_wizard() -> list[TextContent]:
+        """Shift Coverage Wizard - Interactive wizard for creating schedule overrides.
+
+        Step-by-step wizard to select a date range, pick shifts to cover, choose
+        a coverage user, and confirm the override. The UI calls existing MCP tools
+        (list_oncalls, list_schedule_users, create_schedule_override, etc.) to fetch
+        and write data.
+
+        Returns:
+            Text content indicating the UI is ready
+        """
+        return [
+            TextContent(
+                type="text",
+                text="Shift Coverage Wizard UI initialized. The UI will call existing MCP tools to fetch and write data."
+            )
+        ]
+
+    @mcp_instance.resource(
+        SHIFT_COVERAGE_WIZARD_URI,
+        mime_type="text/html;profile=mcp-app",
+        description="Shift Coverage Wizard - Interactive wizard for creating schedule overrides"
+    )
+    def shift_coverage_wizard_view() -> str:
+        """Shift Coverage Wizard UI resource."""
+        html_path = pathlib.Path(__file__).parent / "shift_coverage_wizard_view.html"
+        return html_path.read_text(encoding="utf-8")
+
+
+def add_post_mortem_builder(mcp_instance: FastMCP) -> None:
+    """Add Post-Mortem Builder MCP App resource.
+
+    The UI directly calls existing MCP tools:
+    - list_incidents
+    - list_log_entries, list_incident_notes
+    - list_incident_change_events, list_alerts_from_incident
+
+    Args:
+        mcp_instance: The MCP server instance
+    """
+
+    @mcp_instance.tool(
+        meta={
+            "ui": {"resourceUri": POST_MORTEM_BUILDER_URI},
+            "ui/resourceUri": POST_MORTEM_BUILDER_URI,
+        }
+    )
+    def post_mortem_builder() -> list[TextContent]:
+        """Post-Mortem Builder - Interactive timeline builder for incident post-mortems.
+
+        Select a resolved incident and generate a color-coded timeline of events
+        including triggers, acknowledgements, notes, escalations, and change events.
+        Export the timeline as markdown. The UI calls existing MCP tools to fetch data.
+
+        Returns:
+            Text content indicating the UI is ready
+        """
+        return [
+            TextContent(
+                type="text",
+                text="Post-Mortem Builder UI initialized. The UI will call existing MCP tools to fetch data."
+            )
+        ]
+
+    @mcp_instance.resource(
+        POST_MORTEM_BUILDER_URI,
+        mime_type="text/html;profile=mcp-app",
+        description="Post-Mortem Builder - Interactive incident timeline builder for post-mortems"
+    )
+    def post_mortem_builder_view() -> str:
+        """Post-Mortem Builder UI resource."""
+        html_path = pathlib.Path(__file__).parent / "post_mortem_builder_view.html"
+        return html_path.read_text(encoding="utf-8")
+
+
+def add_operations_intelligence(mcp_instance: FastMCP) -> None:
+    """Add Operations Intelligence Report MCP App resource.
+
+    The UI directly calls existing MCP tools:
+    - list_incidents, list_teams
+    - list_oncalls, list_services
+
+    Args:
+        mcp_instance: The MCP server instance
+    """
+
+    @mcp_instance.tool(
+        meta={
+            "ui": {"resourceUri": OPERATIONS_INTELLIGENCE_URI},
+            "ui/resourceUri": OPERATIONS_INTELLIGENCE_URI,
+        }
+    )
+    def operations_intelligence() -> list[TextContent]:
+        """Operations Intelligence Report - Real-time ops metrics and incident analytics.
+
+        Live dashboard showing total incidents, high urgency rate, average MTTR,
+        service health breakdown, and a sortable incident table with team filtering.
+        The UI calls existing MCP tools (list_incidents, list_teams, list_oncalls, etc.)
+        to fetch data.
+
+        Returns:
+            Text content indicating the UI is ready
+        """
+        return [
+            TextContent(
+                type="text",
+                text="Operations Intelligence Report UI initialized. The UI will call existing MCP tools to fetch data."
+            )
+        ]
+
+    @mcp_instance.resource(
+        OPERATIONS_INTELLIGENCE_URI,
+        mime_type="text/html;profile=mcp-app",
+        description="Operations Intelligence Report - Real-time operations metrics and incident analytics"
+    )
+    def operations_intelligence_view() -> str:
+        """Operations Intelligence Report UI resource."""
+        html_path = pathlib.Path(__file__).parent / "operations_intelligence_view.html"
+        return html_path.read_text(encoding="utf-8")
+
+
 @app.command()
 def run(*, enable_write_tools: bool = False) -> None:
     """Run the MCP server with the specified configuration.
@@ -280,5 +422,8 @@ def run(*, enable_write_tools: bool = False) -> None:
     add_oncall_schedule_visualizer(mcp)
     add_service_dependency_graph(mcp)
     add_oncall_compensation(mcp)
+    add_shift_coverage_wizard(mcp)
+    add_post_mortem_builder(mcp)
+    add_operations_intelligence(mcp)
 
     mcp.run()

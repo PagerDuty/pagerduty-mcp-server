@@ -1,48 +1,49 @@
-import type { ServiceStat } from "../api";
+import type { ServiceMetric } from "../api";
 
-function fmtMttr(minutes: number | null): string {
+function fmtMin(minutes: number | null): string {
   if (minutes === null) return "—";
   if (minutes < 60) return `${minutes}m`;
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
-export function ServiceBreakdown({ stats, max }: { stats: ServiceStat[]; max: number }) {
+export function ServiceBreakdown({ metrics }: { metrics: ServiceMetric[] }) {
   return (
-    <div className="service-breakdown">
-      <div className="section-title">Incidents by Service</div>
-      {stats.length === 0 ? (
-        <div className="empty-state">No service data</div>
+    <div className="analytics-section">
+      <div className="section-title">Service Performance</div>
+      {metrics.length === 0 ? (
+        <div className="empty-state">No service data for this period</div>
       ) : (
-        <table className="service-table">
+        <table className="analytics-table">
           <thead>
             <tr>
               <th>Service</th>
-              <th>Incidents</th>
-              <th>High Urgency</th>
-              <th>MTTR</th>
+              <th className="col-num">Incidents</th>
+              <th className="col-num">MTTA</th>
+              <th className="col-num">MTTR</th>
+              <th className="col-num">Escalations</th>
+              <th className="col-num">Uptime</th>
             </tr>
           </thead>
           <tbody>
-            {stats.map((s) => (
+            {metrics.map((s) => (
               <tr key={s.id}>
-                <td className="service-name">{s.name}</td>
-                <td>
-                  <div className="bar-cell">
-                    <div
-                      className="bar-fill"
-                      style={{ width: `${Math.round((s.incidentCount / max) * 100)}%` }}
-                    />
-                    <span>{s.incidentCount}</span>
-                  </div>
+                <td className="col-name">
+                  {s.name}
+                  {s.teamName && <span className="kpi-sub"> · {s.teamName}</span>}
                 </td>
-                <td>
-                  {s.highUrgencyCount > 0 ? (
-                    <span className="high-urgency-count">{s.highUrgencyCount}</span>
-                  ) : (
-                    <span className="zero-count">0</span>
-                  )}
+                <td className="col-num">{s.totalIncidents}</td>
+                <td className={`col-mono col-num${s.mttaMinutes !== null && s.mttaMinutes > 30 ? " col-warn" : ""}`}>
+                  {fmtMin(s.mttaMinutes)}
                 </td>
-                <td className="mttr-cell">{fmtMttr(s.mttrMinutes)}</td>
+                <td className={`col-mono col-num${s.mttrMinutes !== null && s.mttrMinutes > 60 ? " col-warn" : ""}`}>
+                  {fmtMin(s.mttrMinutes)}
+                </td>
+                <td className={`col-num${s.escalationCount > 0 ? " col-warn" : " col-ok"}`}>
+                  {s.escalationCount}
+                </td>
+                <td className={`col-num${s.uptimePct !== null && s.uptimePct < 99 ? " col-warn" : " col-ok"}`}>
+                  {s.uptimePct !== null ? `${s.uptimePct}%` : "—"}
+                </td>
               </tr>
             ))}
           </tbody>

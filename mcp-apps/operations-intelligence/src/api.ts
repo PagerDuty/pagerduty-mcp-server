@@ -1,6 +1,10 @@
 /**
- * Operations Intelligence - API layer
- * Fetches incident + service + oncall data for operational health dashboard.
+ * Operations Intelligence v2 - API layer
+ *
+ * Fetches pre-aggregated metrics from PagerDuty Analytics API tools.
+ * No raw incident list — all metrics are server-side aggregated.
+ *
+ * Insights tab calls insights_agent_tool on pagerduty-advance-mcp server.
  */
 
 import type { App } from "@modelcontextprotocol/ext-apps";
@@ -13,12 +17,37 @@ export interface Team {
   name: string;
 }
 
-export interface ServiceStat {
+export interface ServiceMetric {
   id: string;
   name: string;
-  incidentCount: number;
-  highUrgencyCount: number;
-  mttrMinutes: number | null; // null if no resolved incidents
+  teamName: string | null;
+  totalIncidents: number;
+  mttaMinutes: number | null;       // mean_seconds_to_first_ack / 60
+  mttrMinutes: number | null;       // mean_seconds_to_resolve / 60
+  escalationCount: number;
+  uptimePct: number | null;
+}
+
+export interface TeamMetric {
+  id: string;
+  name: string;
+  totalIncidents: number;
+  mttaMinutes: number | null;
+  mttrMinutes: number | null;
+  escalationCount: number;
+  totalInterruptions: number;
+  uptimePct: number | null;
+}
+
+export interface ResponderMetric {
+  id: string;
+  name: string;
+  teamName: string | null;
+  onCallHours: number;              // total_seconds_on_call / 3600
+  totalIncidents: number;
+  totalAcks: number;
+  sleepInterruptions: number;
+  engagedMinutes: number;           // total_engaged_seconds / 60
 }
 
 export interface OpsData {
@@ -26,26 +55,21 @@ export interface OpsData {
   selectedTeam: string | null;
   since: string;
   until: string;
+  // KPI summary — derived from team aggregate
   totalIncidents: number;
-  highUrgencyCount: number;
-  resolvedCount: number;
+  mttaMinutes: number | null;
   mttrMinutes: number | null;
-  serviceStats: ServiceStat[];
-  recentIncidents: RecentIncident[];
-  oncallUsers: string[];
+  escalationRate: number | null;    // pct: total_escalated / total_incidents * 100
+  uptimePct: number | null;
+  // Section data
+  serviceMetrics: ServiceMetric[];
+  teamMetrics: TeamMetric[];
+  responderMetrics: ResponderMetric[];
 }
 
-export interface RecentIncident {
-  id: string;
-  number: number;
-  title: string;
-  status: string;
-  urgency: string;
-  serviceName: string;
-  createdAt: string;
-  resolvedAt: string | null;
-  mttrMinutes: number | null;
-  priority: string | null;
+export interface InsightMessage {
+  role: "user" | "assistant";
+  content: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -56,12 +80,26 @@ function extract<T>(result: CallToolResult): T | null {
   try { return JSON.parse(text) as T; } catch { return null; }
 }
 
-function mttr(start: string, end: string | null): number | null {
-  if (!end) return null;
-  return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000);
+function secToMin(seconds: number | null | undefined): number | null {
+  if (seconds == null) return null;
+  return Math.round(seconds / 60);
 }
 
-// ─── API functions ────────────────────────────────────────────────────────────
+function secToHours(seconds: number | null | undefined): number {
+  if (seconds == null) return 0;
+  return Math.round((seconds / 3600) * 10) / 10;
+}
+
+function buildIncidentFilters(since: string, until: string, teamId: string | null) {
+  const filters: Record<string, unknown> = {
+    created_at_start: since,
+    created_at_end: until,
+  };
+  if (teamId) filters["team_ids"] = [teamId];
+  return filters;
+}
+
+// ─── Operational data fetch ───────────────────────────────────────────────────
 
 export async function fetchOpsData(
   app: App,
@@ -69,116 +107,116 @@ export async function fetchOpsData(
   until: string,
   teamId: string | null
 ): Promise<OpsData> {
-  // Build teams query first to return in result
-  const teamsResult = await app.callServerTool({
-    name: "list_teams",
-    arguments: { query_model: { limit: 100 } },
-  });
-  const teamsData = extract<any>(teamsResult);
+  const incidentFilters = buildIncidentFilters(since, until, teamId);
+  // Responder endpoint uses date_range_start/end (different field names)
+  const responderFilters: Record<string, unknown> = {
+    date_range_start: since,
+    date_range_end: until,
+  };
+  if (teamId) responderFilters["team_ids"] = [teamId];
+
+  const [teamsResult, serviceResult, teamResult, responderResult] = await Promise.allSettled([
+    app.callServerTool({ name: "list_teams", arguments: { query_model: { limit: 100 } } }),
+    app.callServerTool({
+      name: "get_incident_metrics_by_service",
+      arguments: { filters: incidentFilters },
+    }),
+    app.callServerTool({
+      name: "get_incident_metrics_by_team",
+      arguments: { filters: incidentFilters },
+    }),
+    app.callServerTool({
+      name: "get_responder_load_metrics",
+      arguments: { filters: responderFilters },
+    }),
+  ]);
+
+  // Teams
+  const teamsData = teamsResult.status === "fulfilled" ? extract<any>(teamsResult.value) : null;
   const teams: Team[] = (teamsData?.response ?? []).map((t: any) => ({
     id: t.id,
     name: t.name ?? t.summary,
   }));
 
-  // Fetch incidents (optionally filtered by team)
-  const incArgs: any = {
-    query_model: {
-      status: ["triggered", "acknowledged", "resolved"],
-      since,
-      until,
-      limit: 100,
-    },
-  };
-  if (teamId) incArgs.query_model.team_ids = [teamId];
-
-  const [incResult, oncallResult] = await Promise.allSettled([
-    app.callServerTool({ name: "list_incidents", arguments: incArgs }),
-    app.callServerTool({
-      name: "list_oncalls",
-      arguments: {
-        query_model: {
-          since,
-          until,
-          earliest: true,
-        },
-      },
-    }),
-  ]);
-
-  const incidents: any[] = incResult.status === "fulfilled"
-    ? (extract<any>(incResult.value)?.response ?? []) : [];
-
-  const oncalls: any[] = oncallResult.status === "fulfilled"
-    ? (extract<any>(oncallResult.value)?.response ?? []) : [];
-
-  // Compute stats
-  const resolved = incidents.filter((i: any) => i.status === "resolved");
-  const highUrgency = incidents.filter((i: any) => i.urgency === "high");
-
-  // MTTR
-  const mttrValues = resolved
-    .map((i: any) => mttr(i.created_at, i.resolved_at))
-    .filter((v): v is number => v !== null);
-  const avgMttr = mttrValues.length > 0
-    ? Math.round(mttrValues.reduce((a, b) => a + b, 0) / mttrValues.length)
-    : null;
-
-  // Service breakdown
-  const serviceMap = new Map<string, ServiceStat>();
-  for (const inc of incidents) {
-    const svcId = inc.service?.id ?? "unknown";
-    const svcName = inc.service?.summary ?? "Unknown";
-    if (!serviceMap.has(svcId)) {
-      serviceMap.set(svcId, { id: svcId, name: svcName, incidentCount: 0, highUrgencyCount: 0, mttrMinutes: null });
-    }
-    const stat = serviceMap.get(svcId)!;
-    stat.incidentCount++;
-    if (inc.urgency === "high") stat.highUrgencyCount++;
-  }
-  // MTTR per service
-  for (const inc of resolved) {
-    const svcId = inc.service?.id ?? "unknown";
-    const stat = serviceMap.get(svcId);
-    if (stat) {
-      const m = mttr(inc.created_at, inc.resolved_at);
-      if (m !== null) {
-        stat.mttrMinutes = stat.mttrMinutes === null ? m : Math.round((stat.mttrMinutes + m) / 2);
-      }
-    }
-  }
-  const serviceStats = [...serviceMap.values()].sort((a, b) => b.incidentCount - a.incidentCount);
-
-  // Recent incidents
-  const recentIncidents: RecentIncident[] = incidents.slice(0, 50).map((i: any) => ({
-    id: i.id,
-    number: i.incident_number,
-    title: i.title ?? i.summary,
-    status: i.status,
-    urgency: i.urgency,
-    serviceName: i.service?.summary ?? "Unknown",
-    createdAt: i.created_at,
-    resolvedAt: i.resolved_at ?? null,
-    mttrMinutes: mttr(i.created_at, i.resolved_at),
-    priority: i.priority?.summary ?? null,
+  // Service metrics
+  const svcData = serviceResult.status === "fulfilled" ? extract<any>(serviceResult.value) : null;
+  const serviceMetrics: ServiceMetric[] = (svcData?.response ?? []).map((s: any) => ({
+    id: s.service_id ?? "",
+    name: s.service_name ?? "Unknown",
+    teamName: s.team_name ?? null,
+    totalIncidents: s.total_incident_count ?? 0,
+    mttaMinutes: secToMin(s.mean_seconds_to_first_ack),
+    mttrMinutes: secToMin(s.mean_seconds_to_resolve),
+    escalationCount: s.total_escalation_count ?? s.total_incidents_manual_escalated ?? 0,
+    uptimePct: s.up_time_pct ?? null,
   }));
 
-  // On-call users (unique)
-  const oncallUserSet = new Set<string>();
-  for (const oc of oncalls) {
-    if (oc.user?.summary) oncallUserSet.add(oc.user.summary);
-  }
+  // Team metrics
+  const teamData = teamResult.status === "fulfilled" ? extract<any>(teamResult.value) : null;
+  const teamMetrics: TeamMetric[] = (teamData?.response ?? []).map((t: any) => ({
+    id: t.team_id ?? "",
+    name: t.team_name ?? "Unknown",
+    totalIncidents: t.total_incident_count ?? 0,
+    mttaMinutes: secToMin(t.mean_seconds_to_first_ack),
+    mttrMinutes: secToMin(t.mean_seconds_to_resolve),
+    escalationCount: t.total_escalation_count ?? t.total_incidents_manual_escalated ?? 0,
+    totalInterruptions: t.total_interruptions ?? 0,
+    uptimePct: t.up_time_pct ?? null,
+  }));
+
+  // Responder metrics
+  const respData = responderResult.status === "fulfilled" ? extract<any>(responderResult.value) : null;
+  const responderMetrics: ResponderMetric[] = (respData?.response ?? []).map((r: any) => ({
+    id: r.responder_id ?? "",
+    name: r.responder_name ?? "Unknown",
+    teamName: r.team_name ?? null,
+    onCallHours: secToHours(r.total_seconds_on_call),
+    totalIncidents: r.total_incident_count ?? 0,
+    totalAcks: r.total_incidents_acknowledged ?? 0,
+    sleepInterruptions: r.total_sleep_hour_interruptions ?? 0,
+    engagedMinutes: secToMin(r.total_engaged_seconds) ?? 0,
+  }));
+
+  // KPI summary — aggregate across all returned teams
+  const totalIncidents = teamMetrics.reduce((s, t) => s + t.totalIncidents, 0);
+  const totalEscalations = teamMetrics.reduce((s, t) => s + t.escalationCount, 0);
+  const mttaValues = teamMetrics.map((t) => t.mttaMinutes).filter((v): v is number => v !== null);
+  const mttrValues = teamMetrics.map((t) => t.mttrMinutes).filter((v): v is number => v !== null);
+  const avg = (arr: number[]) => arr.length === 0 ? null : Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+
+  // uptime: average across services (more meaningful than teams)
+  const uptimeValues = serviceMetrics.map((s) => s.uptimePct).filter((v): v is number => v !== null);
+  const uptimePct = uptimeValues.length > 0
+    ? Math.round((uptimeValues.reduce((a, b) => a + b, 0) / uptimeValues.length) * 10) / 10
+    : null;
 
   return {
     teams,
     selectedTeam: teamId,
     since,
     until,
-    totalIncidents: incidents.length,
-    highUrgencyCount: highUrgency.length,
-    resolvedCount: resolved.length,
-    mttrMinutes: avgMttr,
-    serviceStats,
-    recentIncidents,
-    oncallUsers: [...oncallUserSet].slice(0, 10),
+    totalIncidents,
+    mttaMinutes: avg(mttaValues),
+    mttrMinutes: avg(mttrValues),
+    escalationRate: totalIncidents > 0 ? Math.round((totalEscalations / totalIncidents) * 100) : null,
+    uptimePct,
+    serviceMetrics,
+    teamMetrics,
+    responderMetrics,
   };
+}
+
+// ─── Insights fetch (PagerDuty Advanced MCP) ─────────────────────────────────
+
+export async function fetchInsight(
+  app: App,
+  message: string,
+  sessionId: string
+): Promise<string> {
+  const result = await app.callServerTool({
+    name: "insights_agent_tool",
+    arguments: { message, session_id: sessionId },
+  });
+  const data = extract<{ message: string }>(result);
+  return data?.message ?? "";
 }

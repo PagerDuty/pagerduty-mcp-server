@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { InsightMessage } from "../api";
 
 interface InsightsChatProps {
@@ -11,12 +11,15 @@ export function InsightsChat({ messages, loading, onSend }: InsightsChatProps) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length]);
+
   function handleSend() {
     const msg = input.trim();
     if (!msg || loading) return;
     setInput("");
     onSend(msg);
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {

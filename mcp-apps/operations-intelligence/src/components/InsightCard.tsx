@@ -13,7 +13,7 @@ export function InsightCard({ title, content, error, onRetry }: InsightCardProps
         <div className="insight-error">
           Could not load insight.
           {onRetry && (
-            <button className="btn btn-sm" onClick={onRetry} style={{ marginLeft: 8 }}>
+            <button type="button" className="btn btn-sm" onClick={onRetry} style={{ marginLeft: 8 }}>
               Retry
             </button>
           )}

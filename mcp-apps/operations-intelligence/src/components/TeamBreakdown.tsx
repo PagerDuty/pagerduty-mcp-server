@@ -34,7 +34,7 @@ export function TeamBreakdown({ metrics }: { metrics: TeamMetric[] }) {
                 <td className={`col-num${t.escalationCount > 0 ? " col-warn" : " col-ok"}`}>
                   {t.escalationCount}
                 </td>
-                <td className={`col-num${t.totalInterruptions > 10 ? " col-warn" : ""}`}>
+                <td className={`col-num${t.totalInterruptions > 10 ? " col-warn" : " col-ok"}`}>
                   {t.totalInterruptions}
                 </td>
                 <td className={`col-num${t.uptimePct === null ? "" : t.uptimePct < 99 ? " col-warn" : " col-ok"}`}>

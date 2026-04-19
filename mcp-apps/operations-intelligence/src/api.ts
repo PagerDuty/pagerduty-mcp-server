@@ -4,7 +4,7 @@
  * Fetches pre-aggregated metrics from PagerDuty Analytics API tools.
  * No raw incident list — all metrics are server-side aggregated.
  *
- * Insights tab calls insights_agent_tool on pagerduty-advance-mcp server.
+ * Insights tab calls insights_agent_tool via app.callServerTool.
  */
 
 import type { App } from "@modelcontextprotocol/ext-apps";
@@ -47,7 +47,7 @@ export interface ResponderMetric {
   totalIncidents: number;
   totalAcks: number;
   sleepInterruptions: number;
-  engagedMinutes: number;           // total_engaged_seconds / 60
+  engagedMinutes: number | null;    // total_engaged_seconds / 60
 }
 
 export interface OpsData {
@@ -174,15 +174,19 @@ export async function fetchOpsData(
     totalIncidents: r.total_incident_count ?? 0,
     totalAcks: r.total_incidents_acknowledged ?? 0,
     sleepInterruptions: r.total_sleep_hour_interruptions ?? 0,
-    engagedMinutes: secToMin(r.total_engaged_seconds) ?? 0,
+    engagedMinutes: secToMin(r.total_engaged_seconds),
   }));
 
   // KPI summary — aggregate across all returned teams
   const totalIncidents = teamMetrics.reduce((s, t) => s + t.totalIncidents, 0);
   const totalEscalations = teamMetrics.reduce((s, t) => s + t.escalationCount, 0);
-  const mttaValues = teamMetrics.map((t) => t.mttaMinutes).filter((v): v is number => v !== null);
-  const mttrValues = teamMetrics.map((t) => t.mttrMinutes).filter((v): v is number => v !== null);
-  const avg = (arr: number[]) => arr.length === 0 ? null : Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+  // Weighted average: weight each team's mean by its incident count
+  function weightedAvg(teams: TeamMetric[], getter: (t: TeamMetric) => number | null): number | null {
+    const valid = teams.filter((t) => getter(t) !== null && t.totalIncidents > 0);
+    if (valid.length === 0) return null;
+    const totalWeight = valid.reduce((s, t) => s + t.totalIncidents, 0);
+    return Math.round(valid.reduce((s, t) => s + getter(t)! * t.totalIncidents, 0) / totalWeight);
+  }
 
   // uptime: average across services (more meaningful than teams)
   const uptimeValues = serviceMetrics.map((s) => s.uptimePct).filter((v): v is number => v !== null);
@@ -196,8 +200,8 @@ export async function fetchOpsData(
     since,
     until,
     totalIncidents,
-    mttaMinutes: avg(mttaValues),
-    mttrMinutes: avg(mttrValues),
+    mttaMinutes: weightedAvg(teamMetrics, (t) => t.mttaMinutes),
+    mttrMinutes: weightedAvg(teamMetrics, (t) => t.mttrMinutes),
     escalationRate: totalIncidents > 0 ? Math.round((totalEscalations / totalIncidents) * 100) : null,
     uptimePct,
     serviceMetrics,

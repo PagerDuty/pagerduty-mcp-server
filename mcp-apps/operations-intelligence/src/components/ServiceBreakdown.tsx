@@ -1,10 +1,5 @@
 import type { ServiceMetric } from "../api";
-
-function fmtMin(minutes: number | null): string {
-  if (minutes === null) return "—";
-  if (minutes < 60) return `${minutes}m`;
-  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
-}
+import { fmtMin } from "../utils";
 
 export function ServiceBreakdown({ metrics }: { metrics: ServiceMetric[] }) {
   return (
@@ -41,7 +36,7 @@ export function ServiceBreakdown({ metrics }: { metrics: ServiceMetric[] }) {
                 <td className={`col-num${s.escalationCount > 0 ? " col-warn" : " col-ok"}`}>
                   {s.escalationCount}
                 </td>
-                <td className={`col-num${s.uptimePct !== null && s.uptimePct < 99 ? " col-warn" : " col-ok"}`}>
+                <td className={`col-num${s.uptimePct === null ? "" : s.uptimePct < 99 ? " col-warn" : " col-ok"}`}>
                   {s.uptimePct !== null ? `${s.uptimePct}%` : "—"}
                 </td>
               </tr>

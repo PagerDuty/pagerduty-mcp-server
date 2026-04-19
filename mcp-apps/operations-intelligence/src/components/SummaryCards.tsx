@@ -1,6 +1,6 @@
 import type { OpsData } from "../api";
 
-function fmtMttr(minutes: number | null): string {
+function fmtMin(minutes: number | null): string {
   if (minutes === null) return "—";
   if (minutes < 60) return `${minutes}m`;
   const h = Math.floor(minutes / 60);
@@ -8,55 +8,56 @@ function fmtMttr(minutes: number | null): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-interface CardProps {
+interface KpiCardProps {
   label: string;
   value: string;
   sub?: string;
-  accent?: string;
+  warn?: boolean;
 }
 
-function Card({ label, value, sub, accent }: CardProps) {
+function KpiCard({ label, value, sub, warn }: KpiCardProps) {
   return (
-    <div className="summary-card">
-      <div className="summary-label">{label}</div>
-      <div className="summary-value" style={accent ? { color: accent } : undefined}>{value}</div>
-      {sub && <div className="summary-sub">{sub}</div>}
+    <div className="kpi-card">
+      <div className="kpi-label">{label}</div>
+      <div className="kpi-value" style={warn ? { color: "var(--color-escalation)" } : undefined}>
+        {value}
+      </div>
+      {sub && <div className="kpi-sub">{sub}</div>}
     </div>
   );
 }
 
 export function SummaryCards({ data }: { data: OpsData }) {
-  const highPct = data.totalIncidents > 0
-    ? Math.round((data.highUrgencyCount / data.totalIncidents) * 100)
-    : 0;
-
   return (
-    <div className="summary-cards">
-      <Card
+    <div className="kpi-bar">
+      <KpiCard
         label="Total Incidents"
         value={String(data.totalIncidents)}
-        sub={`${data.resolvedCount} resolved`}
+        sub={`${data.teamMetrics.length} team${data.teamMetrics.length !== 1 ? "s" : ""}`}
       />
-      <Card
-        label="High Urgency"
-        value={String(data.highUrgencyCount)}
-        sub={`${highPct}% of total`}
-        accent={data.highUrgencyCount > 0 ? "var(--status-triggered)" : undefined}
+      <KpiCard
+        label="MTTA"
+        value={fmtMin(data.mttaMinutes)}
+        sub="mean time to ack"
+        warn={data.mttaMinutes !== null && data.mttaMinutes > 30}
       />
-      <Card
-        label="Avg MTTR"
-        value={fmtMttr(data.mttrMinutes)}
+      <KpiCard
+        label="MTTR"
+        value={fmtMin(data.mttrMinutes)}
         sub="mean time to resolve"
-        accent={
-          data.mttrMinutes !== null && data.mttrMinutes > 60
-            ? "var(--color-escalation)"
-            : undefined
-        }
+        warn={data.mttrMinutes !== null && data.mttrMinutes > 60}
       />
-      <Card
-        label="On-Call Users"
-        value={String(data.oncallUsers.length)}
-        sub={data.oncallUsers.slice(0, 2).join(", ") || "—"}
+      <KpiCard
+        label="Escalation Rate"
+        value={data.escalationRate !== null ? `${data.escalationRate}%` : "—"}
+        sub="of all incidents"
+        warn={data.escalationRate !== null && data.escalationRate > 20}
+      />
+      <KpiCard
+        label="Avg Uptime"
+        value={data.uptimePct !== null ? `${data.uptimePct}%` : "—"}
+        sub="across services"
+        warn={data.uptimePct !== null && data.uptimePct < 99}
       />
     </div>
   );

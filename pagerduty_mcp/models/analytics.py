@@ -122,3 +122,180 @@ class AnalyticsResponderMetrics(BaseModel):
     total_incidents_reassigned_to: int | None = Field(default=None)
     total_incidents_timeout_escalated_from: int | None = Field(default=None)
     total_incidents_timeout_escalated_to: int | None = Field(default=None)
+
+
+class AnalyticsIncidentFilters(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    created_at_start: str = Field(
+        description="ISO8601 DateTime. Incidents created before this are omitted."
+    )
+    created_at_end: str = Field(
+        description="ISO8601 DateTime. Incidents created on/after this are omitted."
+    )
+    team_ids: list[str] | None = Field(
+        default=None,
+        description="Only incidents related to these teams will be included.",
+    )
+    service_ids: list[str] | None = Field(
+        default=None,
+        description="Only incidents related to these services will be included.",
+    )
+    urgency: str | None = Field(
+        default=None,
+        description="Filter by urgency: 'high' or 'low'.",
+    )
+
+
+class GetIncidentMetricsByServiceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    filters: AnalyticsIncidentFilters = Field(
+        description="Date range and optional filters to scope the metrics."
+    )
+    time_zone: str | None = Field(
+        default=None,
+        description="The time zone for results (e.g. 'America/New_York').",
+    )
+    order: str | None = Field(default=None, description="Sort order: 'asc' or 'desc'.")
+    order_by: str | None = Field(default=None, description="Field to sort results by.")
+
+    def to_body(self) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "filters": {
+                "created_at_start": self.filters.created_at_start,
+                "created_at_end": self.filters.created_at_end,
+            }
+        }
+        if self.filters.team_ids:
+            body["filters"]["team_ids"] = self.filters.team_ids
+        if self.filters.service_ids:
+            body["filters"]["service_ids"] = self.filters.service_ids
+        if self.filters.urgency:
+            body["filters"]["urgency"] = self.filters.urgency
+        if self.time_zone:
+            body["time_zone"] = self.time_zone
+        if self.order:
+            body["order"] = self.order
+        if self.order_by:
+            body["order_by"] = self.order_by
+        return body
+
+
+class GetIncidentMetricsByTeamRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    filters: AnalyticsIncidentFilters = Field(
+        description="Date range and optional filters to scope the metrics."
+    )
+    time_zone: str | None = Field(
+        default=None,
+        description="The time zone for results (e.g. 'America/New_York').",
+    )
+    order: str | None = Field(default=None, description="Sort order: 'asc' or 'desc'.")
+    order_by: str | None = Field(default=None, description="Field to sort results by.")
+
+    def to_body(self) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "filters": {
+                "created_at_start": self.filters.created_at_start,
+                "created_at_end": self.filters.created_at_end,
+            }
+        }
+        if self.filters.team_ids:
+            body["filters"]["team_ids"] = self.filters.team_ids
+        if self.filters.service_ids:
+            body["filters"]["service_ids"] = self.filters.service_ids
+        if self.filters.urgency:
+            body["filters"]["urgency"] = self.filters.urgency
+        if self.time_zone:
+            body["time_zone"] = self.time_zone
+        if self.order:
+            body["order"] = self.order
+        if self.order_by:
+            body["order_by"] = self.order_by
+        return body
+
+
+class GetResponderLoadMetricsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    filters: AnalyticsFilters = Field(
+        description="Date range (date_range_start/end) and optional filters."
+    )
+    time_zone: str | None = Field(
+        default=None,
+        description="The time zone for results (e.g. 'America/New_York').",
+    )
+    order: str | None = Field(default=None, description="Sort order: 'asc' or 'desc'.")
+    order_by: str | None = Field(default=None, description="Field to sort results by.")
+
+    def to_body(self) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "filters": {
+                "date_range_start": self.filters.date_range_start,
+                "date_range_end": self.filters.date_range_end,
+            }
+        }
+        if self.filters.team_ids:
+            body["filters"]["team_ids"] = self.filters.team_ids
+        if self.filters.urgency:
+            body["filters"]["urgency"] = self.filters.urgency
+        if self.time_zone:
+            body["time_zone"] = self.time_zone
+        if self.order:
+            body["order"] = self.order
+        if self.order_by:
+            body["order_by"] = self.order_by
+        return body
+
+
+class AnalyticsServiceMetrics(BaseModel):
+    """Per-service aggregate incident metrics from PagerDuty Analytics."""
+
+    service_id: str | None = Field(default=None)
+    service_name: str | None = Field(default=None)
+    team_id: str | None = Field(default=None)
+    team_name: str | None = Field(default=None)
+
+    total_incident_count: int | None = Field(default=None)
+    mean_seconds_to_first_ack: int | None = Field(default=None, description="Mean MTTA in seconds.")
+    p50_seconds_to_resolve: int | None = Field(default=None, description="p50 MTTR in seconds.")
+    p90_seconds_to_resolve: int | None = Field(default=None, description="p90 MTTR in seconds.")
+    total_escalation_count: int | None = Field(default=None)
+    total_incidents_manual_escalated: int | None = Field(default=None)
+    total_interruptions: int | None = Field(default=None)
+    up_time_pct: float | None = Field(default=None, description="Service availability percentage.")
+
+
+class AnalyticsTeamMetrics(BaseModel):
+    """Per-team aggregate incident metrics from PagerDuty Analytics."""
+
+    team_id: str | None = Field(default=None)
+    team_name: str | None = Field(default=None)
+
+    total_incident_count: int | None = Field(default=None)
+    mean_seconds_to_first_ack: int | None = Field(default=None, description="Mean MTTA in seconds.")
+    p50_seconds_to_resolve: int | None = Field(default=None, description="p50 MTTR in seconds.")
+    p90_seconds_to_resolve: int | None = Field(default=None, description="p90 MTTR in seconds.")
+    mean_seconds_to_resolve: int | None = Field(default=None)
+    total_escalation_count: int | None = Field(default=None)
+    total_incidents_manual_escalated: int | None = Field(default=None)
+    total_interruptions: int | None = Field(default=None)
+    up_time_pct: float | None = Field(default=None)
+
+
+class AnalyticsResponderLoad(BaseModel):
+    """Per-responder aggregate load metrics from PagerDuty Analytics."""
+
+    responder_id: str | None = Field(default=None)
+    responder_name: str | None = Field(default=None)
+    team_id: str | None = Field(default=None)
+    team_name: str | None = Field(default=None)
+
+    total_seconds_on_call: int | None = Field(default=None)
+    total_incident_count: int | None = Field(default=None)
+    total_incidents_acknowledged: int | None = Field(default=None)
+    total_sleep_hour_interruptions: int | None = Field(default=None)
+    total_engaged_seconds: int | None = Field(default=None)
+    mean_time_to_acknowledge_seconds: int | None = Field(default=None)

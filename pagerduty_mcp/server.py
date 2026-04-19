@@ -355,9 +355,12 @@ def add_post_mortem_builder(mcp_instance: FastMCP) -> None:
 def add_operations_intelligence(mcp_instance: FastMCP) -> None:
     """Add Operations Intelligence Report MCP App resource.
 
-    The UI directly calls existing MCP tools:
-    - list_incidents, list_teams
-    - list_oncalls, list_services
+    The UI calls these MCP tools:
+    - get_incident_metrics_by_service (Analytics API — service-level MTTA/MTTR/escalations)
+    - get_incident_metrics_by_team (Analytics API — team-level MTTA/MTTR/escalations)
+    - get_responder_load_metrics (Analytics API — responder on-call hours and interruptions)
+    - list_teams (for team picker filter)
+    - insights_agent_tool on pagerduty-advance-mcp (AI-powered insights tab)
 
     Args:
         mcp_instance: The MCP server instance
@@ -370,12 +373,10 @@ def add_operations_intelligence(mcp_instance: FastMCP) -> None:
         }
     )
     def operations_intelligence() -> list[TextContent]:
-        """Operations Intelligence Report - Real-time ops metrics and incident analytics.
+        """Operations Intelligence Report - Compact PagerDuty Insights dashboard.
 
-        Live dashboard showing total incidents, high urgency rate, average MTTR,
-        service health breakdown, and a sortable incident table with team filtering.
-        The UI calls existing MCP tools (list_incidents, list_teams, list_oncalls, etc.)
-        to fetch data.
+        Two-tab dashboard: Operational (service/team/responder metrics from Analytics API)
+        and Insights (AI-powered trend analysis via PagerDuty Advanced MCP insights_agent_tool).
 
         Returns:
             Text content indicating the UI is ready

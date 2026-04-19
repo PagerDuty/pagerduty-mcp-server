@@ -9,7 +9,12 @@ from .alerts import (
     get_alert_from_incident,
     list_alerts_from_incident,
 )
-from .analytics import get_responder_metrics
+from .analytics import (
+    get_incident_metrics_by_service,
+    get_incident_metrics_by_team,
+    get_responder_load_metrics,
+    get_responder_metrics,
+)
 from .change_events import (
     get_change_event,
     list_change_events,
@@ -142,6 +147,9 @@ read_tools = [
     get_schedule,
     list_schedule_users,
     # Analytics
+    get_incident_metrics_by_service,
+    get_incident_metrics_by_team,
+    get_responder_load_metrics,
     get_responder_metrics,
     # On-calls
     list_oncalls,

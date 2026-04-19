@@ -1,5 +1,6 @@
 """Unit tests for analytics tools."""
 
+import json
 import unittest
 from unittest.mock import Mock, patch
 
@@ -46,7 +47,6 @@ class TestGetIncidentMetricsByService(unittest.TestCase):
         )
         result = get_incident_metrics_by_service(request)
 
-        import json
         data = json.loads(result)
         self.assertEqual(len(data["response"]), 1)
         self.assertEqual(data["response"][0]["service_name"], "API")
@@ -75,7 +75,6 @@ class TestGetIncidentMetricsByService(unittest.TestCase):
         )
         result = get_incident_metrics_by_service(request)
 
-        import json
         data = json.loads(result)
         self.assertEqual(data["response"], [])
 
@@ -109,7 +108,6 @@ class TestGetIncidentMetricsByTeam(unittest.TestCase):
         )
         result = get_incident_metrics_by_team(request)
 
-        import json
         data = json.loads(result)
         self.assertEqual(data["response"][0]["team_name"], "Platform")
         mock_client.rpost.assert_called_once_with(
@@ -121,6 +119,23 @@ class TestGetIncidentMetricsByTeam(unittest.TestCase):
                 }
             },
         )
+
+    @patch("pagerduty_mcp.tools.analytics.get_client")
+    def test_handles_empty_response(self, mock_get_client):
+        mock_client = Mock()
+        mock_client.rpost.return_value = {"data": []}
+        mock_get_client.return_value = mock_client
+
+        request = GetIncidentMetricsByTeamRequest(
+            filters=AnalyticsIncidentFilters(
+                created_at_start="2026-03-01T00:00:00Z",
+                created_at_end="2026-04-01T00:00:00Z",
+            )
+        )
+        result = get_incident_metrics_by_team(request)
+
+        data = json.loads(result)
+        self.assertEqual(data["response"], [])
 
 
 class TestGetResponderLoadMetrics(unittest.TestCase):
@@ -151,7 +166,6 @@ class TestGetResponderLoadMetrics(unittest.TestCase):
         )
         result = get_responder_load_metrics(request)
 
-        import json
         data = json.loads(result)
         self.assertEqual(data["response"][0]["responder_name"], "Alice")
         mock_client.rpost.assert_called_once_with(
@@ -163,3 +177,20 @@ class TestGetResponderLoadMetrics(unittest.TestCase):
                 }
             },
         )
+
+    @patch("pagerduty_mcp.tools.analytics.get_client")
+    def test_handles_empty_response(self, mock_get_client):
+        mock_client = Mock()
+        mock_client.rpost.return_value = {"data": []}
+        mock_get_client.return_value = mock_client
+
+        request = GetResponderLoadMetricsRequest(
+            filters=AnalyticsFilters(
+                date_range_start="2026-03-01T00:00:00Z",
+                date_range_end="2026-04-01T00:00:00Z",
+            )
+        )
+        result = get_responder_load_metrics(request)
+
+        data = json.loads(result)
+        self.assertEqual(data["response"], [])

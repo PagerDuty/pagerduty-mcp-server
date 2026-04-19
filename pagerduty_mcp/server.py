@@ -384,7 +384,7 @@ def add_operations_intelligence(mcp_instance: FastMCP) -> None:
         return [
             TextContent(
                 type="text",
-                text="Operations Intelligence Report UI initialized. The UI will call existing MCP tools to fetch data."
+                text="Operations Intelligence Report UI initialized. The UI calls get_incident_metrics_by_service, get_incident_metrics_by_team, get_responder_load_metrics, list_teams, and insights_agent_tool (via pagerduty-advance-mcp) to power the Operational and Insights tabs."
             )
         ]
 

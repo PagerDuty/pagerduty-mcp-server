@@ -260,8 +260,7 @@ class AnalyticsServiceMetrics(BaseModel):
 
     total_incident_count: int | None = Field(default=None)
     mean_seconds_to_first_ack: int | None = Field(default=None, description="Mean MTTA in seconds.")
-    p50_seconds_to_resolve: int | None = Field(default=None, description="p50 MTTR in seconds.")
-    p90_seconds_to_resolve: int | None = Field(default=None, description="p90 MTTR in seconds.")
+    mean_seconds_to_resolve: int | None = Field(default=None, description="Mean MTTR in seconds.")
     total_escalation_count: int | None = Field(default=None)
     total_incidents_manual_escalated: int | None = Field(default=None)
     total_interruptions: int | None = Field(default=None)
@@ -276,9 +275,7 @@ class AnalyticsTeamMetrics(BaseModel):
 
     total_incident_count: int | None = Field(default=None)
     mean_seconds_to_first_ack: int | None = Field(default=None, description="Mean MTTA in seconds.")
-    p50_seconds_to_resolve: int | None = Field(default=None, description="p50 MTTR in seconds.")
-    p90_seconds_to_resolve: int | None = Field(default=None, description="p90 MTTR in seconds.")
-    mean_seconds_to_resolve: int | None = Field(default=None)
+    mean_seconds_to_resolve: int | None = Field(default=None, description="Mean MTTR in seconds.")
     total_escalation_count: int | None = Field(default=None)
     total_incidents_manual_escalated: int | None = Field(default=None)
     total_interruptions: int | None = Field(default=None)

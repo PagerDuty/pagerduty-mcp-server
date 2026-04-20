@@ -265,6 +265,10 @@ class AnalyticsServiceMetrics(BaseModel):
     total_incidents_manual_escalated: int | None = Field(default=None)
     total_interruptions: int | None = Field(default=None)
     up_time_pct: float | None = Field(default=None, description="Service availability percentage.")
+    # New fields
+    total_high_urgency_incident_count: int | None = Field(default=None)
+    total_low_urgency_incident_count: int | None = Field(default=None)
+    mean_engaged_seconds: int | None = Field(default=None)
 
 
 class AnalyticsTeamMetrics(BaseModel):
@@ -280,6 +284,11 @@ class AnalyticsTeamMetrics(BaseModel):
     total_incidents_manual_escalated: int | None = Field(default=None)
     total_interruptions: int | None = Field(default=None)
     up_time_pct: float | None = Field(default=None)
+    # New fatigue fields
+    total_business_hour_interruptions: int | None = Field(default=None)
+    total_off_hour_interruptions: int | None = Field(default=None)
+    total_sleep_hour_interruptions: int | None = Field(default=None)
+    mean_engaged_seconds: int | None = Field(default=None)
 
 
 class AnalyticsResponderLoad(BaseModel):
@@ -296,3 +305,57 @@ class AnalyticsResponderLoad(BaseModel):
     total_sleep_hour_interruptions: int | None = Field(default=None)
     total_engaged_seconds: int | None = Field(default=None)
     mean_time_to_acknowledge_seconds: int | None = Field(default=None)
+    # New fatigue fields
+    total_interruptions: int | None = Field(default=None)
+    total_business_hour_interruptions: int | None = Field(default=None)
+    total_off_hour_interruptions: int | None = Field(default=None)
+    mean_engaged_seconds: int | None = Field(default=None)
+
+
+class GetIncidentMetricsAllRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    filters: AnalyticsIncidentFilters = Field(
+        description="Date range and optional filters to scope the metrics."
+    )
+    time_zone: str | None = Field(
+        default=None,
+        description="The time zone for results (e.g. 'America/New_York').",
+    )
+
+    def to_body(self) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "filters": {
+                "created_at_start": self.filters.created_at_start,
+                "created_at_end": self.filters.created_at_end,
+            }
+        }
+        if self.filters.team_ids:
+            body["filters"]["team_ids"] = self.filters.team_ids
+        if self.filters.service_ids:
+            body["filters"]["service_ids"] = self.filters.service_ids
+        if self.filters.urgency:
+            body["filters"]["urgency"] = self.filters.urgency
+        if self.time_zone:
+            body["time_zone"] = self.time_zone
+        return body
+
+
+class AnalyticsAggregatedMetrics(BaseModel):
+    """Full-period aggregated incident metrics from PagerDuty Analytics.
+
+    Returned by /analytics/metrics/incidents/all. Only this endpoint
+    provides percentile fields (P50-P95).
+    """
+
+    total_incident_count: int | None = Field(default=None)
+    mean_seconds_to_first_ack: int | None = Field(default=None)
+    mean_seconds_to_resolve: int | None = Field(default=None)
+    p50_seconds_to_first_ack: int | None = Field(default=None)
+    p75_seconds_to_first_ack: int | None = Field(default=None)
+    p90_seconds_to_first_ack: int | None = Field(default=None)
+    p95_seconds_to_first_ack: int | None = Field(default=None)
+    p50_seconds_to_resolve: int | None = Field(default=None)
+    p75_seconds_to_resolve: int | None = Field(default=None)
+    p90_seconds_to_resolve: int | None = Field(default=None)
+    p95_seconds_to_resolve: int | None = Field(default=None)

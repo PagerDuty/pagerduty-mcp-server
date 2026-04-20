@@ -343,116 +343,6 @@ body {
 .kpi-value { font-size: 22px; font-weight: 700; }
 .kpi-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
 
-/* ── Insights tab ── */
-.insights-tab { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-
-.insight-cards {
-  display: flex;
-  gap: 12px;
-  padding: 16px 20px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--border-primary);
-}
-
-.insight-card {
-  flex: 1;
-  min-width: 260px;
-  max-width: 400px;
-  padding: 14px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: 8px;
-}
-
-.insight-card-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 8px;
-}
-
-.insight-card-body { font-size: 13px; line-height: 1.6; color: var(--text-primary); }
-
-.insight-skeleton {
-  background: var(--bg-tertiary);
-  border-radius: 4px;
-  height: 12px;
-  margin-bottom: 6px;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-.insight-skeleton:last-child { width: 60%; }
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.insight-error {
-  font-size: 12px;
-  color: var(--status-triggered);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* ── Chat panel ── */
-.chat-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0 20px;
-  overflow: hidden;
-  min-height: 200px;
-}
-
-.chat-panel-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 12px 0 8px;
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-bottom: 8px;
-}
-
-.chat-message { display: flex; flex-direction: column; gap: 2px; }
-.chat-message-role { font-size: 10px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
-.chat-message-content { font-size: 13px; line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; }
-.chat-message.chat-user .chat-message-role { color: var(--pd-green); }
-
-.chat-input-row {
-  display: flex;
-  gap: 8px;
-  padding: 10px 0 14px;
-  border-top: 1px solid var(--border-primary);
-}
-
-.chat-input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid var(--border-secondary);
-  border-radius: 6px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 13px;
-  font-family: inherit;
-  resize: none;
-  min-height: 36px;
-  max-height: 100px;
-}
-
-.chat-input:focus { outline: none; border-color: var(--pd-green); }
-
 /* ── Risk badges (Team Health tab) ── */
 .risk-badge {
   padding: 2px 8px;
@@ -567,4 +457,47 @@ body {
 
 :root[data-theme="dark"] .analytics-table tr.row-risk-medium td {
   background: rgba(221, 107, 32, 0.08);
+}
+
+/* ── Trends tab ── */
+.trends-tab {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trends-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.trend-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.trend-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.trend-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart-empty {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 8px 0;
 }

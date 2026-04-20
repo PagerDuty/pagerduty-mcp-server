@@ -18,8 +18,10 @@ import { ServiceBreakdown } from "./components/ServiceBreakdown";
 import { TeamBreakdown } from "./components/TeamBreakdown";
 import { ResponderLoad } from "./components/ResponderLoad";
 import { InsightsTab } from "./components/InsightsTab";
+import { TeamHealth } from "./components/TeamHealth";
+import { PercentileSection } from "./components/PercentileSection";
 
-type Tab = "operational" | "insights";
+type Tab = "operational" | "teamHealth" | "insights";
 
 function getDefaultSince(): string {
   const d = new Date();
@@ -128,6 +130,12 @@ function App() {
           Operational
         </button>
         <button
+          className={`tab-btn${tab === "teamHealth" ? " tab-active" : ""}`}
+          onClick={() => setTab("teamHealth")}
+        >
+          Team Health
+        </button>
+        <button
           className={`tab-btn${tab === "insights" ? " tab-active" : ""}`}
           onClick={() => setTab("insights")}
         >
@@ -142,10 +150,13 @@ function App() {
       ) : tab === "operational" && data ? (
         <div className="body">
           <SummaryCards data={data} />
+          <PercentileSection aggregated={data.aggregated} />
           <ServiceBreakdown metrics={data.serviceMetrics} />
           <TeamBreakdown metrics={data.teamMetrics} />
           <ResponderLoad metrics={data.responderMetrics} />
         </div>
+      ) : tab === "teamHealth" && data ? (
+        <TeamHealth metrics={data.responderMetrics} teamMetrics={data.teamMetrics} />
       ) : tab === "insights" && (app || mockMode) ? (
         <InsightsTab
           app={app ?? ({} as McpApp)}

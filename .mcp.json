@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "pagerduty-mcp-local": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "pagerduty-mcp", "--enable-write-tools"],
+      "env": {
+        "PAGERDUTY_USER_API_KEY": "${PAGERDUTY_USER_API_KEY}"
+      }
+    }
+  }
+}

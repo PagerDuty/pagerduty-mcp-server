@@ -34,6 +34,9 @@ function getToday(): string {
 }
 
 function detectTheme(): "dark" | "light" {
+  const param = new URLSearchParams(window.location.search).get("theme");
+  if (param === "dark") return "dark";
+  if (param === "light") return "light";
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 

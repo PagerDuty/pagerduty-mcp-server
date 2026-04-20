@@ -452,3 +452,119 @@ body {
 }
 
 .chat-input:focus { outline: none; border-color: var(--pd-green); }
+
+/* ── Risk badges (Team Health tab) ── */
+.risk-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.risk-badge.risk-high {
+  background: rgba(229, 62, 62, 0.12);
+  color: #e53e3e;
+}
+
+.risk-badge.risk-medium {
+  background: rgba(221, 107, 32, 0.12);
+  color: #dd6b20;
+}
+
+.risk-badge.risk-low {
+  background: rgba(56, 161, 105, 0.12);
+  color: #38a169;
+}
+
+/* Row tinting by risk level */
+.analytics-table tr.row-risk-high td {
+  background: rgba(229, 62, 62, 0.04);
+}
+
+.analytics-table tr.row-risk-medium td {
+  background: rgba(221, 107, 32, 0.04);
+}
+
+/* ── Fatigue KPI summary (Team Health) ── */
+.fatigue-summary {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-primary);
+  flex-wrap: wrap;
+}
+
+.fatigue-kpi-card {
+  flex: 1;
+  min-width: 110px;
+  padding: 12px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+}
+
+.fatigue-kpi-card.fatigue-high { border-left: 3px solid #e53e3e; }
+.fatigue-kpi-card.fatigue-medium { border-left: 3px solid #dd6b20; }
+.fatigue-kpi-card.fatigue-low { border-left: 3px solid #38a169; }
+
+/* ── Percentile section (Operational tab) ── */
+.percentile-section {
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.percentile-toggle {
+  width: 100%;
+  text-align: left;
+  padding: 8px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.percentile-toggle:hover { color: var(--text-primary); background: var(--bg-secondary); }
+
+.percentile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) repeat(4, 1fr);
+  gap: 8px;
+  padding: 8px 20px 12px;
+}
+
+.percentile-cell {
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+}
+
+.percentile-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.percentile-value {
+  font-size: 15px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+/* Dark mode overrides for new elements */
+:root[data-theme="dark"] .analytics-table tr.row-risk-high td {
+  background: rgba(229, 62, 62, 0.08);
+}
+
+:root[data-theme="dark"] .analytics-table tr.row-risk-medium td {
+  background: rgba(221, 107, 32, 0.08);
+}

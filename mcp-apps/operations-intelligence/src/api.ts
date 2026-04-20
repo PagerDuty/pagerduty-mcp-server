@@ -39,6 +39,11 @@ export interface TeamMetric {
   escalationCount: number;
   totalInterruptions: number;
   uptimePct: number | null;
+  // New fatigue fields
+  businessHourInterruptions: number;
+  offHourInterruptions: number;
+  sleepHourInterruptions: number;
+  meanEngagedMinutes: number | null;
 }
 
 export interface ResponderMetric {
@@ -50,6 +55,23 @@ export interface ResponderMetric {
   totalAcks: number;
   sleepInterruptions: number;
   engagedMinutes: number | null;    // total_engaged_seconds / 60
+  // New fatigue fields
+  totalInterruptions: number;
+  businessHourInterruptions: number;
+  offHourInterruptions: number;
+  meanEngagedMinutes: number | null; // mean_engaged_seconds / 60
+  riskLevel: "high" | "medium" | "low";
+}
+
+export interface AggregatedMetrics {
+  p50AckSeconds: number | null;
+  p75AckSeconds: number | null;
+  p90AckSeconds: number | null;
+  p95AckSeconds: number | null;
+  p50ResolveSeconds: number | null;
+  p75ResolveSeconds: number | null;
+  p90ResolveSeconds: number | null;
+  p95ResolveSeconds: number | null;
 }
 
 export interface OpsData {
@@ -63,6 +85,7 @@ export interface OpsData {
   mttrMinutes: number | null;
   escalationRate: number | null;    // pct: total_escalated / total_incidents * 100
   uptimePct: number | null;
+  aggregated: AggregatedMetrics | null;
   // Section data
   serviceMetrics: ServiceMetric[];
   teamMetrics: TeamMetric[];
@@ -90,6 +113,21 @@ function secToMin(seconds: number | null | undefined): number | null {
 function secToHours(seconds: number | null | undefined): number {
   if (seconds == null) return 0;
   return Math.round((seconds / 3600) * 10) / 10;
+}
+
+const FATIGUE_SLEEP_HIGH = 5;
+const FATIGUE_SLEEP_MED = 2;
+const FATIGUE_ENGAGED_HIGH_MIN = 480;
+const FATIGUE_ENGAGED_MED_MIN = 240;
+
+function computeRisk(sleepInt: number, engagedMin: number | null): "high" | "medium" | "low" {
+  if (sleepInt >= FATIGUE_SLEEP_HIGH || (engagedMin !== null && engagedMin >= FATIGUE_ENGAGED_HIGH_MIN)) {
+    return "high";
+  }
+  if (sleepInt >= FATIGUE_SLEEP_MED || (engagedMin !== null && engagedMin >= FATIGUE_ENGAGED_MED_MIN)) {
+    return "medium";
+  }
+  return "low";
 }
 
 function buildIncidentFilters(since: string, until: string, teamId: string | null) {
@@ -121,7 +159,7 @@ export async function fetchOpsData(
   };
   if (teamId) responderFilters["team_ids"] = [teamId];
 
-  const [teamsResult, serviceResult, teamResult, responderResult] = await Promise.allSettled([
+  const [teamsResult, serviceResult, teamResult, responderResult, aggregatedResult] = await Promise.allSettled([
     app.callServerTool({ name: "list_teams", arguments: { query_model: { limit: 100 } } }),
     app.callServerTool({
       name: "get_incident_metrics_by_service",
@@ -134,6 +172,10 @@ export async function fetchOpsData(
     app.callServerTool({
       name: "get_responder_load_metrics",
       arguments: { request: { filters: responderFilters } },
+    }),
+    app.callServerTool({
+      name: "get_incident_metrics_all",
+      arguments: { request: { filters: incidentFilters } },
     }),
   ]);
 
@@ -168,20 +210,46 @@ export async function fetchOpsData(
     escalationCount: t.total_escalation_count ?? t.total_incidents_manual_escalated ?? 0,
     totalInterruptions: t.total_interruptions ?? 0,
     uptimePct: t.up_time_pct ?? null,
+    businessHourInterruptions: t.total_business_hour_interruptions ?? 0,
+    offHourInterruptions: t.total_off_hour_interruptions ?? 0,
+    sleepHourInterruptions: t.total_sleep_hour_interruptions ?? 0,
+    meanEngagedMinutes: secToMin(t.mean_engaged_seconds),
   }));
 
   // Responder metrics
   const respData = responderResult.status === "fulfilled" ? extract<any>(responderResult.value) : null;
-  const responderMetrics: ResponderMetric[] = (respData?.response ?? []).map((r: any) => ({
-    id: r.responder_id ?? "",
-    name: r.responder_name ?? "Unknown",
-    teamName: r.team_name ?? null,
-    onCallHours: secToHours(r.total_seconds_on_call),
-    totalIncidents: r.total_incident_count ?? 0,
-    totalAcks: r.total_incidents_acknowledged ?? 0,
-    sleepInterruptions: r.total_sleep_hour_interruptions ?? 0,
-    engagedMinutes: secToMin(r.total_engaged_seconds),
-  }));
+  const responderMetrics: ResponderMetric[] = (respData?.response ?? []).map((r: any) => {
+    const sleepInt = r.total_sleep_hour_interruptions ?? 0;
+    const engMin = secToMin(r.total_engaged_seconds);
+    return {
+      id: r.responder_id ?? "",
+      name: r.responder_name ?? "Unknown",
+      teamName: r.team_name ?? null,
+      onCallHours: secToHours(r.total_seconds_on_call),
+      totalIncidents: r.total_incident_count ?? 0,
+      totalAcks: r.total_incidents_acknowledged ?? 0,
+      sleepInterruptions: sleepInt,
+      engagedMinutes: secToMin(r.total_engaged_seconds),
+      totalInterruptions: r.total_interruptions ?? 0,
+      businessHourInterruptions: r.total_business_hour_interruptions ?? 0,
+      offHourInterruptions: r.total_off_hour_interruptions ?? 0,
+      meanEngagedMinutes: secToMin(r.mean_engaged_seconds),
+      riskLevel: computeRisk(sleepInt, engMin),
+    };
+  });
+
+  // Aggregated percentiles
+  const aggRaw = aggregatedResult.status === "fulfilled" ? extract<any>(aggregatedResult.value) : null;
+  const aggregated: AggregatedMetrics | null = aggRaw ? {
+    p50AckSeconds: aggRaw.p50_seconds_to_first_ack ?? null,
+    p75AckSeconds: aggRaw.p75_seconds_to_first_ack ?? null,
+    p90AckSeconds: aggRaw.p90_seconds_to_first_ack ?? null,
+    p95AckSeconds: aggRaw.p95_seconds_to_first_ack ?? null,
+    p50ResolveSeconds: aggRaw.p50_seconds_to_resolve ?? null,
+    p75ResolveSeconds: aggRaw.p75_seconds_to_resolve ?? null,
+    p90ResolveSeconds: aggRaw.p90_seconds_to_resolve ?? null,
+    p95ResolveSeconds: aggRaw.p95_seconds_to_resolve ?? null,
+  } : null;
 
   // KPI summary — aggregate across all returned teams
   const totalIncidents = teamMetrics.reduce((s, t) => s + t.totalIncidents, 0);
@@ -210,6 +278,7 @@ export async function fetchOpsData(
     mttrMinutes: weightedAvg(teamMetrics, (t) => t.mttrMinutes),
     escalationRate: totalIncidents > 0 ? Math.round((totalEscalations / totalIncidents) * 100) : null,
     uptimePct,
+    aggregated,
     serviceMetrics,
     teamMetrics,
     responderMetrics,

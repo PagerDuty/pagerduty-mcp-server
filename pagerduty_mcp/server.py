@@ -357,8 +357,9 @@ def add_operations_intelligence(mcp_instance: FastMCP) -> None:
 
     The UI calls these MCP tools:
     - get_incident_metrics_by_service (Analytics API — service-level MTTA/MTTR/escalations)
-    - get_incident_metrics_by_team (Analytics API — team-level MTTA/MTTR/escalations)
-    - get_responder_load_metrics (Analytics API — responder on-call hours and interruptions)
+    - get_incident_metrics_by_team (Analytics API — team-level MTTA/MTTR/escalations/interruptions)
+    - get_responder_load_metrics (Analytics API — responder on-call hours, interruptions, and fatigue)
+    - get_incident_metrics_all (Analytics API — full-period rollup with P50/P75/P90/P95 percentiles)
     - list_teams (for team picker filter)
     - insights_agent_tool on pagerduty-advance-mcp (AI-powered insights tab)
 
@@ -375,7 +376,8 @@ def add_operations_intelligence(mcp_instance: FastMCP) -> None:
     def operations_intelligence() -> list[TextContent]:
         """Operations Intelligence Report - Compact PagerDuty Insights dashboard.
 
-        Two-tab dashboard: Operational (service/team/responder metrics from Analytics API)
+        Three-tab dashboard: Operational (service/team/responder metrics from Analytics API with P50-P95 percentiles),
+        Team Health (responder fatigue indicators — sleep interruptions, off-hour load, engagement, and risk badges),
         and Insights (AI-powered trend analysis via PagerDuty Advanced MCP insights_agent_tool).
 
         Returns:
@@ -384,7 +386,7 @@ def add_operations_intelligence(mcp_instance: FastMCP) -> None:
         return [
             TextContent(
                 type="text",
-                text="Operations Intelligence Report UI initialized. The UI calls get_incident_metrics_by_service, get_incident_metrics_by_team, get_responder_load_metrics, list_teams, and insights_agent_tool (via pagerduty-advance-mcp) to power the Operational and Insights tabs."
+                text="Operations Intelligence Report UI initialized. The UI calls get_incident_metrics_by_service, get_incident_metrics_by_team, get_responder_load_metrics, get_incident_metrics_all, list_teams, and insights_agent_tool (via pagerduty-advance-mcp) to power the three-tab dashboard (Operational, Team Health, Insights)."
             )
         ]
 

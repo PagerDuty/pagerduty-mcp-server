@@ -243,7 +243,7 @@ body {
   align-self: stretch;
 }
 
-.timeline-event:last-child .timeline-line { display: none; }
+.timeline-event:last-child .timeline-line { visibility: hidden; }
 
 .timeline-card {
   background: var(--bg-secondary);

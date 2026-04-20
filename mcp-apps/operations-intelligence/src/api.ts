@@ -226,10 +226,20 @@ export async function fetchInsight(
   if (MOCK_MODE) {
     const { MOCK_INSIGHT_RESPONSES } = await import("./mock");
     await new Promise((r) => setTimeout(r, 900));
-    const key = Object.keys(MOCK_INSIGHT_RESPONSES).find((k) =>
-      message.toLowerCase().includes(k.toLowerCase().slice(0, 8))
-    );
-    return key ? MOCK_INSIGHT_RESPONSES[key]! : "Mock insight: analysis complete for the selected period.";
+    // Match by keyword fragments that appear in the auto-generated queries
+    const keywordMap: Record<string, string> = {
+      "mtta": "MTTA & MTTR Trends",
+      "mttr": "MTTA & MTTR Trends",
+      "noisiest": "Noisiest Services",
+      "highest incident volume": "Noisiest Services",
+      "escalation": "Team & Responder Load",
+      "responder load": "Team & Responder Load",
+    };
+    const lc = message.toLowerCase();
+    const matchedTitle = Object.entries(keywordMap).find(([kw]) => lc.includes(kw))?.[1];
+    return matchedTitle
+      ? MOCK_INSIGHT_RESPONSES[matchedTitle] ?? "Mock insight: analysis complete for the selected period."
+      : "Mock insight: analysis complete for the selected period.";
   }
   const result = await app.callServerTool({
     name: "insights_agent_tool",

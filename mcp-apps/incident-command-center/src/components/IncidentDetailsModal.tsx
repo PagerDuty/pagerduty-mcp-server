@@ -206,11 +206,7 @@ export function IncidentDetailsModal({
         <div className="modal-body">
           {activeTab === "timeline" && (
             <div className="tab-content">
-              <Timeline
-                notes={[]}
-                alerts={details.alerts}
-                changes={details.changes}
-              />
+              <Timeline events={details.timelineEvents ?? []} />
             </div>
           )}
 

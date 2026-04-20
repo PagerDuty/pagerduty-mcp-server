@@ -1,130 +1,62 @@
 /**
- * Timeline - Chronological view of incident events (notes, alerts, changes)
+ * Timeline - Full chronological view of all incident interactions
  */
 
-import { useMemo } from "react";
-
-interface TimelineNote {
-  id: string;
-  type: "note";
-  content: string;
-  created_at: string;
-  user: {
-    summary: string;
-  };
-}
-
-interface TimelineAlert {
-  id: string;
-  type: "alert";
-  summary: string;
-  created_at: string;
-  status: string;
-}
-
-interface TimelineChange {
-  id: string;
-  type: "change";
-  summary: string;
-  timestamp: string;
-}
-
-type TimelineEvent = TimelineNote | TimelineAlert | TimelineChange;
+import type { TimelineEvent } from "../api";
 
 interface TimelineProps {
-  notes: any[];
-  alerts: any[];
-  changes: any[];
+  events: TimelineEvent[];
 }
 
-function formatTimestamp(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleString();
+const KIND_CONFIG: Record<string, { icon: string; color: string; label: string }> = {
+  trigger:     { icon: "🔴", color: "#e53e3e",  label: "Alert Triggered" },
+  acknowledge: { icon: "👤", color: "#d97706",  label: "Acknowledged" },
+  resolve:     { icon: "✅",  color: "#38a169",  label: "Resolved" },
+  note:        { icon: "📝", color: "#3182ce",  label: "Note Added" },
+  escalation:  { icon: "📊", color: "#e53e3e",  label: "Escalated" },
+  assign:      { icon: "↪",  color: "#805ad5",  label: "Reassigned" },
+  change:      { icon: "🔧", color: "#7c3aed",  label: "Change Event" },
+  alert:       { icon: "⚠️",  color: "#e53e3e",  label: "Alert" },
+  snooze:      { icon: "💤", color: "#a0a0a0",  label: "Snoozed" },
+  priority:    { icon: "🚨", color: "#dd6b20",  label: "Priority Changed" },
+  workflow:    { icon: "⚡",  color: "#2b6cb0",  label: "Workflow" },
+  other:       { icon: "●",  color: "#a0a0a0",  label: "Event" },
+};
+
+function fmt(iso: string): string {
+  return new Date(iso).toLocaleString("en-US", {
+    month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
+  });
 }
 
-function getEventTime(event: TimelineEvent): string {
-  if ("timestamp" in event) return event.timestamp;
-  return event.created_at;
-}
-
-export function Timeline({ notes, alerts, changes }: TimelineProps) {
-  const events = useMemo(() => {
-    const allEvents: TimelineEvent[] = [
-      ...notes.map((n) => ({ ...n, type: "note" as const })),
-      ...alerts.map((a) => ({ ...a, type: "alert" as const })),
-      ...changes.map((c) => ({ ...c, type: "change" as const })),
-    ];
-
-    // Sort by timestamp (newest first)
-    return allEvents.sort((a, b) => {
-      const timeA = new Date(getEventTime(a)).getTime();
-      const timeB = new Date(getEventTime(b)).getTime();
-      return timeB - timeA;
-    });
-  }, [notes, alerts, changes]);
-
-  const getEventIcon = (type: string) => {
-    switch (type) {
-      case "note":
-        return "📝";
-      case "alert":
-        return "🔔";
-      case "change":
-        return "🔄";
-      default:
-        return "•";
-    }
-  };
-
-  const getEventClass = (type: string) => {
-    return `timeline-event event-${type}`;
-  };
-
+export function Timeline({ events }: TimelineProps) {
   return (
     <div className="timeline">
-      <h4>⏱️ Incident Timeline</h4>
-
       <div className="timeline-events">
         {events.length === 0 ? (
           <p className="empty-timeline">No timeline events</p>
         ) : (
-          events.map((event) => (
-            <div key={event.id} className={getEventClass(event.type)}>
-              <div className="timeline-marker">
-                <span className="timeline-icon">{getEventIcon(event.type)}</span>
-                <div className="timeline-line"></div>
-              </div>
-
-              <div className="timeline-content">
-                <div className="timeline-header">
-                  <span className="timeline-type">{event.type.toUpperCase()}</span>
-                  <span className="timeline-time">{formatTimestamp(getEventTime(event))}</span>
+          events.map((event, idx) => {
+            const cfg = KIND_CONFIG[event.kind] ?? KIND_CONFIG["other"]!;
+            return (
+              <div key={event.id ?? idx} className="timeline-event">
+                <div className="timeline-dot" style={{ color: cfg.color }}>{cfg.icon}</div>
+                <div className="timeline-line" />
+                <div className="timeline-card">
+                  <div className="timeline-card-header">
+                    <span className="timeline-kind" style={{ color: cfg.color }}>{cfg.label}</span>
+                    <span className="timeline-time">{fmt(event.timestamp)}</span>
+                    {event.actor && <span className="timeline-actor">{event.actor}</span>}
+                    {event.link && (
+                      <a href={event.link} target="_blank" rel="noopener noreferrer" className="timeline-link">↗</a>
+                    )}
+                  </div>
+                  <div className="timeline-summary">{event.summary}</div>
+                  {event.detail && <div className="timeline-detail">{event.detail}</div>}
                 </div>
-
-                {event.type === "note" && (
-                  <div className="timeline-note">
-                    <strong>{event.user.summary}</strong>
-                    <p>{event.content}</p>
-                  </div>
-                )}
-
-                {event.type === "alert" && (
-                  <div className="timeline-alert">
-                    <p>{event.summary}</p>
-                    <span className={`status-badge status-${event.status}`}>
-                      {event.status}
-                    </span>
-                  </div>
-                )}
-
-                {event.type === "change" && (
-                  <div className="timeline-change">
-                    <p>{event.summary}</p>
-                  </div>
-                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

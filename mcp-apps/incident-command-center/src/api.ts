@@ -22,11 +22,28 @@ export interface IncidentData {
   };
 }
 
+export type TimelineEventKind =
+  | "trigger" | "acknowledge" | "resolve"
+  | "note" | "escalation" | "assign"
+  | "change" | "alert" | "snooze"
+  | "priority" | "workflow" | "other";
+
+export interface TimelineEvent {
+  id: string;
+  kind: TimelineEventKind;
+  timestamp: string;
+  summary: string;
+  detail: string | null;
+  actor: string | null;
+  link: string | null;
+}
+
 export interface IncidentDetails {
   incident: any;
   notes: any[];
   alerts: any[];
   changes: any[];
+  timelineEvents: TimelineEvent[];
 }
 
 export interface SimilarIncidentsData {
@@ -116,6 +133,19 @@ export async function fetchIncidents(
 /**
  * Fetch comprehensive incident details using multiple existing tools
  */
+function logEntryKind(type: string): TimelineEventKind {
+  if (type.includes("trigger")) return "trigger";
+  if (type.includes("acknowledge")) return "acknowledge";
+  if (type.includes("resolve")) return "resolve";
+  if (type.includes("annotate")) return "note";
+  if (type.includes("escalat")) return "escalation";
+  if (type.includes("assign") || type.includes("delegate")) return "assign";
+  if (type.includes("snooze")) return "snooze";
+  if (type.includes("priority")) return "priority";
+  if (type.includes("workflow") || type.includes("action_invocation")) return "workflow";
+  return "other";
+}
+
 export async function fetchIncidentDetails(
   app: App,
   incidentId: string
@@ -123,35 +153,92 @@ export async function fetchIncidentDetails(
   try {
     console.log("[API] Fetching details for incident:", incidentId);
 
-    // Call all tools in parallel for efficiency
-    const [incidentResult, notesResult, alertsResult, changesResult] = await Promise.all([
+    const [incidentResult, logResult, notesResult, alertsResult, changesResult] = await Promise.allSettled([
       app.callServerTool({ name: "get_incident", arguments: { incident_id: incidentId } }),
+      app.callServerTool({ name: "list_incident_log_entries", arguments: { incident_id: incidentId, limit: 100 } }),
       app.callServerTool({ name: "list_incident_notes", arguments: { incident_id: incidentId } }),
-      app.callServerTool({
-        name: "list_alerts_from_incident",
-        arguments: {
-          incident_id: incidentId,
-          query_model: { limit: 50 }
-        }
-      }),
-      app.callServerTool({
-        name: "list_incident_change_events",
-        arguments: { incident_id: incidentId }
-      }),
+      app.callServerTool({ name: "list_alerts_from_incident", arguments: { incident_id: incidentId, query_model: { limit: 50 } } }),
+      app.callServerTool({ name: "list_incident_change_events", arguments: { incident_id: incidentId } }),
     ]);
 
-    const incident = extractData<any>(incidentResult);
-    const notes = extractData<any>(notesResult);
-    const alerts = extractData<any>(alertsResult);
-    const changes = extractData<any>(changesResult);
+    const incident = incidentResult.status === "fulfilled" ? extractData<any>(incidentResult.value) : null;
+    const logEntries: any[] = logResult.status === "fulfilled" ? (extractData<any>(logResult.value)?.response ?? []) : [];
+    const notes: any[] = notesResult.status === "fulfilled" ? (extractData<any>(notesResult.value)?.response ?? []) : [];
+    const alerts: any[] = alertsResult.status === "fulfilled" ? (extractData<any>(alertsResult.value)?.response ?? []) : [];
+    const changes: any[] = changesResult.status === "fulfilled" ? (extractData<any>(changesResult.value)?.response ?? []) : [];
 
-    console.log("[API] Incident details fetched:", { incident, notes, alerts, changes });
+    const events: TimelineEvent[] = [];
+
+    // Log entries cover: trigger, ack, resolve, notes, escalation, assign, priority, workflow, etc.
+    for (const le of logEntries) {
+      events.push({
+        id: le.id,
+        kind: logEntryKind(le.type ?? ""),
+        timestamp: le.created_at,
+        summary: le.summary ?? le.type,
+        detail: le.note ?? le.event_details?.description ?? null,
+        actor: le.agent?.summary ?? null,
+        link: le.html_url ?? null,
+      });
+    }
+
+    // Notes – dedupe against annotate log entries
+    for (const note of notes) {
+      const dup = events.find(
+        (e) => e.kind === "note" && e.detail === note.content && e.timestamp === note.created_at
+      );
+      if (!dup) {
+        events.push({
+          id: note.id,
+          kind: "note",
+          timestamp: note.created_at,
+          summary: "Note added",
+          detail: note.content,
+          actor: note.user?.summary ?? null,
+          link: null,
+        });
+      }
+    }
+
+    // Change events
+    for (const ce of changes) {
+      events.push({
+        id: ce.id,
+        kind: "change",
+        timestamp: ce.timestamp,
+        summary: ce.summary ?? "Change event",
+        detail: ce.custom_details ? JSON.stringify(ce.custom_details).slice(0, 200) : null,
+        actor: ce.source ?? ce.integration?.summary ?? null,
+        link: ce.html_url ?? ce.links?.[0]?.href ?? null,
+      });
+    }
+
+    // Alerts (deduped by key)
+    const seenKeys = new Set<string>();
+    for (const al of alerts) {
+      const key = al.alert_key ?? al.id;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        events.push({
+          id: al.id,
+          kind: "alert",
+          timestamp: al.created_at,
+          summary: al.summary ?? "Alert triggered",
+          detail: `Severity: ${al.severity ?? "unknown"} · Status: ${al.status ?? "unknown"}`,
+          actor: al.service?.summary ?? null,
+          link: al.html_url ?? null,
+        });
+      }
+    }
+
+    events.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     return {
       incident: incident?.response || incident,
-      notes: notes?.response || [],
-      alerts: alerts?.response || [],
-      changes: changes?.response || [],
+      notes,
+      alerts,
+      changes,
+      timelineEvents: events,
     };
   } catch (error) {
     console.error("[API] Failed to fetch incident details:", error);

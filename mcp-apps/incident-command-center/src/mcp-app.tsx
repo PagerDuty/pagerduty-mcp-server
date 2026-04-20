@@ -129,7 +129,7 @@ function IncidentCommandCenter() {
     console.log("[IncidentCommandCenter] Loading incidents...");
     try {
       const newData = await fetchIncidents(app, {
-        status: ["triggered", "acknowledged"],
+        status: ["triggered", "acknowledged", "resolved"],
         urgency: [],
         auto_refresh: true,
       });

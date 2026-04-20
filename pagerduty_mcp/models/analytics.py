@@ -194,6 +194,10 @@ class GetIncidentMetricsByTeamRequest(BaseModel):
     )
     order: str | None = Field(default=None, description="Sort order: 'asc' or 'desc'.")
     order_by: str | None = Field(default=None, description="Field to sort results by.")
+    aggregate_unit: str | None = Field(
+        default=None,
+        description="Time unit to aggregate metrics by: 'day', 'week', or 'month'. If omitted, returns a single all-period row.",
+    )
 
     def to_body(self) -> dict[str, Any]:
         body: dict[str, Any] = {
@@ -214,6 +218,8 @@ class GetIncidentMetricsByTeamRequest(BaseModel):
             body["order"] = self.order
         if self.order_by:
             body["order_by"] = self.order_by
+        if self.aggregate_unit:
+            body["aggregate_unit"] = self.aggregate_unit
         return body
 
 

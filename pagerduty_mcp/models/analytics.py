@@ -277,6 +277,7 @@ class AnalyticsServiceMetrics(BaseModel):
 class AnalyticsTeamMetrics(BaseModel):
     """Per-team aggregate incident metrics from PagerDuty Analytics."""
 
+    range_start: str | None = Field(default=None, description="ISO8601 start of the aggregation period. Populated when aggregate_unit is set on the request.")
     team_id: str | None = Field(default=None)
     team_name: str | None = Field(default=None)
 

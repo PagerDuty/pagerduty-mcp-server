@@ -3,12 +3,11 @@
  *
  * Two tabs:
  *   Operational: KPI bar + Service / Team / Responder metric tables
- *   Insights:    Auto-generated AI summary cards + follow-up chat
+ *   Trends:      Weekly incident volume, MTTA, MTTR, and interruption trend charts
  */
 
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
-import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
-import { StrictMode, useCallback, useEffect, useMemo, useState } from "react";
+import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 import { fetchOpsData, type OpsData } from "./api";
@@ -17,11 +16,11 @@ import { SummaryCards } from "./components/SummaryCards";
 import { ServiceBreakdown } from "./components/ServiceBreakdown";
 import { TeamBreakdown } from "./components/TeamBreakdown";
 import { ResponderLoad } from "./components/ResponderLoad";
-import { InsightsTab } from "./components/InsightsTab";
+import { TrendsTab } from "./components/TrendsTab";
 import { TeamHealth } from "./components/TeamHealth";
 import { PercentileSection } from "./components/PercentileSection";
 
-type Tab = "operational" | "teamHealth" | "insights";
+type Tab = "operational" | "teamHealth" | "trends";
 
 function getDefaultSince(): string {
   const d = new Date();
@@ -52,8 +51,6 @@ function App() {
   const [since, setSince] = useState(getDefaultSince);
   const [until, setUntil] = useState(getToday);
   const [selectedTeam, setSelectedTeam] = useState<string>("");
-  // refreshKey increments on each Refresh click to trigger InsightsTab re-fetch
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const [data, setData] = useState<OpsData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,10 +71,9 @@ function App() {
     if (!app && !mockMode) return;
     setLoading(true);
     setError(null);
-    setRefreshKey((k) => k + 1);
     try {
       const d = await fetchOpsData(
-        app ?? ({} as McpApp),
+        app ?? ({} as any),
         new Date(since).toISOString(),
         new Date(until + "T23:59:59").toISOString(),
         selectedTeam || null
@@ -93,11 +89,6 @@ function App() {
   useEffect(() => {
     load();
   }, [load]);
-
-  const selectedTeamName = useMemo(() => {
-    if (!selectedTeam || !data) return "";
-    return data.teams.find((t) => t.id === selectedTeam)?.name ?? "";
-  }, [selectedTeam, data]);
 
   const displayError = mockMode ? null : (connectionError?.message ?? error);
 
@@ -139,10 +130,10 @@ function App() {
           Team Health
         </button>
         <button
-          className={`tab-btn${tab === "insights" ? " tab-active" : ""}`}
-          onClick={() => setTab("insights")}
+          className={`tab-btn${tab === "trends" ? " tab-active" : ""}`}
+          onClick={() => setTab("trends")}
         >
-          Insights
+          Trends
         </button>
       </div>
 
@@ -160,14 +151,8 @@ function App() {
         </div>
       ) : tab === "teamHealth" && data ? (
         <TeamHealth metrics={data.responderMetrics} teamMetrics={data.teamMetrics} />
-      ) : tab === "insights" && (app || mockMode) ? (
-        <InsightsTab
-          app={app ?? ({} as McpApp)}
-          teamName={selectedTeamName}
-          since={since}
-          until={until}
-          refreshKey={refreshKey}
-        />
+      ) : tab === "trends" && data ? (
+        <TrendsTab trendsData={data.trendsData} />
       ) : null}
     </div>
   );

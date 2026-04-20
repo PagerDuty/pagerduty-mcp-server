@@ -50,20 +50,14 @@ test("dark theme — readable on Operational tab", async ({ page }) => {
   await expect(html).toHaveAttribute("data-theme", "dark");
 });
 
-// ── 3. Insights tab — cards populated from mock data ──────────────────────
-test("Insights tab — insight cards render with content", async ({ page }) => {
+// ── 3. Trends tab — charts render ──────────────────────────────────────────────
+test("Trends tab — charts render", async ({ page }) => {
   await page.goto(BASE_URL);
   await page.waitForSelector(".tabs", { timeout: 8000 });
 
-  await page.click('button:has-text("Insights")');
-  // Mock insight responses have a 900ms delay × 3 parallel fetches
-  await page.waitForSelector(".insight-card, .insight-content", { timeout: 8000 });
-  await screenshot(page, "03-insights");
+  await page.click('button:has-text("Trends")');
+  await page.waitForSelector(".trend-card", { timeout: 5000 });
+  await screenshot(page, "03-trends");
 
-  // Cards should not show the fallback "Could not load insight" text
-  const fallbackCount = await page.locator("text=Could not load insight").count();
-  expect(fallbackCount).toBe(0);
-
-  // At least one card with real content
-  await expect(page.locator(".insight-card").first()).toBeVisible();
+  await expect(page.locator(".trend-card").first()).toBeVisible();
 });

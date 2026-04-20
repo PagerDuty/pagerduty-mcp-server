@@ -181,12 +181,16 @@ export async function fetchIncidentTimeline(
     const key = al.alert_key ?? al.id;
     if (!seenKeys.has(key)) {
       seenKeys.add(key);
+      const baseMeta = `Severity: ${al.severity ?? "unknown"} · Status: ${al.status ?? "unknown"}`;
+      const bodyDetails = al.body?.details
+        ? JSON.stringify(al.body.details).slice(0, 400)
+        : null;
       events.push({
         id: al.id,
         kind: "alert",
         timestamp: al.created_at,
         summary: al.summary ?? "Alert triggered",
-        detail: `Severity: ${al.severity ?? "unknown"} · Status: ${al.status ?? "unknown"}`,
+        detail: bodyDetails ? `${baseMeta}\n${bodyDetails}` : baseMeta,
         actor: al.service?.summary ?? null,
         link: al.html_url ?? null,
       });

@@ -7,6 +7,7 @@
  */
 
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
+import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { StrictMode, useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
@@ -39,6 +40,7 @@ function App() {
     appInfo: { name: "Operations Intelligence", version: "2.0.0" },
     capabilities: {},
   });
+  const mockMode = import.meta.env.VITE_MOCK === "true";
 
   const [theme, setTheme] = useState<"dark" | "light">(detectTheme);
   const [tab, setTab] = useState<Tab>("operational");
@@ -64,13 +66,13 @@ function App() {
   }, [theme]);
 
   const load = useCallback(async () => {
-    if (!app) return;
+    if (!app && !mockMode) return;
     setLoading(true);
     setError(null);
     setRefreshKey((k) => k + 1);
     try {
       const d = await fetchOpsData(
-        app,
+        app ?? ({} as McpApp),
         new Date(since).toISOString(),
         new Date(until + "T23:59:59").toISOString(),
         selectedTeam || null
@@ -92,7 +94,7 @@ function App() {
     return data.teams.find((t) => t.id === selectedTeam)?.name ?? "";
   }, [selectedTeam, data]);
 
-  const displayError = connectionError?.message ?? error;
+  const displayError = mockMode ? null : (connectionError?.message ?? error);
 
   return (
     <div className="app">
@@ -144,9 +146,9 @@ function App() {
           <TeamBreakdown metrics={data.teamMetrics} />
           <ResponderLoad metrics={data.responderMetrics} />
         </div>
-      ) : tab === "insights" && app ? (
+      ) : tab === "insights" && (app || mockMode) ? (
         <InsightsTab
-          app={app}
+          app={app ?? ({} as McpApp)}
           teamName={selectedTeamName}
           since={since}
           until={until}

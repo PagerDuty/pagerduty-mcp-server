@@ -10,6 +10,8 @@
 import type { App } from "@modelcontextprotocol/ext-apps";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
+const MOCK_MODE = import.meta.env.VITE_MOCK === "true";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface Team {
@@ -107,6 +109,10 @@ export async function fetchOpsData(
   until: string,
   teamId: string | null
 ): Promise<OpsData> {
+  if (MOCK_MODE) {
+    const { MOCK_OPS_DATA } = await import("./mock");
+    return { ...MOCK_OPS_DATA, since, until, selectedTeam: teamId };
+  }
   const incidentFilters = buildIncidentFilters(since, until, teamId);
   // Responder endpoint uses date_range_start/end (different field names)
   const responderFilters: Record<string, unknown> = {
@@ -217,6 +223,14 @@ export async function fetchInsight(
   message: string,
   sessionId: string
 ): Promise<string> {
+  if (MOCK_MODE) {
+    const { MOCK_INSIGHT_RESPONSES } = await import("./mock");
+    await new Promise((r) => setTimeout(r, 900));
+    const key = Object.keys(MOCK_INSIGHT_RESPONSES).find((k) =>
+      message.toLowerCase().includes(k.toLowerCase().slice(0, 8))
+    );
+    return key ? MOCK_INSIGHT_RESPONSES[key]! : "Mock insight: analysis complete for the selected period.";
+  }
   const result = await app.callServerTool({
     name: "insights_agent_tool",
     arguments: { message, session_id: sessionId },

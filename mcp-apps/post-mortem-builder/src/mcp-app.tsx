@@ -6,6 +6,7 @@
  */
 
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
+import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
@@ -39,6 +40,7 @@ function App() {
     appInfo: { name: "Post-Mortem Builder", version: "1.0.0" },
     capabilities: {},
   });
+  const mockMode = import.meta.env.VITE_MOCK === "true";
 
   const [theme, setTheme] = useState<"dark" | "light">(detectTheme);
   const [since, setSince] = useState(getDefaultSince);
@@ -67,11 +69,11 @@ function App() {
 
   // Load incidents when app is ready or date range changes
   useEffect(() => {
-    if (!app) return;
+    if (!app && !mockMode) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetchResolvedIncidents(app, new Date(since).toISOString(), new Date(until + "T23:59:59").toISOString())
+    fetchResolvedIncidents(app ?? ({} as McpApp), new Date(since).toISOString(), new Date(until + "T23:59:59").toISOString())
       .then((data) => { if (!cancelled) setIncidents(data); })
       .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load incidents"); })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -79,11 +81,11 @@ function App() {
   }, [app, since, until]);
 
   const handleSelectIncident = useCallback(async (id: string) => {
-    if (!app) return;
+    if (!app && !mockMode) return;
     setTimelineLoading(true);
     setError(null);
     try {
-      const t = await fetchIncidentTimeline(app, id);
+      const t = await fetchIncidentTimeline(app ?? ({} as McpApp), id);
       setTimeline(t);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load timeline");
@@ -101,7 +103,7 @@ function App() {
     });
   }, [timeline]);
 
-  const displayError = connectionError?.message ?? error;
+  const displayError = mockMode ? null : (connectionError?.message ?? error);
 
   return (
     <div className="app">

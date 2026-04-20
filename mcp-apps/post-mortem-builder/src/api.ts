@@ -6,6 +6,8 @@
 import type { App } from "@modelcontextprotocol/ext-apps";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
+const MOCK_MODE = import.meta.env.VITE_MOCK === "true";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface IncidentSummary {
@@ -76,6 +78,10 @@ export async function fetchResolvedIncidents(
   since: string,
   until: string
 ): Promise<IncidentSummary[]> {
+  if (MOCK_MODE) {
+    const { MOCK_INCIDENTS } = await import("./mock");
+    return MOCK_INCIDENTS;
+  }
   const result = await app.callServerTool({
     name: "list_incidents",
     arguments: {
@@ -109,6 +115,10 @@ export async function fetchIncidentTimeline(
   app: App,
   incidentId: string
 ): Promise<IncidentTimeline> {
+  if (MOCK_MODE) {
+    const { MOCK_TIMELINE } = await import("./mock");
+    return MOCK_TIMELINE;
+  }
   const [incResult, logResult, notesResult, changesResult, alertsResult] = await Promise.allSettled([
     app.callServerTool({ name: "get_incident", arguments: { incident_id: incidentId } }),
     app.callServerTool({ name: "list_log_entries", arguments: { query_model: { incident_id: incidentId, limit: 100 } } }),

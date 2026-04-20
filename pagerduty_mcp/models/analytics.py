@@ -265,9 +265,6 @@ class AnalyticsServiceMetrics(BaseModel):
     total_incidents_manual_escalated: int | None = Field(default=None)
     total_interruptions: int | None = Field(default=None)
     up_time_pct: float | None = Field(default=None, description="Service availability percentage.")
-    # New fields
-    total_high_urgency_incident_count: int | None = Field(default=None)
-    total_low_urgency_incident_count: int | None = Field(default=None)
     mean_engaged_seconds: int | None = Field(default=None)
 
 
@@ -284,7 +281,6 @@ class AnalyticsTeamMetrics(BaseModel):
     total_incidents_manual_escalated: int | None = Field(default=None)
     total_interruptions: int | None = Field(default=None)
     up_time_pct: float | None = Field(default=None)
-    # New fatigue fields
     total_business_hour_interruptions: int | None = Field(default=None)
     total_off_hour_interruptions: int | None = Field(default=None)
     total_sleep_hour_interruptions: int | None = Field(default=None)
@@ -305,7 +301,6 @@ class AnalyticsResponderLoad(BaseModel):
     total_sleep_hour_interruptions: int | None = Field(default=None)
     total_engaged_seconds: int | None = Field(default=None)
     mean_time_to_acknowledge_seconds: int | None = Field(default=None)
-    # New fatigue fields
     total_interruptions: int | None = Field(default=None)
     total_business_hour_interruptions: int | None = Field(default=None)
     total_off_hour_interruptions: int | None = Field(default=None)
@@ -322,6 +317,8 @@ class GetIncidentMetricsAllRequest(BaseModel):
         default=None,
         description="The time zone for results (e.g. 'America/New_York').",
     )
+    order: str | None = Field(default=None, description="Sort order: 'asc' or 'desc'.")
+    order_by: str | None = Field(default=None, description="Field to sort results by.")
 
     def to_body(self) -> dict[str, Any]:
         body: dict[str, Any] = {
@@ -338,6 +335,10 @@ class GetIncidentMetricsAllRequest(BaseModel):
             body["filters"]["urgency"] = self.filters.urgency
         if self.time_zone:
             body["time_zone"] = self.time_zone
+        if self.order:
+            body["order"] = self.order
+        if self.order_by:
+            body["order_by"] = self.order_by
         return body
 
 

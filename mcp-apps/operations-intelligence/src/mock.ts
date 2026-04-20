@@ -14,6 +14,16 @@ export const MOCK_OPS_DATA: OpsData = {
   mttrMinutes: 94,
   escalationRate: 12,
   uptimePct: 99.2,
+  aggregated: {
+    p50AckSeconds: 240,
+    p75AckSeconds: 480,
+    p90AckSeconds: 900,
+    p95AckSeconds: 1800,
+    p50ResolveSeconds: 3600,
+    p75ResolveSeconds: 5400,
+    p90ResolveSeconds: 9000,
+    p95ResolveSeconds: 14400,
+  },
   serviceMetrics: [
     { id: "S1", name: "api-gateway",         teamName: "Platform", totalIncidents: 12, mttaMinutes: 6,  mttrMinutes: 72,  escalationCount: 2, uptimePct: 99.5 },
     { id: "S2", name: "auth-service",        teamName: "Backend",  totalIncidents: 9,  mttaMinutes: 11, mttrMinutes: 140, escalationCount: 3, uptimePct: 98.9 },
@@ -22,21 +32,21 @@ export const MOCK_OPS_DATA: OpsData = {
     { id: "S5", name: "notification-worker", teamName: "Platform", totalIncidents: 5,  mttaMinutes: 9,  mttrMinutes: 60,  escalationCount: 0, uptimePct: 99.1 },
   ],
   teamMetrics: [
-    { id: "T1", name: "Platform", totalIncidents: 17, mttaMinutes: 7,  mttrMinutes: 66,  escalationCount: 2, totalInterruptions: 8,  uptimePct: 99.3 },
-    { id: "T2", name: "Backend",  totalIncidents: 24, mttaMinutes: 9,  mttrMinutes: 107, escalationCount: 4, totalInterruptions: 15, uptimePct: 99.1 },
-    { id: "T3", name: "Frontend", totalIncidents: 6,  mttaMinutes: 14, mttrMinutes: 180, escalationCount: 0, totalInterruptions: 3,  uptimePct: 97.3 },
+    { id: "T1", name: "Platform", totalIncidents: 17, mttaMinutes: 7,  mttrMinutes: 66,  escalationCount: 2, totalInterruptions: 8,  uptimePct: 99.3, businessHourInterruptions: 5, offHourInterruptions: 2, sleepHourInterruptions: 1, meanEngagedMinutes: 45 },
+    { id: "T2", name: "Backend",  totalIncidents: 24, mttaMinutes: 9,  mttrMinutes: 107, escalationCount: 4, totalInterruptions: 15, uptimePct: 99.1, businessHourInterruptions: 7, offHourInterruptions: 4, sleepHourInterruptions: 4, meanEngagedMinutes: 82 },
+    { id: "T3", name: "Frontend", totalIncidents: 6,  mttaMinutes: 14, mttrMinutes: 180, escalationCount: 0, totalInterruptions: 3,  uptimePct: 97.3, businessHourInterruptions: 2, offHourInterruptions: 1, sleepHourInterruptions: 0, meanEngagedMinutes: 38 },
   ],
   responderMetrics: [
-    { id: "R1", name: "Alice Chen",   teamName: "Platform", onCallHours: 168, totalIncidents: 11, totalAcks: 10, sleepInterruptions: 2, engagedMinutes: 240 },
-    { id: "R2", name: "Bob Martinez", teamName: "Backend",  onCallHours: 120, totalIncidents: 14, totalAcks: 13, sleepInterruptions: 4, engagedMinutes: 380 },
-    { id: "R3", name: "Carol Park",   teamName: "Backend",  onCallHours: 96,  totalIncidents: 10, totalAcks: 9,  sleepInterruptions: 1, engagedMinutes: 210 },
-    { id: "R4", name: "Dave Kim",     teamName: "Frontend", onCallHours: 72,  totalIncidents: 6,  totalAcks: 6,  sleepInterruptions: 0, engagedMinutes: 150 },
-    { id: "R5", name: "Eve Johnson",  teamName: "Platform", onCallHours: 144, totalIncidents: 6,  totalAcks: 5,  sleepInterruptions: 1, engagedMinutes: 90  },
+    { id: "R1", name: "Alice Chen",   teamName: "Platform", onCallHours: 168, totalIncidents: 11, totalAcks: 10, sleepInterruptions: 2, engagedMinutes: 240, totalInterruptions: 5,  businessHourInterruptions: 2, offHourInterruptions: 1, meanEngagedMinutes: 22, riskLevel: "medium" },
+    { id: "R2", name: "Bob Martinez", teamName: "Backend",  onCallHours: 120, totalIncidents: 14, totalAcks: 13, sleepInterruptions: 6, engagedMinutes: 510, totalInterruptions: 12, businessHourInterruptions: 4, offHourInterruptions: 2, meanEngagedMinutes: 36, riskLevel: "high" },
+    { id: "R3", name: "Carol Park",   teamName: "Backend",  onCallHours: 96,  totalIncidents: 10, totalAcks: 9,  sleepInterruptions: 1, engagedMinutes: 210, totalInterruptions: 4,  businessHourInterruptions: 2, offHourInterruptions: 1, meanEngagedMinutes: 21, riskLevel: "low" },
+    { id: "R4", name: "Dave Kim",     teamName: "Frontend", onCallHours: 72,  totalIncidents: 6,  totalAcks: 6,  sleepInterruptions: 0, engagedMinutes: 150, totalInterruptions: 2,  businessHourInterruptions: 2, offHourInterruptions: 0, meanEngagedMinutes: 25, riskLevel: "low" },
+    { id: "R5", name: "Eve Johnson",  teamName: "Platform", onCallHours: 144, totalIncidents: 6,  totalAcks: 5,  sleepInterruptions: 3, engagedMinutes: 490, totalInterruptions: 6,  businessHourInterruptions: 2, offHourInterruptions: 1, meanEngagedMinutes: 82, riskLevel: "high" },
   ],
 };
 
 export const MOCK_INSIGHT_RESPONSES: Record<string, string> = {
   "MTTA & MTTR Trends": "MTTA improved 18% this period, averaging 8 min across all teams. MTTR remains elevated at 94 min driven by Backend (107 min). auth-service is the outlier at 140 min — a DB migration in week 2 caused a spike that inflated the mean. Platform shows the most consistent response times.",
   "Noisiest Services": "payment-processor led with 15 incidents but resolved fastest (55 min MTTR, 99.8% uptime) — high volume, low impact. auth-service (9 incidents, 140 min MTTR) poses the biggest risk: 3 escalations and sub-99% uptime. user-dashboard has the worst uptime at 97.3% despite only 6 incidents.",
-  "Team & Responder Load": "Backend carries the highest load: 24 incidents, 15 interruptions, Bob Martinez with 4 sleep-hour interruptions. Platform is well-distributed. Frontend's low volume (6 incidents) suggests either strong reliability or under-alerting — worth validating coverage. Consider redistributing Backend on-call to reduce Bob's sleep interruption count.",
+  "Team & Responder Load": "Backend carries the highest load: 24 incidents, 15 interruptions, Bob Martinez with 6 sleep-hour interruptions. Platform is well-distributed. Frontend's low volume (6 incidents) suggests either strong reliability or under-alerting — worth validating coverage. Consider redistributing Backend on-call to reduce Bob's sleep interruption count.",
 };

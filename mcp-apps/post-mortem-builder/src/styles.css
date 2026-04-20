@@ -248,6 +248,8 @@ body {
   border-radius: 8px;
   padding: 10px 14px;
   margin-bottom: 12px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .timeline-card-header {
@@ -263,7 +265,7 @@ body {
 .timeline-actor { font-size: 12px; color: var(--text-secondary); }
 .timeline-link { font-size: 12px; color: var(--pd-green); text-decoration: none; }
 .timeline-summary { font-weight: 500; margin-bottom: 4px; }
-.timeline-detail { font-size: 12px; color: var(--text-secondary); font-family: monospace; background: var(--bg-tertiary); padding: 6px 8px; border-radius: 4px; overflow-wrap: break-word; }
+.timeline-detail { font-size: 12px; color: var(--text-secondary); font-family: monospace; background: var(--bg-tertiary); padding: 6px 8px; border-radius: 4px; overflow-wrap: break-word; white-space: pre-wrap; min-width: 0; width: 100%; }
 
 /* ── Buttons ── */
 .btn {

@@ -119,15 +119,15 @@ export async function fetchOpsData(
     app.callServerTool({ name: "list_teams", arguments: { query_model: { limit: 100 } } }),
     app.callServerTool({
       name: "get_incident_metrics_by_service",
-      arguments: { filters: incidentFilters },
+      arguments: { request: { filters: incidentFilters } },
     }),
     app.callServerTool({
       name: "get_incident_metrics_by_team",
-      arguments: { filters: incidentFilters },
+      arguments: { request: { filters: incidentFilters } },
     }),
     app.callServerTool({
       name: "get_responder_load_metrics",
-      arguments: { filters: responderFilters },
+      arguments: { request: { filters: responderFilters } },
     }),
   ]);
 

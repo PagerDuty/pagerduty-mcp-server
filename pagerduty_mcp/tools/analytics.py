@@ -138,7 +138,8 @@ def get_incident_metrics_all(request: GetIncidentMetricsAllRequest) -> str:
     body = request.to_body()
     response = get_client().rpost("/analytics/metrics/incidents/all", json=body)
     if isinstance(response, dict):
-        raw_data = response.get("data", response)
+        data = response.get("data", [])
+        raw_data = data[0] if isinstance(data, list) and data else data if isinstance(data, dict) else {}
     elif isinstance(response, list) and len(response) > 0:
         raw_data = response[0]
     else:

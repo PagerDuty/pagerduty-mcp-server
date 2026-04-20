@@ -196,7 +196,7 @@ export async function fetchOpsData(
     mttaMinutes: secToMin(s.mean_seconds_to_first_ack),
     mttrMinutes: secToMin(s.mean_seconds_to_resolve),
     escalationCount: s.total_escalation_count ?? s.total_incidents_manual_escalated ?? 0,
-    uptimePct: s.up_time_pct ?? null,
+    uptimePct: s.up_time_pct != null ? Math.round(s.up_time_pct * 10) / 10 : null,
   }));
 
   // Team metrics
@@ -209,7 +209,7 @@ export async function fetchOpsData(
     mttrMinutes: secToMin(t.mean_seconds_to_resolve),
     escalationCount: t.total_escalation_count ?? t.total_incidents_manual_escalated ?? 0,
     totalInterruptions: t.total_interruptions ?? 0,
-    uptimePct: t.up_time_pct ?? null,
+    uptimePct: t.up_time_pct != null ? Math.round(t.up_time_pct * 10) / 10 : null,
     businessHourInterruptions: t.total_business_hour_interruptions ?? 0,
     offHourInterruptions: t.total_off_hour_interruptions ?? 0,
     sleepHourInterruptions: t.total_sleep_hour_interruptions ?? 0,
@@ -310,10 +310,18 @@ export async function fetchInsight(
       ? MOCK_INSIGHT_RESPONSES[matchedTitle] ?? "Mock insight: analysis complete for the selected period."
       : "Mock insight: analysis complete for the selected period.";
   }
-  const result = await app.callServerTool({
-    name: "insights_agent_tool",
-    arguments: { message, session_id: sessionId },
-  });
-  const data = extract<{ message: string }>(result);
-  return data?.message ?? "";
+  try {
+    const result = await app.callServerTool({
+      name: "insights_agent_tool",
+      arguments: { message, session_id: sessionId },
+    });
+    const data = extract<{ message: string }>(result);
+    return data?.message ?? "";
+  } catch (err: any) {
+    const msg = String(err?.message ?? err ?? "");
+    if (msg.includes("not found") || msg.includes("unknown tool") || msg.includes("insights_agent_tool")) {
+      throw new Error("insights_agent_tool is not available. Connect the pagerduty-advance-mcp-server to enable AI insights.");
+    }
+    throw err;
+  }
 }

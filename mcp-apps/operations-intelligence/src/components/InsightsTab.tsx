@@ -53,10 +53,10 @@ export function InsightsTab({ app, teamName, since, until, refreshKey }: Insight
         setInsights((prev) =>
           prev.map((ins, i) => (i === idx ? { ...ins, content } : ins))
         );
-      } catch {
+      } catch (err: any) {
         setInsights((prev) =>
           prev.map((ins, i) =>
-            i === idx ? { ...ins, error: "Failed to load insight" } : ins
+            i === idx ? { ...ins, error: err?.message ?? "Failed to load insight" } : ins
           )
         );
       }
@@ -81,10 +81,10 @@ export function InsightsTab({ app, teamName, since, until, refreshKey }: Insight
     try {
       const reply = await fetchInsight(app, message, sessionId.current);
       setChatMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-    } catch {
+    } catch (err: any) {
       setChatMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, I couldn't process that request. Please try again." },
+        { role: "assistant", content: err?.message ?? "Sorry, I couldn't process that request. Please try again." },
       ]);
     } finally {
       setChatLoading(false);

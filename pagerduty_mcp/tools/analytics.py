@@ -4,10 +4,12 @@ from pagerduty_mcp.models.analytics import (
     AnalyticsServiceMetrics,
     AnalyticsTeamMetrics,
     AnalyticsResponderLoad,
+    AnalyticsAggregatedMetrics,
     GetResponderMetricsRequest,
     GetIncidentMetricsByServiceRequest,
     GetIncidentMetricsByTeamRequest,
     GetResponderLoadMetricsRequest,
+    GetIncidentMetricsAllRequest,
 )
 from pagerduty_mcp.models.base import ListResponseModel
 
@@ -116,3 +118,30 @@ def get_responder_load_metrics(request: GetResponderLoadMetricsRequest) -> str:
         raw_data = []
     metrics = [AnalyticsResponderLoad(**item) for item in raw_data]
     return ListResponseModel[AnalyticsResponderLoad](response=metrics).model_dump_json()
+
+
+def get_incident_metrics_all(request: GetIncidentMetricsAllRequest) -> str:
+    """Get full-period aggregated incident metrics from PagerDuty Analytics.
+
+    Returns rollup metrics for the entire requested period including percentile
+    distributions (P50, P75, P90, P95) for ack and resolve times. These percentile
+    fields are ONLY available from this endpoint — not from the per-team or per-service
+    grouped endpoints.
+
+    Args:
+        request: Filters (required date range, optional team/service/urgency filters)
+                 and optional time zone.
+
+    Returns:
+        JSON string of AnalyticsAggregatedMetrics object.
+    """
+    body = request.to_body()
+    response = get_client().rpost("/analytics/metrics/incidents/all", json=body)
+    if isinstance(response, dict):
+        raw_data = response.get("data", response)
+    elif isinstance(response, list) and len(response) > 0:
+        raw_data = response[0]
+    else:
+        raw_data = {}
+    metrics = AnalyticsAggregatedMetrics(**raw_data) if raw_data else AnalyticsAggregatedMetrics()
+    return metrics.model_dump_json()

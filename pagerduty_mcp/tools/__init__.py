@@ -14,6 +14,7 @@ from .analytics import (
     get_incident_metrics_by_team,
     get_responder_load_metrics,
     get_responder_metrics,
+    get_incident_metrics_all,
 )
 from .change_events import (
     get_change_event,
@@ -58,6 +59,7 @@ from .incidents import (
 )
 from .log_entries import (
     get_log_entry,
+    list_incident_log_entries,
     list_log_entries,
 )
 from .oncalls import list_oncalls
@@ -83,10 +85,12 @@ from .services import (
 )
 from .status_pages import (
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
     get_status_page_post,
     list_status_page_impacts,
     list_status_page_post_updates,
+    list_status_page_posts,
     list_status_page_severities,
     list_status_page_statuses,
     list_status_pages,
@@ -151,10 +155,12 @@ read_tools = [
     get_incident_metrics_by_team,
     get_responder_load_metrics,
     get_responder_metrics,
+    get_incident_metrics_all,
     # On-calls
     list_oncalls,
     # Log Entries
     list_log_entries,
+    list_incident_log_entries,
     get_log_entry,
     # Escalation Policies
     list_escalation_policies,
@@ -171,6 +177,7 @@ read_tools = [
     list_status_page_impacts,
     list_status_page_statuses,
     get_status_page_post,
+    list_status_page_posts,
     list_status_page_post_updates,
 ]
 
@@ -205,6 +212,7 @@ write_tools = [
     append_event_orchestration_router_rule,
     # Status Pages
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
     # Escalation Policies - currently disabled
     # create_escalation_policy,

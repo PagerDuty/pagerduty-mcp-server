@@ -498,6 +498,32 @@ export async function fetchIncidentWorkflows(app: App): Promise<any[]> {
 }
 
 /**
+ * Create a status update on an incident
+ */
+export async function createStatusUpdate(
+  app: App,
+  incidentId: string,
+  message: string
+): Promise<boolean> {
+  try {
+    console.log("[API] Creating status update for incident:", incidentId);
+
+    await app.callServerTool({
+      name: "create_incident_status_update",
+      arguments: {
+        incident_id: incidentId,
+        message,
+      },
+    });
+
+    return true;
+  } catch (error) {
+    console.error("[API] Failed to create status update:", error);
+    throw error;
+  }
+}
+
+/**
  * Start an incident workflow using start_incident_workflow tool
  */
 export async function startIncidentWorkflow(

@@ -934,6 +934,65 @@ body {
   background: var(--bg-primary);
 }
 
+/* ── Status Update Modal ─────────────────────────────────────────────────── */
+.status-update-modal {
+  max-width: 620px;
+  width: 90vw;
+}
+
+.status-update-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.status-update-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 24px 0;
+}
+
+.status-update-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.status-update-textarea:focus {
+  outline: none;
+  border-color: var(--pd-green, #00b050);
+}
+
+.status-update-error {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #e53e3e;
+}
+
+.spinner-sm {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-secondary);
+  border-top-color: var(--pd-green, #00b050);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .btn-primary,
 .btn-secondary {
   padding: 8px 18px;
@@ -1378,6 +1437,28 @@ body {
   font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
   line-height: 1.5;
 }
+
+/* JSON Viewer */
+.json-viewer {
+  background: #0d1117;
+  color: #c9d1d9;
+  padding: 14px 16px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  font-size: 12.5px;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
+  line-height: 1.6;
+  overflow: auto;
+  max-height: 360px;
+  margin: 0;
+  white-space: pre;
+}
+
+.json-viewer .json-key    { color: #79c0ff; }
+.json-viewer .json-string { color: #a5d6a7; }
+.json-viewer .json-number { color: #f2a65a; }
+.json-viewer .json-boolean { color: #ff9d00; font-weight: 600; }
+.json-viewer .json-null   { color: #8b949e; font-style: italic; }
 
 .empty-alerts {
   text-align: center;

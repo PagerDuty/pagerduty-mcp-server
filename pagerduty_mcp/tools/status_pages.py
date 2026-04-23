@@ -1,3 +1,5 @@
+import json
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import ListResponseModel
 from pagerduty_mcp.models.status_pages import (
@@ -213,3 +215,59 @@ def list_status_page_post_updates(
 
     post_updates = [StatusPagePostUpdate(**item) for item in response]
     return ListResponseModel[StatusPagePostUpdate](response=post_updates)
+
+
+def list_status_page_posts(status_page_id: str) -> str:
+    """List Posts for a Status Page by Status Page ID.
+
+    Args:
+        status_page_id: The ID of the Status Page
+
+    Returns:
+        JSON string containing a list of posts for the given Status Page
+    """
+    response = paginate(
+        client=get_client(),
+        entity=f"/status_pages/{status_page_id}/posts",
+        params={},
+        maximum_records=100,
+    )
+    return json.dumps({"response": response})
+
+
+def create_status_page_post_postmortem(
+    status_page_id: str,
+    post_id: str,
+    message: str,
+    notify_subscribers: bool = True,
+) -> str:
+    """Create or update a postmortem for a Status Page Post.
+
+    Publishes a post-mortem document to a Status Page Post. If a postmortem
+    already exists for the post it will be updated; otherwise one is created.
+
+    Args:
+        status_page_id: The ID of the Status Page
+        post_id: The ID of the Status Page Post to attach the postmortem to
+        message: The postmortem message body (supports rich text / markdown)
+        notify_subscribers: Whether to notify status page subscribers (defaults to True)
+
+    Returns:
+        JSON string of the created/updated postmortem
+    """
+    payload = {
+        "postmortem": {
+            "message": message,
+            "notify_subscribers": notify_subscribers,
+            "post": {
+                "id": post_id,
+                "self": f"https://api.pagerduty.com/status_pages/{status_page_id}/posts/{post_id}",
+                "type": "status_page_post",
+            },
+            "type": "status_page_post_postmortem",
+        }
+    }
+    response = get_client().rput(
+        f"/status_pages/{status_page_id}/posts/{post_id}/postmortem", json=payload
+    )
+    return json.dumps(response)

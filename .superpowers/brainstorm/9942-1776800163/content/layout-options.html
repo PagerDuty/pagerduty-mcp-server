@@ -1,0 +1,167 @@
+<h2>On-Call Manager — Layout Approach</h2>
+<p class="subtitle">We're merging the Schedule Visualizer and Shift Coverage Wizard into one app. Which layout structure feels right?</p>
+
+<div class="cards">
+
+  <!-- Option A: Tab-based -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-family:system-ui;font-size:12px;background:#1e1e2e;border-radius:8px;overflow:hidden;color:#cdd6f4">
+        <div style="background:#181825;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #313244">
+          <span style="color:#a6e3a1;font-size:14px">●</span>
+          <strong style="font-size:13px">On-Call Manager</strong>
+          <div style="margin-left:auto;display:flex;gap:4px">
+            <span style="padding:4px 10px;background:#89b4fa;color:#1e1e2e;border-radius:4px;font-weight:600">Calendar</span>
+            <span style="padding:4px 10px;color:#6c7086;border-radius:4px">Coverage</span>
+            <span style="padding:4px 10px;color:#6c7086;border-radius:4px">Overrides</span>
+          </div>
+        </div>
+        <div style="padding:12px 16px">
+          <div style="background:#313244;border-radius:6px;padding:10px;margin-bottom:8px">
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <span style="background:#45475a;border-radius:3px;padding:3px 8px;font-size:10px">← Week</span>
+              <span style="background:#45475a;border-radius:3px;padding:3px 8px;font-size:10px">Apr 14–20</span>
+              <span style="background:#45475a;border-radius:3px;padding:3px 8px;font-size:10px">Week →</span>
+              <span style="margin-left:auto;background:#45475a;border-radius:3px;padding:3px 8px;font-size:10px">Filter teams</span>
+            </div>
+            <div style="display:grid;grid-template-columns:80px repeat(7,1fr);gap:2px">
+              <div></div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Mon</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Tue</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Wed</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Thu</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Fri</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Sat</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Sun</div>
+              <div style="font-size:9px;color:#6c7086;padding-top:2px">Infra</div>
+              <div style="grid-column:span 3;background:#89b4fa;border-radius:3px;padding:2px 4px;font-size:9px;color:#1e1e2e">Alice Chen</div>
+              <div style="grid-column:span 2;background:#cba6f7;border-radius:3px;padding:2px 4px;font-size:9px;color:#1e1e2e">Bob K.</div>
+              <div style="grid-column:span 2"></div>
+              <div style="font-size:9px;color:#6c7086;padding-top:2px">Platform</div>
+              <div style="grid-column:span 2"></div>
+              <div style="grid-column:span 4;background:#a6e3a1;border-radius:3px;padding:2px 4px;font-size:9px;color:#1e1e2e">Carlos M.</div>
+              <div style="grid-column:span 1"></div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:#6c7086">Click any shift to create an override or request coverage →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Tabbed (Calendar + Coverage + Overrides)</h3>
+      <p>Three tabs: <strong>Calendar</strong> (visual timeline, the main view), <strong>Coverage Wizard</strong> (find someone to cover your shift), <strong>Overrides</strong> (list + manage active overrides). Clean separation, easy to navigate. Best for users who primarily browse, then act.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Click-to-act inline -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-family:system-ui;font-size:12px;background:#1e1e2e;border-radius:8px;overflow:hidden;color:#cdd6f4">
+        <div style="background:#181825;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #313244">
+          <span style="color:#a6e3a1;font-size:14px">●</span>
+          <strong style="font-size:13px">On-Call Manager</strong>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 280px;height:180px">
+          <div style="padding:10px;border-right:1px solid #313244">
+            <div style="display:grid;grid-template-columns:70px repeat(7,1fr);gap:2px;margin-bottom:6px">
+              <div></div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Mon</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Tue</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Wed</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Thu</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Fri</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Sat</div>
+              <div style="text-align:center;font-size:9px;color:#6c7086">Sun</div>
+              <div style="font-size:9px;color:#6c7086">Infra</div>
+              <div style="grid-column:span 3;background:#89b4fa33;border:1px solid #89b4fa;border-radius:3px;padding:2px 4px;font-size:9px;color:#89b4fa">Alice Chen ★</div>
+              <div style="grid-column:span 4"></div>
+            </div>
+            <div style="font-size:9px;color:#6c7086">← Selected shift highlighted</div>
+          </div>
+          <div style="padding:10px;background:#181825">
+            <div style="font-size:10px;font-weight:600;color:#cba6f7;margin-bottom:6px">⚡ Quick Actions</div>
+            <div style="background:#313244;border-radius:5px;padding:7px;margin-bottom:5px">
+              <div style="font-size:10px;font-weight:600">Alice Chen</div>
+              <div style="font-size:9px;color:#6c7086">Infra · Mon–Wed</div>
+              <div style="display:flex;gap:4px;margin-top:5px">
+                <span style="background:#89b4fa;color:#1e1e2e;font-size:9px;padding:2px 6px;border-radius:3px">Override</span>
+                <span style="background:#45475a;font-size:9px;padding:2px 6px;border-radius:3px">Coverage</span>
+              </div>
+            </div>
+            <div style="font-size:9px;color:#6c7086">Click any shift to see actions here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Split-pane (Calendar + contextual action panel)</h3>
+      <p>Calendar on the left, contextual action panel on the right. Click any shift → the panel shows that person's shift details with inline Override and Coverage buttons. No tab switching. Best for power users who want everything in one screen.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Two-panel stacked -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-family:system-ui;font-size:12px;background:#1e1e2e;border-radius:8px;overflow:hidden;color:#cdd6f4">
+        <div style="background:#181825;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #313244">
+          <span style="color:#a6e3a1;font-size:14px">●</span>
+          <strong style="font-size:13px">On-Call Manager</strong>
+          <div style="margin-left:auto;display:flex;gap:4px">
+            <span style="padding:4px 10px;background:#89b4fa;color:#1e1e2e;border-radius:4px;font-weight:600">Schedule</span>
+            <span style="padding:4px 10px;color:#6c7086;border-radius:4px">Overrides</span>
+          </div>
+        </div>
+        <div style="padding:10px">
+          <div style="background:#313244;border-radius:5px;padding:8px;margin-bottom:8px">
+            <div style="font-size:10px;font-weight:600;margin-bottom:5px">📅 This week</div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+              <div style="background:#89b4fa22;border-radius:3px;padding:4px;text-align:center">
+                <div style="font-size:9px;color:#6c7086">Mon</div>
+                <div style="font-size:9px;color:#89b4fa">Alice</div>
+              </div>
+              <div style="background:#89b4fa22;border-radius:3px;padding:4px;text-align:center">
+                <div style="font-size:9px;color:#6c7086">Tue</div>
+                <div style="font-size:9px;color:#89b4fa">Alice</div>
+              </div>
+              <div style="background:#a6e3a122;border-radius:3px;padding:4px;text-align:center">
+                <div style="font-size:9px;color:#6c7086">Wed</div>
+                <div style="font-size:9px;color:#a6e3a1">Carlos</div>
+              </div>
+              <div style="background:#a6e3a122;border-radius:3px;padding:4px;text-align:center">
+                <div style="font-size:9px;color:#6c7086">Thu</div>
+                <div style="font-size:9px;color:#a6e3a1">Carlos</div>
+              </div>
+              <div style="background:#cba6f722;border-radius:3px;padding:4px;text-align:center">
+                <div style="font-size:9px;color:#6c7086">Fri</div>
+                <div style="font-size:9px;color:#cba6f7">Bob</div>
+              </div>
+              <div style="background:#45475a;border-radius:3px;padding:4px;text-align:center">
+                <div style="font-size:9px;color:#6c7086">Sat</div>
+                <div style="font-size:9px;color:#6c7086">—</div>
+              </div>
+              <div style="background:#45475a;border-radius:3px;padding:4px;text-align:center">
+                <div style="font-size:9px;color:#6c7086">Sun</div>
+                <div style="font-size:9px;color:#6c7086">—</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <div style="flex:1;background:#89b4fa15;border:1px solid #89b4fa33;border-radius:5px;padding:7px;font-size:9px">
+              <div style="font-weight:600;color:#89b4fa;margin-bottom:3px">🔄 Active Overrides (2)</div>
+              <div>Alice → Bob · Wed 9am</div>
+              <div style="color:#6c7086">Carlos → Alice · Fri</div>
+            </div>
+            <button style="background:#a6e3a1;color:#1e1e2e;border:none;border-radius:5px;padding:7px 10px;font-size:10px;font-weight:600;cursor:pointer">+ New Override</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Two tabs: Schedule view + Overrides manager</h3>
+      <p>Simpler: <strong>Schedule</strong> tab shows the calendar grid with "who's on call when", <strong>Overrides</strong> tab lists all active/upcoming overrides with ability to create new ones. Coverage wizard becomes a modal triggered from either tab. Less is more.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">Click your preferred layout. You can also just tell me in the chat.</p>

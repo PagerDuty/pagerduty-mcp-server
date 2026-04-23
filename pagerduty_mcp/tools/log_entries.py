@@ -49,3 +49,30 @@ def list_log_entries(query_model: LogEntryQuery) -> ListResponseModel[LogEntry]:
     )
     log_entries = [LogEntry(**entry) for entry in response]
     return ListResponseModel[LogEntry](response=log_entries)
+
+
+def list_incident_log_entries(incident_id: str, limit: int | None = None) -> str:
+    """List all log entries for a specific incident.
+
+    Log entries for an incident record every state change and action: trigger, acknowledge,
+    reassign, escalate, annotate (note), and resolve events.
+
+    Args:
+        incident_id: The ID of the incident to retrieve log entries for
+        limit: Maximum number of results to return (optional, defaults to 100)
+
+    Returns:
+        JSON string of ListResponseModel containing LogEntry objects
+    """
+    params: dict = {"is_overview": "false"}
+    if limit:
+        params["limit"] = limit
+
+    response = paginate(
+        client=get_client(),
+        entity=f"incidents/{incident_id}/log_entries",
+        params=params,
+        maximum_records=limit or 100,
+    )
+    log_entries = [LogEntry(**entry) for entry in response]
+    return ListResponseModel[LogEntry](response=log_entries).model_dump_json()

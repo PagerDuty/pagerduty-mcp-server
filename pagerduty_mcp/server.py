@@ -21,10 +21,8 @@ app = typer.Typer()
 
 # MCP App URIs
 INCIDENT_COMMAND_CENTER_URI = "ui://incident-command-center/dashboard.html"
-ONCALL_SCHEDULE_VISUALIZER_URI = "ui://oncall-schedule-visualizer/calendar.html"
 SERVICE_DEPENDENCY_GRAPH_URI = "ui://service-dependency-graph/graph.html"
 ONCALL_COMPENSATION_URI = "ui://oncall-compensation/report.html"
-SHIFT_COVERAGE_WIZARD_URI = "ui://shift-coverage-wizard/wizard.html"
 OPERATIONS_INTELLIGENCE_URI = "ui://operations-intelligence/dashboard.html"
 ONCALL_MANAGER_URI = "ui://oncall-manager/dashboard.html"
 
@@ -125,51 +123,6 @@ def add_incident_command_center(mcp_instance: FastMCP) -> None:
         return html_path.read_text(encoding="utf-8")
 
 
-def add_oncall_schedule_visualizer(mcp_instance: FastMCP) -> None:
-    """Add On-Call Schedule Visualizer MCP App resource.
-
-    The UI directly calls existing MCP tools:
-    - list_schedules, get_schedule
-    - list_oncalls, list_schedule_users
-    - list_teams, list_users
-
-    Args:
-        mcp_instance: The MCP server instance
-    """
-
-    @mcp_instance.tool(
-        meta={
-            "ui": {"resourceUri": ONCALL_SCHEDULE_VISUALIZER_URI},
-            "ui/resourceUri": ONCALL_SCHEDULE_VISUALIZER_URI,
-        }
-    )
-    def oncall_schedule_visualizer() -> list[TextContent]:
-        """On-Call Schedule Visualizer - Interactive calendar view.
-
-        Shows who's on-call across teams and schedules. The UI calls existing
-        MCP tools (list_schedules, list_oncalls, etc.) to fetch data.
-
-        Returns:
-            Text content indicating the UI is ready
-        """
-        return [
-            TextContent(
-                type="text",
-                text="On-Call Schedule Visualizer UI initialized. The UI will call existing MCP tools to fetch data."
-            )
-        ]
-
-    @mcp_instance.resource(
-        ONCALL_SCHEDULE_VISUALIZER_URI,
-        mime_type="text/html;profile=mcp-app",
-        description="On-Call Schedule Visualizer - Interactive calendar view of on-call schedules"
-    )
-    def oncall_schedule_visualizer_view() -> str:
-        """On-Call Schedule Visualizer UI resource."""
-        html_path = pathlib.Path(__file__).parent / "oncall_schedule_visualizer_view.html"
-        return html_path.read_text(encoding="utf-8")
-
-
 def add_service_dependency_graph(mcp_instance: FastMCP) -> None:
     """Add Service Dependency Graph MCP App resource.
 
@@ -257,54 +210,6 @@ def add_oncall_compensation(mcp_instance: FastMCP) -> None:
         """Oncall Compensation Report UI resource."""
         html_path = pathlib.Path(__file__).parent / "oncall_compensation_view.html"
         return html_path.read_text(encoding="utf-8")
-
-
-def add_shift_coverage_wizard(mcp_instance: FastMCP) -> None:
-    """Add Shift Coverage Wizard MCP App resource.
-
-    The UI directly calls existing MCP tools:
-    - get_user_data
-    - list_oncalls, list_schedules, list_schedule_users
-    - create_schedule_override
-
-    Args:
-        mcp_instance: The MCP server instance
-    """
-
-    @mcp_instance.tool(
-        meta={
-            "ui": {"resourceUri": SHIFT_COVERAGE_WIZARD_URI},
-            "ui/resourceUri": SHIFT_COVERAGE_WIZARD_URI,
-        }
-    )
-    def shift_coverage_wizard() -> list[TextContent]:
-        """Shift Coverage Wizard - Interactive wizard for creating schedule overrides.
-
-        Step-by-step wizard to select a date range, pick shifts to cover, choose
-        a coverage user, and confirm the override. The UI calls existing MCP tools
-        (list_oncalls, list_schedule_users, create_schedule_override, etc.) to fetch
-        and write data.
-
-        Returns:
-            Text content indicating the UI is ready
-        """
-        return [
-            TextContent(
-                type="text",
-                text="Shift Coverage Wizard UI initialized. The UI will call existing MCP tools to fetch and write data."
-            )
-        ]
-
-    @mcp_instance.resource(
-        SHIFT_COVERAGE_WIZARD_URI,
-        mime_type="text/html;profile=mcp-app",
-        description="Shift Coverage Wizard - Interactive wizard for creating schedule overrides"
-    )
-    def shift_coverage_wizard_view() -> str:
-        """Shift Coverage Wizard UI resource."""
-        html_path = pathlib.Path(__file__).parent / "shift_coverage_wizard_view.html"
-        return html_path.read_text(encoding="utf-8")
-
 
 
 def add_operations_intelligence(mcp_instance: FastMCP) -> None:
@@ -424,10 +329,8 @@ def run(*, enable_write_tools: bool = False) -> None:
 
     # Add MCP Apps
     add_incident_command_center(mcp)
-    add_oncall_schedule_visualizer(mcp)
     add_service_dependency_graph(mcp)
     add_oncall_compensation(mcp)
-    add_shift_coverage_wizard(mcp)
     add_operations_intelligence(mcp)
     add_oncall_manager(mcp)
 

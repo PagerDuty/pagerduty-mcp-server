@@ -16,6 +16,7 @@ import { ActionsDropdown } from "./components/ActionsDropdown";
 import { EscalationModal } from "./components/EscalationModal";
 import { PriorityModal } from "./components/PriorityModal";
 import { WorkflowModal } from "./components/WorkflowModal";
+import { StatusUpdateModal } from "./components/StatusUpdateModal";
 
 // Types
 interface Incident {
@@ -482,6 +483,7 @@ function IncidentCard({
   const [showEscalationModal, setShowEscalationModal] = useState(false);
   const [showPriorityModal, setShowPriorityModal] = useState(false);
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
+  const [showStatusUpdateModal, setShowStatusUpdateModal] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [isSubmittingNote, setIsSubmittingNote] = useState(false);
   const [isTriaging, setIsTriaging] = useState(false);
@@ -797,6 +799,13 @@ If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident using
           disabled={isLoading}
           actions={[
             {
+              label: "AI Status Update",
+              icon: "📢",
+              onClick: () => {
+                setShowStatusUpdateModal(true);
+              },
+            },
+            {
               label: "Add Note",
               icon: "📝",
               onClick: () => {
@@ -921,6 +930,21 @@ If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident using
             onClose={() => setShowWorkflowModal(false)}
             onStarted={() => {
               setShowWorkflowModal(false);
+              onRefresh();
+            }}
+          />
+        </div>
+      )}
+
+      {/* Status Update Modal */}
+      {showStatusUpdateModal && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <StatusUpdateModal
+            app={app}
+            incident={incident}
+            onClose={() => setShowStatusUpdateModal(false)}
+            onSubmitted={() => {
+              setShowStatusUpdateModal(false);
               onRefresh();
             }}
           />

@@ -22,7 +22,7 @@ export function createServer() {
      */
     registerAppTool(server, "operations-intelligence", {
         title: "Operations Intelligence",
-        description: "Team operational health dashboard — KPI bar, service/team/responder analytics tables, and AI-powered insights tab",
+        description: "Team operational health dashboard — KPI bar, service/team/responder analytics tables, and weekly trends charts",
         inputSchema: {},
         _meta: { ui: { resourceUri } },
     }, async (_args) => {
@@ -32,7 +32,7 @@ export function createServer() {
                     type: "text",
                     text: JSON.stringify({
                         status: "ready",
-                        message: "Operations Intelligence UI initialized. The UI calls get_incident_metrics_by_service, get_incident_metrics_by_team, get_responder_load_metrics, list_teams, and insights_agent_tool to power the Operational and Insights tabs.",
+                        message: "Operations Intelligence UI initialized. The UI calls get_incident_metrics_by_service, get_incident_metrics_by_team, get_responder_load_metrics, and list_teams to power the Operational, Team Health, and Trends tabs.",
                     }),
                 },
             ],

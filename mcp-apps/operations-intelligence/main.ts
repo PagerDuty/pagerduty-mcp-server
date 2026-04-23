@@ -8,7 +8,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import cors from "cors";
 import type { Request, Response } from "express";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { createServer } from "./server.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function startStreamableHTTPServer(
   createServerFn: () => McpServer,
@@ -17,6 +22,11 @@ async function startStreamableHTTPServer(
 
   const app = createMcpExpressApp({ host: "0.0.0.0" });
   app.use(cors());
+
+  app.get("/", (_req: Request, res: Response) => {
+    const htmlPath = path.join(__dirname, "dist", "mcp-app.html");
+    res.send(fs.readFileSync(htmlPath, "utf-8"));
+  });
 
   app.all("/mcp", async (req: Request, res: Response) => {
     const server = createServerFn();

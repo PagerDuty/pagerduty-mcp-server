@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>On-Call Manager — Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0f0f17; color: #cdd6f4; font-size: 13px; padding: 24px; min-height: 100vh; }
+  h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .page-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 20px; text-align: center; }
+  .page-sub { color: #6c7086; text-align: center; margin-bottom: 28px; font-size: 13px; }
+
+  .app-frame { max-width: 780px; margin: 0 auto; background: #1e1e2e; border-radius: 12px; overflow: hidden; border: 1px solid #313244; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+
+  /* Header */
+  .app-header { background: #181825; padding: 12px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #313244; }
+  .app-header .dot { width: 10px; height: 10px; background: #a6e3a1; border-radius: 50%; }
+  .app-header h1 { font-size: 14px; font-weight: 600; color: #cdd6f4; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid #313244; background: #181825; padding: 0 20px; }
+  .tab { padding: 10px 18px; font-size: 12px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #6c7086; transition: all 0.15s; }
+  .tab.active { color: #89b4fa; border-bottom-color: #89b4fa; }
+
+  /* My On-Calls tab */
+  .tab-content { padding: 20px; }
+
+  .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #6c7086; margin-bottom: 10px; }
+
+  /* Countdown cards */
+  .countdown-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .countdown-card { flex: 1; background: #313244; border-radius: 8px; padding: 12px 14px; border-left: 3px solid #89b4fa; }
+  .countdown-card.warning { border-left-color: #f38ba8; }
+  .countdown-card .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #89b4fa; margin-bottom: 4px; }
+  .countdown-card.warning .badge { color: #f38ba8; }
+  .countdown-card .schedule-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .countdown-card .time-range { font-size: 11px; color: #6c7086; margin-bottom: 6px; }
+  .countdown-card .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
+  .countdown-card .dot-live { width: 6px; height: 6px; background: #f38ba8; border-radius: 50%; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* 7-day timeline */
+  .timeline-grid { background: #181825; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+  .timeline-header { display: grid; grid-template-columns: 90px repeat(7, 1fr); gap: 1px; background: #313244; }
+  .timeline-header > div { background: #1e1e2e; padding: 6px 8px; font-size: 10px; color: #6c7086; text-align: center; }
+  .timeline-header > div:first-child { text-align: left; }
+  .timeline-header .today { color: #89b4fa; font-weight: 600; }
+  .timeline-row { display: grid; grid-template-columns: 90px repeat(7, 1fr); gap: 1px; background: #313244; }
+  .timeline-row > div { background: #1e1e2e; padding: 6px 8px; font-size: 11px; min-height: 36px; display: flex; align-items: center; }
+  .timeline-row .row-label { font-size: 10px; color: #6c7086; }
+  .shift-block { border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+  .shift-mine { background: #89b4fa; color: #1e1e2e; }
+  .shift-other { background: #45475a; color: #a6adc8; font-weight: 400; }
+  .shift-override { background: #cba6f7; color: #1e1e2e; }
+  .shift-span-2 { grid-column: span 2; }
+  .shift-span-3 { grid-column: span 3; }
+  .shift-span-4 { grid-column: span 4; }
+
+  /* Action row */
+  .shift-action-row { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 4px; }
+  .btn { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; }
+  .btn-primary { background: #89b4fa; color: #1e1e2e; }
+  .btn-secondary { background: #313244; color: #cdd6f4; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* ── Overrides tab mockup ── */
+  .overrides-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .override-list { display: flex; flex-direction: column; gap: 8px; }
+  .override-card { background: #313244; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .override-icon { font-size: 20px; width: 32px; text-align: center; flex-shrink: 0; }
+  .override-info { flex: 1; min-width: 0; }
+  .override-info .title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .override-info .meta { font-size: 11px; color: #6c7086; }
+  .override-info .arrow { color: #89b4fa; }
+  .override-status { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 10px; flex-shrink: 0; }
+  .status-active { background: #a6e3a122; color: #a6e3a1; }
+  .status-upcoming { background: #89b4fa22; color: #89b4fa; }
+  .override-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-icon { background: #45475a; border: none; color: #cdd6f4; border-radius: 5px; padding: 5px 8px; cursor: pointer; font-size: 12px; }
+
+  .divider { height: 1px; background: #313244; margin: 20px 0; }
+
+  .empty-hint { text-align: center; color: #6c7086; padding: 20px; font-size: 12px; }
+
+  /* Toggle between tab views for demo */
+  .demo-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+  .demo-btn { padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #313244; background: #313244; color: #6c7086; }
+  .demo-btn.active { background: #89b4fa22; color: #89b4fa; border-color: #89b4fa; }
+
+  .view { display: none; }
+  .view.visible { display: block; }
+
+  .note { background: #313244; border-radius: 6px; padding: 10px 14px; font-size: 11px; color: #a6adc8; line-height: 1.6; margin-top: 16px; border-left: 3px solid #89b4fa; }
+</style>
+</head>
+<body>
+
+<div class="page-title">On-Call Manager — Mockup</div>
+<p class="page-sub">Two-tab design: "My On-Calls" (personal view, next 7 days) + "Overrides" (team-wide override management)</p>
+
+<div class="demo-toggle">
+  <button class="demo-btn active" onclick="showTab('mycalls', this)">👁 Preview: My On-Calls tab</button>
+  <button class="demo-btn" onclick="showTab('overrides', this)">👁 Preview: Overrides tab</button>
+</div>
+
+<div class="app-frame">
+  <div class="app-header">
+    <div class="dot"></div>
+    <h1>On-Call Manager</h1>
+    <span style="margin-left:auto;font-size:11px;color:#6c7086">Sebastian Villanelo</span>
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tab-mycalls" onclick="showTab('mycalls', null)">📟 My On-Calls</div>
+    <div class="tab" id="tab-overrides" onclick="showTab('overrides', null)">🔄 Overrides</div>
+  </div>
+
+  <!-- MY ON-CALLS TAB -->
+  <div class="view visible tab-content" id="view-mycalls">
+    <div class="section-label">Your upcoming shifts — next 7 days</div>
+
+    <div class="countdown-row">
+      <div class="countdown-card warning">
+        <div class="badge">● On-call now</div>
+        <div class="schedule-name">Infra Platform</div>
+        <div class="time-range">Mon Apr 21, 9:00 AM → Wed Apr 23, 9:00 AM</div>
+        <div class="pill"><span class="dot-live"></span> 14h 22m remaining</div>
+      </div>
+      <div class="countdown-card">
+        <div class="badge">Next shift</div>
+        <div class="schedule-name">API Gateway</div>
+        <div class="time-range">Fri Apr 25, 6:00 PM → Sat Apr 26, 6:00 PM</div>
+        <div class="pill" style="color:#6c7086">in 3 days</div>
+      </div>
+    </div>
+
+    <div class="section-label">7-day schedule overview</div>
+    <div class="timeline-grid">
+      <div class="timeline-header">
+        <div>Schedule</div>
+        <div class="today">Mon 21</div>
+        <div>Tue 22</div>
+        <div>Wed 23</div>
+        <div>Thu 24</div>
+        <div>Fri 25</div>
+        <div>Sat 26</div>
+        <div>Sun 27</div>
+      </div>
+      <div class="timeline-row">
+        <div class="row-label">Infra Platform</div>
+        <div><div class="shift-block shift-mine">You</div></div>
+        <div><div class="shift-block shift-mine">You</div></div>
+        <div><div class="shift-block shift-other">Alice C.</div></div>
+        <div><div class="shift-block shift-other">Alice C.</div></div>
+        <div><div class="shift-block shift-other">Bob K.</div></div>
+        <div><div class="shift-block shift-other">Bob K.</div></div>
+        <div></div>
+      </div>
+      <div class="timeline-row">
+        <div class="row-label">API Gateway</div>
+        <div><div class="shift-block shift-other">Carlos M.</div></div>
+        <div><div class="shift-block shift-other">Carlos M.</div></div>
+        <div><div class="shift-block shift-other">Carlos M.</div></div>
+        <div></div>
+        <div><div class="shift-block shift-mine">You</div></div>
+        <div><div class="shift-block shift-mine shift-override">You (Override)</div></div>
+        <div></div>
+      </div>
+      <div class="timeline-row">
+        <div class="row-label">Security</div>
+        <div><div class="shift-block shift-other">Dana L.</div></div>
+        <div><div class="shift-block shift-other">Dana L.</div></div>
+        <div></div>
+        <div><div class="shift-block shift-other">Eve S.</div></div>
+        <div><div class="shift-block shift-other">Eve S.</div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="shift-action-row">
+      <button class="btn btn-secondary btn-sm">🔄 Find coverage for my shift</button>
+      <button class="btn btn-primary btn-sm">+ Create override</button>
+    </div>
+
+    <div class="note">
+      <strong>Your shifts</strong> are shown in blue. Click any of your shifts in the grid to get coverage options or create an override directly.
+    </div>
+  </div>
+
+  <!-- OVERRIDES TAB -->
+  <div class="view tab-content" id="view-overrides">
+    <div class="overrides-header">
+      <div>
+        <div class="section-label">Team overrides — Apr 21–27</div>
+      </div>
+      <button class="btn btn-primary btn-sm">+ New Override</button>
+    </div>
+
+    <div class="override-list">
+      <div class="override-card">
+        <div class="override-icon">🔄</div>
+        <div class="override-info">
+          <div class="title">Infra Platform — <span class="arrow">Alice C. covering You</span></div>
+          <div class="meta">Wed Apr 23, 9:00 AM → Thu Apr 24, 9:00 AM · requested by Sebastian</div>
+        </div>
+        <div class="override-status status-upcoming">Upcoming</div>
+        <div class="override-actions">
+          <button class="btn-icon" title="Edit">✏️</button>
+          <button class="btn-icon" title="Delete">🗑</button>
+        </div>
+      </div>
+
+      <div class="override-card">
+        <div class="override-icon">🔄</div>
+        <div class="override-info">
+          <div class="title">API Gateway — <span class="arrow">You covering Carlos M.</span></div>
+          <div class="meta">Sat Apr 26, 6:00 PM → Sun Apr 27, 6:00 PM · requested by Carlos</div>
+        </div>
+        <div class="override-status status-active">Active</div>
+        <div class="override-actions">
+          <button class="btn-icon" title="Edit">✏️</button>
+          <button class="btn-icon" title="Delete">🗑</button>
+        </div>
+      </div>
+
+      <div class="override-card">
+        <div class="override-icon">🔄</div>
+        <div class="override-info">
+          <div class="title">Security — <span class="arrow">Bob K. covering Dana L.</span></div>
+          <div class="meta">Mon Apr 21, 8:00 AM → Tue Apr 22, 8:00 AM · created by admin</div>
+        </div>
+        <div class="override-status status-active">Active</div>
+        <div class="override-actions">
+          <button class="btn-icon">✏️</button>
+          <button class="btn-icon">🗑</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">Create new override</div>
+    <div style="background:#181825;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:11px;color:#6c7086;margin-bottom:4px">Schedule</div>
+          <div style="background:#313244;border-radius:5px;padding:7px 10px;font-size:12px;color:#a6adc8">Select schedule ▾</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#6c7086;margin-bottom:4px">Override with user</div>
+          <div style="background:#313244;border-radius:5px;padding:7px 10px;font-size:12px;color:#a6adc8">Pick user ▾</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:11px;color:#6c7086;margin-bottom:4px">Start</div>
+          <div style="background:#313244;border-radius:5px;padding:7px 10px;font-size:12px;color:#a6adc8">Apr 21, 2026 09:00</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#6c7086;margin-bottom:4px">End</div>
+          <div style="background:#313244;border-radius:5px;padding:7px 10px;font-size:12px;color:#a6adc8">Apr 22, 2026 09:00</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-primary btn-sm">Create Override</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('visible'));
+  document.getElementById('view-' + name).classList.add('visible');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) {
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+}
+</script>
+
+</body>
+</html>

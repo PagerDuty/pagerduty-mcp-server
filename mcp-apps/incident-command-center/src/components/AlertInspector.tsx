@@ -4,6 +4,37 @@
 
 import { useState } from "react";
 
+/** Syntax-highlighted JSON viewer */
+function JsonViewer({ data }: { data: any }) {
+  const escaped = JSON.stringify(data, null, 2)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  const highlighted = escaped.replace(
+    /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    (match) => {
+      let cls = "json-number";
+      if (/^"|'/.test(match)) {
+        cls = /:$/.test(match) ? "json-key" : "json-string";
+      } else if (/true|false/.test(match)) {
+        cls = "json-boolean";
+      } else if (/null/.test(match)) {
+        cls = "json-null";
+      }
+      return `<span class="${cls}">${match}</span>`;
+    }
+  );
+
+  return (
+    <pre
+      className="json-viewer"
+      // eslint-disable-next-line react/no-danger
+      dangerouslySetInnerHTML={{ __html: highlighted }}
+    />
+  );
+}
+
 interface Alert {
   id: string;
   summary: string;
@@ -72,34 +103,7 @@ export function AlertInspector({ alerts }: AlertInspectorProps) {
             </div>
 
             <div className="alert-details-body">
-              <div className="alert-detail-section">
-                <strong>ID:</strong> {selectedAlert.id}
-              </div>
-              <div className="alert-detail-section">
-                <strong>Status:</strong> {selectedAlert.status}
-              </div>
-              <div className="alert-detail-section">
-                <strong>Created:</strong> {formatTimestamp(selectedAlert.created_at)}
-              </div>
-              {selectedAlert.severity && (
-                <div className="alert-detail-section">
-                  <strong>Severity:</strong> {selectedAlert.severity}
-                </div>
-              )}
-              <div className="alert-detail-section">
-                <strong>Summary:</strong>
-                <p>{selectedAlert.summary}</p>
-              </div>
-
-              {/* Alert body/details */}
-              {selectedAlert.body && (
-                <div className="alert-detail-section">
-                  <strong>Raw Alert Data:</strong>
-                  <pre className="alert-body">
-                    {JSON.stringify(selectedAlert.body, null, 2)}
-                  </pre>
-                </div>
-              )}
+              <JsonViewer data={selectedAlert} />
             </div>
           </div>
         )}

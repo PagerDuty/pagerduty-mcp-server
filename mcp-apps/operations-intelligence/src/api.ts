@@ -3,8 +3,6 @@
  *
  * Fetches pre-aggregated metrics from PagerDuty Analytics API tools.
  * No raw incident list — all metrics are server-side aggregated.
- *
- * Insights tab calls insights_agent_tool via app.callServerTool.
  */
 
 import type { App } from "@modelcontextprotocol/ext-apps";
@@ -74,6 +72,18 @@ export interface AggregatedMetrics {
   p95ResolveSeconds: number | null;
 }
 
+export interface TrendPoint {
+  weekStart: string;       // range_start from API, e.g. "2026-03-17"
+  totalIncidents: number;
+  mttaMinutes: number | null;
+  mttrMinutes: number | null;
+  totalInterruptions: number;
+}
+
+export interface TrendsData {
+  points: TrendPoint[];    // one entry per week, sorted ascending
+}
+
 export interface OpsData {
   teams: Team[];
   selectedTeam: string | null;
@@ -86,15 +96,11 @@ export interface OpsData {
   escalationRate: number | null;    // pct: total_escalated / total_incidents * 100
   uptimePct: number | null;
   aggregated: AggregatedMetrics | null;
+  trendsData: TrendsData | null;
   // Section data
   serviceMetrics: ServiceMetric[];
   teamMetrics: TeamMetric[];
   responderMetrics: ResponderMetric[];
-}
-
-export interface InsightMessage {
-  role: "user" | "assistant";
-  content: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -159,7 +165,7 @@ export async function fetchOpsData(
   };
   if (teamId) responderFilters["team_ids"] = [teamId];
 
-  const [teamsResult, serviceResult, teamResult, responderResult, aggregatedResult] = await Promise.allSettled([
+  const [teamsResult, serviceResult, teamResult, responderResult, aggregatedResult, trendsResult] = await Promise.allSettled([
     app.callServerTool({ name: "list_teams", arguments: { query_model: { limit: 100 } } }),
     app.callServerTool({
       name: "get_incident_metrics_by_service",
@@ -176,6 +182,10 @@ export async function fetchOpsData(
     app.callServerTool({
       name: "get_incident_metrics_all",
       arguments: { request: { filters: incidentFilters } },
+    }),
+    app.callServerTool({
+      name: "get_incident_metrics_by_team",
+      arguments: { request: { filters: incidentFilters, aggregate_unit: "week" } },
     }),
   ]);
 
@@ -251,6 +261,39 @@ export async function fetchOpsData(
     p95ResolveSeconds: aggRaw.p95_seconds_to_resolve ?? null,
   } : null;
 
+  // Trends — weekly rollup, group rows by week and sum across teams
+  const trendsRaw = trendsResult.status === "fulfilled" ? extract<any>(trendsResult.value) : null;
+  const trendsData: TrendsData | null = trendsRaw ? (() => {
+    const byWeek = new Map<string, { totalIncidents: number; mttaSum: number; mttrSum: number; intSum: number; mttaCount: number; mttrCount: number }>();
+    for (const row of (trendsRaw.response ?? [])) {
+      const week = (row.range_start ?? "").substring(0, 10);
+      if (!week) continue;
+      const existing = byWeek.get(week) ?? { totalIncidents: 0, mttaSum: 0, mttrSum: 0, intSum: 0, mttaCount: 0, mttrCount: 0 };
+      const inc = row.total_incident_count ?? 0;
+      existing.totalIncidents += inc;
+      existing.intSum += row.total_interruptions ?? 0;
+      if (row.mean_seconds_to_first_ack != null && inc > 0) {
+        existing.mttaSum += row.mean_seconds_to_first_ack * inc;
+        existing.mttaCount += inc;
+      }
+      if (row.mean_seconds_to_resolve != null && inc > 0) {
+        existing.mttrSum += row.mean_seconds_to_resolve * inc;
+        existing.mttrCount += inc;
+      }
+      byWeek.set(week, existing);
+    }
+    const points: TrendPoint[] = Array.from(byWeek.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([weekStart, v]) => ({
+        weekStart,
+        totalIncidents: v.totalIncidents,
+        mttaMinutes: v.mttaCount > 0 ? Math.round(v.mttaSum / v.mttaCount / 60) : null,
+        mttrMinutes: v.mttrCount > 0 ? Math.round(v.mttrSum / v.mttrCount / 60) : null,
+        totalInterruptions: v.intSum,
+      }));
+    return { points };
+  })() : null;
+
   // KPI summary — aggregate across all returned teams
   const totalIncidents = teamMetrics.reduce((s, t) => s + t.totalIncidents, 0);
   const totalEscalations = teamMetrics.reduce((s, t) => s + t.escalationCount, 0);
@@ -279,49 +322,10 @@ export async function fetchOpsData(
     escalationRate: totalIncidents > 0 ? Math.round((totalEscalations / totalIncidents) * 100) : null,
     uptimePct,
     aggregated,
+    trendsData,
     serviceMetrics,
     teamMetrics,
     responderMetrics,
   };
 }
 
-// ─── Insights fetch (PagerDuty Advanced MCP) ─────────────────────────────────
-
-export async function fetchInsight(
-  app: App,
-  message: string,
-  sessionId: string
-): Promise<string> {
-  if (MOCK_MODE) {
-    const { MOCK_INSIGHT_RESPONSES } = await import("./mock");
-    await new Promise((r) => setTimeout(r, 900));
-    // Match by keyword fragments that appear in the auto-generated queries
-    const keywordMap: Record<string, string> = {
-      "mtta": "MTTA & MTTR Trends",
-      "mttr": "MTTA & MTTR Trends",
-      "noisiest": "Noisiest Services",
-      "highest incident volume": "Noisiest Services",
-      "escalation": "Team & Responder Load",
-      "responder load": "Team & Responder Load",
-    };
-    const lc = message.toLowerCase();
-    const matchedTitle = Object.entries(keywordMap).find(([kw]) => lc.includes(kw))?.[1];
-    return matchedTitle
-      ? MOCK_INSIGHT_RESPONSES[matchedTitle] ?? "Mock insight: analysis complete for the selected period."
-      : "Mock insight: analysis complete for the selected period.";
-  }
-  try {
-    const result = await app.callServerTool({
-      name: "insights_agent_tool",
-      arguments: { message, session_id: sessionId },
-    });
-    const data = extract<{ message: string }>(result);
-    return data?.message ?? "";
-  } catch (err: any) {
-    const msg = String(err?.message ?? err ?? "");
-    if (msg.includes("not found") || msg.includes("unknown tool") || msg.includes("insights_agent_tool")) {
-      throw new Error("insights_agent_tool is not available. Connect the pagerduty-advance-mcp-server to enable AI insights.");
-    }
-    throw err;
-  }
-}

@@ -49,6 +49,7 @@ from .incidents import (
     add_note_to_incident,
     add_responders,
     create_incident,
+    create_incident_status_update,
     get_incident,
     get_outlier_incident,
     get_past_incidents,
@@ -189,6 +190,7 @@ write_tools = [
     delete_alert_grouping_setting,
     # Incidents
     create_incident,
+    create_incident_status_update,
     manage_incidents,
     add_responders,
     add_note_to_incident,

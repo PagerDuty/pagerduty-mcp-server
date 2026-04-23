@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Any
 
@@ -252,6 +253,27 @@ def add_note_to_incident(incident_id: str, note: str) -> str:
         json={"note": {"content": note}},
     )
     return IncidentNote.model_validate(response).model_dump_json()
+
+
+def create_incident_status_update(incident_id: str, message: str) -> str:
+    """Create a status update on an incident.
+
+    Posts a status update message to an incident, notifying subscribers and
+    stakeholders of the current state. The message appears in the incident
+    timeline and is sent to notification subscribers.
+
+    Args:
+        incident_id: The ID of the incident to post the status update to
+        message: The status update message text
+
+    Returns:
+        JSON string of the created status update
+    """
+    response = get_client().rpost(
+        f"/incidents/{incident_id}/status_updates",
+        json={"message": message},
+    )
+    return json.dumps(response)
 
 
 def get_outlier_incident(incident_id: str, query_model: OutlierIncidentQuery) -> str:

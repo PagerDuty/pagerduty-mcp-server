@@ -157,6 +157,7 @@ const config = {
               { label: 'Developer Docs', href: 'https://developer.pagerduty.com' },
               { label: 'API Reference', href: 'https://developer.pagerduty.com/api-reference' },
               { label: 'PagerDuty.com', href: 'https://www.pagerduty.com' },
+              { label: 'Knowledge Base', href: 'https://support.pagerduty.com' },
             ],
           },
         ],

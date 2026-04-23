@@ -1,0 +1,39 @@
+{
+  "name": "@pagerduty/oncall-manager",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "On-Call Manager — personal schedule view and override management",
+  "scripts": {
+    "build": "tsc --noEmit && tsc -p tsconfig.server.json && cross-env INPUT=mcp-app.html vite build",
+    "start": "concurrently \"cross-env NODE_ENV=development INPUT=mcp-app.html vite build --watch\" \"tsx watch main.ts\"",
+    "dev:mock": "cross-env VITE_MOCK=true NODE_ENV=development vite",
+    "serve": "npm run build && node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "PORT=5174 APP_NAME=oncall-manager SCREENSHOT_DIR=/tmp/pw-screenshots npx playwright test pw-test.spec.mjs --browser=chromium"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.3.2",
+    "@modelcontextprotocol/sdk": "^1.24.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "preact": "^10.29.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.0",
+    "@types/node": "22.19.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

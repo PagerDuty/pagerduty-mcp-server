@@ -1,0 +1,218 @@
+version: "1"
+description: "PagerDuty MCP — strict policy. Default deny. Only read tools are allowed unless explicitly opted in."
+default: deny
+
+tools:
+  # Read-only tools — explicitly allowed
+  get_alert_grouping_setting:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_alert_grouping_settings:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_change_event:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_change_events:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_incident_change_events:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_service_change_events:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_event_orchestration:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_event_orchestration_global:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_event_orchestration_router:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_event_orchestration_service:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_event_orchestrations:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_escalation_policies:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_escalation_policy:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_alert_from_incident:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_incident:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_outlier_incident:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_past_incidents:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_related_incidents:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_alerts_from_incident:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_incident_notes:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_incidents:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_incident_workflow:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_incident_workflows:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_log_entry:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_log_entries:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_team:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_team_members:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_teams:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_user_data:
+    rules:
+      - action: allow
+        rate_limit: "10/minute"
+
+  list_users:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_oncalls:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_schedule:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_schedule_users:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_schedules:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_service:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_services:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  get_status_page_post:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_status_page_impacts:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_status_page_post_updates:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_status_page_severities:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_status_page_statuses:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  list_status_pages:
+    rules:
+      - action: allow
+        rate_limit: "30/minute"
+
+  # Everything else blocked by default: deny
+  # To allow writes, copy rules from recommended.yaml

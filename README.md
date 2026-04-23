@@ -333,6 +333,50 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | list_status_pages        | Status Pages       | Lists all status pages with optional filtering      | ✅         |
 
 
+## Tool-level policy enforcement
+
+By default, the MCP server uses the `--enable-write-tools` flag to control whether write operations are available. For more granular control — rate limiting, daily caps, and blocking specific operations — you can wrap the server with [PolicyLayer Intercept](https://github.com/policylayer/intercept), an open-source MCP proxy.
+
+Three policy presets are included in [`/policies`](/policies):
+
+| Policy | Description |
+|--------|-------------|
+| `recommended.yaml` | Rate limits on incident management, daily caps on destructive ops, reads allowed freely |
+| `strict.yaml` | Default deny — only read tools allowed unless explicitly opted in |
+| `permissive.yaml` | Everything allowed, rate limits on acknowledge, resolve, and incident creation |
+
+### Usage
+
+```sh
+npx -y @policylayer/intercept \
+  --policy policies/recommended.yaml \
+  -- uvx pagerduty-mcp --enable-write-tools
+```
+
+Or in your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "pagerduty-mcp": {
+      "command": "npx",
+      "args": [
+        "-y", "@policylayer/intercept",
+        "--policy", "policies/recommended.yaml",
+        "--", "uvx", "pagerduty-mcp",
+        "--enable-write-tools"
+      ],
+      "env": {
+        "PAGERDUTY_USER_API_KEY": "<your-api-key>"
+      }
+    }
+  }
+}
+```
+
+Policies are YAML files you can customise. See the [Intercept docs](https://github.com/policylayer/intercept) for the full reference.
+
+
 ## Support
 
 PagerDuty's MCP server is an open-source project, and as such, we offer only community-based support. If assistance is required, please open an issue in [GitHub](https://github.com/pagerduty/pagerduty-mcp-server) or [PagerDuty's community forum](https://community.pagerduty.com/).

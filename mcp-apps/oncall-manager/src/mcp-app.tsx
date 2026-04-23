@@ -1,4 +1,4 @@
-import { useApp } from "@modelcontextprotocol/ext-apps";
+import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import { useEffect, useState } from "react";
 import { fetchAllOnCalls, fetchCurrentUser, fetchSchedules, fetchUserShifts } from "./api";
 import type { CurrentUser, OnCallShift, Override, Schedule } from "./api";
@@ -10,7 +10,10 @@ const MOCK_MODE = import.meta.env.VITE_MOCK === "true";
 type Tab = "myoncalls" | "overrides";
 
 function App() {
-  const app = useApp();
+  const { app, error: connectionError } = useApp({
+    appInfo: { name: "On-Call Manager", version: "1.0.0" },
+    capabilities: {},
+  });
 
   const [tab, setTab] = useState<Tab>("myoncalls");
   const [loading, setLoading] = useState(true);
@@ -62,7 +65,7 @@ function App() {
     return (
       <div className="app">
         <div className="empty-state" style={{ marginTop: 80 }}>
-          Waiting for MCP connection…
+          {connectionError ? `Connection error: ${connectionError.message}` : "Waiting for MCP connection…"}
         </div>
       </div>
     );

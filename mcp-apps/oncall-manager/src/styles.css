@@ -1,0 +1,354 @@
+/* ─── Reset & base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --base: #1e1e2e;
+  --mantle: #181825;
+  --crust: #11111b;
+  --surface0: #313244;
+  --surface1: #45475a;
+  --surface2: #585b70;
+  --overlay0: #6c7086;
+  --overlay1: #7f849c;
+  --text: #cdd6f4;
+  --subtext0: #a6adc8;
+  --subtext1: #bac2de;
+  --blue: #89b4fa;
+  --mauve: #cba6f7;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --red: #f38ba8;
+  --peach: #fab387;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--base);
+}
+
+body { background: var(--base); min-height: 100vh; }
+#root { min-height: 100vh; }
+
+/* ─── App shell ─── */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+.app-header {
+  background: var(--mantle);
+  border-bottom: 1px solid var(--surface0);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-header .dot { color: var(--green); font-size: 14px; }
+.app-header h1 { font-size: 14px; font-weight: 600; }
+
+/* ─── Tabs ─── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.tab-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--overlay0);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.tab-btn:hover { background: var(--surface0); color: var(--text); }
+.tab-btn.active { background: var(--blue); color: var(--mantle); font-weight: 600; }
+
+/* ─── Tab content ─── */
+.tab-content { flex: 1; padding: 16px; overflow-y: auto; }
+
+/* ─── Section headings ─── */
+.section-heading {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--overlay1);
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+.section-heading:first-child { margin-top: 0; }
+
+/* ─── Countdown cards ─── */
+.countdown-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.countdown-card {
+  flex: 1;
+  min-width: 160px;
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.countdown-card.active-now { border-color: var(--green); }
+.countdown-card.upcoming { border-color: var(--blue); }
+.countdown-card .label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.countdown-card.active-now .label { color: var(--green); }
+.countdown-card.upcoming .label { color: var(--blue); }
+.countdown-card .schedule-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.countdown-card .time-detail { font-size: 11px; color: var(--overlay0); margin-bottom: 10px; }
+.countdown-card .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ─── 7-day schedule grid ─── */
+.schedule-grid { overflow-x: auto; }
+.grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.grid-table th {
+  background: var(--mantle);
+  color: var(--overlay0);
+  font-weight: 500;
+  padding: 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--surface0);
+  white-space: nowrap;
+}
+.grid-table th:first-child { text-align: left; min-width: 130px; }
+.grid-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--surface0);
+  text-align: center;
+  vertical-align: middle;
+  min-width: 0;
+  width: 100%;
+}
+.grid-table td:first-child { text-align: left; color: var(--subtext1); white-space: nowrap; }
+.grid-table tr:last-child td { border-bottom: none; }
+
+.shift-block {
+  display: inline-block;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  min-width: 0;
+  width: 100%;
+}
+.shift-block.mine { background: var(--blue); color: var(--mantle); }
+.shift-block.other { background: var(--surface1); color: var(--subtext0); }
+.shift-block.override { background: var(--mauve); color: var(--mantle); }
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--blue); color: var(--mantle); }
+.btn-secondary { background: var(--surface0); color: var(--text); }
+.btn-danger { background: var(--red); color: var(--mantle); }
+.btn-ghost { background: transparent; color: var(--blue); padding: 3px 6px; }
+.btn-ghost:hover { background: var(--surface0); }
+.btn-sm { font-size: 10px; padding: 3px 7px; }
+
+/* ─── Override list ─── */
+.override-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.override-row {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.override-row .or-schedule { font-size: 10px; color: var(--overlay0); margin-bottom: 2px; }
+.override-row .or-user { font-weight: 600; font-size: 12px; }
+.override-row .or-dates { font-size: 10px; color: var(--overlay0); }
+.override-row .or-actions { margin-left: auto; display: flex; gap: 6px; }
+
+/* ─── Create override form ─── */
+.create-override-form {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.form-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+.form-field label { font-size: 10px; color: var(--overlay0); font-weight: 500; }
+.form-field select,
+.form-field input[type="datetime-local"] {
+  background: var(--surface0);
+  border: 1px solid var(--surface1);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 5px 8px;
+  font-size: 12px;
+  width: 100%;
+}
+.form-field select:focus,
+.form-field input:focus { outline: 1px solid var(--blue); border-color: var(--blue); }
+
+/* ─── Coverage wizard overlay ─── */
+.wizard-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 27, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.wizard-dialog {
+  background: var(--base);
+  border: 1px solid var(--surface1);
+  border-radius: 10px;
+  width: min(500px, 95vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.wizard-header {
+  background: var(--mantle);
+  border-bottom: 1px solid var(--surface0);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wizard-header h3 { font-size: 13px; font-weight: 600; flex: 1; }
+.wizard-close { background: transparent; border: none; color: var(--overlay0); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; }
+.wizard-close:hover { background: var(--surface0); color: var(--text); }
+
+.wizard-steps {
+  display: flex;
+  gap: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--surface0);
+  background: var(--mantle);
+}
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--overlay0);
+}
+.wizard-step.active { color: var(--blue); font-weight: 600; }
+.wizard-step.done { color: var(--green); }
+.wizard-step-num {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+}
+.wizard-step.active .wizard-step-num { background: var(--blue); color: var(--mantle); }
+.wizard-step.done .wizard-step-num { background: var(--green); color: var(--mantle); }
+.wizard-step-sep { color: var(--surface1); margin: 0 6px; font-size: 10px; }
+
+.wizard-body { padding: 16px; overflow-y: auto; flex: 1; }
+.wizard-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--surface0);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--mantle);
+}
+
+/* ─── Shift picker (wizard step 1) ─── */
+.shift-list { display: flex; flex-direction: column; gap: 6px; }
+.shift-option {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.shift-option:hover { border-color: var(--blue); }
+.shift-option.selected { border-color: var(--blue); background: rgba(137, 180, 250, 0.1); }
+.shift-option .shift-sched { font-size: 10px; color: var(--overlay0); margin-bottom: 2px; }
+.shift-option .shift-dates { font-size: 12px; font-weight: 500; }
+
+/* ─── User picker (wizard step 2) ─── */
+.user-search {
+  background: var(--surface0);
+  border: 1px solid var(--surface1);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 12px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+.user-search:focus { outline: 1px solid var(--blue); border-color: var(--blue); }
+.user-list { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+.user-option {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.user-option:hover { border-color: var(--blue); }
+.user-option.selected { border-color: var(--blue); background: rgba(137, 180, 250, 0.1); }
+.user-option .user-name { font-weight: 600; font-size: 12px; }
+.user-option .user-email { font-size: 10px; color: var(--overlay0); }
+
+/* ─── Confirm step (wizard step 3) ─── */
+.confirm-card {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.confirm-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+.confirm-row .label { color: var(--overlay0); }
+.confirm-row .value { font-weight: 500; }
+
+/* ─── Empty / error / loading ─── */
+.empty-state { text-align: center; color: var(--overlay0); padding: 32px 16px; font-size: 12px; }
+.error-banner { background: rgba(243, 139, 168, 0.15); border: 1px solid var(--red); color: var(--red); border-radius: 6px; padding: 8px 12px; font-size: 12px; margin-bottom: 12px; }
+.loading-row { display: flex; align-items: center; gap: 8px; color: var(--overlay0); font-size: 12px; padding: 8px 0; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--surface1);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}

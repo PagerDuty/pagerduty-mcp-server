@@ -23,13 +23,12 @@ from .change_events import (
     list_service_change_events,
 )
 
-# Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
-    # create_escalation_policy,
+    create_escalation_policy,
+    delete_escalation_policy,
     get_escalation_policy,
-    # get_escalation_policy_on_call,
-    # get_escalation_policy_services,
     list_escalation_policies,
+    update_escalation_policy,
 )
 from .event_orchestrations import (
     append_event_orchestration_router_rule,
@@ -68,7 +67,9 @@ from .priorities import list_priorities
 from .schedules import (
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     get_schedule,
+    list_schedule_overrides,
     list_schedule_users,
     list_schedules,
     update_schedule,
@@ -151,6 +152,7 @@ read_tools = [
     list_schedules,
     get_schedule,
     list_schedule_users,
+    list_schedule_overrides,
     # Analytics
     get_incident_metrics_by_service,
     get_incident_metrics_by_team,
@@ -208,7 +210,12 @@ write_tools = [
     # Schedules
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     update_schedule,
+    # Escalation Policies
+    create_escalation_policy,
+    update_escalation_policy,
+    delete_escalation_policy,
     # Event Orchestrations
     update_event_orchestration_router,
     append_event_orchestration_router_rule,

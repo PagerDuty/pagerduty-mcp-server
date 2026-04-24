@@ -56,7 +56,7 @@ function shiftsOnDay(shifts: OnCallShift[], scheduleId: string, day: Date): OnCa
   );
 }
 
-export function MyOnCalls({ app, currentUser, myShifts, allShifts, schedules, onOverrideCreated, onClose }: Props) {
+export function MyOnCalls({ app, currentUser: _currentUser, myShifts, allShifts, schedules, onOverrideCreated, onClose }: Props) {
   const [wizardShift, setWizardShift] = useState<OnCallShift | undefined>(undefined);
   const [showWizard, setShowWizard] = useState(false);
 

@@ -83,7 +83,13 @@ def list_schedule_overrides(schedule_id: str, since: str, until: str) -> str:
         f"/schedules/{schedule_id}/overrides",
         params={"since": since, "until": until},
     )
-    overrides = response.get("overrides", []) if isinstance(response, dict) else []
+    # pdpyras may return a list or {"overrides": [...]}
+    if isinstance(response, list):
+        overrides = response
+    elif isinstance(response, dict):
+        overrides = response.get("overrides", [])
+    else:
+        overrides = []
     return json.dumps({"overrides": overrides})
 
 

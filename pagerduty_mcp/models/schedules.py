@@ -147,6 +147,7 @@ class ScheduleLayerRestriction(BaseModel):
 
 
 class ScheduleLayerCreate(BaseModel):
+    id: str | None = Field(default=None, description="The ID of the layer (required when updating an existing layer)")
     name: str = Field(description="The name of the schedule layer")
     start: datetime = Field(description="The start time of this layer")
     end: datetime | None = Field(

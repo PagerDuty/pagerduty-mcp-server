@@ -185,6 +185,7 @@ export async function saveScheduleDetail(
           description: scheduleDetail.description,
           type: "schedule",
           schedule_layers: scheduleDetail.layers.map((l) => ({
+            id: l.id,
             name: l.name,
             start: l.start,
             end: l.end ?? undefined,

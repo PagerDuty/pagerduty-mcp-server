@@ -44,21 +44,30 @@ export interface TeamMetric {
   meanEngagedMinutes: number | null;
 }
 
+export interface OncallShift {
+  userId: string;
+  start: number; // UTC ms
+  end: number;   // UTC ms
+}
+
 export interface ResponderMetric {
   id: string;
   name: string;
   teamName: string | null;
+  teamIds: string[];
   onCallHours: number;              // total_seconds_on_call / 3600
+  onCallHoursL1: number;            // total_seconds_on_call_level_1 / 3600
+  onCallHoursL2Plus: number;        // total_seconds_on_call_level_2_plus / 3600
   totalIncidents: number;
   totalAcks: number;
   sleepInterruptions: number;
   engagedMinutes: number | null;    // total_engaged_seconds / 60
-  // New fatigue fields
   totalInterruptions: number;
   businessHourInterruptions: number;
   offHourInterruptions: number;
   meanEngagedMinutes: number | null; // mean_engaged_seconds / 60
   riskLevel: "high" | "medium" | "low";
+  oncallShifts: OncallShift[];      // raw shift windows for outside-hours computation
 }
 
 export interface AggregatedMetrics {
@@ -165,7 +174,7 @@ export async function fetchOpsData(
   };
   if (teamId) responderFilters["team_ids"] = [teamId];
 
-  const [teamsResult, serviceResult, teamResult, responderResult, aggregatedResult, trendsResult] = await Promise.allSettled([
+  const [teamsResult, serviceResult, teamResult, responderResult, aggregatedResult, trendsResult, oncallsResult] = await Promise.allSettled([
     app.callServerTool({ name: "list_teams", arguments: { query_model: { limit: 100 } } }),
     app.callServerTool({
       name: "get_incident_metrics_by_service",
@@ -176,7 +185,7 @@ export async function fetchOpsData(
       arguments: { request: { filters: incidentFilters } },
     }),
     app.callServerTool({
-      name: "get_responder_load_metrics",
+      name: "get_responder_metrics",
       arguments: { request: { filters: responderFilters } },
     }),
     app.callServerTool({
@@ -186,6 +195,10 @@ export async function fetchOpsData(
     app.callServerTool({
       name: "get_incident_metrics_by_team",
       arguments: { request: { filters: incidentFilters, aggregate_unit: "week" } },
+    }),
+    app.callServerTool({
+      name: "list_oncalls",
+      arguments: { query_model: { since, until, earliest: false, limit: 100 } },
     }),
   ]);
 
@@ -226,25 +239,86 @@ export async function fetchOpsData(
     meanEngagedMinutes: secToMin(t.mean_engaged_seconds),
   }));
 
-  // Responder metrics
+  // Build per-user oncall shifts from list_oncalls (clamped to [since, until])
+  const oncallsData = oncallsResult.status === "fulfilled" ? extract<any>(oncallsResult.value) : null;
+  const sinceMs = new Date(since).getTime();
+  const untilMs = new Date(until).getTime();
+  const userShifts = new Map<string, OncallShift[]>();
+  for (const entry of (oncallsData?.response ?? [])) {
+    const userId: string | undefined = entry.user?.id;
+    if (!userId) continue;
+    const rawStart = entry.start ? new Date(entry.start).getTime() : sinceMs;
+    const rawEnd = entry.end ? new Date(entry.end).getTime() : untilMs;
+    const s = Math.max(rawStart, sinceMs);
+    const e = Math.min(rawEnd, untilMs);
+    if (s >= e) continue;
+    if (!userShifts.has(userId)) userShifts.set(userId, []);
+    userShifts.get(userId)!.push({ userId, start: s, end: e });
+  }
+
+  // Responder metrics — get_responder_metrics returns one row per user+team.
+  // Merge all team rows for the same user (max hours, sum interruptions/incidents).
   const respData = responderResult.status === "fulfilled" ? extract<any>(responderResult.value) : null;
-  const responderMetrics: ResponderMetric[] = (respData?.response ?? []).map((r: any) => {
-    const sleepInt = r.total_sleep_hour_interruptions ?? 0;
-    const engMin = secToMin(r.total_engaged_seconds);
+  const mergedMap = new Map<string, {
+    id: string; name: string; teamName: string | null; teamIds: string[];
+    onCallHours: number; onCallHoursL1: number; onCallHoursL2Plus: number;
+    totalIncidents: number; totalAcks: number; sleepInterruptions: number;
+    engagedMinutes: number | null; totalInterruptions: number;
+    businessHourInterruptions: number; offHourInterruptions: number;
+    meanEngagedMinutes: number | null;
+  }>();
+
+  for (const r of (respData?.response ?? [])) {
+    const userId: string = String(r.responder_id ?? "");
+    if (!userId) continue;
+    const onCallHours = secToHours(r.total_seconds_on_call);
+    const onCallHoursL1 = secToHours(r.total_seconds_on_call_level_1);
+    const onCallHoursL2Plus = secToHours(r.total_seconds_on_call_level_2_plus);
+    const teamId: string | undefined = r.team_id ?? undefined;
+    const teamName: string | undefined = r.team_name ?? undefined;
+
+    const existing = mergedMap.get(userId);
+    if (existing) {
+      existing.onCallHours = Math.max(existing.onCallHours, onCallHours);
+      existing.onCallHoursL1 = Math.max(existing.onCallHoursL1, onCallHoursL1);
+      existing.onCallHoursL2Plus = Math.max(existing.onCallHoursL2Plus, onCallHoursL2Plus);
+      existing.totalInterruptions += r.total_interruptions ?? 0;
+      existing.businessHourInterruptions += r.total_business_hour_interruptions ?? 0;
+      existing.offHourInterruptions += r.total_off_hour_interruptions ?? 0;
+      existing.sleepInterruptions += r.total_sleep_hour_interruptions ?? 0;
+      existing.totalIncidents += r.total_incident_count ?? 0;
+      existing.totalAcks += r.total_incidents_acknowledged ?? 0;
+      if (teamId && !existing.teamIds.includes(teamId)) existing.teamIds.push(teamId);
+      if (teamName && !existing.teamName?.includes(teamName)) {
+        existing.teamName = existing.teamName ? `${existing.teamName}, ${teamName}` : teamName;
+      }
+    } else {
+      mergedMap.set(userId, {
+        id: userId,
+        name: r.responder_name ?? "Unknown",
+        teamName: teamName ?? null,
+        teamIds: teamId ? [teamId] : [],
+        onCallHours,
+        onCallHoursL1,
+        onCallHoursL2Plus,
+        totalIncidents: r.total_incident_count ?? 0,
+        totalAcks: r.total_incidents_acknowledged ?? 0,
+        sleepInterruptions: r.total_sleep_hour_interruptions ?? 0,
+        engagedMinutes: secToMin(r.total_engaged_seconds),
+        totalInterruptions: r.total_interruptions ?? 0,
+        businessHourInterruptions: r.total_business_hour_interruptions ?? 0,
+        offHourInterruptions: r.total_off_hour_interruptions ?? 0,
+        meanEngagedMinutes: secToMin(r.mean_engaged_seconds),
+      });
+    }
+  }
+
+  const responderMetrics: ResponderMetric[] = Array.from(mergedMap.values()).map((r) => {
+    const riskLevel = computeRisk(r.sleepInterruptions, r.engagedMinutes);
     return {
-      id: r.responder_id ?? "",
-      name: r.responder_name ?? "Unknown",
-      teamName: r.team_name ?? null,
-      onCallHours: secToHours(r.total_seconds_on_call),
-      totalIncidents: r.total_incident_count ?? 0,
-      totalAcks: r.total_incidents_acknowledged ?? 0,
-      sleepInterruptions: sleepInt,
-      engagedMinutes: secToMin(r.total_engaged_seconds),
-      totalInterruptions: r.total_interruptions ?? 0,
-      businessHourInterruptions: r.total_business_hour_interruptions ?? 0,
-      offHourInterruptions: r.total_off_hour_interruptions ?? 0,
-      meanEngagedMinutes: secToMin(r.mean_engaged_seconds),
-      riskLevel: computeRisk(sleepInt, engMin),
+      ...r,
+      riskLevel,
+      oncallShifts: userShifts.get(r.id) ?? [],
     };
   });
 

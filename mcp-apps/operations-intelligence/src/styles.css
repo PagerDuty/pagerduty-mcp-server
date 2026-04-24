@@ -429,6 +429,57 @@ body {
 .comp-page { display: flex; flex-direction: column; }
 .comp-empty { padding: 40px 20px; text-align: center; color: var(--text-3); font-size: 14px; }
 
+.comp-table { font-size: 12px; }
+
+/* Business hours config bar */
+.comp-bh-bar {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.comp-bh-toggle {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 8px 20px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  color: var(--text-3); text-align: left;
+  text-transform: uppercase; letter-spacing: .07em;
+}
+.comp-bh-toggle:hover { background: var(--surface-2); color: var(--text-2); }
+.comp-bh-summary {
+  font-size: 10px; color: var(--green); font-weight: 600;
+  background: var(--green-dim); padding: 2px 8px; border-radius: 100px;
+  text-transform: none; letter-spacing: 0;
+}
+.comp-bh-chevron { margin-left: auto; font-size: 9px; color: var(--text-3); }
+
+.comp-bh-panel {
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.comp-bh-row {
+  display: flex; align-items: center; gap: 12px;
+}
+.comp-bh-row--top { align-items: flex-start; }
+.comp-bh-label {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  color: var(--text-3); text-transform: uppercase; letter-spacing: .07em;
+  min-width: 100px;
+}
+.comp-bh-fields { display: flex; align-items: center; gap: 8px; }
+.comp-bh-fields--col { flex-direction: column; align-items: flex-start; gap: 4px; }
+.comp-bh-sep { font-size: 11px; color: var(--text-3); }
+.comp-bh-textarea {
+  width: 280px; padding: 6px 10px;
+  border: 1px solid var(--border-2); border-radius: 7px;
+  background: var(--surface); color: var(--text-1);
+  font-family: var(--font-mono); font-size: 11px;
+  resize: vertical; min-height: 60px;
+}
+.comp-bh-textarea:focus { outline: none; border-color: var(--green); }
+.comp-bh-hint { font-size: 10px; color: var(--text-3); font-family: var(--font-body); }
+
 /* ── States ── */
 .loading, .empty-state, .error-state {
   text-align: center; padding: 40px 20px; color: var(--text-2);

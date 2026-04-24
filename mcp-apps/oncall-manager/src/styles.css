@@ -99,14 +99,16 @@ body { background: var(--base); min-height: 100vh; }
   inset: 0;
   background: rgba(17,17,27,0.85);
   display: flex;
-  align-items: stretch;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
   z-index: 50;
 }
 .modal-panel {
   background: var(--base);
-  border-left: 1px solid var(--surface0);
-  width: min(680px, 100vw);
+  border: 1px solid var(--surface0);
+  border-radius: 10px;
+  width: min(680px, 95vw);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;

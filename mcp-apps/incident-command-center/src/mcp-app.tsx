@@ -17,6 +17,7 @@ import { EscalationModal } from "./components/EscalationModal";
 import { PriorityModal } from "./components/PriorityModal";
 import { WorkflowModal } from "./components/WorkflowModal";
 import { StatusUpdateModal } from "./components/StatusUpdateModal";
+import { SreAgentModal } from "./components/SreAgentModal";
 
 // Types
 interface Incident {
@@ -322,6 +323,12 @@ function IncidentDashboard({
 
   console.log("[IncidentDashboard] Rendering dashboard with", data.incidents.length, "incidents");
 
+  const stats = {
+    triggered: (data.incidents || []).filter(i => i.status === "triggered").length,
+    acknowledged: (data.incidents || []).filter(i => i.status === "acknowledged").length,
+    resolved: (data.incidents || []).filter(i => i.status === "resolved").length,
+  };
+
   return (
     <main
       className="dashboard"
@@ -335,21 +342,8 @@ function IncidentDashboard({
       {/* Header */}
       <header className="dashboard-header">
         <div className="header-title-row">
-          <PagerDutyLogo size={36} />
+          <PagerDutyLogo size={28} />
           <h1>Incident Command Center</h1>
-        </div>
-        <div className="header-meta">
-          <span className="incident-count">
-            {filteredIncidents.length === data.incidents.length
-              ? `${data.incidents.length} Active Incidents`
-              : `${filteredIncidents.length} of ${data.incidents.length} Incidents`}
-          </span>
-          <span className="last-update">
-            Updated: {formatTimestamp(data.metadata.timestamp)}
-          </span>
-          {data.filters.auto_refresh && (
-            <span className="auto-refresh">🔄 Auto-refresh ON</span>
-          )}
           <button
             className="btn-expand"
             onClick={async () => {
@@ -360,6 +354,36 @@ function IncidentDashboard({
           >
             {hostContext?.displayMode === "fullscreen" ? "⤡" : "⤢"}
           </button>
+        </div>
+
+        {/* Stats Bar */}
+        <div className="stats-bar">
+          <div className="stat-pill triggered">
+            <span className="stat-number">{stats.triggered}</span>
+            <span>Triggered</span>
+          </div>
+          <div className="stat-pill acknowledged">
+            <span className="stat-number">{stats.acknowledged}</span>
+            <span>Acknowledged</span>
+          </div>
+          <div className="stat-pill resolved">
+            <span className="stat-number">{stats.resolved}</span>
+            <span>Resolved</span>
+          </div>
+        </div>
+
+        <div className="header-meta">
+          <span className="incident-count">
+            {filteredIncidents.length === data.incidents.length
+              ? `${data.incidents.length} incidents`
+              : `${filteredIncidents.length} / ${data.incidents.length} incidents`}
+          </span>
+          <span className="last-update">
+            last sync {formatTimestamp(data.metadata.timestamp)}
+          </span>
+          {data.filters.auto_refresh && (
+            <span className="auto-refresh">live</span>
+          )}
         </div>
         {/* Search and Filters */}
         <div className="header-controls">
@@ -487,7 +511,7 @@ function IncidentCard({
   const [noteText, setNoteText] = useState("");
   const [isSubmittingNote, setIsSubmittingNote] = useState(false);
   const [isTriaging, setIsTriaging] = useState(false);
-  const [isTriagingAdvance, setIsTriagingAdvance] = useState(false);
+  const [showSreModal, setShowSreModal] = useState(false);
 
   /**
    * Parse runbook URLs from incident description or metadata
@@ -616,118 +640,27 @@ ${runbookUrls.length > 0 ? runbookUrls.map(url => `- ${url}`).join('\n') : 'No r
   };
 
   /**
-   * Triage incident using PagerDuty Advance MCP server
+   * Open the SRE Agent modal — calls sre_agent_tool directly on pagerduty-advance-mcp-server.
    */
-  const handleTriageWithAdvance = async (e: React.MouseEvent) => {
+  const handleTriageWithAdvance = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsTriagingAdvance(true);
-
-    try {
-      // Fetch full incident details
-      const details = await fetchIncidentDetails(app, incident.id);
-      if (!details) {
-        throw new Error("Failed to fetch incident details");
-      }
-
-      const fullIncident = details.incident;
-      const alerts = details.alerts || [];
-      const notes = details.notes || [];
-      const runbookUrls = parseRunbookUrls(fullIncident);
-
-      // Format incident details as markdown for the model
-      const markdown = `# PagerDuty Incident #${fullIncident.incident_number}
-
-## Summary
-**Status:** ${fullIncident.status}
-**Urgency:** ${fullIncident.urgency}
-**Priority:** ${fullIncident.priority?.summary || 'None'}
-**Service:** ${fullIncident.service?.summary || 'Unknown'}
-**Assigned to:** ${fullIncident.assignments?.[0]?.assignee?.summary || 'Unassigned'}
-**Created:** ${fullIncident.created_at}
-
-## Description
-${fullIncident.title}
-
-${fullIncident.description || 'No description provided'}
-
-## Full Incident Payload
-\`\`\`json
-${JSON.stringify(fullIncident, null, 2)}
-\`\`\`
-
-## Alerts (${alerts.length})
-${alerts.map((alert: any, idx: number) => `
-### Alert ${idx + 1}: ${alert.summary}
-- **Status:** ${alert.status}
-- **Severity:** ${alert.severity || 'unknown'}
-- **Created:** ${alert.created_at}
-
-**Full Alert Payload:**
-\`\`\`json
-${JSON.stringify(alert, null, 2)}
-\`\`\`
-`).join('\n')}
-
-## Recent Notes (${notes.length})
-${notes.slice(0, 5).map((note: any) => `
-- **${note.user?.summary || 'Unknown'}** (${note.created_at}): ${note.content}
-`).join('\n')}
-
-## Runbook Links
-${runbookUrls.length > 0 ? runbookUrls.map(url => `- ${url}`).join('\n') : 'No runbook links found'}
-
----
-**Action needed:** Please triage this incident using PagerDuty Advance. Check if the PagerDuty Advance MCP server is available and use its tools to analyze and triage this incident. The incident ID is: ${fullIncident.id}`;
-
-      // Send to model context
-      await app.updateModelContext({
-        content: [
-          {
-            type: "text",
-            text: markdown,
-          },
-        ],
-      });
-
-      console.log("[IncidentCard] Incident context sent to model for PD Advance triage");
-
-      // Send a trigger message to activate PD Advance triage
-      await app.sendMessage({
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `If the \`pagerduty-advance-mcp-server\` is available as an MCP tool, use its \`sre_agent_tool\` with incident_id: ${fullIncident.id} to triage this incident.
-
-If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident using the following two-step sequence:
-
-"triage ${fullIncident.id} and search logs"`,
-          },
-        ],
-      });
-
-      console.log("[IncidentCard] Incident sent for PD Advance triage successfully");
-    } catch (err) {
-      console.error("[IncidentCard] Failed to triage with PD Advance:", err);
-      alert("Failed to triage with PD Advance. Please try again.");
-    } finally {
-      setIsTriagingAdvance(false);
-    }
+    setShowSreModal(true);
   };
   return (
     <div
-      className={`incident-card urgency-${incident.urgency}`}
+      className={`incident-card urgency-${incident.urgency}${incident.status === "triggered" ? " status-triggered-card" : ""}`}
       onClick={onClick}
       style={{ cursor: "pointer" }}
     >
       {/* Header */}
       <div className="incident-header">
+        {incident.status === "triggered" && <span className="triggered-pulse" />}
         <span className="incident-number">#{incident.incident_number}</span>
         <span className={`status-badge status-${incident.status}`}>
           {incident.status}
         </span>
         <span className={`urgency-badge urgency-${incident.urgency}`}>
-          {incident.urgency} urgency
+          {incident.urgency}
         </span>
         <span className={`priority-badge ${incident.priority ? '' : 'no-priority'}`}>
           {incident.priority ? incident.priority.summary : 'No Priority'}
@@ -789,11 +722,11 @@ If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident using
           {isTriaging ? "⏳" : "🤖"} Triage Locally
         </button>
         <button
-          className={`action-btn triage-advance${isTriagingAdvance ? " loading" : ""}`}
+          className="action-btn triage-advance"
           onClick={handleTriageWithAdvance}
-          disabled={isLoading || isTriagingAdvance}
+          disabled={isLoading}
         >
-          {isTriagingAdvance ? "⏳ Triaging..." : "✨ Triage with SRE Agent"}
+          ✨ Triage with SRE Agent
         </button>
         <ActionsDropdown
           disabled={isLoading}
@@ -947,6 +880,18 @@ If \`pagerduty-advance-mcp-server\` is NOT available, triage this incident using
               setShowStatusUpdateModal(false);
               onRefresh();
             }}
+          />
+        </div>
+      )}
+
+      {/* SRE Agent Modal */}
+      {showSreModal && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <SreAgentModal
+            app={app}
+            incidentId={incident.id}
+            incidentNumber={incident.incident_number}
+            onClose={() => setShowSreModal(false)}
           />
         </div>
       )}

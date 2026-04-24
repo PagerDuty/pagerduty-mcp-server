@@ -524,6 +524,33 @@ export async function createStatusUpdate(
 }
 
 /**
+ * Trigger sre_agent_tool via sendMessage.
+ *
+ * callServerTool only routes to the originating server (pagerduty-mcp), so cross-server
+ * tools like sre_agent_tool must be invoked by sending a message to the LLM host.
+ * The SRE agent response will appear in the chat thread.
+ */
+export async function triggerSreAgent(
+  app: App,
+  incidentId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const result = await app.sendMessage({
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: `Use the sre_agent_tool to triage incident ${incidentId}. Pass incident_id="${incidentId}" and message="Triage this incident: analyze the alerts, identify the root cause, and suggest remediation steps."`,
+        },
+      ],
+    });
+    return { success: !result.isError };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
  * Start an incident workflow using start_incident_workflow tool
  */
 export async function startIncidentWorkflow(

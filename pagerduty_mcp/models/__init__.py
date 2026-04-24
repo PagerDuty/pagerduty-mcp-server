@@ -13,7 +13,7 @@ from .alerts import Alert, AlertQuery
 from .base import MAX_RESULTS, ListResponseModel
 from .change_events import ChangeEvent, ChangeEventQuery
 from .context import MCPContext
-from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
+from .escalation_policies import EscalationPolicy, EscalationPolicyCreate, EscalationPolicyQuery
 from .event_orchestrations import (
     EventOrchestration,
     EventOrchestrationCatchAll,
@@ -131,6 +131,7 @@ __all__ = [
     "ContentBasedConfig",
     "ContentBasedIntelligentConfig",
     "EscalationPolicy",
+    "EscalationPolicyCreate",
     "EscalationPolicyQuery",
     "EventOrchestration",
     "EventOrchestrationCatchAll",

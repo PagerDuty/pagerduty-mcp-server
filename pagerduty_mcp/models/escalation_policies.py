@@ -88,6 +88,18 @@ class EscalationPolicy(BaseModel):
         return "escalation_policy"
 
 
+class EscalationPolicyCreate(BaseModel):
+    name: str = Field(description="The name of the escalation policy")
+    description: str | None = Field(default=None, description="Description of the policy")
+    num_loops: int = Field(default=0, description="Number of times the policy repeats after reaching the end")
+    escalation_rules: list[EscalationRule] = Field(description="Ordered list of escalation rules")
+    on_call_handoff_notifications: Literal["if_has_services", "always"] | None = Field(
+        default="if_has_services",
+        description="When to send on-call handoff notifications",
+    )
+    teams: list[TeamReference] | None = Field(default=None, description="Teams to associate")
+
+
 class EscalationPolicyQuery(BaseModel):
     query: str | None = Field(description="Filter escalation policies by name or description", default=None)
     user_ids: list[str] | None = Field(description="Filter escalation policies by user IDs", default=None)

@@ -45,6 +45,14 @@ export function CompensationPage({ metrics }: CompensationPageProps) {
     () => defaultBHConfig().timezone
   );
   const [holidayText, setHolidayText] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState("");
+
+  const teamNames = useMemo(() =>
+    Array.from(new Set(metrics.map((r) => r.teamName).filter(Boolean))).sort() as string[],
+    [metrics]
+  );
+
+  const filteredMetrics = selectedTeam ? metrics.filter((r) => r.teamName === selectedTeam) : metrics;
 
   const bhConfig: BusinessHoursConfig = useMemo(() => ({
     startHour,
@@ -55,32 +63,48 @@ export function CompensationPage({ metrics }: CompensationPageProps) {
   }), [startHour, endHour, timezone, holidayText]);
 
   const enriched: EnrichedMetric[] = useMemo(() =>
-    metrics.map((r) => ({
+    filteredMetrics.map((r) => ({
       ...r,
       outside: computeOutsideHoursMetrics(r.oncallShifts, bhConfig),
     })),
-    [metrics, bhConfig]
+    [filteredMetrics, bhConfig]
   );
 
-  if (enriched.length === 0) {
+  if (metrics.length === 0) {
     return <div className="comp-empty">No responder data available for this period.</div>;
   }
 
   const sorted = [...enriched].sort((a, b) => b.onCallHours - a.onCallHours);
 
-  const totalOnCallHours = metrics.reduce((s, r) => s + r.onCallHours, 0);
-  const avgOnCallHours = Math.round((totalOnCallHours / metrics.length) * 10) / 10;
-  const totalSleepInt = metrics.reduce((s, r) => s + r.sleepInterruptions, 0);
-  const highRiskCount = metrics.filter((r) => r.riskLevel === "high").length;
+  const totalOnCallHours = filteredMetrics.reduce((s, r) => s + r.onCallHours, 0);
+  const avgOnCallHours = filteredMetrics.length > 0 ? Math.round((totalOnCallHours / filteredMetrics.length) * 10) / 10 : 0;
+  const totalSleepInt = filteredMetrics.reduce((s, r) => s + r.sleepInterruptions, 0);
+  const highRiskCount = filteredMetrics.filter((r) => r.riskLevel === "high").length;
   const totalOutside = enriched.reduce((s, r) => s + r.outside.totalOutsideHours, 0);
 
   return (
     <div className="comp-page">
+      {/* Team filter */}
+      {teamNames.length > 0 && (
+        <div className="th-filter-bar">
+          <select
+            className="ctrl-btn"
+            value={selectedTeam}
+            onChange={(e) => setSelectedTeam(e.currentTarget.value)}
+          >
+            <option value="">All teams</option>
+            {teamNames.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* KPI bar */}
       <div className="kpi-bar">
         <div className="kpi-cell kpi-ok">
           <div className="kpi-label">Responders</div>
-          <div className="kpi-value">{metrics.length}</div>
+          <div className="kpi-value">{filteredMetrics.length}</div>
           <div className="kpi-sub">with on-call data</div>
         </div>
         <div className="kpi-cell">
@@ -186,7 +210,7 @@ export function CompensationPage({ metrics }: CompensationPageProps) {
       <div className="analytics-section">
         <div className="section-title">
           Responder On-Call Summary
-          <span className="section-count">{metrics.length}</span>
+          <span className="section-count">{filteredMetrics.length}</span>
         </div>
         <table className="analytics-table comp-table">
           <thead>

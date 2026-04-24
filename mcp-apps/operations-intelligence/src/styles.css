@@ -147,7 +147,10 @@ body {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
+  overflow-y: visible;
   flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
 }
 .tabs::-webkit-scrollbar { display: none; }
 .tab-btn {
@@ -378,6 +381,14 @@ body {
 :root[data-theme="dark"] .analytics-table tr.row-risk-high td   { background: rgba(220,38,38,.08); }
 :root[data-theme="dark"] .analytics-table tr.row-risk-medium td { background: rgba(217,119,6,.08); }
 
+/* ── Team Health filter bar ── */
+.th-filter-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
 /* ── Fatigue KPI (TeamHealth) ── */
 .fatigue-summary {
   display: flex; gap: 0;
@@ -391,9 +402,9 @@ body {
   border-right: 1px solid var(--border);
 }
 .fatigue-kpi-card:last-child { border-right: none; }
-.fatigue-kpi-card.fatigue-high   { border-top: 2px solid var(--red); }
-.fatigue-kpi-card.fatigue-medium { border-top: 2px solid var(--amber); }
-.fatigue-kpi-card.fatigue-low    { border-top: 2px solid var(--green); }
+.fatigue-kpi-card.fatigue-high   { border-bottom: 3px solid var(--red); }
+.fatigue-kpi-card.fatigue-medium { border-bottom: 3px solid var(--amber); }
+.fatigue-kpi-card.fatigue-low    { border-bottom: 3px solid var(--green); }
 
 /* ── Percentile section ── */
 .percentile-section { border-bottom: 1px solid var(--border); }

@@ -16,13 +16,17 @@ function RiskBadge({ level }: { level: "high" | "medium" | "low" }) {
 
 export function TeamHealth({ metrics, teamMetrics }: TeamHealthProps) {
   const [sortKey, setSortKey] = useState<SortKey>("sleepInterruptions");
+  const [selectedTeam, setSelectedTeam] = useState<string>("");
 
-  const highCount = metrics.filter((r) => r.riskLevel === "high").length;
-  const medCount = metrics.filter((r) => r.riskLevel === "medium").length;
-  const lowCount = metrics.filter((r) => r.riskLevel === "low").length;
-  const totalSleepInt = metrics.reduce((s, r) => s + r.sleepInterruptions, 0);
+  const teamNames = Array.from(new Set(metrics.map((r) => r.teamName).filter(Boolean))) as string[];
+  const filtered = selectedTeam ? metrics.filter((r) => r.teamName === selectedTeam) : metrics;
 
-  const sorted = [...metrics].sort((a, b) => {
+  const highCount = filtered.filter((r) => r.riskLevel === "high").length;
+  const medCount = filtered.filter((r) => r.riskLevel === "medium").length;
+  const lowCount = filtered.filter((r) => r.riskLevel === "low").length;
+  const totalSleepInt = filtered.reduce((s, r) => s + r.sleepInterruptions, 0);
+
+  const sorted = [...filtered].sort((a, b) => {
     if (sortKey === "engagedMinutes") {
       return (b.engagedMinutes ?? 0) - (a.engagedMinutes ?? 0);
     }
@@ -47,6 +51,22 @@ export function TeamHealth({ metrics, teamMetrics }: TeamHealthProps) {
 
   return (
     <div className="body">
+      {/* Team filter */}
+      {teamNames.length > 0 && (
+        <div className="th-filter-bar">
+          <select
+            className="ctrl-btn"
+            value={selectedTeam}
+            onChange={(e) => setSelectedTeam(e.currentTarget.value)}
+          >
+            <option value="">All teams</option>
+            {teamNames.sort().map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Fatigue risk summary */}
       <div className="fatigue-summary">
         <div className="fatigue-kpi-card fatigue-high">

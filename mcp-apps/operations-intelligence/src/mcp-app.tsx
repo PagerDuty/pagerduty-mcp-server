@@ -26,6 +26,29 @@ const TABS: { id: Page; label: string }[] = [
   { id: "compensation", label: "Compensation" },
 ];
 
+function TeamFilterBar({
+  teams, selectedTeam, onTeamChange, loading, onRefresh,
+}: {
+  teams: { id: string; name: string }[];
+  selectedTeam: string;
+  onTeamChange: (id: string) => void;
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  if (teams.length === 0) return null;
+  return (
+    <div className="th-filter-bar">
+      <select className="ctrl-btn" value={selectedTeam} onChange={(e) => onTeamChange(e.currentTarget.value)}>
+        <option value="">All teams</option>
+        {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+      </select>
+      <button className="btn btn-primary btn-sm" onClick={onRefresh} disabled={loading}>
+        {loading ? "Loading…" : "Refresh"}
+      </button>
+    </div>
+  );
+}
+
 function getDefaultSince(): string {
   const d = new Date();
   d.setDate(d.getDate() - 30);
@@ -104,16 +127,6 @@ function App() {
         <h1>Operations Intelligence</h1>
         <div className="header-spacer" />
         <div className="header-controls">
-          <select
-            className="ctrl-btn"
-            value={selectedTeam}
-            onChange={(e) => setSelectedTeam(e.currentTarget.value)}
-          >
-            <option value="">All teams</option>
-            {(data?.teams ?? []).map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
           <input
             type="date"
             className="ctrl-btn"
@@ -159,6 +172,7 @@ function App() {
 
           {page === "service" && data && (
             <div className="body">
+              <TeamFilterBar teams={data.teams} selectedTeam={selectedTeam} onTeamChange={setSelectedTeam} loading={loading} onRefresh={load} />
               <SummaryCards data={data} />
               <PercentileSection aggregated={data.aggregated} />
               <ServiceBreakdown metrics={data.serviceMetrics} />
@@ -167,12 +181,14 @@ function App() {
 
           {page === "team" && data && (
             <div className="body">
+              <TeamFilterBar teams={data.teams} selectedTeam={selectedTeam} onTeamChange={setSelectedTeam} loading={loading} onRefresh={load} />
               <TeamBreakdown metrics={data.teamMetrics} />
             </div>
           )}
 
           {page === "responder" && data && (
             <div className="body">
+              <TeamFilterBar teams={data.teams} selectedTeam={selectedTeam} onTeamChange={setSelectedTeam} loading={loading} onRefresh={load} />
               <ResponderLoad metrics={data.responderMetrics} />
             </div>
           )}
@@ -182,7 +198,14 @@ function App() {
           )}
 
           {page === "trends" && data && (
-            <TrendsTab trendsData={data.trendsData} />
+            <TrendsTab
+              trendsData={data.trendsData}
+              teams={data.teams}
+              selectedTeam={selectedTeam}
+              onTeamChange={setSelectedTeam}
+              loading={loading}
+              onRefresh={load}
+            />
           )}
 
           {page === "compensation" && data && (

@@ -1,7 +1,12 @@
-import type { TrendsData, TrendPoint } from "../api";
+import type { TrendsData, TrendPoint, Team } from "../api";
 
 interface TrendsTabProps {
   trendsData: TrendsData | null;
+  teams: Team[];
+  selectedTeam: string;
+  onTeamChange: (team: string) => void;
+  loading: boolean;
+  onRefresh: () => void;
 }
 
 const CHART_W = 600;
@@ -112,13 +117,13 @@ function LineChart({ points, getValue, color, yLabel }: LineChartProps) {
   );
 }
 
-export function TrendsTab({ trendsData }: TrendsTabProps) {
-  if (!trendsData || trendsData.points.length === 0) {
-    return <div className="trends-empty">No trend data available for this period.</div>;
-  }
-
+export function TrendsTab({ trendsData, teams: _teams, selectedTeam: _selectedTeam, onTeamChange: _onTeamChange, loading: _loading, onRefresh: _onRefresh }: TrendsTabProps) {
   return (
     <div className="trends-tab">
+
+      {(!trendsData || trendsData.points.length === 0) ? (
+        <div className="trends-empty">No trend data available for this period.</div>
+      ) : (<>
       <div className="trend-card">
         <div className="trend-card-title">Incident Volume (per week)</div>
         <BarChart points={trendsData.points} getValue={(p) => p.totalIncidents} color="var(--red)" yLabel="Incidents" />
@@ -135,6 +140,7 @@ export function TrendsTab({ trendsData }: TrendsTabProps) {
         <div className="trend-card-title">Interruptions (per week)</div>
         <BarChart points={trendsData.points} getValue={(p) => p.totalInterruptions} color="var(--amber)" yLabel="Count" />
       </div>
+      </>)}
     </div>
   );
 }

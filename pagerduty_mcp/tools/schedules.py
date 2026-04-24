@@ -67,6 +67,41 @@ def list_schedule_users(schedule_id: str) -> str:
     return ListResponseModel[User](response=users).model_dump_json()
 
 
+def list_schedule_overrides(schedule_id: str, since: str, until: str) -> str:
+    """List overrides for a schedule within a date range.
+
+    Args:
+        schedule_id: The ID of the schedule
+        since: Start of the date range (ISO 8601)
+        until: End of the date range (ISO 8601)
+
+    Returns:
+        JSON string with an 'overrides' array
+    """
+    import json
+    response = get_client().rget(
+        f"/schedules/{schedule_id}/overrides",
+        params={"since": since, "until": until},
+    )
+    overrides = response.get("overrides", []) if isinstance(response, dict) else []
+    return json.dumps({"overrides": overrides})
+
+
+def delete_schedule_override(schedule_id: str, override_id: str) -> str:
+    """Delete a schedule override.
+
+    Args:
+        schedule_id: The ID of the schedule
+        override_id: The ID of the override to delete
+
+    Returns:
+        JSON string confirming deletion
+    """
+    import json
+    get_client().rdelete(f"/schedules/{schedule_id}/overrides/{override_id}")
+    return json.dumps({"success": True})
+
+
 def create_schedule(create_model: ScheduleCreateRequest) -> str:
     """Create a new on-call schedule.
 

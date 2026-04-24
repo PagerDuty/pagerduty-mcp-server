@@ -80,6 +80,8 @@ from .schedules import (
     ScheduleLayerRestriction,
     ScheduleLayerUser,
     ScheduleOverrideCreate,
+    ScheduleOverrideDetail,
+    ScheduleOverrideUser,
     ScheduleQuery,
     ScheduleUpdateRequest,
 )
@@ -184,6 +186,8 @@ __all__ = [
     "ScheduleLayerRestriction",
     "ScheduleLayerUser",
     "ScheduleOverrideCreate",
+    "ScheduleOverrideDetail",
+    "ScheduleOverrideUser",
     "ScheduleQuery",
     "ScheduleReference",
     "ScheduleUpdateRequest",

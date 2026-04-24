@@ -122,6 +122,20 @@ class ScheduleOverrideCreate(BaseModel):
     overrides: list[Override] = Field(description="The list of overrides to create for the schedule")
 
 
+class ScheduleOverrideUser(BaseModel):
+    id: str
+    name: str | None = None
+    summary: str | None = None
+    type: str | None = None
+
+
+class ScheduleOverrideDetail(BaseModel):
+    id: str
+    start: datetime
+    end: datetime
+    user: ScheduleOverrideUser
+
+
 class ScheduleLayerRestriction(BaseModel):
     type: str = Field(description="The type of restriction (daily_restriction or weekly_restriction)")
     start_time_of_day: str = Field(description="The time of day when the restriction starts (HH:MM:SS)")

@@ -36,10 +36,10 @@ function BarChart({ points, getValue, color, yLabel }: BarChartProps) {
       className="trend-chart"
       preserveAspectRatio="xMidYMid meet"
     >
-      <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={PAD.top + plotH()} stroke="var(--border-secondary)" strokeWidth="1" />
-      <text x={8} y={PAD.top + plotH() / 2} fontSize="10" fill="var(--text-secondary)" textAnchor="middle" transform={`rotate(-90, 8, ${PAD.top + plotH() / 2})`}>{yLabel}</text>
-      <text x={PAD.left - 4} y={PAD.top + plotH()} fontSize="9" fill="var(--text-secondary)" textAnchor="end" dominantBaseline="middle">0</text>
-      <text x={PAD.left - 4} y={PAD.top} fontSize="9" fill="var(--text-secondary)" textAnchor="end" dominantBaseline="middle">{maxVal}</text>
+      <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={PAD.top + plotH()} stroke="var(--border-2)" strokeWidth="1" />
+      <text x={8} y={PAD.top + plotH() / 2} fontSize="10" fill="var(--text-2)" textAnchor="middle" transform={`rotate(-90, 8, ${PAD.top + plotH() / 2})`}>{yLabel}</text>
+      <text x={PAD.left - 4} y={PAD.top + plotH()} fontSize="9" fill="var(--text-2)" textAnchor="end" dominantBaseline="middle">0</text>
+      <text x={PAD.left - 4} y={PAD.top} fontSize="9" fill="var(--text-2)" textAnchor="end" dominantBaseline="middle">{maxVal}</text>
       {points.map((p, i) => {
         const val = getValue(p);
         const barH = (val / maxVal) * plotH();
@@ -48,7 +48,7 @@ function BarChart({ points, getValue, color, yLabel }: BarChartProps) {
         return (
           <g key={p.weekStart}>
             <rect x={x} y={y} width={barW} height={barH} fill={color} rx="2" opacity="0.85" />
-            <text x={x + barW / 2} y={PAD.top + plotH() + 14} fontSize="9" fill="var(--text-secondary)" textAnchor="middle">{formatWeek(p.weekStart)}</text>
+            <text x={x + barW / 2} y={PAD.top + plotH() + 14} fontSize="9" fill="var(--text-2)" textAnchor="middle">{formatWeek(p.weekStart)}</text>
           </g>
         );
       })}
@@ -92,10 +92,10 @@ function LineChart({ points, getValue, color, yLabel }: LineChartProps) {
       className="trend-chart"
       preserveAspectRatio="xMidYMid meet"
     >
-      <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={PAD.top + plotH()} stroke="var(--border-secondary)" strokeWidth="1" />
-      <text x={8} y={PAD.top + plotH() / 2} fontSize="10" fill="var(--text-secondary)" textAnchor="middle" transform={`rotate(-90, 8, ${PAD.top + plotH() / 2})`}>{yLabel}</text>
-      <text x={PAD.left - 4} y={PAD.top + plotH()} fontSize="9" fill="var(--text-secondary)" textAnchor="end" dominantBaseline="middle">{minVal}</text>
-      <text x={PAD.left - 4} y={PAD.top} fontSize="9" fill="var(--text-secondary)" textAnchor="end" dominantBaseline="middle">{maxVal}</text>
+      <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={PAD.top + plotH()} stroke="var(--border-2)" strokeWidth="1" />
+      <text x={8} y={PAD.top + plotH() / 2} fontSize="10" fill="var(--text-2)" textAnchor="middle" transform={`rotate(-90, 8, ${PAD.top + plotH() / 2})`}>{yLabel}</text>
+      <text x={PAD.left - 4} y={PAD.top + plotH()} fontSize="9" fill="var(--text-2)" textAnchor="end" dominantBaseline="middle">{minVal}</text>
+      <text x={PAD.left - 4} y={PAD.top} fontSize="9" fill="var(--text-2)" textAnchor="end" dominantBaseline="middle">{maxVal}</text>
       <polyline points={polyPoints} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
       {points.map((p, i) => {
         const v = getValue(p);
@@ -104,7 +104,7 @@ function LineChart({ points, getValue, color, yLabel }: LineChartProps) {
             {v !== null && (
               <circle cx={xOf(i)} cy={yOf(v)} r="3.5" fill={color} />
             )}
-            <text x={xOf(i)} y={PAD.top + plotH() + 14} fontSize="9" fill="var(--text-secondary)" textAnchor="middle">{formatWeek(p.weekStart)}</text>
+            <text x={xOf(i)} y={PAD.top + plotH() + 14} fontSize="9" fill="var(--text-2)" textAnchor="middle">{formatWeek(p.weekStart)}</text>
           </g>
         );
       })}
@@ -121,19 +121,19 @@ export function TrendsTab({ trendsData }: TrendsTabProps) {
     <div className="trends-tab">
       <div className="trend-card">
         <div className="trend-card-title">Incident Volume (per week)</div>
-        <BarChart points={trendsData.points} getValue={(p) => p.totalIncidents} color="var(--status-triggered)" yLabel="Incidents" />
+        <BarChart points={trendsData.points} getValue={(p) => p.totalIncidents} color="var(--red)" yLabel="Incidents" />
       </div>
       <div className="trend-card">
         <div className="trend-card-title">MTTA — Mean Time to Ack (minutes)</div>
-        <LineChart points={trendsData.points} getValue={(p) => p.mttaMinutes} color="var(--status-acknowledged)" yLabel="min" />
+        <LineChart points={trendsData.points} getValue={(p) => p.mttaMinutes} color="var(--blue)" yLabel="min" />
       </div>
       <div className="trend-card">
         <div className="trend-card-title">MTTR — Mean Time to Resolve (minutes)</div>
-        <LineChart points={trendsData.points} getValue={(p) => p.mttrMinutes} color="var(--pd-green)" yLabel="min" />
+        <LineChart points={trendsData.points} getValue={(p) => p.mttrMinutes} color="var(--green)" yLabel="min" />
       </div>
       <div className="trend-card">
         <div className="trend-card-title">Interruptions (per week)</div>
-        <BarChart points={trendsData.points} getValue={(p) => p.totalInterruptions} color="var(--color-escalation)" yLabel="Count" />
+        <BarChart points={trendsData.points} getValue={(p) => p.totalInterruptions} color="var(--amber)" yLabel="Count" />
       </div>
     </div>
   );

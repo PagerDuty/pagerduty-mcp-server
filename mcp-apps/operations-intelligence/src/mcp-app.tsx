@@ -1,11 +1,3 @@
-/**
- * Operations Intelligence v2 - Main App
- *
- * Two tabs:
- *   Operational: KPI bar + Service / Team / Responder metric tables
- *   Trends:      Weekly incident volume, MTTA, MTTR, and interruption trend charts
- */
-
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -19,8 +11,20 @@ import { ResponderLoad } from "./components/ResponderLoad";
 import { TrendsTab } from "./components/TrendsTab";
 import { TeamHealth } from "./components/TeamHealth";
 import { PercentileSection } from "./components/PercentileSection";
+import { HomePage } from "./components/HomePage";
+import { CompensationPage } from "./components/CompensationPage";
 
-type Tab = "operational" | "teamHealth" | "trends";
+export type Page = "home" | "service" | "team" | "responder" | "teamHealth" | "trends" | "compensation";
+
+const TABS: { id: Page; label: string }[] = [
+  { id: "home",         label: "Home" },
+  { id: "service",      label: "Service Metrics" },
+  { id: "team",         label: "Team Metrics" },
+  { id: "responder",    label: "Responder" },
+  { id: "teamHealth",   label: "Team Health" },
+  { id: "trends",       label: "Trends" },
+  { id: "compensation", label: "Compensation" },
+];
 
 function getDefaultSince(): string {
   const d = new Date();
@@ -41,13 +45,13 @@ function detectTheme(): "dark" | "light" {
 
 function App() {
   const { app, error: connectionError } = useApp({
-    appInfo: { name: "Operations Intelligence", version: "2.0.0" },
+    appInfo: { name: "Operations Intelligence", version: "3.0.0" },
     capabilities: {},
   });
   const mockMode = import.meta.env.VITE_MOCK === "true";
 
   const [theme, setTheme] = useState<"dark" | "light">(detectTheme);
-  const [tab, setTab] = useState<Tab>("operational");
+  const [page, setPage] = useState<Page>("home");
   const [since, setSince] = useState(getDefaultSince);
   const [until, setUntil] = useState(getToday);
   const [selectedTeam, setSelectedTeam] = useState<string>("");
@@ -94,65 +98,101 @@ function App() {
 
   return (
     <div className="app">
+      {/* ── Header ── */}
       <header className="app-header">
         <span className="pd-icon"><PagerDutyLogo size={22} /></span>
         <h1>Operations Intelligence</h1>
+        <div className="header-spacer" />
+        <div className="header-controls">
+          <select
+            className="ctrl-btn"
+            value={selectedTeam}
+            onChange={(e) => setSelectedTeam(e.currentTarget.value)}
+          >
+            <option value="">All teams</option>
+            {(data?.teams ?? []).map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+          <input
+            type="date"
+            className="ctrl-btn"
+            value={since}
+            onChange={(e) => setSince(e.currentTarget.value)}
+          />
+          <input
+            type="date"
+            className="ctrl-btn"
+            value={until}
+            onChange={(e) => setUntil(e.currentTarget.value)}
+          />
+          <button className="btn btn-primary btn-sm" onClick={load} disabled={loading}>
+            {loading ? "Loading…" : "Refresh"}
+          </button>
+        </div>
       </header>
 
-      <div className="controls">
-        <label>Team</label>
-        <select value={selectedTeam} onChange={(e) => setSelectedTeam(e.currentTarget.value)}>
-          <option value="">All teams</option>
-          {(data?.teams ?? []).map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
-          ))}
-        </select>
-        <label>From</label>
-        <input type="date" value={since} onChange={(e) => setSince(e.currentTarget.value)} />
-        <label>To</label>
-        <input type="date" value={until} onChange={(e) => setUntil(e.currentTarget.value)} />
-        <button className="btn btn-primary btn-sm" onClick={load} disabled={loading}>
-          {loading ? "Loading…" : "Refresh"}
-        </button>
-      </div>
+      {/* ── Tab nav ── */}
+      <nav className="tabs">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            className={`tab-btn${page === tab.id ? " tab-active" : ""}`}
+            onClick={() => setPage(tab.id)}
+          >
+            {page === tab.id && <span className="tab-dot" />}
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
-      <div className="tabs">
-        <button
-          className={`tab-btn${tab === "operational" ? " tab-active" : ""}`}
-          onClick={() => setTab("operational")}
-        >
-          Operational
-        </button>
-        <button
-          className={`tab-btn${tab === "teamHealth" ? " tab-active" : ""}`}
-          onClick={() => setTab("teamHealth")}
-        >
-          Team Health
-        </button>
-        <button
-          className={`tab-btn${tab === "trends" ? " tab-active" : ""}`}
-          onClick={() => setTab("trends")}
-        >
-          Trends
-        </button>
-      </div>
-
+      {/* ── Error banner ── */}
       {displayError && <div className="error-state">{displayError}</div>}
 
-      {loading && !data ? (
-        <div className="loading">Loading operational data…</div>
-      ) : tab === "operational" && data ? (
-        <div className="body">
-          <SummaryCards data={data} />
-          <PercentileSection aggregated={data.aggregated} />
-          <ServiceBreakdown metrics={data.serviceMetrics} />
-          <TeamBreakdown metrics={data.teamMetrics} />
-          <ResponderLoad metrics={data.responderMetrics} />
-        </div>
-      ) : tab === "teamHealth" && data ? (
-        <TeamHealth metrics={data.responderMetrics} teamMetrics={data.teamMetrics} />
-      ) : tab === "trends" && data ? (
-        <TrendsTab trendsData={data.trendsData} />
+      {/* ── Loading ── */}
+      {loading && !data && <div className="loading">Loading operational data…</div>}
+
+      {/* ── Page content ── */}
+      {(!loading || data) ? (
+        <>
+          {page === "home" && <HomePage onNavigate={setPage} />}
+
+          {page === "service" && data && (
+            <div className="body">
+              <SummaryCards data={data} />
+              <PercentileSection aggregated={data.aggregated} />
+              <ServiceBreakdown metrics={data.serviceMetrics} />
+            </div>
+          )}
+
+          {page === "team" && data && (
+            <div className="body">
+              <TeamBreakdown metrics={data.teamMetrics} />
+            </div>
+          )}
+
+          {page === "responder" && data && (
+            <div className="body">
+              <ResponderLoad metrics={data.responderMetrics} />
+            </div>
+          )}
+
+          {page === "teamHealth" && data && (
+            <TeamHealth metrics={data.responderMetrics} teamMetrics={data.teamMetrics} />
+          )}
+
+          {page === "trends" && data && (
+            <TrendsTab trendsData={data.trendsData} />
+          )}
+
+          {page === "compensation" && data && (
+            <CompensationPage metrics={data.responderMetrics} />
+          )}
+
+          {page !== "home" && !data && !loading && (
+            <div className="empty-state">No data — adjust date range and refresh.</div>
+          )}
+        </>
       ) : null}
     </div>
   );

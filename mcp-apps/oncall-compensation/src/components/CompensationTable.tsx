@@ -14,7 +14,8 @@ export type SortKey =
   | "weekendHours"
   | "holidayHours"
   | "maxConsecutiveOutsideHours"
-  | "uniquePeriodsOutside";
+  | "uniquePeriodsOutside"
+  | "estimatedPay";
 
 interface Props {
   records: UserCompensationRecord[];
@@ -51,6 +52,7 @@ export const ALL_COLS: ColDef[] = [
   { key: "holidayHours",                label: "Holiday Hrs",        description: "On-call hours that fell on configured holidays.",                                                                                align: "right", toggleable: true, group: "bh" },
   { key: "maxConsecutiveOutsideHours",  label: "Max Consec. Hrs",   description: "Longest single unbroken stretch of on-call time outside business hours. Useful for identifying sustained out-of-hours burden.",  align: "right", toggleable: true, group: "bh" },
   { key: "uniquePeriodsOutside",        label: "Unique Periods",    description: "Number of distinct separate windows where this user was on-call outside business hours. High count = frequently interrupted.",    align: "right", toggleable: true, group: "bh" },
+  { key: "estimatedPay",                label: "Est. Pay",          description: "Estimated compensation based on L1/L2+ base rates and off-hours/weekend/holiday multipliers configured in Settings. This is an estimate only.", align: "right", toggleable: true },
 ];
 
 const HIGH_RATE_THRESHOLD = 0.5;
@@ -158,6 +160,12 @@ function renderCell(r: UserCompensationRecord, key: SortKey) {
       return (
         <td key={key} className="num-cell bh-cell">
           {r.uniquePeriodsOutside > 0 ? r.uniquePeriodsOutside : <span style={{ color: "var(--text-muted)" }}>—</span>}
+        </td>
+      );
+    case "estimatedPay":
+      return (
+        <td key={key} className="num-cell est-pay-cell">
+          {r.estimatedPay > 0 ? `$${r.estimatedPay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : <span style={{ color: "var(--text-muted)" }}>—</span>}
         </td>
       );
   }

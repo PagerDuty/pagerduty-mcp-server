@@ -1,17 +1,20 @@
+// src/components/SummaryCards.tsx
+
 import type { UserCompensationRecord } from "../api";
+import { InfoIcon } from "./InfoIcon";
 
 interface Props {
   records: UserCompensationRecord[];
+  totalEstimatedPay?: number;
 }
 
-export function SummaryCards({ records }: Props) {
+export function SummaryCards({ records, totalEstimatedPay }: Props) {
   const totalUsers = records.length;
   const totalOncallHours = records.reduce((s, r) => s + r.scheduledHours, 0);
   const totalIncidents = records.reduce((s, r) => s + r.incidentCount, 0);
   const avgIncidents = totalUsers > 0 ? totalIncidents / totalUsers : 0;
   const totalOffHourIntrs = records.reduce((s, r) => s + r.offHourInterruptions, 0);
   const totalSleepIntrs = records.reduce((s, r) => s + r.sleepHourInterruptions, 0);
-
   const totalOutsideHours = records.reduce((s, r) => s + r.outsideHours, 0);
   const totalWeekendHours = records.reduce((s, r) => s + r.weekendHours, 0);
   const totalHolidayHours = records.reduce((s, r) => s + r.holidayHours, 0);
@@ -55,6 +58,17 @@ export function SummaryCards({ records }: Props) {
           <div className="card-sub">
             {totalWeekendHours.toFixed(1)}h wknd
             {totalHolidayHours > 0 ? ` · ${totalHolidayHours.toFixed(1)}h holiday` : ""}
+          </div>
+        </div>
+      )}
+      {(totalEstimatedPay ?? 0) > 0 && (
+        <div className="summary-card summary-card--pay">
+          <div className="card-value pay-value">
+            ${(totalEstimatedPay!).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </div>
+          <div className="card-label" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            Est. Compensation
+            <InfoIcon text="Sum of estimated pay across all visible users, based on L1/L2+ rates and multipliers in Settings. This is an estimate only." />
           </div>
         </div>
       )}

@@ -63,18 +63,28 @@ const STORAGE_KEY = "oncall-compliance-settings";
 
 function serializeBH(bh: BusinessHoursConfig): object {
   return {
-    ...bh,
+    startHour: bh.startHour,
+    endHour: bh.endHour,
+    timezone: bh.timezone,
     workDays: Array.from(bh.workDays),
     holidays: Array.from(bh.holidays).sort(),
   };
 }
 
 function deserializeBH(raw: any): BusinessHoursConfig {
+  const toHour = (v: unknown, fallback: number): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
   return {
-    startHour: Number(raw.startHour ?? 9),
-    endHour: Number(raw.endHour ?? 18),
+    startHour: toHour(raw.startHour, 9),
+    endHour: toHour(raw.endHour, 18),
     timezone: String(raw.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
-    workDays: new Set<number>(Array.isArray(raw.workDays) ? raw.workDays.map(Number) : [1,2,3,4,5]),
+    workDays: new Set<number>(
+      Array.isArray(raw.workDays)
+        ? raw.workDays.map(Number).filter(Number.isFinite)
+        : [1, 2, 3, 4, 5],
+    ),
     holidays: new Set<string>(Array.isArray(raw.holidays) ? raw.holidays.map(String) : []),
   };
 }
@@ -93,7 +103,8 @@ export function loadSettings(): AllSettings {
         ? deserializeBH(parsed.businessHours)
         : defaults.businessHours,
     };
-  } catch {
+  } catch (e) {
+    console.warn("[config] Failed to load settings from localStorage, using defaults:", e);
     return defaults;
   }
 }

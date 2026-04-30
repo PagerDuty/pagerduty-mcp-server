@@ -65,6 +65,10 @@ export interface UserCompensationRecord {
   holidayHours: number;
   maxConsecutiveOutsideHours: number;
   uniquePeriodsOutside: number;
+
+  // Estimated compensation — computed in the browser from PayConfig
+  // Default to 0; recomputed whenever PayConfig changes
+  estimatedPay: number;
 }
 
 export interface TeamInfo {
@@ -309,6 +313,7 @@ export async function fetchCompensationData(
         holidayHours: 0,
         maxConsecutiveOutsideHours: 0,
         uniquePeriodsOutside: 0,
+        estimatedPay: 0,
       });
     }
   }

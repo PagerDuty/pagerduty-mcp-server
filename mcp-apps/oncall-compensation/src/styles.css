@@ -1405,6 +1405,9 @@ html, body {
   vertical-align: middle;
   user-select: none;
 }
+.info-icon:hover {
+  color: var(--text-secondary);
+}
 
 /* Tab bar */
 .tab-bar {
@@ -1437,7 +1440,4 @@ html, body {
   color: var(--pd-green);
   border-bottom-color: var(--pd-green);
   font-weight: 600;
-}
-.info-icon:hover {
-  color: var(--text-secondary);
 }

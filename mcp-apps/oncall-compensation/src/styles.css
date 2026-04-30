@@ -1393,3 +1393,18 @@ html, body {
   margin-top: 2px;
   white-space: nowrap;
 }
+
+/* Info icon tooltip */
+.info-icon {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: help;
+  margin-left: 4px;
+  line-height: 1;
+  vertical-align: middle;
+  user-select: none;
+}
+.info-icon:hover {
+  color: var(--text-secondary);
+}

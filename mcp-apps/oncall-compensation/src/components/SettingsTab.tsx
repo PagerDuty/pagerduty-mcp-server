@@ -1,6 +1,6 @@
 // src/components/SettingsTab.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AllSettings } from "../config";
 import { defaultAllSettings } from "../config";
 import { BusinessHoursConfig } from "./BusinessHoursConfig";
@@ -32,6 +32,19 @@ export function SettingsTab({ settings, onSave }: Props) {
   const setFairness = (patch: Partial<AllSettings["fairness"]>) =>
     setDraft((d) => ({ ...d, fairness: { ...d.fairness, ...patch } }));
 
+  useEffect(() => {
+    setDraft({
+      pay: { ...settings.pay },
+      compliance: { ...settings.compliance },
+      fairness: { ...settings.fairness },
+      businessHours: {
+        ...settings.businessHours,
+        workDays: new Set(settings.businessHours.workDays),
+        holidays: new Set(settings.businessHours.holidays),
+      },
+    });
+  }, [settings]);
+
   const handleReset = () => setDraft(defaultAllSettings());
 
   return (
@@ -57,7 +70,7 @@ export function SettingsTab({ settings, onSave }: Props) {
                     min={0}
                     step={1}
                     value={draft.pay.l1RatePerHour}
-                    onChange={(e) => setPay({ l1RatePerHour: Number(e.target.value) })}
+                    onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPay({ l1RatePerHour: v }); }}
                     className="settings-input"
                   />
                 </div>
@@ -71,7 +84,7 @@ export function SettingsTab({ settings, onSave }: Props) {
                     min={0}
                     step={1}
                     value={draft.pay.l2PlusRatePerHour}
-                    onChange={(e) => setPay({ l2PlusRatePerHour: Number(e.target.value) })}
+                    onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPay({ l2PlusRatePerHour: v }); }}
                     className="settings-input"
                   />
                 </div>
@@ -89,7 +102,7 @@ export function SettingsTab({ settings, onSave }: Props) {
                   min={1}
                   step={0.1}
                   value={draft.pay.offHoursMultiplier}
-                  onChange={(e) => setPay({ offHoursMultiplier: Number(e.target.value) })}
+                  onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPay({ offHoursMultiplier: v }); }}
                   className="settings-input"
                 />
               </label>
@@ -100,7 +113,7 @@ export function SettingsTab({ settings, onSave }: Props) {
                   min={1}
                   step={0.1}
                   value={draft.pay.weekendMultiplier}
-                  onChange={(e) => setPay({ weekendMultiplier: Number(e.target.value) })}
+                  onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPay({ weekendMultiplier: v }); }}
                   className="settings-input"
                 />
               </label>
@@ -111,7 +124,7 @@ export function SettingsTab({ settings, onSave }: Props) {
                   min={1}
                   step={0.1}
                   value={draft.pay.holidayMultiplier}
-                  onChange={(e) => setPay({ holidayMultiplier: Number(e.target.value) })}
+                  onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPay({ holidayMultiplier: v }); }}
                   className="settings-input"
                 />
               </label>
@@ -133,7 +146,7 @@ export function SettingsTab({ settings, onSave }: Props) {
                   min={1}
                   step={1}
                   value={draft.compliance.periodHoursCap}
-                  onChange={(e) => setCompliance({ periodHoursCap: Number(e.target.value) })}
+                  onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setCompliance({ periodHoursCap: v }); }}
                   className="settings-input"
                 />
               </label>
@@ -145,7 +158,7 @@ export function SettingsTab({ settings, onSave }: Props) {
                   min={1}
                   step={1}
                   value={draft.compliance.periodOutsideHoursCap}
-                  onChange={(e) => setCompliance({ periodOutsideHoursCap: Number(e.target.value) })}
+                  onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setCompliance({ periodOutsideHoursCap: v }); }}
                   className="settings-input"
                 />
               </label>

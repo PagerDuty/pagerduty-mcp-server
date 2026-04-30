@@ -1653,3 +1653,82 @@ html, body {
 .compliance-badge--ok   { background: var(--pd-green-bg); color: var(--pd-green); }
 .compliance-badge--near { background: var(--ooh-orange-bg); color: var(--ooh-orange); }
 .compliance-badge--over { background: var(--impacted-high-bg); color: var(--impacted-high); }
+
+/* Fairness tab */
+.fairness-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fairness-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fairness-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fairness-outliers { }
+
+.outlier-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.outlier-card {
+  background: var(--impacted-high-bg);
+  border: 1px solid var(--impacted-high);
+  border-radius: 5px;
+  padding: 8px 12px;
+}
+
+.outlier-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.outlier-name {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--impacted-high);
+}
+
+.outlier-badge {
+  font-size: 10px;
+  background: var(--impacted-high-bg);
+  color: var(--impacted-high);
+  border: 1px solid var(--impacted-high);
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+
+.outlier-detail {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.fairness-team-table { }
+
+.equity-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 6px;
+}

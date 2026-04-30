@@ -17,6 +17,7 @@ export function deriveComplianceRecords(
   cfg: ComplianceConfig,
 ): ComplianceRecord[] {
   return records.map((r) => {
+    // A cap of 0 is treated as "disabled" — no limit enforced for that dimension
     const hoursCapPct = cfg.periodHoursCap > 0
       ? r.scheduledHours / cfg.periodHoursCap
       : 0;
@@ -24,6 +25,7 @@ export function deriveComplianceRecords(
       ? r.outsideHours / cfg.periodOutsideHoursCap
       : 0;
 
+    // nearLimitThreshold is expected to be in (0, 1); values >= 1 would make "over" unreachable
     let complianceStatus: ComplianceStatus = "ok";
     if (hoursCapPct > 1 || outsideCapPct > 1) {
       complianceStatus = "over";

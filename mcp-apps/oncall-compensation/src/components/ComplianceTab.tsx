@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: "ok" | "near" | "over" }) {
 
 export function ComplianceTab({ records, config }: Props) {
   const overCount = records.filter((r) => r.complianceStatus === "over").length;
-  const okCount = records.filter((r) => r.complianceStatus === "ok").length;
+  const withinCapsCount = records.length - overCount;
 
   return (
     <div className="compliance-tab">
@@ -41,9 +41,9 @@ export function ComplianceTab({ records, config }: Props) {
 
       <div className="summary-cards" style={{ padding: "8px 16px" }}>
         <div className="summary-card">
-          <div className="card-value" style={{ color: "var(--pd-green)" }}>{okCount}</div>
-          <div className="card-label">Compliant</div>
-          <div className="card-sub">users within caps</div>
+          <div className="card-value" style={{ color: "var(--pd-green)" }}>{withinCapsCount}</div>
+          <div className="card-label">Within Caps</div>
+          <div className="card-sub">not over cap</div>
         </div>
         <div className="summary-card" style={{ borderColor: overCount > 0 ? "var(--impacted-high-bg)" : undefined }}>
           <div className="card-value" style={{ color: overCount > 0 ? "var(--impacted-high)" : "var(--text-muted)" }}>{overCount}</div>
@@ -94,7 +94,7 @@ export function ComplianceTab({ records, config }: Props) {
                   {r.scheduledHours.toFixed(1)}h
                 </td>
                 <td>
-                  <ProgressBar pct={r.hoursCapPct} status={r.complianceStatus} />
+                  <ProgressBar pct={r.hoursCapPct} status={r.hoursCapPct > 1 ? "over" : r.hoursCapPct >= config.nearLimitThreshold ? "near" : "ok"} />
                   <div className="compliance-bar-label">
                     {r.scheduledHours.toFixed(1)}/{config.periodHoursCap}h
                     {r.hoursCapPct > 1 && <span style={{ color: "var(--impacted-high)" }}> (+{(r.scheduledHours - config.periodHoursCap).toFixed(1)}h over)</span>}

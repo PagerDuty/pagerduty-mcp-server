@@ -64,7 +64,7 @@ export function SummaryCards({ records, totalEstimatedPay }: Props) {
       {(totalEstimatedPay ?? 0) > 0 && (
         <div className="summary-card summary-card--pay">
           <div className="card-value pay-value">
-            ${(totalEstimatedPay!).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            ${(totalEstimatedPay ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </div>
           <div className="card-label" style={{ display: "flex", alignItems: "center", gap: 4 }}>
             Est. Compensation

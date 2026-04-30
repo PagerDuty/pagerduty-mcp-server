@@ -108,11 +108,11 @@ function App() {
     return () => { cancelled = true; };
   }, [app, since, until]);
 
-  // Layer 1: enrich with outside-hours metrics + default estimatedPay
+  // Layer 1: enrich with outside-hours metrics (estimatedPay set by Layer 2)
   const enrichedRecords = useMemo((): UserCompensationRecord[] => {
     if (!data) return [];
     return data.records.map((r) => {
-      if (r.oncallShifts.length === 0) return { ...r, estimatedPay: 0 };
+      if (r.oncallShifts.length === 0) return r;
       const m = computeOutsideHoursMetrics(r.oncallShifts, settings.businessHours);
       return {
         ...r,
@@ -121,7 +121,6 @@ function App() {
         holidayHours: m.totalHolidayHours,
         maxConsecutiveOutsideHours: m.maxConsecutiveOutsideHours,
         uniquePeriodsOutside: m.uniquePeriodsOutside,
-        estimatedPay: 0,
       };
     });
   }, [data, settings.businessHours]);

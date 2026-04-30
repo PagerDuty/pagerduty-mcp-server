@@ -1596,3 +1596,60 @@ html, body {
 .btn-settings-save:hover {
   opacity: 0.9;
 }
+
+/* Compliance tab */
+.compliance-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.compliance-violation-banner {
+  background: var(--impacted-high-bg);
+  border: 1px solid var(--impacted-high);
+  border-radius: 6px;
+  padding: 8px 16px;
+  margin: 8px 16px 0;
+  font-size: 12px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.compliance-bar-wrap { margin-bottom: 2px; }
+
+.compliance-bar-track {
+  background: var(--bg-card);
+  border-radius: 3px;
+  height: 8px;
+  overflow: hidden;
+  width: 100%;
+  min-width: 80px;
+}
+
+.compliance-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.compliance-bar-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.compliance-row--over td { background: color-mix(in srgb, var(--impacted-high) 5%, transparent); }
+
+.compliance-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.compliance-badge--ok   { background: var(--pd-green-bg); color: var(--pd-green); }
+.compliance-badge--near { background: var(--ooh-orange-bg); color: var(--ooh-orange); }
+.compliance-badge--over { background: var(--impacted-high-bg); color: var(--impacted-high); }

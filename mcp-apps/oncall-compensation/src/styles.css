@@ -1405,6 +1405,39 @@ html, body {
   vertical-align: middle;
   user-select: none;
 }
+
+/* Tab bar */
+.tab-bar {
+  display: flex;
+  align-items: stretch;
+  padding: 0 16px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn--active {
+  color: var(--pd-green);
+  border-bottom-color: var(--pd-green);
+  font-weight: 600;
+}
 .info-icon:hover {
   color: var(--text-secondary);
 }

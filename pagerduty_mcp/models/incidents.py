@@ -8,6 +8,16 @@ from pagerduty_mcp.models.references import ServiceReference, UserReference
 
 IncidentStatus = Literal["triggered", "acknowledged", "resolved"]
 
+IncidentIncludeOption = Literal[
+    "body",
+    "external_references",
+    "metadata",
+    "first_trigger_log_entry",
+    "conference_bridge",
+    "acknowledgers",
+    "assignees",
+]
+
 IncidentManageStatus = Literal["acknowledged", "resolved"]
 
 IncidentUrgency = Literal[
@@ -113,8 +123,12 @@ class GetIncidentQuery(BaseModel):
     include: list[str] | None = Field(
         default=None,
         description="List of additional information to include in the response. "
-        "Available options: 'users', 'services', 'assignments', 'acknowledgers', 'custom_fields', "
-        "'teams', 'escalation_policies', 'notes', 'urgencies', 'priorities'",
+        "Available options: 'body' (incident description/details), "
+        "'external_references' (links to Datadog monitors, runbooks, etc.), "
+        "'first_trigger_log_entry' (initial trigger log with alert payload), "
+        "'conference_bridge' (conference bridge details), "
+        "'acknowledgers', 'assignees', 'users', 'services', 'assignments', "
+        "'custom_fields', 'teams', 'escalation_policies', 'notes', 'urgencies', 'priorities'",
     )
 
     def to_params(self) -> dict[str, Any]:
@@ -196,7 +210,51 @@ class Assignment(BaseModel):
     assignee: UserReference = Field(description="The user assigned to the incident")
 
 
+class ExternalReference(BaseModel):
+    """An external reference linked to a PagerDuty incident (e.g., Datadog monitor, Jira ticket, runbook)."""
+
+    model_config = ConfigDict(extra="allow")
+
+    id: str | None = Field(default=None, description="The ID of the external reference")
+    type: str | None = Field(default=None, description="The type of the external reference")
+    summary: str | None = Field(default=None, description="A short summary of the external reference")
+    self_: str | None = Field(default=None, alias="self", description="The API URL of the external reference")
+    html_url: str | None = Field(default=None, description="The HTML URL of the external reference")
+    external_id: str | None = Field(default=None, description="The ID of the resource in the external system")
+    external_url: str | None = Field(
+        default=None,
+        description="The URL of the resource in the external system (e.g., Datadog monitor URL)",
+    )
+
+
+class ConferenceBridge(BaseModel):
+    """Conference bridge details for an incident."""
+
+    model_config = ConfigDict(extra="allow")
+
+    conference_number: str | None = Field(default=None, description="The phone number of the conference bridge")
+    conference_url: str | None = Field(default=None, description="The URL of the conference bridge")
+
+
+class IncidentBody(BaseModel):
+    """The body of an incident containing details. Included when requested via include[]=body."""
+
+    model_config = ConfigDict(extra="allow")
+
+    details: str | dict | None = Field(
+        default=None,
+        description="The details of the incident body. Can be a string or a dict (e.g., CEF payload from Datadog).",
+    )
+
+    @computed_field
+    @property
+    def type(self) -> Literal["incident_body"]:
+        return "incident_body"
+
+
 class Incident(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     id: str | None = Field(description="The ID of the incident", default=None)
     summary: str | None = Field(default=None, description="A short summary of the incident")
     incident_number: int = Field(description="The number of the incident. This is unique across your account")
@@ -213,20 +271,45 @@ class Incident(BaseModel):
         default=None,
         description="The users assigned to the incident",
     )
+    html_url: str | None = Field(default=None, description="The URL at which the incident is accessible in the web app")
+    urgency: str | None = Field(default=None, description="The current urgency of the incident")
+    description: str | None = Field(default=None, description="The description of the incident")
+
+    # Fields populated when using include[] parameters on get_incident
+    body: IncidentBody | None = Field(
+        default=None,
+        description="The body of the incident. Included when requested via include[]=body.",
+    )
+    external_references: list[ExternalReference] | None = Field(
+        default=None,
+        description="External references linked to the incident (e.g., Datadog monitors, Jira tickets, runbooks). "
+        "Included when requested via include[]=external_references.",
+    )
+    conference_bridge: ConferenceBridge | None = Field(
+        default=None,
+        description="Conference bridge details for the incident. "
+        "Included when requested via include[]=conference_bridge.",
+    )
+    first_trigger_log_entry: dict[str, Any] | None = Field(
+        default=None,
+        description="The first log entry that triggered the incident, containing alert details and integration data. "
+        "Included when requested via include[]=first_trigger_log_entry.",
+    )
+    metadata: dict[str, Any] | None = Field(
+        default=None,
+        description="Service-level metadata associated with the incident. "
+        "Included when requested via include[]=metadata.",
+    )
+    acknowledgers: list[UserReference] | None = Field(
+        default=None,
+        description="Users who acknowledged the incident. "
+        "Included when requested via include[]=acknowledgers.",
+    )
 
     @computed_field
     @property
     def type(self) -> Literal["incident"]:
         return "incident"
-
-
-class IncidentBody(BaseModel):
-    details: str = Field(description="The details of the incident body")
-
-    @computed_field
-    @property
-    def type(self) -> Literal["incident_body"]:
-        return "incident_body"
 
 
 class IncidentCreate(BaseModel):

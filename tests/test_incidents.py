@@ -9,10 +9,12 @@ from pagerduty_mcp.models import (
     MAX_RESULTS,
     Alert,
     AlertQuery,
-    Assignment,
     AssignmentInput,
+    ConferenceBridge,
+    ExternalReference,
     GetIncidentQuery,
     Incident,
+    IncidentBody,
     IncidentCreate,
     IncidentManageRequest,
     IncidentNote,
@@ -356,15 +358,10 @@ class TestIncidentTools(unittest.TestCase):
         mock_client.rget.return_value = incident_with_users
         mock_get_client.return_value = mock_client
 
-        # Test
         query = GetIncidentQuery(include=["users"])
         result = get_incident("PINCIDENT123", query)
 
-        # Verify API call
-        expected_params = {"include[]": ["users"]}
-        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params=expected_params)
-
-        # Verify result
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={"include[]": ["users"]})
         self.assertIsInstance(result, Incident)
         self.assertEqual(result.id, "PINCIDENT123")
 
@@ -381,65 +378,171 @@ class TestIncidentTools(unittest.TestCase):
         mock_client.rget.return_value = incident_with_data
         mock_get_client.return_value = mock_client
 
-        # Test
         query = GetIncidentQuery(include=["users", "teams", "services"])
         result = get_incident("PINCIDENT123", query)
 
-        # Verify API call
-        expected_params = {"include[]": ["users", "teams", "services"]}
-        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params=expected_params)
-
-        # Verify result
+        mock_client.rget.assert_called_once_with(
+            "/incidents/PINCIDENT123", params={"include[]": ["users", "teams", "services"]}
+        )
         self.assertIsInstance(result, Incident)
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_include_body(self, mock_get_client):
+        """Test get_incident with body include parses IncidentBody."""
+        incident_with_body = {
+            **self.sample_incident_data,
+            "body": {"type": "incident_body", "details": "Server CPU at 100% for 30 minutes"},
+        }
+        mock_client = Mock()
+        mock_client.rget.return_value = incident_with_body
+        mock_get_client.return_value = mock_client
+
+        result = get_incident("PINCIDENT123", GetIncidentQuery(include=["body"]))
+
+        mock_client.rget.assert_called_once_with(
+            "/incidents/PINCIDENT123", params={"include[]": ["body"]}
+        )
+        self.assertIsInstance(result, Incident)
+        self.assertIsNotNone(result.body)
+        self.assertEqual(result.body.details, "Server CPU at 100% for 30 minutes")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_include_external_references(self, mock_get_client):
+        """Test get_incident with external_references include parses ExternalReference list."""
+        incident_with_refs = {
+            **self.sample_incident_data,
+            "external_references": [
+                {
+                    "id": "PREF123",
+                    "type": "external_reference",
+                    "summary": "Datadog Monitor: CPU Alert",
+                    "external_id": "12345678",
+                    "external_url": "https://app.datadoghq.com/monitors/12345678",
+                },
+                {
+                    "id": "PREF456",
+                    "type": "external_reference",
+                    "summary": "Runbook",
+                    "external_id": "runbook-001",
+                    "external_url": "https://wiki.example.com/runbooks/cpu-alert",
+                },
+            ],
+        }
+        mock_client = Mock()
+        mock_client.rget.return_value = incident_with_refs
+        mock_get_client.return_value = mock_client
+
+        result = get_incident("PINCIDENT123", GetIncidentQuery(include=["external_references"]))
+
+        mock_client.rget.assert_called_once_with(
+            "/incidents/PINCIDENT123", params={"include[]": ["external_references"]}
+        )
+        self.assertIsNotNone(result.external_references)
+        self.assertEqual(len(result.external_references), 2)
+        self.assertIsInstance(result.external_references[0], ExternalReference)
+        self.assertEqual(result.external_references[0].summary, "Datadog Monitor: CPU Alert")
+        self.assertEqual(result.external_references[0].external_url, "https://app.datadoghq.com/monitors/12345678")
+        self.assertEqual(result.external_references[1].external_url, "https://wiki.example.com/runbooks/cpu-alert")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_multiple_rich_includes(self, mock_get_client):
+        """Test get_incident with body, external_references, and conference_bridge."""
+        incident_with_includes = {
+            **self.sample_incident_data,
+            "body": {"type": "incident_body", "details": "Alert details here"},
+            "external_references": [],
+            "conference_bridge": {
+                "conference_number": "+1-555-0123",
+                "conference_url": "https://zoom.us/j/123456",
+            },
+        }
+        mock_client = Mock()
+        mock_client.rget.return_value = incident_with_includes
+        mock_get_client.return_value = mock_client
+
+        result = get_incident(
+            "PINCIDENT123",
+            GetIncidentQuery(include=["body", "external_references", "conference_bridge"]),
+        )
+
+        mock_client.rget.assert_called_once_with(
+            "/incidents/PINCIDENT123",
+            params={"include[]": ["body", "external_references", "conference_bridge"]},
+        )
+        self.assertIsNotNone(result.body)
+        self.assertEqual(result.body.details, "Alert details here")
+        self.assertIsNotNone(result.external_references)
+        self.assertEqual(len(result.external_references), 0)
+        self.assertIsNotNone(result.conference_bridge)
+        self.assertIsInstance(result.conference_bridge, ConferenceBridge)
+        self.assertEqual(result.conference_bridge.conference_number, "+1-555-0123")
+        self.assertEqual(result.conference_bridge.conference_url, "https://zoom.us/j/123456")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_first_trigger_log_entry(self, mock_get_client):
+        """Test get_incident with first_trigger_log_entry include returns raw dict."""
+        incident_with_log = {
+            **self.sample_incident_data,
+            "first_trigger_log_entry": {
+                "id": "PLOG123",
+                "type": "trigger_log_entry",
+                "created_at": "2023-01-01T00:00:00Z",
+                "channel": {
+                    "type": "monitoring_tool",
+                    "monitoring_tool": "Datadog",
+                    "details": {"monitor_id": "12345678"},
+                },
+            },
+        }
+        mock_client = Mock()
+        mock_client.rget.return_value = incident_with_log
+        mock_get_client.return_value = mock_client
+
+        result = get_incident("PINCIDENT123", GetIncidentQuery(include=["first_trigger_log_entry"]))
+
+        self.assertIsNotNone(result.first_trigger_log_entry)
+        self.assertEqual(result.first_trigger_log_entry["id"], "PLOG123")
+        self.assertEqual(result.first_trigger_log_entry["channel"]["monitoring_tool"], "Datadog")
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_incident_without_query_model(self, mock_get_client):
-        """Test get_incident without query model maintains backward compatibility."""
+        """Test get_incident without query_model uses empty params and all optional fields are None."""
         mock_client = Mock()
         mock_client.rget.return_value = self.sample_incident_data
         mock_get_client.return_value = mock_client
 
-        # Test - call without query_model parameter
         result = get_incident("PINCIDENT123")
 
-        # Verify API call with empty params
         mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={})
-
-        # Verify result
         self.assertIsInstance(result, Incident)
         self.assertEqual(result.id, "PINCIDENT123")
+        self.assertIsNone(result.body)
+        self.assertIsNone(result.external_references)
+        self.assertIsNone(result.conference_bridge)
+        self.assertIsNone(result.first_trigger_log_entry)
+        self.assertIsNone(result.metadata)
+        self.assertIsNone(result.acknowledgers)
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_incident_with_empty_query_model(self, mock_get_client):
-        """Test get_incident with empty query model."""
+        """Test get_incident with empty query model produces empty params."""
         mock_client = Mock()
         mock_client.rget.return_value = self.sample_incident_data
         mock_get_client.return_value = mock_client
 
-        # Test
-        query = GetIncidentQuery()
-        result = get_incident("PINCIDENT123", query)
+        result = get_incident("PINCIDENT123", GetIncidentQuery())
 
-        # Should have empty params
         mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={})
-
-        # Verify result
         self.assertIsInstance(result, Incident)
 
     def test_get_incident_query_to_params_with_include(self):
         """Test GetIncidentQuery.to_params() with include parameter."""
         query = GetIncidentQuery(include=["users", "teams"])
-        params = query.to_params()
-
-        expected_params = {"include[]": ["users", "teams"]}
-        self.assertEqual(params, expected_params)
+        self.assertEqual(query.to_params(), {"include[]": ["users", "teams"]})
 
     def test_get_incident_query_to_params_empty(self):
         """Test GetIncidentQuery.to_params() with no parameters."""
-        query = GetIncidentQuery()
-        params = query.to_params()
-
-        self.assertEqual(params, {})
+        self.assertEqual(GetIncidentQuery().to_params(), {})
 
     def test_get_incident_query_validation_extra_forbidden(self):
         """Test GetIncidentQuery rejects extra fields."""
@@ -452,15 +555,13 @@ class TestIncidentTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_incident_with_query_api_error(self, mock_get_client):
-        """Test get_incident with query parameters when API returns error."""
+        """Test get_incident with query parameters propagates API errors."""
         mock_client = Mock()
         mock_client.rget.side_effect = Exception("API Error")
         mock_get_client.return_value = mock_client
 
-        # Test
-        query = GetIncidentQuery(include=["users"])
         with self.assertRaises(Exception) as context:
-            get_incident("PINCIDENT123", query)
+            get_incident("PINCIDENT123", GetIncidentQuery(include=["users"]))
 
         self.assertIn("API Error", str(context.exception))
 
@@ -1369,6 +1470,105 @@ class TestIncidentTools(unittest.TestCase):
             'The correct parameter to filter by multiple Incidents statuses is "status", not "statuses"',
             str(ctx.exception),
         )
+
+    def test_incident_model_with_body(self):
+        """Test Incident model validates correctly with body field."""
+        data = {
+            **self.sample_incident_data,
+            "body": {"type": "incident_body", "details": "Server is on fire"},
+        }
+        incident = Incident.model_validate(data)
+        self.assertIsNotNone(incident.body)
+        self.assertIsInstance(incident.body, IncidentBody)
+        self.assertEqual(incident.body.details, "Server is on fire")
+
+    def test_incident_model_with_external_references(self):
+        """Test Incident model validates correctly with external_references field."""
+        data = {
+            **self.sample_incident_data,
+            "external_references": [
+                {
+                    "id": "PREF123",
+                    "type": "external_reference",
+                    "external_url": "https://app.datadoghq.com/monitors/12345678",
+                }
+            ],
+        }
+        incident = Incident.model_validate(data)
+        self.assertIsNotNone(incident.external_references)
+        self.assertEqual(len(incident.external_references), 1)
+        self.assertIsInstance(incident.external_references[0], ExternalReference)
+        self.assertEqual(
+            incident.external_references[0].external_url,
+            "https://app.datadoghq.com/monitors/12345678",
+        )
+
+    def test_incident_model_with_conference_bridge(self):
+        """Test Incident model validates correctly with conference_bridge field."""
+        data = {
+            **self.sample_incident_data,
+            "conference_bridge": {
+                "conference_number": "+1-555-0123",
+                "conference_url": "https://zoom.us/j/123",
+            },
+        }
+        incident = Incident.model_validate(data)
+        self.assertIsNotNone(incident.conference_bridge)
+        self.assertIsInstance(incident.conference_bridge, ConferenceBridge)
+        self.assertEqual(incident.conference_bridge.conference_number, "+1-555-0123")
+
+    def test_incident_model_without_optional_fields(self):
+        """Test Incident model validates correctly without any optional include fields."""
+        incident = Incident.model_validate(self.sample_incident_data)
+        self.assertIsNone(incident.body)
+        self.assertIsNone(incident.external_references)
+        self.assertIsNone(incident.conference_bridge)
+        self.assertIsNone(incident.first_trigger_log_entry)
+        self.assertIsNone(incident.metadata)
+        self.assertIsNone(incident.acknowledgers)
+
+    def test_external_reference_model(self):
+        """Test ExternalReference model validates correctly."""
+        ref = ExternalReference.model_validate({
+            "id": "PREF123",
+            "type": "external_reference",
+            "summary": "Datadog Monitor",
+            "external_id": "12345678",
+            "external_url": "https://app.datadoghq.com/monitors/12345678",
+        })
+        self.assertEqual(ref.id, "PREF123")
+        self.assertEqual(ref.external_id, "12345678")
+        self.assertEqual(ref.external_url, "https://app.datadoghq.com/monitors/12345678")
+
+    def test_conference_bridge_model(self):
+        """Test ConferenceBridge model validates correctly."""
+        bridge = ConferenceBridge.model_validate({
+            "conference_number": "+1-555-0123",
+            "conference_url": "https://zoom.us/j/123",
+        })
+        self.assertEqual(bridge.conference_number, "+1-555-0123")
+        self.assertEqual(bridge.conference_url, "https://zoom.us/j/123")
+
+    def test_incident_body_model_with_none_details(self):
+        """Test IncidentBody model allows None details."""
+        body = IncidentBody.model_validate({"type": "incident_body"})
+        self.assertIsNone(body.details)
+
+    def test_incident_body_model_with_dict_details(self):
+        """Test IncidentBody model allows dict details (e.g., CEF payload from Datadog)."""
+        cef_payload = {
+            "__pd_cef_payload": {"client": "Datadog"},
+            "body": "Container failures detected",
+            "event_id": "12345",
+            "event_type": "query_alert_monitor",
+        }
+        body = IncidentBody.model_validate({
+            "type": "incident_body",
+            "details": cef_payload,
+        })
+        self.assertIsInstance(body.details, dict)
+        self.assertEqual(body.details["body"], "Container failures detected")
+        self.assertEqual(body.details["event_id"], "12345")
 
 
 class TestAlertTools(unittest.TestCase):

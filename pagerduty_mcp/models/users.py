@@ -59,3 +59,16 @@ class UserQuery(BaseModel):
         if self.limit:
             params["limit"] = self.limit
         return params
+
+
+class CreateUserRequest(BaseModel):
+    name: str = Field(description="The full name of the user")
+    email: str = Field(description="The user's email address (used as login)")
+    role: UserRole = Field(
+        default="user",
+        description="The user's role in PagerDuty (user, admin, read_only_user, etc.)",
+    )
+    time_zone: str = Field(
+        default="UTC",
+        description="The user's time zone (e.g. 'America/New_York')",
+    )

@@ -476,3 +476,73 @@ body {
   font-size: 13px;
   margin-bottom: 12px;
 }
+
+/* ── User checkbox list (schedule phase) ── */
+.user-count-badge {
+  display: inline-block;
+  margin-left: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.user-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px;
+  background: var(--color-bg);
+}
+
+.user-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background .12s;
+  font-size: 13px;
+  user-select: none;
+}
+
+.user-checkbox-item:hover {
+  background: var(--color-bg-subtle, rgba(0,0,0,.04));
+}
+
+.user-checkbox-item.checked {
+  background: var(--color-primary-light, rgba(var(--color-primary-rgb, 22,93,255),.08));
+}
+
+.user-checkbox-item input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.user-checkbox-name {
+  font-weight: 500;
+  color: var(--color-text);
+  min-width: 0;
+}
+
+.user-checkbox-email {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

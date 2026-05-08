@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { ScheduleFormData } from "../types.js";
 
 interface Props {
@@ -34,15 +34,6 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
 
   function remove(idx: number) {
     onChange(schedules.filter((_, i) => i !== idx));
-  }
-
-  function handleUserSelect(e: React.ChangeEvent<HTMLSelectElement>) {
-    const select = e.target;
-    const selected = Array.from(select.selectedOptions).map((o) => o.value);
-    setDraft((d) => ({
-      ...d,
-      layers: [{ ...d.layers[0], user_ids: selected }],
-    }));
   }
 
   const rotationLabel = (s: number) =>
@@ -120,20 +111,33 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
           </div>
           {availableUsers.length > 0 && (
             <div className="form-group">
-              <label>Assign Users (hold Ctrl/Cmd to select multiple)</label>
-              <select
-                multiple
-                size={Math.min(availableUsers.length, 6)}
-                value={draft.layers[0].user_ids}
-                onChange={handleUserSelect}
-                style={{ minHeight: 80 }}
-              >
-                {availableUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.email})
-                  </option>
-                ))}
-              </select>
+              <label>
+                Assign Users
+                {draft.layers[0].user_ids.length > 0 && (
+                  <span className="user-count-badge">{draft.layers[0].user_ids.length} selected</span>
+                )}
+              </label>
+              <div className="user-checkbox-list">
+                {availableUsers.map((u) => {
+                  const checked = draft.layers[0].user_ids.includes(u.id);
+                  return (
+                    <label key={u.id} className={`user-checkbox-item${checked ? " checked" : ""}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          const ids = checked
+                            ? draft.layers[0].user_ids.filter((id) => id !== u.id)
+                            : [...draft.layers[0].user_ids, u.id];
+                          setDraft((d) => ({ ...d, layers: [{ ...d.layers[0], user_ids: ids }] }));
+                        }}
+                      />
+                      <span className="user-checkbox-name">{u.name}</span>
+                      <span className="user-checkbox-email">{u.email}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           )}
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>

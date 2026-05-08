@@ -97,6 +97,11 @@ export function App() {
     setSubmitting(true);
     const allResults: PhaseResult[] = [];
 
+    // ID maps: resolve "new:x" placeholders to real PagerDuty IDs after each phase
+    const userIdMap = new Map<string, string>();
+    const scheduleIdMap = new Map<string, string>();
+    const epIdMap = new Map<string, string>();
+
     // Teams
     if (wizardState.teams.length > 0) {
       const created: CreatedResource[] = [];
@@ -109,35 +114,69 @@ export function App() {
     // Users
     if (wizardState.users.length > 0) {
       const created: CreatedResource[] = [];
-      for (const u of wizardState.users) {
-        created.push(await createUser(proxy!, u));
+      for (let i = 0; i < wizardState.users.length; i++) {
+        const r = await createUser(proxy!, wizardState.users[i]);
+        created.push(r);
+        if (r.status === "success" && r.id) {
+          userIdMap.set(`new:${wizardState.users[i].email}`, r.id);
+        }
       }
       allResults.push({ phase: "users", created });
     }
 
-    // Schedules
+    // Schedules — resolve wizard-user IDs in layer user lists
     if (wizardState.schedules.length > 0) {
       const created: CreatedResource[] = [];
-      for (const s of wizardState.schedules) {
-        created.push(await createSchedule(proxy!, s));
+      for (let i = 0; i < wizardState.schedules.length; i++) {
+        const s = wizardState.schedules[i];
+        const resolved = {
+          ...s,
+          layers: s.layers.map((l) => ({
+            ...l,
+            user_ids: l.user_ids.map((id) => userIdMap.get(id) ?? id),
+          })),
+        };
+        const r = await createSchedule(proxy!, resolved);
+        created.push(r);
+        if (r.status === "success" && r.id) {
+          scheduleIdMap.set(`new:${s.name}`, r.id);
+        }
       }
       allResults.push({ phase: "schedules", created });
     }
 
-    // Escalation Policies
+    // Escalation Policies — resolve wizard-user and wizard-schedule target IDs
     if (wizardState.escalationPolicies.length > 0) {
       const created: CreatedResource[] = [];
-      for (const ep of wizardState.escalationPolicies) {
-        created.push(await createEscalationPolicy(proxy!, ep));
+      for (let i = 0; i < wizardState.escalationPolicies.length; i++) {
+        const ep = wizardState.escalationPolicies[i];
+        const resolved = {
+          ...ep,
+          rules: ep.rules.map((r) => ({
+            ...r,
+            target_id: r.target_type === "schedule"
+              ? (scheduleIdMap.get(r.target_id) ?? r.target_id)
+              : (userIdMap.get(r.target_id) ?? r.target_id),
+          })),
+        };
+        const res = await createEscalationPolicy(proxy!, resolved);
+        created.push(res);
+        if (res.status === "success" && res.id) {
+          epIdMap.set(`new:${ep.name}`, res.id);
+        }
       }
       allResults.push({ phase: "escalation-policies", created });
     }
 
-    // Services
+    // Services — resolve wizard-EP IDs and names
     if (wizardState.services.length > 0) {
       const created: CreatedResource[] = [];
       for (const s of wizardState.services) {
-        created.push(await createService(proxy!, s));
+        const resolvedEpId = epIdMap.get(s.escalation_policy_id) ?? s.escalation_policy_id;
+        const resolvedEpName = epIdMap.has(s.escalation_policy_id)
+          ? s.escalation_policy_name
+          : s.escalation_policy_name;
+        created.push(await createService(proxy!, { ...s, escalation_policy_id: resolvedEpId, escalation_policy_name: resolvedEpName }));
       }
       allResults.push({ phase: "services", created });
     }

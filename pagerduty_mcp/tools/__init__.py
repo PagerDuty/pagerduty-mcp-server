@@ -107,7 +107,7 @@ from .teams import (
     remove_team_member,
     update_team,
 )
-from .users import get_user_data, list_users
+from .users import create_user, get_user_data, list_users
 
 # Read-only tools (safe, non-destructive operations)
 read_tools = [
@@ -207,6 +207,8 @@ write_tools = [
     delete_team,
     add_team_member,
     remove_team_member,
+    # Users
+    create_user,
     # Schedules
     create_schedule,
     create_schedule_override,

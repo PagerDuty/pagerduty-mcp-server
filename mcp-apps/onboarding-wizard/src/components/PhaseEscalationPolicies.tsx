@@ -11,7 +11,7 @@ interface Props {
   onSkip: () => void;
 }
 
-const EMPTY_RULE: EscalationRule = { delay_in_minutes: 30, target_type: "user", target_id: "" };
+const EMPTY_RULE: EscalationRule = { escalation_delay_in_minutes: 30, target_type: "user", target_id: "" };
 
 const EMPTY: EscalationPolicyFormData = {
   name: "",
@@ -122,8 +122,8 @@ export function PhaseEscalationPolicies({
                   <input
                     type="number"
                     min={0}
-                    value={rule.delay_in_minutes}
-                    onChange={(e) => updateRule(ri, { delay_in_minutes: parseInt((e.target as HTMLInputElement).value) || 0 })}
+                    value={rule.escalation_delay_in_minutes}
+                    onChange={(e) => updateRule(ri, { escalation_delay_in_minutes: parseInt((e.target as HTMLInputElement).value) || 0 })}
                   />
                 </div>
                 <div className="form-group">

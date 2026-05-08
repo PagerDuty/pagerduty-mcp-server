@@ -14,7 +14,6 @@ const EMPTY: ServiceFormData = {
   name: "",
   description: "",
   escalation_policy_id: "",
-  alert_creation: "create_alerts_and_incidents",
 };
 
 export function PhaseServices({
@@ -54,7 +53,7 @@ export function PhaseServices({
           <div key={i} className="item-row">
             <div className="item-row-main">
               <div className="item-row-name">{s.name}</div>
-              <div className="item-row-detail">{epName(s.escalation_policy_id)} · {s.alert_creation}</div>
+              <div className="item-row-detail">{epName(s.escalation_policy_id)}</div>
             </div>
             <button className="btn btn-sm btn-danger" onClick={() => remove(i)}>Remove</button>
           </div>
@@ -86,26 +85,14 @@ export function PhaseServices({
               </select>
             </div>
           </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Description</label>
-              <input
-                type="text"
-                placeholder="Optional description"
-                value={draft.description}
-                onChange={(e) => setDraft((d) => ({ ...d, description: (e.target as HTMLInputElement).value }))}
-              />
-            </div>
-            <div className="form-group">
-              <label>Alert Creation</label>
-              <select
-                value={draft.alert_creation}
-                onChange={(e) => setDraft((d) => ({ ...d, alert_creation: (e.target as HTMLSelectElement).value as ServiceFormData["alert_creation"] }))}
-              >
-                <option value="create_alerts_and_incidents">Alerts and Incidents</option>
-                <option value="create_incidents_from_alerts">Incidents from Alerts</option>
-              </select>
-            </div>
+          <div className="form-group">
+            <label>Description</label>
+            <input
+              type="text"
+              placeholder="Optional description"
+              value={draft.description}
+              onChange={(e) => setDraft((d) => ({ ...d, description: (e.target as HTMLInputElement).value }))}
+            />
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button

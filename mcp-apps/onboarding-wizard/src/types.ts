@@ -22,7 +22,7 @@ export interface UserFormData {
 
 export interface ScheduleLayer {
   name: string;
-  rotation_type: "daily" | "weekly";
+  rotation_turn_length_seconds: number;
   user_ids: string[];
   handoff_time: string;
 }
@@ -34,7 +34,7 @@ export interface ScheduleFormData {
 }
 
 export interface EscalationRule {
-  delay_in_minutes: number;
+  escalation_delay_in_minutes: number;
   target_type: "user" | "schedule";
   target_id: string;
 }
@@ -50,7 +50,6 @@ export interface ServiceFormData {
   name: string;
   description: string;
   escalation_policy_id: string;
-  alert_creation: "create_incidents_from_alerts" | "create_alerts_and_incidents";
 }
 
 export interface AlertGroupingFormData {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import type { ScheduleFormData } from "../types.js";
 
 interface Props {
@@ -10,10 +10,15 @@ interface Props {
   onSkip: () => void;
 }
 
+const ROTATION_OPTIONS = [
+  { label: "Daily (24h)", value: 86400 },
+  { label: "Weekly (7d)", value: 604800 },
+];
+
 const EMPTY: ScheduleFormData = {
   name: "",
   time_zone: "UTC",
-  layers: [{ name: "Layer 1", rotation_type: "weekly", user_ids: [], handoff_time: "08:00" }],
+  layers: [{ name: "Layer 1", rotation_turn_length_seconds: 604800, user_ids: [], handoff_time: "08:00" }],
 };
 
 export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, onBack, onSkip }: Props) {
@@ -23,7 +28,7 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
   function add() {
     if (!draft.name.trim()) return;
     onChange([...schedules, { ...draft }]);
-    setDraft(EMPTY);
+    setDraft({ ...EMPTY, layers: [{ ...EMPTY.layers[0] }] });
     setAdding(false);
   }
 
@@ -31,13 +36,17 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
     onChange(schedules.filter((_, i) => i !== idx));
   }
 
-  function toggleUser(userId: string) {
-    const layer = draft.layers[0];
-    const ids = layer.user_ids.includes(userId)
-      ? layer.user_ids.filter((id) => id !== userId)
-      : [...layer.user_ids, userId];
-    setDraft((d) => ({ ...d, layers: [{ ...layer, user_ids: ids }] }));
+  function handleUserSelect(e: React.ChangeEvent<HTMLSelectElement>) {
+    const select = e.target;
+    const selected = Array.from(select.selectedOptions).map((o) => o.value);
+    setDraft((d) => ({
+      ...d,
+      layers: [{ ...d.layers[0], user_ids: selected }],
+    }));
   }
+
+  const rotationLabel = (s: number) =>
+    ROTATION_OPTIONS.find((o) => o.value === s)?.label ?? `${s}s`;
 
   return (
     <div className="phase-container">
@@ -51,7 +60,9 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
           <div key={i} className="item-row">
             <div className="item-row-main">
               <div className="item-row-name">{s.name}</div>
-              <div className="item-row-detail">{s.time_zone} · {s.layers[0]?.rotation_type} · {s.layers[0]?.user_ids.length} user(s)</div>
+              <div className="item-row-detail">
+                {s.time_zone} · {rotationLabel(s.layers[0]?.rotation_turn_length_seconds)} · {s.layers[0]?.user_ids.length} user(s)
+              </div>
             </div>
             <button className="btn btn-sm btn-danger" onClick={() => remove(i)}>Remove</button>
           </div>
@@ -82,16 +93,17 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Rotation Type</label>
+              <label>Rotation Length</label>
               <select
-                value={draft.layers[0].rotation_type}
+                value={draft.layers[0].rotation_turn_length_seconds}
                 onChange={(e) => setDraft((d) => ({
                   ...d,
-                  layers: [{ ...d.layers[0], rotation_type: (e.target as HTMLSelectElement).value as "daily" | "weekly" }],
+                  layers: [{ ...d.layers[0], rotation_turn_length_seconds: parseInt((e.target as HTMLSelectElement).value) }],
                 }))}
               >
-                <option value="weekly">Weekly</option>
-                <option value="daily">Daily</option>
+                {ROTATION_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -108,25 +120,23 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
           </div>
           {availableUsers.length > 0 && (
             <div className="form-group">
-              <label>Assign Users</label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-                {availableUsers.map((u) => {
-                  const selected = draft.layers[0].user_ids.includes(u.id);
-                  return (
-                    <button
-                      key={u.id}
-                      className={`btn btn-sm ${selected ? "btn-primary" : "btn-secondary"}`}
-                      onClick={() => toggleUser(u.id)}
-                      type="button"
-                    >
-                      {u.name}
-                    </button>
-                  );
-                })}
-              </div>
+              <label>Assign Users (hold Ctrl/Cmd to select multiple)</label>
+              <select
+                multiple
+                size={Math.min(availableUsers.length, 6)}
+                value={draft.layers[0].user_ids}
+                onChange={handleUserSelect}
+                style={{ minHeight: 80 }}
+              >
+                {availableUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.email})
+                  </option>
+                ))}
+              </select>
             </div>
           )}
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
             <button className="btn btn-primary btn-sm" onClick={add} disabled={!draft.name.trim()}>
               Add Schedule
             </button>
@@ -151,11 +161,7 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
         <button className="skip-btn" onClick={onSkip}>Skip this phase</button>
         <div className="nav-bar-right">
           <button className="btn btn-secondary" onClick={onBack}>← Back</button>
-          <button
-            className="btn btn-primary"
-            onClick={onNext}
-            disabled={schedules.length === 0}
-          >
+          <button className="btn btn-primary" onClick={onNext} disabled={schedules.length === 0}>
             Next →
           </button>
         </div>

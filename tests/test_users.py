@@ -291,5 +291,93 @@ class TestUserTools(unittest.TestCase):
         self.assertEqual(len(result.response), 2)
 
 
+class TestCreateUser(unittest.TestCase):
+    """Test cases for create_user tool."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.sample_create_response = {
+            "id": "UNEW01",
+            "summary": "Alice Johnson",
+            "name": "Alice Johnson",
+            "email": "alice@example.com",
+            "role": "user",
+            "teams": [],
+        }
+        cls.mock_client = MagicMock()
+
+    def setUp(self):
+        self.mock_client.reset_mock()
+        self.mock_client.rpost.side_effect = None
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_success(self, mock_get_client):
+        """Test successful user creation."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = self.sample_create_response
+
+        from pagerduty_mcp.models.users import CreateUserRequest
+        from pagerduty_mcp.tools.users import create_user
+
+        result = create_user(CreateUserRequest(name="Alice Johnson", email="alice@example.com"))
+
+        mock_get_client.assert_called_once()
+        self.mock_client.rpost.assert_called_once_with(
+            "/users",
+            json={"name": "Alice Johnson", "email": "alice@example.com", "role": "user", "time_zone": "UTC"},
+        )
+        self.assertIsInstance(result, User)
+        self.assertEqual(result.id, "UNEW01")
+        self.assertEqual(result.name, "Alice Johnson")
+        self.assertEqual(result.email, "alice@example.com")
+        self.assertEqual(result.role, "user")
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_with_role(self, mock_get_client):
+        """Test user creation with custom role."""
+        mock_get_client.return_value = self.mock_client
+        admin_response = {**self.sample_create_response, "role": "admin"}
+        self.mock_client.rpost.return_value = admin_response
+
+        from pagerduty_mcp.models.users import CreateUserRequest
+        from pagerduty_mcp.tools.users import create_user
+
+        result = create_user(CreateUserRequest(name="Alice Johnson", email="alice@example.com", role="admin"))
+
+        self.mock_client.rpost.assert_called_once_with(
+            "/users",
+            json={"name": "Alice Johnson", "email": "alice@example.com", "role": "admin", "time_zone": "UTC"},
+        )
+        self.assertEqual(result.role, "admin")
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_with_user_envelope(self, mock_get_client):
+        """Test create_user when API returns response wrapped in 'user' envelope."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = {"user": self.sample_create_response}
+
+        from pagerduty_mcp.models.users import CreateUserRequest
+        from pagerduty_mcp.tools.users import create_user
+
+        result = create_user(CreateUserRequest(name="Alice Johnson", email="alice@example.com"))
+
+        self.assertIsInstance(result, User)
+        self.assertEqual(result.id, "UNEW01")
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_api_error(self, mock_get_client):
+        """Test create_user when API raises exception."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.side_effect = Exception("API Error")
+
+        from pagerduty_mcp.models.users import CreateUserRequest
+        from pagerduty_mcp.tools.users import create_user
+
+        with self.assertRaises(Exception) as ctx:
+            create_user(CreateUserRequest(name="Alice Johnson", email="alice@example.com"))
+
+        self.assertEqual(str(ctx.exception), "API Error")
+
+
 if __name__ == "__main__":
     unittest.main()

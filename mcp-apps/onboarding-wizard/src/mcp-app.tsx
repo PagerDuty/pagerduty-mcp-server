@@ -184,6 +184,11 @@ export function App() {
       allResults.push({ phase: "services", created });
     }
 
+    // Brief pause so PagerDuty indexes newly created services before alert groupings reference them
+    if (wizardState.alertGroupings.length > 0 && serviceIdMap.size > 0) {
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+
     // AIOps Alert Groupings — resolve wizard-service IDs
     if (wizardState.alertGroupings.length > 0) {
       const created: CreatedResource[] = [];

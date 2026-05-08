@@ -25,6 +25,7 @@ SERVICE_DEPENDENCY_GRAPH_URI = "ui://service-dependency-graph/graph.html"
 ONCALL_COMPENSATION_URI = "ui://oncall-compensation/report.html"
 OPERATIONS_INTELLIGENCE_URI = "ui://operations-intelligence/dashboard.html"
 ONCALL_MANAGER_URI = "ui://oncall-manager/dashboard.html"
+ONBOARDING_WIZARD_URI = "ui://onboarding-wizard/mcp-app.html"
 
 MCP_SERVER_INSTRUCTIONS = """
 When the user asks for information about their resources, first get the user data and scope any
@@ -308,6 +309,42 @@ def add_oncall_manager(mcp_instance: FastMCP) -> None:
         return html_path.read_text(encoding="utf-8")
 
 
+def add_onboarding_wizard(mcp_instance: FastMCP) -> None:
+    """Register the Onboarding Wizard MCP App tool and resource."""
+
+    @mcp_instance.tool(
+        meta={
+            "ui": {"resourceUri": ONBOARDING_WIZARD_URI},
+            "ui/resourceUri": ONBOARDING_WIZARD_URI,
+        }
+    )
+    def onboarding_wizard() -> list[TextContent]:
+        """PagerDuty Onboarding Wizard — guided 7-phase setup for Teams, Users, Schedules,
+        Escalation Policies, Services, AIOps settings, and Incident Workflows.
+        Supports individual form entry and CSV bulk import for users.
+        The UI calls existing MCP tools to create resources.
+
+        Returns:
+            Text content indicating the UI is ready
+        """
+        return [
+            TextContent(
+                type="text",
+                text="Onboarding Wizard UI initialized. The UI will guide you through setting up Teams, Users, Schedules, Escalation Policies, Services, AIOps, and Incident Workflows.",
+            )
+        ]
+
+    @mcp_instance.resource(
+        ONBOARDING_WIZARD_URI,
+        mime_type="text/html;profile=mcp-app",
+        description="Onboarding Wizard — guided 7-phase PagerDuty setup with CSV bulk import",
+    )
+    def onboarding_wizard_view() -> str:
+        """Onboarding Wizard UI resource."""
+        html_path = pathlib.Path(__file__).parent / "onboarding_wizard_view.html"
+        return html_path.read_text(encoding="utf-8")
+
+
 @app.command()
 def run(*, enable_write_tools: bool = False) -> None:
     """Run the MCP server with the specified configuration.
@@ -333,5 +370,6 @@ def run(*, enable_write_tools: bool = False) -> None:
     add_oncall_compensation(mcp)
     add_operations_intelligence(mcp)
     add_oncall_manager(mcp)
+    add_onboarding_wizard(mcp)
 
     mcp.run()

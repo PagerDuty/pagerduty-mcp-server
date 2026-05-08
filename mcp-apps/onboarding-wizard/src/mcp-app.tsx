@@ -169,23 +169,27 @@ export function App() {
     }
 
     // Services — resolve wizard-EP IDs and names
+    const serviceIdMap = new Map<string, string>();
     if (wizardState.services.length > 0) {
       const created: CreatedResource[] = [];
-      for (const s of wizardState.services) {
+      for (let i = 0; i < wizardState.services.length; i++) {
+        const s = wizardState.services[i];
         const resolvedEpId = epIdMap.get(s.escalation_policy_id) ?? s.escalation_policy_id;
-        const resolvedEpName = epIdMap.has(s.escalation_policy_id)
-          ? s.escalation_policy_name
-          : s.escalation_policy_name;
-        created.push(await createService(proxy!, { ...s, escalation_policy_id: resolvedEpId, escalation_policy_name: resolvedEpName }));
+        const r = await createService(proxy!, { ...s, escalation_policy_id: resolvedEpId, escalation_policy_name: s.escalation_policy_name });
+        created.push(r);
+        if (r.status === "success" && r.id) {
+          serviceIdMap.set(`new:${s.name}`, r.id);
+        }
       }
       allResults.push({ phase: "services", created });
     }
 
-    // AIOps Alert Groupings
+    // AIOps Alert Groupings — resolve wizard-service IDs
     if (wizardState.alertGroupings.length > 0) {
       const created: CreatedResource[] = [];
       for (const g of wizardState.alertGroupings) {
-        created.push(await createAlertGroupingSetting(proxy!, g));
+        const resolved = { ...g, service_id: serviceIdMap.get(g.service_id) ?? g.service_id };
+        created.push(await createAlertGroupingSetting(proxy!, resolved));
       }
       allResults.push({ phase: "aiops", created });
     }

@@ -1,7 +1,7 @@
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import { useEffect, useState } from "react";
-import { createAlertGroupingSetting, createEscalationPolicy, createSchedule, createService, createTeam, createUser, fetchExistingEscalationPolicies, fetchExistingSchedules, fetchExistingServices, fetchExistingUsers } from "./api.js";
+import { createAlertGroupingSetting, createEscalationPolicy, createSchedule, createService, createTeam, createUser, fetchExistingEscalationPolicies, fetchExistingSchedules, fetchExistingUsers } from "./api.js";
 import { PhaseAIOps } from "./components/PhaseAIOps.js";
 import { PhaseEscalationPolicies } from "./components/PhaseEscalationPolicies.js";
 import { PhaseIncidentWorkflows } from "./components/PhaseIncidentWorkflows.js";
@@ -62,7 +62,6 @@ export function App() {
   const [existingUsers, setExistingUsers] = useState<Array<{ id: string; name: string; email: string }>>([]);
   const [existingSchedules, setExistingSchedules] = useState<Array<{ id: string; name: string }>>([]);
   const [existingEPs, setExistingEPs] = useState<Array<{ id: string; name: string }>>([]);
-  const [existingServices, setExistingServices] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     if (!app && !MOCK_MODE) return;
@@ -70,7 +69,6 @@ export function App() {
     fetchExistingUsers(proxy!).then(setExistingUsers).catch(() => {});
     fetchExistingSchedules(proxy!).then(setExistingSchedules).catch(() => {});
     fetchExistingEscalationPolicies(proxy!).then(setExistingEPs).catch(() => {});
-    fetchExistingServices(proxy!).then(setExistingServices).catch(() => {});
   }, [app]);
 
   // Merged lists: existing PD resources + ones added in this wizard session
@@ -85,10 +83,6 @@ export function App() {
   const allEPs = [
     ...existingEPs,
     ...wizardState.escalationPolicies.map((ep) => ({ id: `new:${ep.name}`, name: ep.name })),
-  ];
-  const allServices = [
-    ...existingServices,
-    ...wizardState.services.map((s) => ({ id: `new:${s.name}`, name: s.name })),
   ];
 
   async function handleSubmit() {
@@ -274,7 +268,7 @@ export function App() {
       {phase === "aiops" && (
         <PhaseAIOps
           groupings={wizardState.alertGroupings}
-          availableServices={allServices}
+          availableServices={wizardState.services.map((s) => ({ id: `new:${s.name}`, name: s.name }))}
           onChange={(g: AlertGroupingFormData[]) => update("alertGroupings", g)}
           onNext={() => setPhase(nextPhase(phase))}
           onBack={() => setPhase(prevPhase(phase))}

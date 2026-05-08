@@ -165,7 +165,7 @@ export async function createService(app: App, form: ServiceFormData): Promise<Cr
         service: {
           name: form.name,
           description: form.description || null,
-          escalation_policy: { id: form.escalation_policy_id, type: "escalation_policy_reference" },
+          escalation_policy: { id: form.escalation_policy_id, summary: form.escalation_policy_name, type: "escalation_policy_reference" },
         },
       },
     }) as { id: string; name: string };
@@ -181,10 +181,10 @@ export async function createAlertGroupingSetting(app: App, form: AlertGroupingFo
   }
   try {
     const config = form.type === "time"
-      ? { type: "time", timeout: form.timeout ?? 300 }
+      ? { timeout: form.timeout ?? 300 }
       : form.type === "intelligent"
-      ? { type: "intelligent" }
-      : { type: "content_based", time_window: form.timeout ?? 300, aggregate: "any", fields: ["summary"] };
+      ? { time_window: form.timeout ?? 300 }
+      : { aggregate: "any", fields: ["summary"], time_window: form.timeout ?? 300 };
 
     // Python: create_alert_grouping_setting(create_model: AlertGroupingSettingCreateRequest)
     // AlertGroupingSettingCreateRequest { alert_grouping_setting: AlertGroupingSettingCreate }

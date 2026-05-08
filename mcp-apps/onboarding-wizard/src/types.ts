@@ -50,6 +50,7 @@ export interface ServiceFormData {
   name: string;
   description: string;
   escalation_policy_id: string;
+  escalation_policy_name: string;
 }
 
 export interface AlertGroupingFormData {

@@ -14,6 +14,7 @@ const EMPTY: ServiceFormData = {
   name: "",
   description: "",
   escalation_policy_id: "",
+  escalation_policy_name: "",
 };
 
 export function PhaseServices({
@@ -76,7 +77,11 @@ export function PhaseServices({
               <label>Escalation Policy *</label>
               <select
                 value={draft.escalation_policy_id}
-                onChange={(e) => setDraft((d) => ({ ...d, escalation_policy_id: (e.target as HTMLSelectElement).value }))}
+                onChange={(e) => {
+                  const sel = e.target as HTMLSelectElement;
+                  const epName = sel.options[sel.selectedIndex]?.text ?? "";
+                  setDraft((d) => ({ ...d, escalation_policy_id: sel.value, escalation_policy_name: epName }));
+                }}
               >
                 <option value="">-- select --</option>
                 {availableEscalationPolicies.map((ep) => (

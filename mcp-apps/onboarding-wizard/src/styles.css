@@ -507,8 +507,8 @@ body {
 .user-checkbox-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
+  gap: 12px;
+  padding: 6px 10px;
   border-radius: 5px;
   cursor: pointer;
   transition: background .12s;

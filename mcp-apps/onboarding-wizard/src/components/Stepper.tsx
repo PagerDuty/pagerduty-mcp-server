@@ -3,6 +3,7 @@ import type { Phase } from "../types.js";
 const PHASES: { id: Phase; label: string }[] = [
   { id: "teams", label: "Teams" },
   { id: "users", label: "Users" },
+  { id: "team-membership", label: "Members" },
   { id: "schedules", label: "Schedules" },
   { id: "escalation-policies", label: "Escalation" },
   { id: "services", label: "Services" },

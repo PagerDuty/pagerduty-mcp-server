@@ -6,6 +6,7 @@ import type {
   ScheduleFormData,
   ServiceFormData,
   TeamFormData,
+  TeamMemberAssignment,
   UserFormData,
 } from "./types.js";
 
@@ -172,6 +173,25 @@ export async function createService(app: App, form: ServiceFormData): Promise<Cr
     return { type: "Service", name: data.name ?? form.name, id: data.id ?? "", status: "success" };
   } catch (e) {
     return { type: "Service", name: form.name, id: "", status: "error", error: String(e) };
+  }
+}
+
+export async function addTeamMember(
+  app: App,
+  teamId: string,
+  member: TeamMemberAssignment,
+): Promise<CreatedResource> {
+  if (MOCK_MODE) {
+    return { type: "Team Membership", name: `${member.user_name} → team`, id: teamId, status: "success" };
+  }
+  try {
+    await call(app, "add_team_member", {
+      team_id: teamId,
+      member_data: { user_id: member.user_id, role: member.role },
+    });
+    return { type: "Team Membership", name: `${member.user_name} (${member.role})`, id: teamId, status: "success" };
+  } catch (e) {
+    return { type: "Team Membership", name: `${member.user_name} (${member.role})`, id: teamId, status: "error", error: String(e) };
   }
 }
 

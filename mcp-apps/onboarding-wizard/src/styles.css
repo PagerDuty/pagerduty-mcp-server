@@ -630,3 +630,106 @@ body {
   cursor: pointer;
   user-select: none;
 }
+
+/* ── Team Membership Phase ── */
+.membership-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.membership-team-card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--color-surface);
+}
+
+.membership-team-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.membership-team-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.membership-team-count {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
+.membership-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.membership-member-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.membership-member-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.membership-role-select {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: 12px;
+  color: var(--color-text);
+  font-family: var(--font);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.membership-add-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.membership-user-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-size: 13px;
+  color: var(--color-text);
+  font-family: var(--font);
+}
+
+.membership-add-btn {
+  margin-top: 4px;
+}
+
+.membership-all-assigned {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 4px;
+  display: block;
+}

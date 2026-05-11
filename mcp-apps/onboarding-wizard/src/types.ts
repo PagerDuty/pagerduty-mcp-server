@@ -1,6 +1,7 @@
 export type Phase =
   | "teams"
   | "users"
+  | "team-membership"
   | "schedules"
   | "escalation-policies"
   | "services"
@@ -59,6 +60,18 @@ export interface AlertGroupingFormData {
   timeout?: number;
 }
 
+export interface TeamMemberAssignment {
+  user_id: string;
+  user_name: string;
+  role: "manager" | "responder" | "observer";
+}
+
+export interface TeamMembershipFormData {
+  team_id: string;   // "new:TeamName" placeholder during wizard, resolved at submit
+  team_name: string;
+  members: TeamMemberAssignment[];
+}
+
 export interface IncidentWorkflowFormData {
   name: string;
   description: string;
@@ -67,6 +80,7 @@ export interface IncidentWorkflowFormData {
 export interface WizardState {
   teams: TeamFormData[];
   users: UserFormData[];
+  teamMemberships: TeamMembershipFormData[];
   schedules: ScheduleFormData[];
   escalationPolicies: EscalationPolicyFormData[];
   services: ServiceFormData[];

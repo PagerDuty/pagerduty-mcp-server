@@ -1,24 +1,26 @@
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import { useEffect, useState } from "react";
-import { createAlertGroupingSetting, createEscalationPolicy, createSchedule, createService, createTeam, createUser, fetchExistingEscalationPolicies, fetchExistingSchedules, fetchExistingUsers } from "./api.js";
+import { addTeamMember, createAlertGroupingSetting, createEscalationPolicy, createSchedule, createService, createTeam, createUser, fetchExistingEscalationPolicies, fetchExistingSchedules, fetchExistingUsers } from "./api.js";
 import { PhaseAIOps } from "./components/PhaseAIOps.js";
 import { PhaseEscalationPolicies } from "./components/PhaseEscalationPolicies.js";
 import { PhaseIncidentWorkflows } from "./components/PhaseIncidentWorkflows.js";
 import { PhaseSchedules } from "./components/PhaseSchedules.js";
 import { PhaseServices } from "./components/PhaseServices.js";
+import { PhaseTeamMembership } from "./components/PhaseTeamMembership.js";
 import { PhaseTeams } from "./components/PhaseTeams.js";
 import { PhaseUsers } from "./components/PhaseUsers.js";
 import { ReviewSummary } from "./components/ReviewSummary.js";
 import { Stepper } from "./components/Stepper.js";
 import "./styles.css";
-import type { AlertGroupingFormData, CreatedResource, EscalationPolicyFormData, IncidentWorkflowFormData, Phase, PhaseResult, ScheduleFormData, ServiceFormData, TeamFormData, UserFormData, WizardState } from "./types.js";
+import type { AlertGroupingFormData, CreatedResource, EscalationPolicyFormData, IncidentWorkflowFormData, Phase, PhaseResult, ScheduleFormData, ServiceFormData, TeamFormData, TeamMembershipFormData, UserFormData, WizardState } from "./types.js";
 
 const MOCK_MODE = import.meta.env.VITE_MOCK === "true";
 
 const PHASE_ORDER: Phase[] = [
   "teams",
   "users",
+  "team-membership",
   "schedules",
   "escalation-policies",
   "services",
@@ -30,6 +32,7 @@ const PHASE_ORDER: Phase[] = [
 const EMPTY_STATE: WizardState = {
   teams: [],
   users: [],
+  teamMemberships: [],
   schedules: [],
   escalationPolicies: [],
   services: [],
@@ -116,6 +119,27 @@ export function App() {
         }
       }
       allResults.push({ phase: "users", created });
+    }
+
+    // Team Memberships — resolve wizard-team and wizard-user IDs
+    const teamIdMap = new Map<string, string>();
+    // Populate teamIdMap from teams created above
+    for (let i = 0; i < wizardState.teams.length; i++) {
+      const r = allResults.find((p) => p.phase === "teams")?.created[i];
+      if (r?.status === "success" && r.id) {
+        teamIdMap.set(`new:${wizardState.teams[i].name}`, r.id);
+      }
+    }
+    if (wizardState.teamMemberships.length > 0) {
+      const created: CreatedResource[] = [];
+      for (const m of wizardState.teamMemberships) {
+        const realTeamId = teamIdMap.get(m.team_id) ?? m.team_id;
+        for (const member of m.members) {
+          const realUserId = userIdMap.get(member.user_id) ?? member.user_id;
+          created.push(await addTeamMember(proxy!, realTeamId, { ...member, user_id: realUserId }));
+        }
+      }
+      if (created.length > 0) allResults.push({ phase: "team-membership", created });
     }
 
     // Schedules — resolve wizard-user IDs in layer user lists
@@ -229,6 +253,17 @@ export function App() {
         <PhaseUsers
           users={wizardState.users}
           onChange={(u: UserFormData[]) => update("users", u)}
+          onNext={() => setPhase(nextPhase(phase))}
+          onBack={() => setPhase(prevPhase(phase))}
+          onSkip={() => setPhase(nextPhase(phase))}
+        />
+      )}
+      {phase === "team-membership" && (
+        <PhaseTeamMembership
+          memberships={wizardState.teamMemberships}
+          wizardTeams={wizardState.teams.map((t) => ({ id: `new:${t.name}`, name: t.name }))}
+          availableUsers={allUsers}
+          onChange={(m: TeamMembershipFormData[]) => update("teamMemberships", m)}
           onNext={() => setPhase(nextPhase(phase))}
           onBack={() => setPhase(prevPhase(phase))}
           onSkip={() => setPhase(nextPhase(phase))}

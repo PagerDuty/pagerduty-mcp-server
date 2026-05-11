@@ -1,125 +1,171 @@
 // src/components/FairnessTab.tsx
 
-import type { FairnessData } from "../fairness";
+import type { FairnessRecord } from "../fairness";
+import type { FairnessConfig } from "../config";
 import { InfoIcon } from "./InfoIcon";
 
 interface Props {
-  data: FairnessData;
-  outlierMultiplier: number;
+  records: FairnessRecord[];
+  config: FairnessConfig;
 }
 
-export function FairnessTab({ data, outlierMultiplier }: Props) {
-  const equityColor = (score: number) =>
-    score >= 80 ? "var(--pd-green)" : score >= 60 ? "var(--ooh-orange)" : "var(--impacted-high)";
+function TeamCell({ teamName }: { teamName?: string }) {
+  if (!teamName) return <span>—</span>;
+  const teams = teamName.split(", ");
+  if (teams.length <= 1) return <span>{teamName}</span>;
+  const [first, ...rest] = teams;
+  return (
+    <span className="team-cell">
+      {first}
+      <span className="team-overflow-badge" title={rest.join(", ")}>+{rest.length}</span>
+    </span>
+  );
+}
+
+function ProgressBar({ pct, status }: { pct: number; status: "ok" | "near" | "over" }) {
+  const fillPct = Math.min(pct * 100, 100);
+  const color = status === "over" ? "var(--impacted-high)" : status === "near" ? "var(--ooh-orange)" : "var(--pd-green)";
+  return (
+    <div className="compliance-bar-wrap">
+      <div className="compliance-bar-track">
+        <div className="compliance-bar-fill" style={{ width: `${fillPct}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: "ok" | "near" | "over" }) {
+  if (status === "over") return <span className="compliance-badge compliance-badge--over">⚠ OVER CAP</span>;
+  if (status === "near") return <span className="compliance-badge compliance-badge--near">⚡ NEAR</span>;
+  return <span className="compliance-badge compliance-badge--ok">✓ OK</span>;
+}
+
+export function FairnessTab({ records, config }: Props) {
+  const overCount = records.filter((r) => r.fairnessStatus === "over").length;
+  const withinCount = records.length - overCount;
+
+  const showWeekends = config.maxWeekendsPerPeriod > 0;
+  const showHolidays = config.maxHolidaysPerPeriod > 0;
+  const showOoh = config.maxOohPeriodsPerPeriod > 0;
+
+  const weekendViolations = showWeekends ? records.filter((r) => r.weekendCapPct > 1).length : 0;
+  const holidayViolations = showHolidays ? records.filter((r) => r.holidayCapPct > 1).length : 0;
+  const oohViolations = showOoh ? records.filter((r) => r.oohPeriodsCapPct > 1).length : 0;
 
   return (
-    <div className="fairness-tab">
-      {/* Summary cards */}
-      <div className="summary-cards" style={{ padding: "8px 16px" }}>
-        <div className="summary-card">
-          <div className="card-value">{data.globalAvgHours}h</div>
-          <div className="card-label" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            Avg Hours / Person
-            <InfoIcon text="Mean scheduled oncall hours across all users in the selected period." />
-          </div>
+    <div className="compliance-tab">
+      {overCount > 0 && (
+        <div className="compliance-violation-banner">
+          ⚠ <strong>{overCount} user{overCount > 1 ? "s" : ""}</strong> have exceeded configured fairness limits this period.
         </div>
-        <div className="summary-card">
-          <div className="card-value" style={{ color: data.globalStdDev > data.globalAvgHours * 0.5 ? "var(--ooh-orange)" : "var(--text-primary)" }}>
-            {data.globalStdDev}h
-          </div>
-          <div className="card-label" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            Std Deviation
-            <InfoIcon text="Standard deviation of scheduled hours across all users. High deviation = uneven distribution." />
-          </div>
-        </div>
-        <div className="summary-card" style={{ borderColor: data.outliers.length > 0 ? "var(--impacted-high-bg)" : undefined }}>
-          <div className="card-value" style={{ color: data.outliers.length > 0 ? "var(--impacted-high)" : "var(--text-muted)" }}>
-            {data.outliers.length}
-          </div>
-          <div className="card-label" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            Outliers
-            <InfoIcon text={`Users carrying ≥ ${outlierMultiplier}× the global average oncall hours. Configurable in Settings.`} />
-          </div>
-          <div className="card-sub">&gt;{outlierMultiplier}× avg load</div>
-        </div>
-        <div className="summary-card">
-          <div className="card-value" style={{ color: equityColor(data.globalEquityScore) }}>
-            {data.globalEquityScore} / 100
-          </div>
-          <div className="card-label" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            Equity Score
-            <InfoIcon text="Equity Score = 100 − (std deviation ÷ mean × 100), capped 0–100. Score of 100 = perfectly equal distribution. Lower = higher variance in oncall burden." />
-          </div>
-        </div>
-      </div>
+      )}
 
-      <div className="fairness-body">
-        {/* Outlier cards */}
-        {data.outliers.length > 0 && (
-          <div className="fairness-outliers">
-            <h4 className="fairness-section-title">
-              ⚠ Outliers — carrying {outlierMultiplier}×+ average load
-              <InfoIcon text={`These users have scheduled hours ≥ ${outlierMultiplier}× the global average of ${data.globalAvgHours}h.`} />
-            </h4>
-            <div className="outlier-cards">
-              {data.outliers.map((o) => (
-                <div key={o.userId} className="outlier-card">
-                  <div className="outlier-card-header">
-                    <span className="outlier-name">{o.userName}</span>
-                    <span className="outlier-badge">{o.multiplierVsAvg}× avg</span>
-                  </div>
-                  <div className="outlier-detail">
-                    {o.scheduledHours.toFixed(1)}h total
-                    {o.outsideHours > 0 && ` · ${o.outsideHours.toFixed(1)}h outside-hours`}
-                    {` · ${o.totalInterruptions} interruptions`}
-                  </div>
-                </div>
-              ))}
-            </div>
+      <div className="compliance-stats-bar">
+        <div className="compliance-stat-pill compliance-stat-pill--ok">
+          <span className="compliance-stat-number">{withinCount}</span>
+          <span className="compliance-stat-label">Within Limits</span>
+        </div>
+        <div className={`compliance-stat-pill${overCount > 0 ? " compliance-stat-pill--over" : ""}`}>
+          <span className="compliance-stat-number">{overCount}</span>
+          <span className="compliance-stat-label">Violations</span>
+        </div>
+        {showWeekends && (
+          <div className={`compliance-stat-pill${weekendViolations > 0 ? " compliance-stat-pill--over" : ""}`}>
+            <span className="compliance-stat-number">{weekendViolations}</span>
+            <span className="compliance-stat-label">
+              Weekend Violations <InfoIcon text={`Users with more than ${config.maxWeekendsPerPeriod} weekend${config.maxWeekendsPerPeriod !== 1 ? "s" : ""} on-call.`} />
+            </span>
           </div>
         )}
+        {showHolidays && (
+          <div className={`compliance-stat-pill${holidayViolations > 0 ? " compliance-stat-pill--over" : ""}`}>
+            <span className="compliance-stat-number">{holidayViolations}</span>
+            <span className="compliance-stat-label">
+              Holiday Violations <InfoIcon text={`Users with more than ${config.maxHolidaysPerPeriod} holiday${config.maxHolidaysPerPeriod !== 1 ? "s" : ""} on-call.`} />
+            </span>
+          </div>
+        )}
+        {showOoh && (
+          <div className={`compliance-stat-pill${oohViolations > 0 ? " compliance-stat-pill--over" : ""}`}>
+            <span className="compliance-stat-number">{oohViolations}</span>
+            <span className="compliance-stat-label">
+              OOH Period Violations <InfoIcon text={`Users with more than ${config.maxOohPeriodsPerPeriod} outside-hours on-call blocks.`} />
+            </span>
+          </div>
+        )}
+      </div>
 
-        {/* Team equity table */}
-        <div className="fairness-team-table">
-          <h4 className="fairness-section-title">
-            Team equity breakdown
-            <InfoIcon text="Equity Score per team = 100 − (team std deviation ÷ team mean × 100). Lower score = more uneven burden within that team." />
-          </h4>
-          <table className="comp-table">
-            <thead>
-              <tr>
-                <th>Team</th>
-                <th style={{ textAlign: "right" }}>Members</th>
-                <th style={{ textAlign: "right" }}>Avg Hours</th>
-                <th style={{ textAlign: "right" }}>
-                  Std Dev
-                  <InfoIcon text="Standard deviation of scheduled hours within this team." />
+      <div className="table-area">
+        <table className="comp-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Team</th>
+              {showWeekends && (
+                <th>
+                  Weekends vs Cap
+                  <InfoIcon text={`Cap: ${config.maxWeekendsPerPeriod} weekends. Number of distinct weekends (Sat or Sun) with any on-call coverage.`} />
                 </th>
-                <th style={{ textAlign: "right" }}>
-                  Outliers
-                  <InfoIcon text={`Members carrying ≥ ${outlierMultiplier}× their team average.`} />
+              )}
+              {showHolidays && (
+                <th>
+                  Holidays vs Cap
+                  <InfoIcon text={`Cap: ${config.maxHolidaysPerPeriod} holidays. Number of distinct holiday dates with any on-call coverage.`} />
                 </th>
-                <th style={{ textAlign: "center" }}>Equity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.teams.map((t) => (
-                <tr key={t.teamId}>
-                  <td>{t.teamName}</td>
-                  <td className="num-cell">{t.memberCount}</td>
-                  <td className="num-cell">{t.avgHours}h</td>
-                  <td className="num-cell" style={{ color: t.stdDev > t.avgHours * 0.5 ? "var(--ooh-orange)" : undefined }}>{t.stdDev}h</td>
-                  <td className="num-cell" style={{ color: t.outlierCount > 0 ? "var(--impacted-high)" : undefined }}>{t.outlierCount}</td>
-                  <td style={{ textAlign: "center" }}>
-                    <span className="equity-badge" style={{ color: equityColor(t.equityScore), background: "transparent", border: `1px solid ${equityColor(t.equityScore)}` }}>
-                      {t.equityScore} / 100
-                    </span>
+              )}
+              {showOoh && (
+                <th>
+                  OOH Periods vs Cap
+                  <InfoIcon text={`Cap: ${config.maxOohPeriodsPerPeriod} periods. Number of distinct outside-business-hours on-call blocks.`} />
+                </th>
+              )}
+              <th style={{ textAlign: "center" }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {records.map((r) => (
+              <tr key={r.userId} className={r.fairnessStatus === "over" ? "compliance-row--over" : ""}>
+                <td>{r.userName}</td>
+                <td style={{ color: "var(--text-muted)" }}>
+                  <TeamCell teamName={r.teamName} />
+                </td>
+                {showWeekends && (
+                  <td>
+                    <ProgressBar pct={r.weekendCapPct} status={r.weekendCapPct > 1 ? "over" : r.weekendCapPct >= config.nearLimitThreshold ? "near" : "ok"} />
+                    <div className="compliance-bar-label">
+                      {r.weekendPeriodCount}/{config.maxWeekendsPerPeriod} weekends
+                      {r.weekendCapPct > 1 && <span style={{ color: "var(--impacted-high)" }}> (+{r.weekendPeriodCount - config.maxWeekendsPerPeriod} over)</span>}
+                      {r.weekendCapPct <= 1 && <span style={{ color: "var(--text-muted)" }}> ({Math.round(r.weekendCapPct * 100)}%)</span>}
+                    </div>
                   </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                )}
+                {showHolidays && (
+                  <td>
+                    <ProgressBar pct={r.holidayCapPct} status={r.holidayCapPct > 1 ? "over" : r.holidayCapPct >= config.nearLimitThreshold ? "near" : "ok"} />
+                    <div className="compliance-bar-label">
+                      {r.holidayCount}/{config.maxHolidaysPerPeriod} holidays
+                      {r.holidayCapPct > 1 && <span style={{ color: "var(--impacted-high)" }}> (+{r.holidayCount - config.maxHolidaysPerPeriod} over)</span>}
+                      {r.holidayCapPct <= 1 && <span style={{ color: "var(--text-muted)" }}> ({Math.round(r.holidayCapPct * 100)}%)</span>}
+                    </div>
+                  </td>
+                )}
+                {showOoh && (
+                  <td>
+                    <ProgressBar pct={r.oohPeriodsCapPct} status={r.oohPeriodsCapPct > 1 ? "over" : r.oohPeriodsCapPct >= config.nearLimitThreshold ? "near" : "ok"} />
+                    <div className="compliance-bar-label">
+                      {r.uniquePeriodsOutside}/{config.maxOohPeriodsPerPeriod} periods
+                      {r.oohPeriodsCapPct > 1 && <span style={{ color: "var(--impacted-high)" }}> (+{r.uniquePeriodsOutside - config.maxOohPeriodsPerPeriod} over)</span>}
+                      {r.oohPeriodsCapPct <= 1 && <span style={{ color: "var(--text-muted)" }}> ({Math.round(r.oohPeriodsCapPct * 100)}%)</span>}
+                    </div>
+                  </td>
+                )}
+                <td style={{ textAlign: "center" }}>
+                  <StatusBadge status={r.fairnessStatus} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

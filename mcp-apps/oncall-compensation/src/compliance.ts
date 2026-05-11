@@ -8,8 +8,11 @@ export type ComplianceStatus = "ok" | "near" | "over";
 export interface ComplianceRecord extends UserCompensationRecord {
   estimatedPay: number;
   complianceStatus: ComplianceStatus;
-  hoursCapPct: number;       // scheduledHours / periodHoursCap (0–∞)
-  outsideCapPct: number;     // outsideHours / periodOutsideHoursCap (0–∞)
+  hoursCapPct: number;         // scheduledHours / periodHoursCap (0–∞)
+  outsideCapPct: number;       // outsideHours / periodOutsideHoursCap (0–∞)
+  consecutiveDaysPct: number;  // maxConsecutiveOnCallDays / maxConsecutiveDays (0 if disabled)
+  consecutiveHoursPct: number; // maxConsecutiveOnCallHours / maxConsecutiveHours (0 if disabled)
+  restViolation: boolean;      // minRestHours < mandatoryRestHours (false if disabled)
 }
 
 export function deriveComplianceRecords(
@@ -24,15 +27,42 @@ export function deriveComplianceRecords(
     const outsideCapPct = cfg.periodOutsideHoursCap > 0
       ? r.outsideHours / cfg.periodOutsideHoursCap
       : 0;
+    const consecutiveDaysPct = cfg.maxConsecutiveDays > 0
+      ? r.maxConsecutiveOnCallDays / cfg.maxConsecutiveDays
+      : 0;
+    const consecutiveHoursPct = cfg.maxConsecutiveHours > 0
+      ? r.maxConsecutiveOnCallHours / cfg.maxConsecutiveHours
+      : 0;
+    const restViolation = cfg.mandatoryRestHours > 0
+      ? r.minRestHours < cfg.mandatoryRestHours
+      : false;
 
-    // nearLimitThreshold is expected to be in (0, 1); values >= 1 would make "over" unreachable
     let complianceStatus: ComplianceStatus = "ok";
-    if (hoursCapPct > 1 || outsideCapPct > 1) {
+    if (
+      hoursCapPct > 1 ||
+      outsideCapPct > 1 ||
+      consecutiveDaysPct > 1 ||
+      consecutiveHoursPct > 1 ||
+      restViolation
+    ) {
       complianceStatus = "over";
-    } else if (hoursCapPct >= cfg.nearLimitThreshold || outsideCapPct >= cfg.nearLimitThreshold) {
+    } else if (
+      hoursCapPct >= cfg.nearLimitThreshold ||
+      outsideCapPct >= cfg.nearLimitThreshold ||
+      consecutiveDaysPct >= cfg.nearLimitThreshold ||
+      consecutiveHoursPct >= cfg.nearLimitThreshold
+    ) {
       complianceStatus = "near";
     }
 
-    return { ...r, complianceStatus, hoursCapPct, outsideCapPct };
+    return {
+      ...r,
+      complianceStatus,
+      hoursCapPct,
+      outsideCapPct,
+      consecutiveDaysPct,
+      consecutiveHoursPct,
+      restViolation,
+    };
   });
 }

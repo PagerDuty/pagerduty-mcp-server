@@ -52,7 +52,12 @@ export function UserDetailModal({ record, onClose }: Props) {
         {/* Modal header */}
         <div className="modal-header">
           <div className="modal-header-info">
-            <div className="modal-name">{record.userName}</div>
+            <div className="modal-name">
+              {record.userName}
+              {record.userTimezone && (
+                <span className="modal-tz">{record.userTimezone}</span>
+              )}
+            </div>
             {record.teamName && (
               <div className="modal-team">{record.teamName}</div>
             )}

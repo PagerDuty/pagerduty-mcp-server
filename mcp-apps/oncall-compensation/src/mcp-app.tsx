@@ -14,7 +14,7 @@ import { loadSettings, saveSettings } from "./config";
 import type { AllSettings } from "./config";
 import { computeEstimatedPay } from "./compensation";
 import { deriveComplianceRecords } from "./compliance";
-import { computeFairnessData } from "./fairness";
+import { deriveFairnessRecords } from "./fairness";
 import { TabBar } from "./components/TabBar";
 import type { TabId } from "./components/TabBar";
 import { CompensationTab } from "./components/CompensationTab";
@@ -45,6 +45,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [since, setSince] = useState(getDefaultSince);
   const [until, setUntil] = useState(getToday);
+  const [epFilter, setEpFilter] = useState("");
   const [activeTab, setActiveTab] = useState<TabId>("compensation");
   const [settings, setSettings] = useState<AllSettings>(loadSettings);
 
@@ -92,6 +93,7 @@ function App() {
           appInstance,
           `${since}T00:00:00Z`,
           `${until}T23:59:59Z`,
+          epFilter || undefined,
         );
         if (!cancelled) setData(result);
       } catch (err) {
@@ -106,14 +108,26 @@ function App() {
 
     load(app);
     return () => { cancelled = true; };
-  }, [app, since, until]);
+  }, [app, since, until, epFilter]);
 
   // Layer 1: enrich with outside-hours metrics (estimatedPay set by Layer 2)
   const enrichedRecords = useMemo((): UserCompensationRecord[] => {
     if (!data) return [];
-    return data.records.map((r) => {
-      if (r.oncallShifts.length === 0) return r;
-      const m = computeOutsideHoursMetrics(r.oncallShifts, settings.businessHours);
+    // When includeDirectlyAdded is false, exclude users with no schedule-backed shifts
+    // and strip direct-layer shifts from the hours calculation for those who have both
+    const records = settings.includeDirectlyAdded
+      ? data.records
+      : data.records.filter((r) => r.hasScheduleShifts);
+    return records.map((r) => {
+      const shiftsToUse = settings.includeDirectlyAdded
+        ? r.oncallShifts
+        : r.oncallShifts.filter((s) => s.hasSchedule);
+      if (shiftsToUse.length === 0) return r;
+      const tz = r.userTimezone ?? settings.businessHours.timezone;
+      const bhConfig = tz !== settings.businessHours.timezone
+        ? { ...settings.businessHours, timezone: tz }
+        : settings.businessHours;
+      const m = computeOutsideHoursMetrics(shiftsToUse, bhConfig);
       return {
         ...r,
         outsideHours: m.totalOutsideHours,
@@ -121,9 +135,14 @@ function App() {
         holidayHours: m.totalHolidayHours,
         maxConsecutiveOutsideHours: m.maxConsecutiveOutsideHours,
         uniquePeriodsOutside: m.uniquePeriodsOutside,
+        weekendPeriodCount: m.weekendPeriodCount,
+        holidayCount: m.holidayCount,
+        maxConsecutiveOnCallDays: m.maxConsecutiveOnCallDays,
+        maxConsecutiveOnCallHours: m.maxConsecutiveOnCallHours,
+        minRestHours: m.minRestHours,
       };
     });
-  }, [data, settings.businessHours]);
+  }, [data, settings.businessHours, settings.includeDirectlyAdded]);
 
   // Layer 2: compute estimated pay
   const compensatedRecords = useMemo(
@@ -137,9 +156,9 @@ function App() {
     [compensatedRecords, settings.compliance],
   );
 
-  // Layer 4: fairness data
-  const fairnessData = useMemo(
-    () => computeFairnessData(compensatedRecords, settings.fairness),
+  // Layer 4: fairness records (cap-based)
+  const fairnessRecords = useMemo(
+    () => deriveFairnessRecords(compensatedRecords, settings.fairness),
     [compensatedRecords, settings.fairness],
   );
 
@@ -216,6 +235,19 @@ function App() {
             onChange={(e) => setUntil(e.target.value)}
             disabled={loading}
           />
+          {(data?.escalationPolicies.length ?? 0) > 0 && (
+            <select
+              className="header-ep-select"
+              value={epFilter}
+              onChange={(e) => { setEpFilter(e.target.value); setSelectedUserId(null); }}
+              disabled={loading}
+            >
+              <option value="">All escalation policies</option>
+              {(data?.escalationPolicies ?? []).map((ep) => (
+                <option key={ep.id} value={ep.id}>{ep.name}</option>
+              ))}
+            </select>
+          )}
           <button className="btn-refresh-header" disabled={loading} onClick={doRefresh}>
             <span className="pd-dot" />
             {loading ? "Loading…" : "Refresh"}
@@ -299,7 +331,7 @@ function App() {
               <ComplianceTab records={complianceRecords} config={settings.compliance} />
             )}
             {activeTab === "fairness" && (
-              <FairnessTab data={fairnessData} outlierMultiplier={settings.fairness.outlierMultiplier} />
+              <FairnessTab records={fairnessRecords} config={settings.fairness} />
             )}
             {activeTab === "settings" && (
               <SettingsTab settings={settings} onSave={handleSaveSettings} />

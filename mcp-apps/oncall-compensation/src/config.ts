@@ -11,14 +11,50 @@ export interface PayConfig {
   holidayMultiplier: number;
 }
 
+export type ComplianceTemplateId = "emea" | "us" | "custom";
+
 export interface ComplianceConfig {
+  templateId: ComplianceTemplateId;
   periodHoursCap: number;
   periodOutsideHoursCap: number;
-  nearLimitThreshold: number; // 0–1, e.g. 0.9 = 90%
+  nearLimitThreshold: number;
+  maxConsecutiveDays: number;   // 0 = disabled
+  maxConsecutiveHours: number;  // 0 = disabled
+  mandatoryRestHours: number;   // 0 = disabled
 }
 
+export const COMPLIANCE_TEMPLATES: Record<
+  ComplianceTemplateId,
+  Omit<ComplianceConfig, "templateId" | "nearLimitThreshold">
+> = {
+  emea: {
+    periodHoursCap: 192,         // EU WTD: 48h/week avg over 4 weeks
+    periodOutsideHoursCap: 80,
+    maxConsecutiveDays: 6,
+    maxConsecutiveHours: 48,
+    mandatoryRestHours: 11,      // EU: 11h daily rest
+  },
+  us: {
+    periodHoursCap: 160,         // 40h/week × 4 weeks
+    periodOutsideHoursCap: 60,
+    maxConsecutiveDays: 7,
+    maxConsecutiveHours: 72,
+    mandatoryRestHours: 8,
+  },
+  custom: {
+    periodHoursCap: 160,
+    periodOutsideHoursCap: 60,
+    maxConsecutiveDays: 0,
+    maxConsecutiveHours: 0,
+    mandatoryRestHours: 0,
+  },
+};
+
 export interface FairnessConfig {
-  outlierMultiplier: number;
+  maxWeekendsPerPeriod: number;    // 0 = disabled
+  maxHolidaysPerPeriod: number;    // 0 = disabled
+  maxOohPeriodsPerPeriod: number;  // 0 = disabled
+  nearLimitThreshold: number;
 }
 
 export interface AllSettings {
@@ -26,6 +62,7 @@ export interface AllSettings {
   compliance: ComplianceConfig;
   fairness: FairnessConfig;
   businessHours: BusinessHoursConfig;
+  includeDirectlyAdded: boolean;
 }
 
 export function defaultPayConfig(): PayConfig {
@@ -40,14 +77,19 @@ export function defaultPayConfig(): PayConfig {
 
 export function defaultComplianceConfig(): ComplianceConfig {
   return {
-    periodHoursCap: 160,
-    periodOutsideHoursCap: 60,
+    templateId: "custom",
     nearLimitThreshold: 0.9,
+    ...COMPLIANCE_TEMPLATES.custom,
   };
 }
 
 export function defaultFairnessConfig(): FairnessConfig {
-  return { outlierMultiplier: 2.0 };
+  return {
+    maxWeekendsPerPeriod: 4,
+    maxHolidaysPerPeriod: 2,
+    maxOohPeriodsPerPeriod: 10,
+    nearLimitThreshold: 0.9,
+  };
 }
 
 export function defaultAllSettings(): AllSettings {
@@ -56,6 +98,7 @@ export function defaultAllSettings(): AllSettings {
     compliance: defaultComplianceConfig(),
     fairness: defaultFairnessConfig(),
     businessHours: defaultBHConfig(),
+    includeDirectlyAdded: false,
   };
 }
 
@@ -102,6 +145,7 @@ export function loadSettings(): AllSettings {
       businessHours: parsed.businessHours
         ? deserializeBH(parsed.businessHours)
         : defaults.businessHours,
+      includeDirectlyAdded: parsed.includeDirectlyAdded ?? defaults.includeDirectlyAdded,
     };
   } catch (e) {
     console.warn("[config] Failed to load settings from localStorage, using defaults:", e);
@@ -117,6 +161,7 @@ export function saveSettings(s: AllSettings): void {
       compliance: s.compliance,
       fairness: s.fairness,
       businessHours: serializeBH(s.businessHours),
+      includeDirectlyAdded: s.includeDirectlyAdded,
     }),
   );
 }

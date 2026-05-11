@@ -475,10 +475,10 @@ def get_oncall_compensation_report(request: OncallCompensationRequest) -> str:
     ep_user_ids: set[str] = set()
 
     for entry in oncalls_rows:
-        uid: str | None = entry.get("user", {}).get("id")
+        uid: str | None = (entry.get("user") or {}).get("id")
         if not uid:
             continue
-        has_schedule = bool(entry.get("schedule", {}).get("id"))
+        has_schedule = bool((entry.get("schedule") or {}).get("id"))
         if not request.include_directly_added and not has_schedule:
             continue
 

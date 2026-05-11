@@ -19,6 +19,7 @@ export interface OncallShift {
   userId: string;
   start: number; // UTC ms
   end: number;   // UTC ms
+  hasSchedule: boolean; // false = directly added to escalation policy layer
 }
 
 export interface OutsideHoursMetrics {
@@ -27,6 +28,11 @@ export interface OutsideHoursMetrics {
   totalHolidayHours: number;
   maxConsecutiveOutsideHours: number;
   uniquePeriodsOutside: number;
+  weekendPeriodCount: number;
+  holidayCount: number;
+  maxConsecutiveOnCallDays: number;
+  maxConsecutiveOnCallHours: number;
+  minRestHours: number;
 }
 
 export function defaultBHConfig(): BusinessHoursConfig {
@@ -248,6 +254,11 @@ export function computeOutsideHoursMetrics(
       totalHolidayHours: 0,
       maxConsecutiveOutsideHours: 0,
       uniquePeriodsOutside: 0,
+      weekendPeriodCount: 0,
+      holidayCount: 0,
+      maxConsecutiveOnCallDays: 0,
+      maxConsecutiveOnCallHours: 0,
+      minRestHours: 999,
     };
   }
 
@@ -256,12 +267,61 @@ export function computeOutsideHoursMetrics(
   let weekendMs = 0;
   let holidayMs = 0;
 
+  // Collect all calendar dates covered by any shift (for consecutive days + weekend/holiday counts)
+  const coveredDates = new Set<string>();
+  const weekendIsoWeeks = new Set<string>();
+  const holidayDatesSet = new Set<string>();
+
   for (const shift of shifts) {
     for (const seg of shiftToOutsideSegments(shift.start, shift.end, config)) {
       allSegs.push(seg);
       if (seg.category === "weekend") weekendMs += seg.end - seg.start;
       else if (seg.category === "holiday") holidayMs += seg.end - seg.start;
     }
+
+    for (const dateStr of getDaysInRange(shift.start, shift.end, config.timezone)) {
+      coveredDates.add(dateStr);
+      const noonMs = (() => {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        return localToUTC(y!, m!, d!, 12, 0, config.timezone);
+      })();
+      const { weekday } = getPartsInTz(noonMs, config.timezone);
+      // Weekend period = distinct ISO week that contains a Sat or Sun with coverage
+      if (weekday === 0 || weekday === 6) {
+        // Use Sun of that week as the week key: subtract weekday days
+        const sundayMs = noonMs - weekday * 86_400_000;
+        const { dateStr: sundayStr } = getPartsInTz(sundayMs, config.timezone);
+        weekendIsoWeeks.add(sundayStr);
+      }
+      if (config.holidays.has(dateStr)) {
+        holidayDatesSet.add(dateStr);
+      }
+    }
+  }
+
+  // Max consecutive on-call days
+  const sortedDates = Array.from(coveredDates).sort();
+  let maxConsecDays = sortedDates.length > 0 ? 1 : 0;
+  let currentConsec = 1;
+  for (let i = 1; i < sortedDates.length; i++) {
+    const prev = new Date(sortedDates[i - 1]!).getTime();
+    const curr = new Date(sortedDates[i]!).getTime();
+    if (curr - prev === 86_400_000) {
+      currentConsec++;
+      maxConsecDays = Math.max(maxConsecDays, currentConsec);
+    } else {
+      currentConsec = 1;
+    }
+  }
+
+  // Max consecutive on-call hours = longest single merged shift
+  const maxShiftMs = shifts.reduce((m, s) => Math.max(m, s.end - s.start), 0);
+
+  // Min rest hours = shortest gap between consecutive merged shifts
+  let minRestHours = 999;
+  for (let i = 1; i < shifts.length; i++) {
+    const gapH = (shifts[i]!.start - shifts[i - 1]!.end) / 3_600_000;
+    if (gapH < minRestHours) minRestHours = gapH;
   }
 
   const merged = mergeSegments(allSegs);
@@ -275,5 +335,10 @@ export function computeOutsideHoursMetrics(
     totalHolidayHours: h(holidayMs),
     maxConsecutiveOutsideHours: h(maxMs),
     uniquePeriodsOutside: merged.length,
+    weekendPeriodCount: weekendIsoWeeks.size,
+    holidayCount: holidayDatesSet.size,
+    maxConsecutiveOnCallDays: maxConsecDays,
+    maxConsecutiveOnCallHours: h(maxShiftMs),
+    minRestHours: Math.round(minRestHours * 100) / 100,
   };
 }

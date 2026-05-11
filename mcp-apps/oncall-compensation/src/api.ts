@@ -24,9 +24,15 @@ export interface IncidentRecord {
   serviceName?: string;
 }
 
+export interface EscalationPolicyInfo {
+  id: string;
+  name: string;
+}
+
 export interface UserCompensationRecord {
   userId: string;
   userName: string;
+  userTimezone?: string;
   teamId?: string;
   teamIds: string[];
   teamName?: string;
@@ -57,6 +63,7 @@ export interface UserCompensationRecord {
 
   // Raw on-call shift windows — used to compute outside hours metrics
   oncallShifts: OncallShift[];
+  hasScheduleShifts: boolean; // true if any shift is backed by a schedule (not directly added)
 
   // Outside business hours metrics — computed in the browser from oncallShifts + config
   // Default to 0; recomputed whenever BusinessHoursConfig changes
@@ -65,6 +72,11 @@ export interface UserCompensationRecord {
   holidayHours: number;
   maxConsecutiveOutsideHours: number;
   uniquePeriodsOutside: number;
+  weekendPeriodCount: number;
+  holidayCount: number;
+  maxConsecutiveOnCallDays: number;
+  maxConsecutiveOnCallHours: number;
+  minRestHours: number;
 
   // Estimated compensation — computed in the browser from PayConfig
   // Default to 0; recomputed whenever PayConfig changes
@@ -79,6 +91,7 @@ export interface TeamInfo {
 export interface CompensationData {
   records: UserCompensationRecord[];
   teams: TeamInfo[];
+  escalationPolicies: EscalationPolicyInfo[];
   since: string;
   until: string;
 }
@@ -105,8 +118,19 @@ export async function fetchCompensationData(
   app: App,
   since: string,
   until: string,
+  escalationPolicyId?: string,
 ): Promise<CompensationData> {
-  const [metricsResult, incidentsResult, teamsResult, oncallsResult] =
+  const oncallsArgs: Record<string, unknown> = {
+    since,
+    until,
+    earliest: false,
+    limit: 100,
+  };
+  if (escalationPolicyId) {
+    oncallsArgs.escalation_policy_ids = [escalationPolicyId];
+  }
+
+  const [metricsResult, incidentsResult, teamsResult, oncallsResult, epResult, usersResult] =
     await Promise.allSettled([
       app.callServerTool({
         name: "get_responder_metrics",
@@ -136,14 +160,15 @@ export async function fetchCompensationData(
       }),
       app.callServerTool({
         name: "list_oncalls",
-        arguments: {
-          query_model: {
-            since,
-            until,
-            earliest: false,
-            limit: 100,
-          },
-        },
+        arguments: { query_model: oncallsArgs },
+      }),
+      app.callServerTool({
+        name: "list_escalation_policies",
+        arguments: { query_model: { limit: 100 } },
+      }),
+      app.callServerTool({
+        name: "list_users",
+        arguments: { query_model: { limit: 100 } },
       }),
     ]);
 
@@ -163,6 +188,14 @@ export async function fetchCompensationData(
     oncallsResult.status === "fulfilled"
       ? extractData<any>(oncallsResult.value)
       : null;
+  const epData =
+    epResult.status === "fulfilled"
+      ? extractData<any>(epResult.value)
+      : null;
+  const usersData =
+    usersResult.status === "fulfilled"
+      ? extractData<any>(usersResult.value)
+      : null;
 
   // Build teams map: id → name
   const teamsMap = new Map<string, string>();
@@ -171,6 +204,23 @@ export async function fetchCompensationData(
     const name: string = t.name ?? t.summary ?? "Unknown Team";
     teamsMap.set(t.id as string, name);
     teamsArray.push({ id: t.id as string, name });
+  }
+
+  // Build escalation policies list
+  const escalationPolicies: EscalationPolicyInfo[] = [];
+  for (const ep of epData?.response ?? []) {
+    if (ep.id && ep.name) {
+      escalationPolicies.push({ id: ep.id as string, name: ep.name as string });
+    }
+  }
+  escalationPolicies.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Build user timezone map: userId → IANA timezone
+  const userTimezoneMap = new Map<string, string>();
+  for (const u of usersData?.response ?? []) {
+    if (u.id && u.time_zone) {
+      userTimezoneMap.set(u.id as string, u.time_zone as string);
+    }
   }
 
   // Build per-user oncall shifts from list_oncalls
@@ -190,8 +240,9 @@ export async function fetchCompensationData(
     const end = Math.min(rawEnd, untilMs);
     if (start >= end) continue;
 
+    const hasSchedule = !!entry.schedule?.id;
     if (!userShifts.has(userId)) userShifts.set(userId, []);
-    userShifts.get(userId)!.push({ userId, start, end });
+    userShifts.get(userId)!.push({ userId, start, end, hasSchedule });
   }
 
   // Group incidents by assigned user for detail modal + urgency counts
@@ -282,6 +333,7 @@ export async function fetchCompensationData(
       const highUrgencyCount = incidents.filter((i) => i.urgency === "high").length;
       const lowUrgencyCount = incidents.filter((i) => i.urgency === "low").length;
       const oncallShifts = userShifts.get(userId) ?? [];
+      const hasScheduleShifts = oncallShifts.some((s) => s.hasSchedule);
       const interruptionRate =
         scheduledHours > 0
           ? Number((totalInterruptions / scheduledHours).toFixed(3))
@@ -290,6 +342,7 @@ export async function fetchCompensationData(
       mergedMap.set(userId, {
         userId,
         userName: m.responder_name ?? "Unknown User",
+        userTimezone: userTimezoneMap.get(userId),
         teamId,
         teamIds: teamId ? [teamId] : [],
         teamName,
@@ -308,18 +361,24 @@ export async function fetchCompensationData(
         lowUrgencyCount,
         incidents,
         oncallShifts,
+        hasScheduleShifts,
         outsideHours: 0,
         weekendHours: 0,
         holidayHours: 0,
         maxConsecutiveOutsideHours: 0,
         uniquePeriodsOutside: 0,
+        weekendPeriodCount: 0,
+        holidayCount: 0,
+        maxConsecutiveOnCallDays: 0,
+        maxConsecutiveOnCallHours: 0,
+        minRestHours: 999,
         estimatedPay: 0,
       });
     }
   }
 
   // Recalculate interruptionRate after all team rows are merged
-  const records: UserCompensationRecord[] = Array.from(mergedMap.values()).map((r) => ({
+  let records: UserCompensationRecord[] = Array.from(mergedMap.values()).map((r) => ({
     ...r,
     interruptionRate:
       r.scheduledHours > 0
@@ -327,8 +386,18 @@ export async function fetchCompensationData(
         : 0,
   }));
 
+  // When an EP filter is active, restrict to users who appeared in the EP-filtered oncalls
+  if (escalationPolicyId) {
+    const epUserIds = new Set<string>();
+    for (const entry of oncallsData?.response ?? []) {
+      const uid: string | undefined = entry.user?.id;
+      if (uid) epUserIds.add(uid);
+    }
+    records = records.filter((r) => epUserIds.has(r.userId));
+  }
+
   // Default sort: highest scheduled hours first
   records.sort((a, b) => b.scheduledHours - a.scheduledHours);
 
-  return { records, teams: teamsArray, since, until };
+  return { records, teams: teamsArray, escalationPolicies, since, until };
 }

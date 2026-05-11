@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BestPracticesPanel } from "./BestPracticesPanel.js";
 import { CsvUpload } from "./CsvUpload.js";
 import type { UserFormData } from "../types.js";
 
@@ -22,6 +23,13 @@ const ROLES = [
 ];
 
 const EMPTY: UserFormData = { name: "", email: "", role: "user", time_zone: "UTC" };
+
+const USERS_TIPS = [
+  { icon: "📧", text: "Use company email addresses only — no Gmail, Yahoo, or personal accounts." },
+  { icon: "🎭", text: "Role guide: Engineers on-call → user (Responder) · Team leads who configure schedules → admin (Manager) · New hires (first 1–2 weeks) → observer · Executives/visibility only → limited_user." },
+  { icon: "🔢", text: "Limit admin/manager users to 2–3 per team. Too many creates confusion over who's in charge." },
+  { icon: "🏢", text: "All users must be members of at least one team — users not assigned to a team can view objects but cannot make changes." },
+];
 
 export function PhaseUsers({ users, onChange, onNext, onBack, onSkip }: Props) {
   const [draft, setDraft] = useState<UserFormData>(EMPTY);
@@ -50,6 +58,8 @@ export function PhaseUsers({ users, onChange, onNext, onBack, onSkip }: Props) {
         <h2>Users</h2>
         <p>Add colleagues to onboard. Use the form or bulk-import via CSV.</p>
       </div>
+
+      <BestPracticesPanel phase="Users" tips={USERS_TIPS} />
 
       <div className="item-list">
         {users.map((u, i) => (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BestPracticesPanel } from "./BestPracticesPanel.js";
 import type { ScheduleFormData } from "../types.js";
 
 interface Props {
@@ -13,6 +14,13 @@ interface Props {
 const ROTATION_OPTIONS = [
   { label: "Daily (24h)", value: 86400 },
   { label: "Weekly (7d)", value: 604800 },
+];
+
+const SCHEDULES_TIPS = [
+  { icon: "📛", text: "Name schedules as: \"TeamName Primary Schedule\", \"TeamName Secondary Schedule\", \"TeamName Manager Schedule\"." },
+  { icon: "🔄", text: "Weekly rotation (6–9 engineers): one person covers a full week — most common for SRE/DevOps. Daily rotation (5–8 engineers): 24h shifts. Business Hours only (3–5 engineers): M–F 9–5 for non-critical/internal tools." },
+  { icon: "⏰", text: "For weekly rotations, set handoff on Monday at 09:00 — consistent day reduces scheduling confusion." },
+  { icon: "🌐", text: "Always set an explicit timezone. All layer shift times are relative to the schedule's configured timezone." },
 ];
 
 const EMPTY: ScheduleFormData = {
@@ -45,6 +53,8 @@ export function PhaseSchedules({ schedules, availableUsers, onChange, onNext, on
         <h2>Schedules</h2>
         <p>Define on-call rotations for your teams.</p>
       </div>
+
+      <BestPracticesPanel phase="Schedules" tips={SCHEDULES_TIPS} />
 
       <div className="item-list">
         {schedules.map((s, i) => (

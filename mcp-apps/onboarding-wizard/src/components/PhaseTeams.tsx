@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BestPracticesPanel } from "./BestPracticesPanel.js";
 import type { TeamFormData } from "../types.js";
 
 interface Props {
@@ -9,6 +10,13 @@ interface Props {
 }
 
 const EMPTY: TeamFormData = { name: "", description: "" };
+
+const TEAMS_TIPS = [
+  { icon: "📛", text: "Use clear, descriptive names: \"Payments Team\", \"Mobile App Team\", \"Infrastructure Team\". For enterprise, follow the org-space convention (e.g., clvs-us-payments)." },
+  { icon: "👥", text: "Keep teams small and focused — ideal size is 5–10 engineers. Larger teams lose clear ownership." },
+  { icon: "🗂️", text: "Organize by product/system, not by org chart. Service ownership stays stable even when people change managers." },
+  { icon: "🔑", text: "Every team needs at least 1 Manager. Keep it to a maximum of 3 — too many managers creates confusion." },
+];
 
 export function PhaseTeams({ teams, onChange, onNext, onSkip }: Props) {
   const [draft, setDraft] = useState<TeamFormData>(EMPTY);
@@ -31,6 +39,8 @@ export function PhaseTeams({ teams, onChange, onNext, onSkip }: Props) {
         <h2>Teams</h2>
         <p>Create the teams that will own services and escalation policies.</p>
       </div>
+
+      <BestPracticesPanel phase="Teams" tips={TEAMS_TIPS} />
 
       <div className="item-list">
         {teams.map((t, i) => (

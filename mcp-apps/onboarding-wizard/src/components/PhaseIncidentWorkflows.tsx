@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BestPracticesPanel } from "./BestPracticesPanel.js";
 import type { IncidentWorkflowFormData } from "../types.js";
 
 interface Props {
@@ -8,6 +9,13 @@ interface Props {
   onBack: () => void;
   onSkip: () => void;
 }
+
+const WORKFLOWS_TIPS = [
+  { icon: "📲", text: "Mobilization Workflow (manual trigger): adds your escalation policy as responders to any active incident. Anyone on the team can trigger it from the incident page, mobile app, or Slack." },
+  { icon: "🚨", text: "Major Incident Workflow (auto-trigger): fires automatically when an incident is declared a Major Incident. Pages responders, notifies stakeholders, and posts status updates." },
+  { icon: "💬", text: "If Slack is connected to PagerDuty, the Major Incident Workflow gains 5 extra steps: Slack channel creation, pinned messages, and a live status thread." },
+  { icon: "🎯", text: "Best practice: create both workflows. Name them \"[Team] Mobilization\" and \"[Team] Major Incident\"." },
+];
 
 const EMPTY: IncidentWorkflowFormData = { name: "", description: "" };
 
@@ -32,6 +40,8 @@ export function PhaseIncidentWorkflows({ workflows, onChange, onNext, onBack, on
         <h2>Incident Workflows</h2>
         <p>Set up automated workflows that trigger when incidents occur.</p>
       </div>
+
+      <BestPracticesPanel phase="Incident Workflows" tips={WORKFLOWS_TIPS} />
 
       <div className="item-list">
         {workflows.map((w, i) => (

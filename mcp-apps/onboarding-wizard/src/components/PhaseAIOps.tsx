@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BestPracticesPanel } from "./BestPracticesPanel.js";
 import type { AlertGroupingFormData } from "../types.js";
 
 interface Props {
@@ -9,6 +10,13 @@ interface Props {
   onBack: () => void;
   onSkip: () => void;
 }
+
+const AIOPS_TIPS = [
+  { icon: "🧠", text: "Intelligent (recommended): ML-based grouping with no manual config — learns from your incident patterns automatically." },
+  { icon: "⏱️", text: "Time-based: groups alerts within a fixed time window (60–3600 seconds). Good when incidents reliably occur in bursts." },
+  { icon: "🔍", text: "Content-based: groups alerts by matching summary keywords. Good when alerts have consistent, structured content." },
+  { icon: "✅", text: "Start with Intelligent for new services — zero config, works immediately. You can switch to another type later." },
+];
 
 const EMPTY: AlertGroupingFormData = {
   service_id: "",
@@ -51,6 +59,8 @@ export function PhaseAIOps({
         <h2>AIOps — Alert Grouping</h2>
         <p>Configure intelligent alert grouping to reduce noise on your services.</p>
       </div>
+
+      <BestPracticesPanel phase="AIOps" tips={AIOPS_TIPS} />
 
       <div className="item-list">
         {groupings.map((g, i) => (

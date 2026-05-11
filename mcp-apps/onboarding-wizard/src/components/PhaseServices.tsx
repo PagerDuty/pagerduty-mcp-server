@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BestPracticesPanel } from "./BestPracticesPanel.js";
 import type { ServiceFormData } from "../types.js";
 
 interface Props {
@@ -9,6 +10,13 @@ interface Props {
   onBack: () => void;
   onSkip: () => void;
 }
+
+const SERVICES_TIPS = [
+  { icon: "📛", text: "Naming convention: {org}-{space}-{servicename}-{env} (e.g., clvs-us-payments-prod). Infrastructure: name by technology or business function, not by a single app." },
+  { icon: "📝", text: "Descriptions are required — include what this service does and what it depends on. Empty descriptions slow down incident response." },
+  { icon: "🔗", text: "Only one escalation policy can be assigned per service — make sure the right team owns it." },
+  { icon: "🤖", text: "Enable Intelligent Alert Grouping (configured in the AIOps phase) to reduce alert noise by 50–70%." },
+];
 
 const EMPTY: ServiceFormData = {
   name: "",
@@ -48,6 +56,8 @@ export function PhaseServices({
         <h2>Services</h2>
         <p>Create services that represent the things you monitor in PagerDuty.</p>
       </div>
+
+      <BestPracticesPanel phase="Services" tips={SERVICES_TIPS} />
 
       <div className="item-list">
         {services.map((s, i) => (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BestPracticesPanel } from "./BestPracticesPanel.js";
 import type { EscalationPolicyFormData, EscalationRule } from "../types.js";
 
 interface Props {
@@ -10,6 +11,13 @@ interface Props {
   onBack: () => void;
   onSkip: () => void;
 }
+
+const EP_TIPS = [
+  { icon: "📛", text: "Name format: \"TeamName EP\" (e.g., \"Payments Team EP\")." },
+  { icon: "📶", text: "Always use 3 levels: Level 1 = Primary on-call schedule → Level 2 = Backup person or schedule → Level 3 = Engineering manager. Never rely on a single escalation level." },
+  { icon: "⏱️", text: "Timeout guidelines: 5 min for revenue-critical services (payments, login) · 10–15 min for standard production services. Maximum 15 min unless specifically required." },
+  { icon: "🔁", text: "Set repeats to at least 2, recommended 3. This ensures incidents don't go unnoticed if all levels miss the page." },
+];
 
 const EMPTY_RULE: EscalationRule = { escalation_delay_in_minutes: 30, target_type: "user", target_id: "" };
 
@@ -67,6 +75,8 @@ export function PhaseEscalationPolicies({
         <h2>Escalation Policies</h2>
         <p>Define who gets paged and in what order when incidents occur.</p>
       </div>
+
+      <BestPracticesPanel phase="Escalation Policies" tips={EP_TIPS} />
 
       <div className="item-list">
         {policies.map((p, i) => (

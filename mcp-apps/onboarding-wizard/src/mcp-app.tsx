@@ -262,7 +262,7 @@ export function App() {
         <PhaseTeamMembership
           memberships={wizardState.teamMemberships}
           wizardTeams={wizardState.teams.map((t) => ({ id: `new:${t.name}`, name: t.name }))}
-          availableUsers={allUsers}
+          availableUsers={wizardState.users.map((u) => ({ id: `new:${u.email}`, name: u.name, email: u.email }))}
           onChange={(m: TeamMembershipFormData[]) => update("teamMemberships", m)}
           onNext={() => setPhase(nextPhase(phase))}
           onBack={() => setPhase(prevPhase(phase))}

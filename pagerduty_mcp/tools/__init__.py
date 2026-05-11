@@ -63,6 +63,7 @@ from .log_entries import (
     list_log_entries,
 )
 from .oncalls import list_oncalls
+from .oncall_compensation import get_oncall_compensation_report
 from .priorities import list_priorities
 from .schedules import (
     create_schedule,
@@ -161,6 +162,8 @@ read_tools = [
     get_incident_metrics_all,
     # On-calls
     list_oncalls,
+    # On-call Compensation Report (agentic)
+    get_oncall_compensation_report,
     # Log Entries
     list_log_entries,
     list_incident_log_entries,

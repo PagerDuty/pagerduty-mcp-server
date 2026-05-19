@@ -59,6 +59,7 @@ const sidebars = {
         'tools/escalation-policies',
         'tools/event-orchestrations',
         'tools/status-pages',
+        'tools/business-services',
       ],
     },
     {

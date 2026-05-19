@@ -71,6 +71,7 @@ The PagerDuty MCP Server exposes **55 tools** across **14 domains**. By default,
 |------|------|-------------|
 | `list_services` | Read | List all services |
 | `get_service` | Read | Get a specific service |
+| `get_technical_service_dependencies` | Read | Get service dependencies for a technical service |
 | `create_service` | Write | Create a new service |
 | `update_service` | Write | Update a service configuration |
 
@@ -150,12 +151,19 @@ The PagerDuty MCP Server exposes **55 tools** across **14 domains**. By default,
 | `create_status_page_post` | Write | Create a new status page post |
 | `create_status_page_post_update` | Write | Add an update to a status page post |
 
+### Business Services
+
+| Tool | Type | Description |
+|------|------|-------------|
+| `list_business_services` | Read | List all business services |
+| `get_business_service_dependencies` | Read | Get technical service dependencies for a business service |
+
 ## Detailed Reference
 
 See the individual domain pages for parameter details and usage examples:
 
 - [Alert Grouping](./alert-grouping) · [Alerts](./alerts) · [Change Events](./change-events)
 - [Incidents](./incidents) · [Incident Workflows](./incident-workflows)
-- [Services](./services) · [Teams](./teams) · [Users](./users)
+- [Services](./services) · [Business Services](./business-services) · [Teams](./teams) · [Users](./users)
 - [Schedules](./schedules) · [On-Call](./oncalls) · [Log Entries](./log-entries)
 - [Escalation Policies](./escalation-policies) · [Event Orchestrations](./event-orchestrations) · [Status Pages](./status-pages)

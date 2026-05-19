@@ -66,3 +66,19 @@ Update an existing service.
 :::note
 Requires `--enable-write-tools` flag.
 :::
+
+---
+
+### `get_technical_service_dependencies`
+
+Get dependencies for a technical service. Returns all service relationships where this technical service is either the dependent or supporting service.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `service_id` | `string` | Yes | The ID of the technical service |
+
+**Example prompts:**
+
+> "What does the checkout-api service depend on?"
+
+> "Show all service dependencies for PXXXXXX"

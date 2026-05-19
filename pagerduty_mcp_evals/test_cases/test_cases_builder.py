@@ -17,6 +17,7 @@ from pagerduty_mcp_evals.test_cases.test_alert_grouping_settings import (
 )
 from pagerduty_mcp_evals.test_cases.test_change_events import CHANGE_EVENTS_COMPETENCY_TESTS
 from pagerduty_mcp_evals.test_cases.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_webhooks import WEBHOOK_COMPETENCY_TESTS
 
 test_mapping = {
     "incidents": INCIDENT_COMPETENCY_TESTS,
@@ -29,6 +30,7 @@ test_mapping = {
     "log-entries": LOG_ENTRY_COMPETENCY_TESTS,
     "schedules": SCHEDULES_COMPETENCY_TESTS,
     "services": SERVICES_COMPETENCY_TESTS,
+    "webhooks": WEBHOOK_COMPETENCY_TESTS,
     "all": (
         INCIDENT_COMPETENCY_TESTS
         + TEAMS_COMPETENCY_TESTS
@@ -40,6 +42,7 @@ test_mapping = {
         + LOG_ENTRY_COMPETENCY_TESTS
         + SCHEDULES_COMPETENCY_TESTS
         + SERVICES_COMPETENCY_TESTS
+        + WEBHOOK_COMPETENCY_TESTS
     ),
 }
 

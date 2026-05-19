@@ -10,6 +10,16 @@ from pagerduty_mcp.tools.schedules_v3 import (
     update_schedule_v3,
 )
 
+BASE_URL = "https://api.pagerduty.com"
+
+
+def _mock_response(data):
+    """Build a mock requests.Response whose .json() returns data."""
+    resp = MagicMock()
+    resp.json.return_value = data
+    resp.raise_for_status.return_value = None
+    return resp
+
 
 class TestScheduleV3Models(unittest.TestCase):
     """Test v3 schedule model validation."""
@@ -87,7 +97,14 @@ class TestEscalationPolicyScheduleV3Reference(unittest.TestCase):
 
 
 class TestScheduleV3Tools(unittest.TestCase):
-    """Test v3 schedule tool functions."""
+    """Test v3 schedule tool functions.
+
+    The implementation uses client.get/post/put (requests.Session methods) instead
+    of client.rget/rpost/rput, because the pagerduty SDK's r* methods validate paths
+    against a hardcoded CANONICAL_PATHS allowlist that doesn't include /v3/schedules.
+    Tests therefore mock client.get/post/put and expect .json() to be called on the
+    returned response object.
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -100,22 +117,26 @@ class TestScheduleV3Tools(unittest.TestCase):
             "summary": "Engineering On-Call",
         }
         cls.mock_client = MagicMock()
+        cls.mock_client.url = BASE_URL
 
     def setUp(self):
         self.mock_client.reset_mock()
-        self.mock_client.rget.side_effect = None
-        self.mock_client.rpost.side_effect = None
-        self.mock_client.rput.side_effect = None
+        self.mock_client.url = BASE_URL
+        self.mock_client.get.side_effect = None
+        self.mock_client.post.side_effect = None
+        self.mock_client.put.side_effect = None
 
     @patch("pagerduty_mcp.tools.schedules_v3.get_client")
     def test_list_schedules_v3_wrapped_response(self, mock_get_client):
         """Test list_schedules_v3 with wrapped API response."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.rget.return_value = {"schedules": [self.sample_schedule]}
+        self.mock_client.get.return_value = _mock_response({"schedules": [self.sample_schedule]})
 
         result = list_schedules_v3()
 
-        self.mock_client.rget.assert_called_once_with("/v3/schedules", params={})
+        self.mock_client.get.assert_called_once_with(
+            f"{BASE_URL}/v3/schedules", params={}
+        )
         self.assertEqual(len(result.response), 1)
         self.assertIsInstance(result.response[0], ScheduleV3)
         self.assertEqual(result.response[0].id, "SCHED123")
@@ -124,7 +145,7 @@ class TestScheduleV3Tools(unittest.TestCase):
     def test_list_schedules_v3_list_response(self, mock_get_client):
         """Test list_schedules_v3 with direct list response (SDK unwrapped)."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.rget.return_value = [self.sample_schedule]
+        self.mock_client.get.return_value = _mock_response([self.sample_schedule])
 
         result = list_schedules_v3()
 
@@ -135,19 +156,19 @@ class TestScheduleV3Tools(unittest.TestCase):
     def test_list_schedules_v3_with_query(self, mock_get_client):
         """Test list_schedules_v3 passes query param correctly."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.rget.return_value = {"schedules": [self.sample_schedule]}
+        self.mock_client.get.return_value = _mock_response({"schedules": [self.sample_schedule]})
 
         list_schedules_v3(query="Engineering", limit=10)
 
-        self.mock_client.rget.assert_called_once_with(
-            "/v3/schedules", params={"query": "Engineering", "limit": 10}
+        self.mock_client.get.assert_called_once_with(
+            f"{BASE_URL}/v3/schedules", params={"query": "Engineering", "limit": 10}
         )
 
     @patch("pagerduty_mcp.tools.schedules_v3.get_client")
     def test_list_schedules_v3_empty_response(self, mock_get_client):
         """Test list_schedules_v3 with empty result."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.rget.return_value = {"schedules": []}
+        self.mock_client.get.return_value = _mock_response({"schedules": []})
 
         result = list_schedules_v3()
 
@@ -157,11 +178,11 @@ class TestScheduleV3Tools(unittest.TestCase):
     def test_get_schedule_v3_wrapped(self, mock_get_client):
         """Test get_schedule_v3 with wrapped response."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.rget.return_value = {"schedule": self.sample_schedule}
+        self.mock_client.get.return_value = _mock_response({"schedule": self.sample_schedule})
 
         result = get_schedule_v3("SCHED123")
 
-        self.mock_client.rget.assert_called_once_with("/v3/schedules/SCHED123")
+        self.mock_client.get.assert_called_once_with(f"{BASE_URL}/v3/schedules/SCHED123")
         self.assertIsInstance(result, ScheduleV3)
         self.assertEqual(result.id, "SCHED123")
         self.assertEqual(result.name, "Engineering On-Call")
@@ -170,7 +191,7 @@ class TestScheduleV3Tools(unittest.TestCase):
     def test_get_schedule_v3_unwrapped(self, mock_get_client):
         """Test get_schedule_v3 with SDK-unwrapped response."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.rget.return_value = self.sample_schedule
+        self.mock_client.get.return_value = _mock_response(self.sample_schedule)
 
         result = get_schedule_v3("SCHED123")
 
@@ -181,7 +202,7 @@ class TestScheduleV3Tools(unittest.TestCase):
     def test_create_schedule_v3(self, mock_get_client):
         """Test create_schedule_v3 posts correct payload and returns ScheduleV3."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.rpost.return_value = {"schedule": self.sample_schedule}
+        self.mock_client.post.return_value = _mock_response({"schedule": self.sample_schedule})
 
         schedule_data = ScheduleV3Create(
             name="Engineering On-Call",
@@ -191,8 +212,8 @@ class TestScheduleV3Tools(unittest.TestCase):
 
         result = create_schedule_v3(schedule_data)
 
-        self.mock_client.rpost.assert_called_once_with(
-            "/v3/schedules",
+        self.mock_client.post.assert_called_once_with(
+            f"{BASE_URL}/v3/schedules",
             json={"schedule": schedule_data.model_dump(exclude_none=True)},
         )
         self.assertIsInstance(result, ScheduleV3)
@@ -204,14 +225,14 @@ class TestScheduleV3Tools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         updated = dict(self.sample_schedule)
         updated["name"] = "Engineering On-Call (Updated)"
-        self.mock_client.rput.return_value = {"schedule": updated}
+        self.mock_client.put.return_value = _mock_response({"schedule": updated})
 
         update_data = ScheduleV3Update(name="Engineering On-Call (Updated)")
 
         result = update_schedule_v3("SCHED123", update_data)
 
-        self.mock_client.rput.assert_called_once_with(
-            "/v3/schedules/SCHED123",
+        self.mock_client.put.assert_called_once_with(
+            f"{BASE_URL}/v3/schedules/SCHED123",
             json={"schedule": update_data.model_dump(exclude_none=True)},
         )
         self.assertIsInstance(result, ScheduleV3)

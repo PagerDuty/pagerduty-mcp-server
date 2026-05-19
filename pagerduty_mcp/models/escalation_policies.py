@@ -12,8 +12,8 @@ from pagerduty_mcp.models.references import (
 
 class EscalationTarget(BaseModel):
     id: str = Field(description="The ID of the escalation target (user or schedule)")
-    type: Literal["user_reference", "schedule_reference"] = Field(
-        description="The type of target - either a user or a schedule reference"
+    type: Literal["user_reference", "schedule_reference", "schedule_v3_reference"] = Field(
+        description="The type of target - a user, a v2 schedule, or a v3 schedule reference"
     )
     summary: str | None = Field(
         default=None,

@@ -20,6 +20,12 @@ from .schedules import (
     list_schedule_users,
     list_schedules,
 )
+from .schedules_v3 import (
+    create_schedule_v3,
+    get_schedule_v3,
+    list_schedules_v3,
+    update_schedule_v3,
+)
 from .services import (
     create_service,
     get_service,
@@ -53,10 +59,13 @@ read_tools = [
     # Users
     get_user_data,
     list_users,
-    # Schedules
+    # Schedules (v2)
     list_schedules,
     get_schedule,
     list_schedule_users,
+    # Schedules (v3)
+    list_schedules_v3,
+    get_schedule_v3,
     # On-calls
     list_oncalls,
     # Escalation Policies
@@ -79,8 +88,11 @@ write_tools = [
     delete_team,
     add_team_member,
     remove_team_member,
-    # Schedules
+    # Schedules (v2)
     create_schedule_override,
+    # Schedules (v3)
+    create_schedule_v3,
+    update_schedule_v3,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

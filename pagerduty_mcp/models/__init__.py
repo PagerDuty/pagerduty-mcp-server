@@ -19,6 +19,7 @@ from .schedules import (
     ScheduleOverrideCreate,
     ScheduleQuery,
 )
+from .schedules_v3 import ScheduleV3, ScheduleV3Create, ScheduleV3Update
 from .services import Service, ServiceCreate, ServiceQuery
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
 from .users import User, UserQuery
@@ -45,6 +46,9 @@ __all__ = [
     "ScheduleOverrideCreate",
     "ScheduleQuery",
     "ScheduleReference",
+    "ScheduleV3",
+    "ScheduleV3Create",
+    "ScheduleV3Update",
     "Service",
     "ServiceCreate",
     "ServiceQuery",

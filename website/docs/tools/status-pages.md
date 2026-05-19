@@ -63,6 +63,20 @@ Get a specific status page post by post ID.
 
 ---
 
+### `list_status_page_posts`
+
+List posts for a Status Page by Status Page ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status_page_id` | `string` | Yes | The ID of the Status Page |
+
+**Example prompt:**
+
+> "List all posts on status page PXXXXXX"
+
+---
+
 ### `list_status_page_post_updates`
 
 List updates for a specific status page post.
@@ -125,3 +139,24 @@ Optional fields:
 :::note
 Requires `--enable-write-tools` flag.
 :::
+
+---
+
+### `create_status_page_post_postmortem` *(write)*
+
+Create or update a postmortem for a Status Page Post. If a postmortem already exists for the post it will be updated; otherwise one is created.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status_page_id` | `string` | Yes | The ID of the Status Page |
+| `post_id` | `string` | Yes | The ID of the Status Page Post |
+| `message` | `string` | Yes | The postmortem message body (supports markdown) |
+| `notify_subscribers` | `boolean` | No | Whether to notify status page subscribers (defaults to `true`) |
+
+:::note
+Requires `--enable-write-tools` flag.
+:::
+
+**Example prompt:**
+
+> "Add a postmortem to status page post PXXXXXX explaining the root cause and preventive measures"

@@ -9,20 +9,29 @@ from .alerts import (
     get_alert_from_incident,
     list_alerts_from_incident,
 )
+from .analytics import (
+    get_incident_metrics_all,
+    get_incident_metrics_by_service,
+    get_incident_metrics_by_team,
+    get_responder_load_metrics,
+    get_responder_metrics,
+)
+from .business_services import (
+    get_business_service_dependencies,
+    list_business_services,
+)
 from .change_events import (
     get_change_event,
     list_change_events,
     list_incident_change_events,
     list_service_change_events,
 )
-
-# Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
-    # create_escalation_policy,
+    create_escalation_policy,
+    delete_escalation_policy,
     get_escalation_policy,
-    # get_escalation_policy_on_call,
-    # get_escalation_policy_services,
     list_escalation_policies,
+    update_escalation_policy,
 )
 from .event_orchestrations import (
     append_event_orchestration_router_rule,
@@ -42,6 +51,7 @@ from .incidents import (
     add_note_to_incident,
     add_responders,
     create_incident,
+    create_incident_status_update,
     get_incident,
     get_outlier_incident,
     get_past_incidents,
@@ -52,13 +62,18 @@ from .incidents import (
 )
 from .log_entries import (
     get_log_entry,
+    list_incident_log_entries,
     list_log_entries,
 )
+from .oncall_compensation import get_oncall_compensation_report
 from .oncalls import list_oncalls
+from .priorities import list_priorities
 from .schedules import (
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     get_schedule,
+    list_schedule_overrides,
     list_schedule_users,
     list_schedules,
     update_schedule,
@@ -66,15 +81,18 @@ from .schedules import (
 from .services import (
     create_service,
     get_service,
+    get_technical_service_dependencies,
     list_services,
     update_service,
 )
 from .status_pages import (
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
     get_status_page_post,
     list_status_page_impacts,
     list_status_page_post_updates,
+    list_status_page_posts,
     list_status_page_severities,
     list_status_page_statuses,
     list_status_pages,
@@ -89,7 +107,7 @@ from .teams import (
     remove_team_member,
     update_team,
 )
-from .users import get_user_data, list_users
+from .users import create_user, get_user_data, list_users
 
 # Read-only tools (safe, non-destructive operations)
 read_tools = [
@@ -99,6 +117,15 @@ read_tools = [
     # Alerts
     list_alerts_from_incident,
     get_alert_from_incident,
+    # Analytics
+    get_responder_metrics,
+    get_incident_metrics_by_service,
+    get_incident_metrics_by_team,
+    get_responder_load_metrics,
+    get_incident_metrics_all,
+    # Business Services
+    list_business_services,
+    get_business_service_dependencies,
     # Change Events
     list_change_events,
     get_change_event,
@@ -114,9 +141,20 @@ read_tools = [
     # Incident Workflows
     list_incident_workflows,
     get_incident_workflow,
+    # Log Entries
+    list_log_entries,
+    get_log_entry,
+    list_incident_log_entries,
+    # On-Call Compensation
+    get_oncall_compensation_report,
+    # On-calls
+    list_oncalls,
+    # Priorities
+    list_priorities,
     # Services
     list_services,
     get_service,
+    get_technical_service_dependencies,
     # Teams
     list_teams,
     get_team,
@@ -128,11 +166,7 @@ read_tools = [
     list_schedules,
     get_schedule,
     list_schedule_users,
-    # On-calls
-    list_oncalls,
-    # Log Entries
-    list_log_entries,
-    get_log_entry,
+    list_schedule_overrides,
     # Escalation Policies
     list_escalation_policies,
     get_escalation_policy,
@@ -149,6 +183,7 @@ read_tools = [
     list_status_page_statuses,
     get_status_page_post,
     list_status_page_post_updates,
+    list_status_page_posts,
 ]
 
 # Write tools (potentially dangerous operations that modify state)
@@ -162,6 +197,7 @@ write_tools = [
     manage_incidents,
     add_responders,
     add_note_to_incident,
+    create_incident_status_update,
     # Incident Workflows
     start_incident_workflow,
     # Services
@@ -173,18 +209,24 @@ write_tools = [
     delete_team,
     add_team_member,
     remove_team_member,
+    # Users
+    create_user,
     # Schedules
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     update_schedule,
+    # Escalation Policies
+    create_escalation_policy,
+    update_escalation_policy,
+    delete_escalation_policy,
     # Event Orchestrations
     update_event_orchestration_router,
     append_event_orchestration_router_rule,
     # Status Pages
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
-    # Escalation Policies - currently disabled
-    # create_escalation_policy,
 ]
 
 # All tools (combined list for backward compatibility)

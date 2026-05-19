@@ -12,7 +12,21 @@ from .alert_grouping_settings import (
 from .alerts import Alert, AlertQuery
 from .base import MAX_RESULTS, ListResponseModel
 from .change_events import ChangeEvent, ChangeEventQuery
-from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
+from .analytics import (
+    AnalyticsAggregatedMetrics,
+    AnalyticsFilters,
+    AnalyticsIncidentFilters,
+    AnalyticsResponderLoad,
+    AnalyticsResponderMetrics,
+    AnalyticsServiceMetrics,
+    AnalyticsTeamMetrics,
+    GetIncidentMetricsAllRequest,
+    GetIncidentMetricsByServiceRequest,
+    GetIncidentMetricsByTeamRequest,
+    GetResponderLoadMetricsRequest,
+    GetResponderMetricsRequest,
+)
+from .escalation_policies import EscalationPolicy, EscalationPolicyCreate, EscalationPolicyQuery
 from .event_orchestrations import (
     EventOrchestration,
     EventOrchestrationCatchAll,
@@ -68,6 +82,7 @@ from .oncalls import Oncall, OncallQuery
 from .references import (
     IncidentReference,
     IntegrationReference,
+    PriorityReference,
     ScheduleReference,
     ServiceReference,
     TeamReference,
@@ -112,7 +127,7 @@ from .status_pages import (
     StatusPageStatusReference,
 )
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
-from .users import User, UserQuery
+from .users import CreateUserRequest, User, UserQuery
 
 __all__ = [
     "MAX_RESULTS",
@@ -121,6 +136,13 @@ __all__ = [
     "ActionOutput",
     "Alert",
     "AlertGroupingSetting",
+    "AnalyticsAggregatedMetrics",
+    "AnalyticsFilters",
+    "AnalyticsIncidentFilters",
+    "AnalyticsResponderLoad",
+    "AnalyticsResponderMetrics",
+    "AnalyticsServiceMetrics",
+    "AnalyticsTeamMetrics",
     "AlertGroupingSettingCreate",
     "AlertGroupingSettingCreateRequest",
     "AlertGroupingSettingQuery",
@@ -132,8 +154,15 @@ __all__ = [
     "ChangeEventQuery",
     "ContentBasedConfig",
     "ContentBasedIntelligentConfig",
+    "CreateUserRequest",
     "EscalationPolicy",
+    "EscalationPolicyCreate",
     "EscalationPolicyQuery",
+    "GetIncidentMetricsAllRequest",
+    "GetIncidentMetricsByServiceRequest",
+    "GetIncidentMetricsByTeamRequest",
+    "GetResponderLoadMetricsRequest",
+    "GetResponderMetricsRequest",
     "EventOrchestration",
     "EventOrchestrationCatchAll",
     "EventOrchestrationGlobal",
@@ -167,6 +196,7 @@ __all__ = [
     "InlineStepInput",
     "IntegrationReference",
     "IntelligentGroupingConfig",
+    "PriorityReference",
     "ListResponseModel",
     "LogEntry",
     "LogEntryQuery",

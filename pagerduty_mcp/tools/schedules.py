@@ -1,3 +1,5 @@
+import json
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
     ListResponseModel,
@@ -71,6 +73,45 @@ def list_schedule_users(schedule_id: str) -> ListResponseModel[User]:
     response = get_client().rget(f"/schedules/{schedule_id}/users")
     users = [User(**user) for user in response]
     return ListResponseModel[User](response=users)
+
+
+def list_schedule_overrides(schedule_id: str, since: str, until: str) -> str:
+    """List overrides for a schedule within a date range.
+
+    Args:
+        schedule_id: The ID of the schedule
+        since: Start of the date range (ISO 8601)
+        until: End of the date range (ISO 8601)
+
+    Returns:
+        JSON string with an 'overrides' array
+    """
+    response = get_client().rget(
+        f"/schedules/{schedule_id}/overrides",
+        params={"since": since, "until": until},
+    )
+    # pdpyras may return a list or {"overrides": [...]}
+    if isinstance(response, list):
+        overrides = response
+    elif isinstance(response, dict):
+        overrides = response.get("overrides", [])
+    else:
+        overrides = []
+    return json.dumps({"overrides": overrides})
+
+
+def delete_schedule_override(schedule_id: str, override_id: str) -> str:
+    """Delete a schedule override.
+
+    Args:
+        schedule_id: The ID of the schedule
+        override_id: The ID of the override to delete
+
+    Returns:
+        JSON string confirming deletion
+    """
+    get_client().rdelete(f"/schedules/{schedule_id}/overrides/{override_id}")
+    return json.dumps({"success": True})
 
 
 def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:

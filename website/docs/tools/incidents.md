@@ -168,3 +168,22 @@ Requires `--enable-write-tools` flag.
 **Example prompt:**
 
 > "Add a note to incident P123456 saying 'Database failover initiated'"
+
+---
+
+### `create_incident_status_update` *(write)*
+
+Post a status update message to an incident, notifying subscribers and stakeholders of the current state. The message appears in the incident timeline and is sent to notification subscribers.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `incident_id` | `string` | Yes | The ID of the incident to post the status update to |
+| `message` | `string` | Yes | The status update message text |
+
+:::note
+Requires `--enable-write-tools` flag.
+:::
+
+**Example prompt:**
+
+> "Post a status update on incident P123456 saying 'Root cause identified — database connection pool exhausted, fix deploying now'"

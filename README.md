@@ -259,6 +259,16 @@ To integrate the Docker container with MCP clients, you can use Docker as the co
     }
     ```
 
+## Configuration
+
+The MCP server is configured via environment variables:
+
+| Environment Variable | Required | Default | Description |
+|---|---|---|---|
+| `PAGERDUTY_USER_API_KEY` | Yes | — | Your PagerDuty User API Token (or OAuth2 access token when `PAGERDUTY_AUTH_TYPE=oauth2`). |
+| `PAGERDUTY_API_HOST` | No | `https://api.pagerduty.com` | PagerDuty API base URL. Use `https://api.eu.pagerduty.com` for EU accounts. |
+| `PAGERDUTY_AUTH_TYPE` | No | `token` | Controls the Authorization header format. `token` sends `Token token=<key>` (for User API keys). `oauth2` sends `Bearer <key>` (for OAuth2 access tokens). |
+
 ## Available Tools and Resources
 
 This section describes the tools provided by the PagerDuty MCP server. They are categorized based on whether they only read data or can modify data in your PagerDuty account.

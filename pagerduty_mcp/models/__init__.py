@@ -85,6 +85,7 @@ from .schedules import (
     ScheduleQuery,
     ScheduleUpdateRequest,
 )
+from .schedules_v3 import ScheduleV3, ScheduleV3Create, ScheduleV3Update
 from .services import Service, ServiceCreate, ServiceQuery
 from .status_pages import (
     StatusPage,
@@ -192,6 +193,9 @@ __all__ = [
     "ScheduleQuery",
     "ScheduleReference",
     "ScheduleUpdateRequest",
+    "ScheduleV3",
+    "ScheduleV3Create",
+    "ScheduleV3Update",
     "Service",
     "ServiceCreate",
     "ServiceQuery",

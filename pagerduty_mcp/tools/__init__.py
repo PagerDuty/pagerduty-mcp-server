@@ -75,6 +75,12 @@ from .schedules import (
     list_schedules,
     update_schedule,
 )
+from .schedules_v3 import (
+    create_schedule_v3,
+    get_schedule_v3,
+    list_schedules_v3,
+    update_schedule_v3,
+)
 from .services import (
     create_service,
     get_service,
@@ -147,10 +153,13 @@ read_tools = [
     # Users
     get_user_data,
     list_users,
-    # Schedules
+    # Schedules (v2)
     list_schedules,
     get_schedule,
     list_schedule_users,
+    # Schedules (v3)
+    list_schedules_v3,
+    get_schedule_v3,
     # On-calls
     list_oncalls,
     # Log Entries

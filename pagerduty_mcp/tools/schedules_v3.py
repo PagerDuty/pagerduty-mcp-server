@@ -7,6 +7,16 @@ from pagerduty_mcp.models.schedules_v3 import ScheduleV3, ScheduleV3Create, Sche
 
 logger = logging.getLogger(__name__)
 
+# The pagerduty SDK's rget/rpost/rput/rdelete validate paths against a hardcoded
+# CANONICAL_PATHS allowlist. /v3/schedules is a newer API path not included in
+# that list. We use client.get/post/put directly (which goes through the underlying
+# requests.Session with auth headers) and construct the full URL ourselves.
+
+
+def _v3_url(client: Any, path: str) -> str:
+    """Build a full v3 API URL from a relative path."""
+    return f"{client.url}{path}"
+
 
 def _unwrap_schedule(response: Any) -> dict:
     """Extract schedule dict from API response, handling both wrapped and unwrapped forms."""
@@ -37,14 +47,17 @@ def list_schedules_v3(
     if limit:
         params["limit"] = limit
 
-    response = get_client().rget("/v3/schedules", params=params)
+    client = get_client()
+    resp = client.get(_v3_url(client, "/v3/schedules"), params=params)
+    resp.raise_for_status()
+    data = resp.json()
 
-    if isinstance(response, dict) and "schedules" in response:
-        raw_schedules = response["schedules"]
-    elif isinstance(response, list):
-        raw_schedules = response
+    if isinstance(data, dict) and "schedules" in data:
+        raw_schedules = data["schedules"]
+    elif isinstance(data, list):
+        raw_schedules = data
     else:
-        logger.warning("Unexpected response format from /v3/schedules: %s", type(response).__name__)
+        logger.warning("Unexpected response format from /v3/schedules: %s", type(data).__name__)
         raw_schedules = []
 
     schedules = [ScheduleV3(**s) for s in raw_schedules]
@@ -60,8 +73,10 @@ def get_schedule_v3(schedule_id: str) -> ScheduleV3:
     Returns:
         v3 schedule details including rotations, events, and time zone
     """
-    response = get_client().rget(f"/v3/schedules/{schedule_id}")
-    return ScheduleV3.model_validate(_unwrap_schedule(response))
+    client = get_client()
+    resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}"))
+    resp.raise_for_status()
+    return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))
 
 
 def create_schedule_v3(schedule_data: ScheduleV3Create) -> ScheduleV3:
@@ -73,11 +88,13 @@ def create_schedule_v3(schedule_data: ScheduleV3Create) -> ScheduleV3:
     Returns:
         The created v3 schedule
     """
-    response = get_client().rpost(
-        "/v3/schedules",
+    client = get_client()
+    resp = client.post(
+        _v3_url(client, "/v3/schedules"),
         json={"schedule": schedule_data.model_dump(exclude_none=True)},
     )
-    return ScheduleV3.model_validate(_unwrap_schedule(response))
+    resp.raise_for_status()
+    return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))
 
 
 def update_schedule_v3(schedule_id: str, schedule_data: ScheduleV3Update) -> ScheduleV3:
@@ -90,8 +107,10 @@ def update_schedule_v3(schedule_id: str, schedule_data: ScheduleV3Update) -> Sch
     Returns:
         The updated v3 schedule
     """
-    response = get_client().rput(
-        f"/v3/schedules/{schedule_id}",
+    client = get_client()
+    resp = client.put(
+        _v3_url(client, f"/v3/schedules/{schedule_id}"),
         json={"schedule": schedule_data.model_dump(exclude_none=True)},
     )
-    return ScheduleV3.model_validate(_unwrap_schedule(response))
+    resp.raise_for_status()
+    return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))

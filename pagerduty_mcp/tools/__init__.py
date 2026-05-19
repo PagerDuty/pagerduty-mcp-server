@@ -9,6 +9,10 @@ from .alerts import (
     get_alert_from_incident,
     list_alerts_from_incident,
 )
+from .business_services import (
+    get_business_service_dependencies,
+    list_business_services,
+)
 from .change_events import (
     get_change_event,
     list_change_events,
@@ -66,6 +70,7 @@ from .schedules import (
 from .services import (
     create_service,
     get_service,
+    get_technical_service_dependencies,
     list_services,
     update_service,
 )
@@ -114,9 +119,13 @@ read_tools = [
     # Incident Workflows
     list_incident_workflows,
     get_incident_workflow,
+    # Business Services
+    list_business_services,
+    get_business_service_dependencies,
     # Services
     list_services,
     get_service,
+    get_technical_service_dependencies,
     # Teams
     list_teams,
     get_team,

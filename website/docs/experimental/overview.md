@@ -23,8 +23,10 @@ MCP Apps is an ecosystem-wide extension to the Model Context Protocol, not a Pag
 | App | Description |
 |-----|-------------|
 | [Incident Command Center](./incident-command-center) | An interactive incident management dashboard — view, triage, and act on incidents without leaving your IDE |
-| [On-Call Compensation Report](./oncall-compensation) | A sortable breakdown of on-call burden per person — hours, incidents, off-hours interruptions, and configurable business-hours metrics |
+| [On-Call Manager](./oncall-manager) | Schedule management with override CRUD and coverage wizards — view rotations, create overrides, and manage escalation policies |
+| [On-Call Compensation Report](./oncall-compensation) | A sortable breakdown of on-call burden per person — hours, incidents, off-hours interruptions, compliance status, and fairness scoring |
 | [Service Dependency Graph](./service-dependency-graph) | An interactive node graph of your service topology — business services, technical services, dependencies, and active incident impact |
+| [Onboarding Wizard](./onboarding-wizard) | A step-by-step setup guide for new PagerDuty accounts — teams, users, schedules, escalation policies, services, AIOps, and workflows |
 
 ## The `experimental` branch
 

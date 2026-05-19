@@ -85,8 +85,10 @@ const sidebars = {
       items: [
         'experimental/overview',
         'experimental/incident-command-center',
+        'experimental/oncall-manager',
         'experimental/oncall-compensation',
         'experimental/service-dependency-graph',
+        'experimental/onboarding-wizard',
       ],
     },
     {

@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
@@ -6,22 +7,45 @@ from pagerduty_mcp.models import (
     Schedule,
     ScheduleCreateRequest,
     ScheduleOverrideCreate,
-    ScheduleQuery,
     ScheduleUpdateRequest,
     User,
 )
 from pagerduty_mcp.utils import paginate
 
 
-def list_schedules(query_model: ScheduleQuery | None = None) -> ListResponseModel[Schedule]:
+def list_schedules(
+    query: str | None = None,
+    team_ids: list[str] | None = None,
+    user_ids: list[str] | None = None,
+    include: list[str] | None = None,
+    limit: int | None = None,
+) -> ListResponseModel[Schedule]:
     """List schedules with optional filtering.
+
+    Args:
+        query: Filter schedules by name
+        team_ids: Filter by team IDs
+        user_ids: Filter by user IDs
+        include: Include additional details (e.g. schedule_layers)
+        limit: Max results to return
 
     Returns:
         List of schedules matching the query parameters
     """
-    if query_model is None:
-        query_model = ScheduleQuery()
-    response = paginate(client=get_client(), entity="schedules", params=query_model.to_params())
+    params: dict[str, Any] = {}
+    if query:
+        params["query"] = query
+    if team_ids:
+        params["team_ids[]"] = team_ids
+    if user_ids:
+        params["user_ids[]"] = user_ids
+    if include:
+        params["include[]"] = include
+    if limit:
+        params["limit"] = limit
+    response = paginate(
+        client=get_client(), entity="schedules", params=params
+    )
     schedules = [Schedule(**schedule) for schedule in response]
     return ListResponseModel[Schedule](response=schedules)
 

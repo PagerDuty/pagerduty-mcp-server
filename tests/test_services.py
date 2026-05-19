@@ -81,7 +81,7 @@ class TestServiceTools(unittest.TestCase):
 
         result = list_services()
 
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={"limit": DEFAULT_PAGINATION_LIMIT})
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={})
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.services.paginate")
@@ -91,11 +91,10 @@ class TestServiceTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_services_list_response
 
-        query = ServiceQuery()
-        result = list_services(query)
+        result = list_services()
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=query.to_params())
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={})
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -113,11 +112,10 @@ class TestServiceTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[0]]
 
-        query = ServiceQuery(query="Web")
-        result = list_services(query)
+        result = list_services(query="Web")
 
         # Verify paginate call
-        expected_params = {"query": "Web", "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"query": "Web"}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
         # Verify result
@@ -131,11 +129,10 @@ class TestServiceTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[1]]
 
-        query = ServiceQuery(teams_ids=["TEAM2"])
-        result = list_services(query)
+        result = list_services(teams_ids=["TEAM2"])
 
         # Verify paginate call
-        expected_params = {"team_ids[]": ["TEAM2"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": ["TEAM2"]}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
         # Verify result
@@ -149,8 +146,7 @@ class TestServiceTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_services_list_response
 
-        query = ServiceQuery(limit=50)
-        result = list_services(query)
+        result = list_services(limit=50)
 
         # Verify paginate call
         expected_params = {"limit": 50}
@@ -166,8 +162,7 @@ class TestServiceTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_services_list_response[0]]
 
-        query = ServiceQuery(query="Web", teams_ids=["TEAM1"], limit=10)
-        result = list_services(query)
+        result = list_services(query="Web", teams_ids=["TEAM1"], limit=10)
 
         # Verify paginate call
         expected_params = {"query": "Web", "team_ids[]": ["TEAM1"], "limit": 10}
@@ -184,11 +179,10 @@ class TestServiceTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
-        query = ServiceQuery(query="NonExistentService")
-        result = list_services(query)
+        result = list_services(query="NonExistentService")
 
         # Verify paginate call
-        expected_params = {"query": "NonExistentService", "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"query": "NonExistentService"}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
         # Verify result
@@ -201,10 +195,8 @@ class TestServiceTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
-        query = ServiceQuery()
-
         with self.assertRaises(Exception) as context:
-            list_services(query)
+            list_services()
 
         self.assertEqual(str(context.exception), "Pagination Error")
 

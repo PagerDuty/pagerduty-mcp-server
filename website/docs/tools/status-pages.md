@@ -51,6 +51,20 @@ List status options for a Status Page.
 
 ---
 
+### `list_status_page_posts`
+
+List all posts for a Status Page.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status_page_id` | `string` | Yes | The ID of the Status Page |
+
+**Example prompt:**
+
+> "List all posts on status page PXXXXXX"
+
+---
+
 ### `get_status_page_post`
 
 Get a specific status page post by post ID.

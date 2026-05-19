@@ -153,6 +153,7 @@ The PagerDuty MCP Server exposes tools across multiple domains. By default, only
 | `list_status_page_severities` | Read | List severity levels for a status page |
 | `list_status_page_impacts` | Read | List impact options for a status page |
 | `list_status_page_statuses` | Read | List status options for a status page |
+| `list_status_page_posts` | Read | List all posts for a status page |
 | `get_status_page_post` | Read | Get a specific status page post |
 | `list_status_page_post_updates` | Read | List updates for a status page post |
 | `create_status_page_post` | Write | Create a new status page post |

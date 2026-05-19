@@ -4,6 +4,65 @@
 
 PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
+## Embedded MCP Apps (Developer Experience)
+
+Interactive React UIs for PagerDuty incident management, embedded directly in the Python MCP server for seamless IDE integration. Manage your full incident lifecycle without leaving your IDE.
+
+**Available Apps:**
+
+### 1. **Incident Command Center** 🚨
+Full incident lifecycle management from your IDE:
+- Real-time incident feed with auto-refresh
+- Deep incident details: timeline, notes, alerts, changes
+- Quick actions: acknowledge, resolve, escalate
+- AI-powered similar incident detection
+- Alert inspection with raw data
+
+**Usage in VS Code:** Ask Claude: `Show me the incident command center`
+
+### 2. **On-Call Manager** 📅
+Schedule management with override CRUD and coverage wizards:
+- View current on-call rotations across schedules
+- Create, edit, and delete schedule overrides
+- Escalation policy management with modal-based UI
+
+**Usage in VS Code:** Ask Claude: `Show me the on-call manager`
+
+### 3. **On-Call Compensation Report** 💰
+Per-user on-call metrics with compliance tracking:
+- Hours worked, incident counts, interruption rates
+- Business hours vs. off-hours breakdown
+- Compliance status with EU Working Time Directive limits
+- Fairness/equity scoring across responders
+- CSV export
+
+**Usage in VS Code:** Ask Claude: `Show me the oncall compensation report`
+
+### 4. **Service Dependency Graph** 🕸️
+Interactive graph of service relationships and dependencies:
+- Directed graph visualization
+- Impact sidebar showing upstream/downstream services
+
+**Usage in VS Code:** Ask Claude: `Show me the service dependency graph`
+
+### 5. **Onboarding Wizard** 🧙
+Step-by-step PagerDuty account setup:
+- Team creation and user onboarding
+- Schedule setup with timezone support
+- Escalation policy and service configuration
+- AIOps / alert grouping configuration
+- Incident workflow setup
+
+**Usage in VS Code:** Ask Claude: `Open the onboarding wizard`
+
+**Architecture:**
+- ✅ Native VS Code integration (MCP resources)
+- ✅ Single process, no HTTP server management
+- ✅ Direct access to all PagerDuty MCP tools
+- ✅ Simple deployment: `uv run pagerduty-mcp`
+
+See [mcp-apps/README.md](mcp-apps/README.md) for development instructions and customization.
+
 ## Prerequisites
 
 *   [asdf-vm](https://asdf-vm.com/) installed.
@@ -340,7 +399,3 @@ PagerDuty's MCP server is an open-source project, and as such, we offer only com
 ## Contributing
 
 If you are interested in contributing to this project, please refer to our [Contributing Guidelines](https://github.com/pagerduty/pagerduty-mcp-server/blob/main/CONTRIBUTING.md).
-
-## Alternative License
-
-If you do not want to license this under the current open source license, contact PagerDuty Sales to acquire this software under a paid, proprietary license.

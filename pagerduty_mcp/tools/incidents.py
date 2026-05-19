@@ -9,7 +9,7 @@ from pagerduty_mcp.models import (
     IncidentCreate,
     IncidentManageRequest,
     IncidentNote,
-    IncidentQuery,
+    MAX_RESULTS,
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
@@ -24,33 +24,68 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_incidents(query_model: IncidentQuery | None = None) -> ListResponseModel[Incident]:
+def list_incidents(
+    statuses: list[str] | None = None,
+    since: datetime | None = None,
+    until: datetime | None = None,
+    user_ids: list[str] | None = None,
+    service_ids: list[str] | None = None,
+    teams_ids: list[str] | None = None,
+    urgencies: list[str] | None = None,
+    sort_by: list[str] | None = None,
+    request_scope: str | None = None,
+    limit: int | None = None,
+) -> ListResponseModel[Incident]:
     """List incidents with optional filtering.
 
     Args:
-        query_model: Optional filtering parameters
+        statuses: Filter by status (triggered, acknowledged, resolved)
+        since: Filter incidents since a specific date
+        until: Filter incidents until a specific date
+        user_ids: Filter by user IDs
+        service_ids: Filter by service IDs
+        teams_ids: Filter by team IDs
+        urgencies: Filter by urgency (high, low)
+        sort_by: Sort fields and directions (e.g. ['created_at:desc'])
+        request_scope: 'all', 'teams' (my teams), or 'assigned' (assigned to me)
+        limit: Max results to return
 
     Returns:
-        List of Incident objects matching the query parameters
-
+        List of incidents matching the query parameters
     """
-    if query_model is None:
-        query_model = IncidentQuery()
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if statuses:
+        params["statuses[]"] = statuses
+    if since:
+        params["since"] = since.isoformat()
+    if until:
+        params["until"] = until.isoformat()
+    if service_ids:
+        params["service_ids[]"] = service_ids
+    if teams_ids:
+        params["team_ids[]"] = teams_ids
+    if user_ids:
+        params["user_ids[]"] = user_ids
+    if urgencies:
+        params["urgencies[]"] = urgencies
+    if sort_by:
+        params["sort_by"] = ",".join(sort_by)
 
-    if query_model.request_scope in ["assigned", "teams"]:
+    if request_scope in ("assigned", "teams"):
         user_data = ContextResolver.get_user()
         if user_data is None:
-            raise ValueError(f"Cannot filter incidents by \"{query_model.request_scope}\" with account-level auth. Please provide a user token, or scope the request differently.")
-
-        if query_model.request_scope == "assigned":
+            raise ValueError(
+                f"Cannot filter incidents by '{request_scope}' with account-level auth. "
+                "Please provide a user token, or scope the request differently."
+            )
+        if request_scope == "assigned":
             params["user_ids[]"] = [user_data.id]
-        elif query_model.request_scope == "teams":
+        elif request_scope == "teams":
             user_team_ids = [team.id for team in user_data.teams]
             params["team_ids[]"] = user_team_ids
 
     response = paginate(
-        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
+        client=get_client(), entity="incidents", params=params, maximum_records=limit or MAX_RESULTS
     )
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)

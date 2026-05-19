@@ -49,6 +49,14 @@ def add_write_tool(mcp_instance: FastMCP, tool: Callable) -> None:
     )
 
 
+mcp = FastMCP(
+    "PagerDuty MCP Server",
+    instructions=MCP_SERVER_INSTRUCTIONS,
+)
+for _tool in read_tools:
+    add_read_only_tool(mcp, _tool)
+
+
 @app.command()
 def run(*, enable_write_tools: bool = False) -> None:
     """Run the MCP server with the specified configuration.
@@ -57,13 +65,6 @@ def run(*, enable_write_tools: bool = False) -> None:
         enable_write_tools: Flag to enable write tools
     """
     ContextResolver.set_strategy(ApplicationContextStrategy())
-
-    mcp = FastMCP(
-        "PagerDuty MCP Server",
-        instructions=MCP_SERVER_INSTRUCTIONS,
-    )
-    for tool in read_tools:
-        add_read_only_tool(mcp, tool)
 
     if enable_write_tools:
         for tool in write_tools:

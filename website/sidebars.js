@@ -59,7 +59,10 @@ const sidebars = {
         'tools/escalation-policies',
         'tools/event-orchestrations',
         'tools/status-pages',
+        'tools/analytics',
+        'tools/priorities',
         'tools/business-services',
+        'tools/oncall-compensation',
       ],
     },
     {

@@ -33,3 +33,21 @@ List users, optionally filtering by name and team IDs.
 **Example prompt:**
 
 > "List all users on the platform team"
+
+---
+
+### `create_user` *(write)*
+
+Create a new PagerDuty user account. No invitation email is sent.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `request` | `CreateUserRequest` | Yes | User creation parameters: `name`, `email`, `role`, `time_zone` |
+
+:::note
+Requires `--enable-write-tools` flag.
+:::
+
+**Example prompt:**
+
+> "Create a user account for Jane Smith with email jane@example.com and role responder"

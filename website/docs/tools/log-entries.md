@@ -35,3 +35,20 @@ Get a specific log entry by ID.
 **Example prompt:**
 
 > "Get log entry PXXXXXX"
+
+---
+
+### `list_incident_log_entries`
+
+List all log entries for a specific incident. Records every state change and action: trigger, acknowledge, reassign, escalate, annotate (note), and resolve events.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `incident_id` | `string` | Yes | The ID of the incident to retrieve log entries for |
+| `limit` | `integer` | No | Maximum number of results to return (defaults to 100) |
+
+**Example prompts:**
+
+> "Show me the full audit trail for incident P123456"
+
+> "List all log entries for incident P123456"

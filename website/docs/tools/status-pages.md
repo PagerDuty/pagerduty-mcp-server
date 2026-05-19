@@ -125,3 +125,24 @@ Optional fields:
 :::note
 Requires `--enable-write-tools` flag.
 :::
+
+---
+
+### `create_status_page_post_postmortem` *(write)*
+
+Create or update a postmortem for a Status Page Post. If a postmortem already exists for the post it will be updated; otherwise a new one is created.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status_page_id` | `string` | Yes | The ID of the Status Page |
+| `post_id` | `string` | Yes | The ID of the Status Page Post to attach the postmortem to |
+| `message` | `string` | Yes | The postmortem message body (supports rich text / markdown) |
+| `notify_subscribers` | `boolean` | No | Whether to notify status page subscribers (defaults to `true`) |
+
+:::note
+Requires `--enable-write-tools` flag.
+:::
+
+**Example prompt:**
+
+> "Publish a postmortem for status page post PXXXXXX summarizing the root cause and remediation steps"

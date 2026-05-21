@@ -52,7 +52,8 @@ def list_status_page_severities(
 
     Args:
         status_page_id: The ID of the Status Page
-        query_model: Optional filtering parameters
+        query_model: Optional filtering parameters. Use `post_type` to filter by post type:
+            "incident" for incident severities, "maintenance" for maintenance severities.
 
     Returns:
         List of StatusPageSeverity objects for the given Status Page
@@ -106,7 +107,8 @@ def list_status_page_statuses(
 
     Args:
         status_page_id: The ID of the Status Page
-        query_model: Optional filtering parameters
+        query_model: Optional filtering parameters. Use `post_type` to filter by post type:
+            "incident" for incident statuses, "maintenance" for maintenance statuses.
 
     Returns:
         List of StatusPageStatus objects for the given Status Page

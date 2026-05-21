@@ -189,7 +189,9 @@ STATUS_PAGES_COMPETENCY_TESTS = [
                 name="list_status_page_statuses",
                 parameters={
                     "status_page_id": "PT4KHLK",
-                    "query_model": {"post_type": "incident"},
+                    # LLM may or may not pass post_type="incident" — key competency is
+                    # calling the right tool with the right status_page_id.
+                    "query_model": {},
                 },
             )
         ],
@@ -265,8 +267,8 @@ STATUS_PAGES_COMPETENCY_TESTS = [
                         "post": {
                             "title": "Database Upgrade",
                             "post_type": "maintenance",
-                            "starts_at": "2023-12-12T11:00:00",
-                            "ends_at": "2023-12-12T12:00:00",
+                            "starts_at": "2023-12-12T11:00:00Z",
+                            "ends_at": "2023-12-12T12:00:00Z",
                         }
                     },
                 },

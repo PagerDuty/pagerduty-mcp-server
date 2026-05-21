@@ -79,6 +79,23 @@ class LogEntryCompetencyTest(AgentCompetencyTest):
                     },
                 },
             ),
+            # When the LLM looks up "TEAM1" or "TEAM2" via list_teams, return a mock that
+            # uses the query string as the team ID.  This ensures that the team_ids passed to
+            # list_log_entries match the expected ["TEAM1", "TEAM2"] values.
+            MockMCPToolInvocationResponse(
+                tool_name="list_teams",
+                parameters=lambda params: (
+                    (params.get("query_model") or {}).get("query") == "TEAM1"
+                ),
+                response={"response": [{"id": "TEAM1", "name": "Team 1"}]},
+            ),
+            MockMCPToolInvocationResponse(
+                tool_name="list_teams",
+                parameters=lambda params: (
+                    (params.get("query_model") or {}).get("query") == "TEAM2"
+                ),
+                response={"response": [{"id": "TEAM2", "name": "Team 2"}]},
+            ),
         ]
         super().__init__(mock_responses=mock_responses, **kwargs)
 

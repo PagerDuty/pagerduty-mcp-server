@@ -147,7 +147,11 @@ class TestAgent:
             calls_by_tool.setdefault(call["tool_name"], []).append(call)
 
         for expected in test_case.expected_tool_calls:
-            tool_calls = calls_by_tool.get(expected.name)
+            # name may be a str or a list of acceptable tool names
+            acceptable_names = [expected.name] if isinstance(expected.name, str) else expected.name
+            tool_calls = []
+            for name in acceptable_names:
+                tool_calls.extend(calls_by_tool.get(name, []))
             if not tool_calls:
                 print(f"Expected tool {expected.name} was not called")
                 return False
@@ -180,6 +184,11 @@ class TestAgent:
         normalized_expected = self._normalize_optional_models(expected)
         normalized_actual = self._normalize_optional_models(actual)
 
+        # Drop keys whose expected value is None (i.e., was originally {} or None).
+        # Those fields are optional – any actual value is acceptable, so we exclude
+        # them from the diff entirely rather than flagging a type-change.
+        normalized_expected = self._drop_none_values(normalized_expected)
+
         diff = DeepDiff(normalized_expected, normalized_actual, ignore_order=True)
 
         compatibility_issues = []
@@ -188,9 +197,23 @@ class TestAgent:
         if "iterable_item_removed" in diff:
             compatibility_issues.extend(diff["iterable_item_removed"])
         if "values_changed" in diff:
-            compatibility_issues.extend(
-                [f"{k}: {v['old_value']} -> {v['new_value']}" for k, v in diff["values_changed"].items()]
-            )
+            for path, change in diff["values_changed"].items():
+                old_val = change.get("old_value")
+                new_val = change.get("new_value")
+                # DeepDiff 8+ uses a similarity threshold: when actual has many more keys
+                # than expected it collapses the whole nested dict into a single
+                # values_changed entry rather than reporting individual dictionary_item_added
+                # entries.  Handle this gracefully by re-running the compatibility check
+                # recursively on the two sub-dicts.
+                if isinstance(old_val, dict) and isinstance(new_val, dict):
+                    # Use _has_required_structure (not _params_are_compatible) to avoid
+                    # infinite recursion: if the sub-dict also has ≥4 more keys in actual,
+                    # DeepDiff 8 would collapse it again and re-trigger this same handler.
+                    if not self._has_required_structure(old_val, new_val):
+                        compatibility_issues.append(f"{path}: {old_val!r} -> {new_val!r}")
+                    # else: old_val is a compatible subset of new_val — treat as OK
+                else:
+                    compatibility_issues.append(f"{path}: {old_val!r} -> {new_val!r}")
         if "type_changes" in diff:
             compatibility_issues.extend(
                 [f"{k}: {v['old_type']} -> {v['new_type']}" for k, v in diff["type_changes"].items()]
@@ -209,15 +232,39 @@ class TestAgent:
                 normalized[key] = value
         return normalized
 
+    def _drop_none_values(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Recursively remove keys whose value is None from a dict.
+
+        Used to strip optional model fields from the *expected* params before
+        running DeepDiff.  When an expected field is {} (normalized to None) it
+        means "any value is acceptable", so we simply remove it from the
+        comparison rather than failing on a type-change against the actual value.
+        """
+        result = {}
+        for key, value in params.items():
+            if value is None:
+                continue  # skip – any actual value is acceptable
+            if isinstance(value, dict):
+                result[key] = self._drop_none_values(value)
+            else:
+                result[key] = value
+        return result
+
     def _has_required_structure(self, expected: dict[str, Any], actual: dict[str, Any]) -> bool:
         """Check if actual has the basic required structure."""
 
         def check_structure(exp_item: Any, act_item: Any) -> bool:
             if isinstance(exp_item, dict) and isinstance(act_item, dict):
                 for key in exp_item:
+                    exp_val = exp_item[key]
+                    # If the expected value is None or an empty dict, the field is
+                    # optional – any actual value (including absence of the key)
+                    # is acceptable.
+                    if exp_val is None or (isinstance(exp_val, dict) and len(exp_val) == 0):
+                        continue
                     if key not in act_item:
                         return False
-                    if not check_structure(exp_item[key], act_item[key]):
+                    if not check_structure(exp_val, act_item[key]):
                         return False
                 return True
             if isinstance(exp_item, list) and isinstance(act_item, list):

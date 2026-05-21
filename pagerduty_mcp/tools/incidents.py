@@ -29,7 +29,11 @@ def list_incidents(query_model: IncidentQuery | None = None) -> ListResponseMode
     """List incidents with optional filtering.
 
     Args:
-        query_model: Optional filtering parameters
+        query_model: Optional filtering parameters. The `status` field accepts a list of
+            one or more of: "triggered", "acknowledged", "resolved".
+            Note: "open" incidents include BOTH "triggered" and "acknowledged" statuses.
+            To list all open incidents pass status=["triggered", "acknowledged"].
+            To list open and resolved pass status=["triggered", "acknowledged", "resolved"].
 
     Returns:
         List of Incident objects matching the query parameters

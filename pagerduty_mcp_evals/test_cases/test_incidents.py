@@ -279,11 +279,9 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(
                 name="create_incident",
                 parameters={
-                    "create_model": {
-                        "incident": {
-                            "title": "Testing MCP",
-                            "service": {"id": "1234"},
-                        }
+                    "incident": {
+                        "title": "Testing MCP",
+                        "service": {"id": "1234"},
                     }
                 },
             )
@@ -296,9 +294,7 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(
                 name="create_incident",
                 parameters={
-                    "create_model": {
-                        "incident": {"title": "Server down", "urgency": "high"}
-                    }
+                    "incident": {"title": "Server down", "urgency": "high"}
                 },
             )
         ],

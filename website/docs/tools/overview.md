@@ -4,15 +4,15 @@ sidebar_position: 1
 
 # Tools Overview
 
-The PagerDuty MCP Server exposes **55 tools** across **14 domains**. By default, only the 37 read-only tools are available. The 18 write tools require starting the server with `--enable-write-tools`.
+The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default, only the 42 read-only tools are available. The 22 write tools require starting the server with `--enable-write-tools`.
 
 ## Read vs. Write Tools
 
 | Type | Count | Flag Required |
 |------|-------|---------------|
-| Read-only | 37 | None (always available) |
-| Write | 18 | `--enable-write-tools` |
-| **Total** | **55** | |
+| Read-only | 42 | None (always available) |
+| Write | 22 | `--enable-write-tools` |
+| **Total** | **64** | |
 
 ## Complete Tool Reference
 

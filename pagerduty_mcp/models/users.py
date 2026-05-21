@@ -29,6 +29,14 @@ class User(BaseModel):
     name: str = Field(description="The name of the user")
     email: str = Field(description="The email of the user")
     role: UserRole = Field(description="The user role in PagerDuty (admin, limited_user, observer, etc.)")
+    job_title: str | None = Field(
+        default=None,
+        description="The user's job title",
+    )
+    time_zone: str | None = Field(
+        default=None,
+        description="The user's preferred time zone as an IANA name (e.g., 'America/New_York')",
+    )
     teams: list[TeamReference] = Field(description="The list of teams to which the user belongs")
 
     @computed_field

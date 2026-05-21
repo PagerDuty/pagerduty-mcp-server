@@ -19,6 +19,8 @@ class TestUserTools(unittest.TestCase):
             "name": "John Doe",
             "email": "john.doe@example.com",
             "role": "user",
+            "job_title": "Senior Engineer",
+            "time_zone": "America/New_York",
             "teams": [
                 {"id": "TEAM1", "summary": "Engineering Team", "type": "team_reference"},
                 {"id": "TEAM2", "summary": "DevOps Team", "type": "team_reference"},
@@ -32,6 +34,8 @@ class TestUserTools(unittest.TestCase):
                 "name": "John Doe",
                 "email": "john.doe@example.com",
                 "role": "user",
+                "job_title": "Senior Engineer",
+                "time_zone": "America/New_York",
                 "teams": [{"id": "TEAM1", "summary": "Engineering Team", "type": "team_reference"}],
             },
             {
@@ -40,6 +44,8 @@ class TestUserTools(unittest.TestCase):
                 "name": "Jane Smith",
                 "email": "jane.smith@example.com",
                 "role": "admin",
+                "job_title": "Engineering Manager",
+                "time_zone": "Europe/London",
                 "teams": [{"id": "TEAM2", "summary": "DevOps Team", "type": "team_reference"}],
             },
         ]
@@ -71,6 +77,8 @@ class TestUserTools(unittest.TestCase):
         self.assertEqual(result.email, "john.doe@example.com")
         self.assertEqual(result.role, "user")
         self.assertEqual(result.summary, "John Doe - Senior Engineer")
+        self.assertEqual(result.job_title, "Senior Engineer")
+        self.assertEqual(result.time_zone, "America/New_York")
         self.assertEqual(len(result.teams), 2)
         self.assertIsInstance(result.teams[0], TeamReference)
         self.assertEqual(result.teams[0].id, "TEAM1")
@@ -267,6 +275,27 @@ class TestUserTools(unittest.TestCase):
         user = User(name="Test User", email="test@example.com", role="user", teams=[])
 
         self.assertEqual(user.type, "user")
+
+    def test_user_model_job_title_and_time_zone_default_none(self):
+        """Test that job_title and time_zone default to None when omitted (backwards compat)."""
+        user = User(name="Test User", email="test@example.com", role="user", teams=[])
+
+        self.assertIsNone(user.job_title)
+        self.assertIsNone(user.time_zone)
+
+    def test_user_model_job_title_and_time_zone_populated(self):
+        """Test that job_title and time_zone round-trip from the API payload."""
+        user = User(
+            name="Test User",
+            email="test@example.com",
+            role="user",
+            teams=[],
+            job_title="Staff Engineer",
+            time_zone="Europe/Lisbon",
+        )
+
+        self.assertEqual(user.job_title, "Staff Engineer")
+        self.assertEqual(user.time_zone, "Europe/Lisbon")
 
     @patch("pagerduty_mcp.tools.users.get_client")
     def test_list_users_single_team_filter(self, mock_get_client):

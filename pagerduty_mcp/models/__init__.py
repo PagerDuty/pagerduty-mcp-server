@@ -9,7 +9,7 @@ from .alert_grouping_settings import (
     IntelligentGroupingConfig,
     TimeGroupingConfig,
 )
-from .alerts import Alert, AlertQuery
+from .alerts import Alert
 from .base import MAX_RESULTS, ListResponseModel
 from .change_events import ChangeEvent, ChangeEventQuery
 from .analytics import (
@@ -143,7 +143,6 @@ __all__ = [
     "AlertGroupingSettingCreateRequest",
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
-    "AlertQuery",
     "Assignment",
     "AssignmentInput",
     "ChangeEvent",

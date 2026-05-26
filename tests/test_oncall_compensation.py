@@ -239,13 +239,13 @@ class TestGetOncallCompensationReport(unittest.TestCase):
 
     # ── helpers ──────────────────────────────────────────────────────────────
 
-    def _make_request(self, **kwargs):
+    def _make_kwargs(self, **kwargs):
         defaults = {
             "since": "2023-01-01T00:00:00Z",
             "until": "2023-01-31T23:59:59Z",
         }
         defaults.update(kwargs)
-        return OncallCompensationRequest(**defaults)
+        return defaults
 
     # ── tests ────────────────────────────────────────────────────────────────
 
@@ -262,8 +262,7 @@ class TestGetOncallCompensationReport(unittest.TestCase):
             self.sample_users,      # users
         ]
 
-        request = self._make_request()
-        result = get_oncall_compensation_report(request)
+        result = get_oncall_compensation_report(**self._make_kwargs())
 
         self.assertIsInstance(result, str)
         parsed = json.loads(result)
@@ -285,8 +284,7 @@ class TestGetOncallCompensationReport(unittest.TestCase):
             self.sample_users,     # users
         ]
 
-        request = self._make_request(forward=True)
-        result = get_oncall_compensation_report(request)
+        result = get_oncall_compensation_report(**self._make_kwargs(forward=True))
 
         parsed = json.loads(result)
         self.assertTrue(parsed["is_forward"])
@@ -308,8 +306,7 @@ class TestGetOncallCompensationReport(unittest.TestCase):
             [],  # users
         ]
 
-        request = self._make_request()
-        result = get_oncall_compensation_report(request)
+        result = get_oncall_compensation_report(**self._make_kwargs())
 
         parsed = json.loads(result)
         self.assertEqual(parsed["total_users"], 0)
@@ -328,8 +325,7 @@ class TestGetOncallCompensationReport(unittest.TestCase):
             self.sample_users,
         ]
 
-        request = self._make_request(compliance_template="emea")
-        result = get_oncall_compensation_report(request)
+        result = get_oncall_compensation_report(**self._make_kwargs(compliance_template="emea"))
 
         parsed = json.loads(result)
         self.assertEqual(len(parsed["users"]), 1)
@@ -348,8 +344,7 @@ class TestGetOncallCompensationReport(unittest.TestCase):
             self.sample_users,
         ]
 
-        request = self._make_request(l1_rate_per_hour=10.0)
-        result = get_oncall_compensation_report(request)
+        result = get_oncall_compensation_report(**self._make_kwargs(l1_rate_per_hour=10.0))
 
         parsed = json.loads(result)
         self.assertEqual(len(parsed["users"]), 1)
@@ -369,8 +364,7 @@ class TestGetOncallCompensationReport(unittest.TestCase):
             self.sample_users,
         ]
 
-        request = self._make_request()
-        result = get_oncall_compensation_report(request)
+        result = get_oncall_compensation_report(**self._make_kwargs())
 
         parsed = json.loads(result)
         self.assertIn("team_summary", parsed)
@@ -418,8 +412,7 @@ class TestGetOncallCompensationReport(unittest.TestCase):
             self.sample_users,      # users
         ]
 
-        request = self._make_request()
-        result = get_oncall_compensation_report(request)
+        result = get_oncall_compensation_report(**self._make_kwargs())
 
         parsed = json.loads(result)
         # User should be present (from analytics) with direct_ep_count >= 1

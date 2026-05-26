@@ -14,7 +14,7 @@ Data sources (same as the UI):
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone as dt_timezone
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -432,7 +432,32 @@ def _compute_outside_hours(
 
 # ── Main tool ─────────────────────────────────────────────────────────────────
 
-def get_oncall_compensation_report(request: OncallCompensationRequest) -> str:
+def get_oncall_compensation_report(
+    since: str,
+    until: str,
+    team_ids: list[str] | None = None,
+    escalation_policy_id: str | None = None,
+    compliance_template: str = "none",
+    hours_cap: float = 0.0,
+    outside_hours_cap: float = 0.0,
+    max_consecutive_days: int = 0,
+    max_consecutive_hours: float = 0.0,
+    min_rest_hours: float = 0.0,
+    biz_start_hour: int = 9,
+    biz_end_hour: int = 18,
+    timezone: str = "UTC",
+    work_days: list[int] | None = None,
+    holidays: list[str] | None = None,
+    l1_rate_per_hour: float = 0.0,
+    l2_plus_rate_per_hour: float = 0.0,
+    off_hours_multiplier: float = 1.5,
+    weekend_multiplier: float = 2.0,
+    holiday_multiplier: float = 2.5,
+    include_incidents: bool = False,
+    include_directly_added: bool = False,
+    min_scheduled_hours: float = 0.0,
+    forward: bool = False,
+) -> str:
     """Generate an on-call compensation and fairness report for a date range.
 
     Computes per-user oncall hours, outside-business-hours breakdown (weekends,
@@ -450,13 +475,69 @@ def get_oncall_compensation_report(request: OncallCompensationRequest) -> str:
       this month's on-call cost before the period ends (scheduled shifts only)
 
     Args:
-        request: Date range, optional filters (team/EP), business-hours config,
-                 pay rates, and output options.
+        since: Start of reporting period in ISO 8601 format (e.g. '2026-01-01T00:00:00Z').
+            Inclusive. Maximum recommended range: 90 days.
+        until: End of reporting period in ISO 8601 format (e.g. '2026-01-31T23:59:59Z').
+            Exclusive.
+        team_ids: Restrict report to specific team IDs. Leave null for all teams.
+        escalation_policy_id: Restrict report to users in a specific escalation policy.
+        compliance_template: Pre-built compliance rule set. Options: 'emea' (EU Working Time
+            Directive: 192h/period cap, 11h rest, max 6 consecutive days), 'us' (US defaults:
+            160h/period cap, 8h rest, max 7 consecutive days), 'none' (default, no checks).
+        hours_cap: Override max scheduled hours allowed per period. 0 = use template value.
+        outside_hours_cap: Override max outside-business-hours allowed per period. 0 = use template.
+        max_consecutive_days: Override max consecutive calendar days on-call. 0 = use template.
+        max_consecutive_hours: Override max single unbroken on-call shift in hours. 0 = use template.
+        min_rest_hours: Override minimum hours of rest required between consecutive shifts. 0 = use template.
+        biz_start_hour: Local hour when business hours begin (inclusive). Default 9 = 09:00.
+        biz_end_hour: Local hour when business hours end (exclusive). Default 18 = 18:00.
+        timezone: IANA timezone for business-hours and weekend classification
+            (e.g. 'America/New_York', 'Europe/London'). Default UTC.
+        work_days: ISO weekday numbers that are business days. 1=Monday ... 7=Sunday.
+            Default Mon-Fri ([1,2,3,4,5]).
+        holidays: List of holiday dates as 'YYYY-MM-DD' strings in the configured timezone.
+            Shifts on these dates count as holiday hours.
+        l1_rate_per_hour: Hourly pay rate for L1 on-call during business hours. 0 = skip pay estimation.
+        l2_plus_rate_per_hour: Hourly pay rate for L2+ on-call shifts. 0 = skip.
+        off_hours_multiplier: Multiplier applied to l1_rate_per_hour for weekday off-hours shifts.
+        weekend_multiplier: Multiplier applied to l1_rate_per_hour for weekend shifts.
+        holiday_multiplier: Multiplier applied to l1_rate_per_hour for holiday shifts.
+        include_incidents: Include per-user incident list in the response.
+        include_directly_added: Include on-call entries added directly to an escalation policy
+            layer (not backed by a schedule).
+        min_scheduled_hours: Exclude users with fewer scheduled hours than this threshold.
+        forward: If True, run in projection mode (future date range). Skips Analytics API.
 
     Returns:
         JSON string containing OncallCompensationReport with per-user summaries,
         team rollups, and aggregate totals.
     """
+    request = OncallCompensationRequest(
+        since=since,
+        until=until,
+        team_ids=team_ids,
+        escalation_policy_id=escalation_policy_id,
+        compliance_template=compliance_template,
+        hours_cap=hours_cap,
+        outside_hours_cap=outside_hours_cap,
+        max_consecutive_days=max_consecutive_days,
+        max_consecutive_hours=max_consecutive_hours,
+        min_rest_hours=min_rest_hours,
+        biz_start_hour=biz_start_hour,
+        biz_end_hour=biz_end_hour,
+        timezone=timezone,
+        work_days=work_days if work_days is not None else [1, 2, 3, 4, 5],
+        holidays=holidays if holidays is not None else [],
+        l1_rate_per_hour=l1_rate_per_hour,
+        l2_plus_rate_per_hour=l2_plus_rate_per_hour,
+        off_hours_multiplier=off_hours_multiplier,
+        weekend_multiplier=weekend_multiplier,
+        holiday_multiplier=holiday_multiplier,
+        include_incidents=include_incidents,
+        include_directly_added=include_directly_added,
+        min_scheduled_hours=min_scheduled_hours,
+        forward=forward,
+    )
     client = get_client()
     since = request.since
     until = request.until
@@ -787,7 +868,7 @@ def get_oncall_compensation_report(request: OncallCompensationRequest) -> str:
         until=until,
         timezone=tz,
         compliance_template=request.compliance_template,
-        generated_at=datetime.now(timezone.utc).isoformat(),
+        generated_at=datetime.now(dt_timezone.utc).isoformat(),
         is_forward=request.forward,
         total_users=len(user_summaries),
         total_scheduled_hours=round(sum(u.scheduled_hours for u in user_summaries), 2),

@@ -52,7 +52,6 @@ from .incident_workflows import (
     IncidentWorkflowInstance,
     IncidentWorkflowInstanceCreate,
     IncidentWorkflowInstanceRequest,
-    IncidentWorkflowQuery,
     InlineStepInput,
     Step,
 )
@@ -186,7 +185,6 @@ __all__ = [
     "IncidentWorkflowInstance",
     "IncidentWorkflowInstanceCreate",
     "IncidentWorkflowInstanceRequest",
-    "IncidentWorkflowQuery",
     "InlineStepInput",
     "IntegrationReference",
     "IntelligentGroupingConfig",

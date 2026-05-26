@@ -1,33 +1,43 @@
+from typing import Any, Literal
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
     IncidentWorkflow,
     IncidentWorkflowInstance,
     IncidentWorkflowInstanceRequest,
-    IncidentWorkflowQuery,
     ListResponseModel,
 )
 from pagerduty_mcp.utils import paginate
 
 
-def list_incident_workflows(query_model: IncidentWorkflowQuery | None = None) -> ListResponseModel[IncidentWorkflow]:
+def list_incident_workflows(
+    limit: int | None = 100,
+    query: str | None = None,
+    include: list[Literal["steps", "team"]] | None = None,
+) -> ListResponseModel[IncidentWorkflow]:
     """List incident workflows with optional filtering.
 
     Args:
-        query_model: Optional filtering parameters. If None, returns the first page with default limit of 100.
+        limit: Maximum number of results to return. Maximum is 100. Default 100.
+        query: Filters the result, showing only the records whose name matches the query.
+        include: Array of additional details to include. Options: 'steps', 'team'.
 
     Returns:
         List of IncidentWorkflow objects matching the query parameters
     """
-    if query_model is None:
-        query_model = IncidentWorkflowQuery()
-
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if limit:
+        params["limit"] = limit
+    if query:
+        params["query"] = query
+    if include:
+        params["include[]"] = include
 
     response = paginate(
         client=get_client(),
         entity="incident_workflows",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=limit or 100,
     )
 
     workflows = [IncidentWorkflow(**item) for item in response]

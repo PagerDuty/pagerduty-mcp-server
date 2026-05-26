@@ -8,26 +8,20 @@ from pagerduty_mcp.models import ListResponseModel
 from pagerduty_mcp.models.status_pages import (
     StatusPage,
     StatusPageImpact,
-    StatusPageImpactQuery,
     StatusPageImpactReference,
     StatusPagePost,
     StatusPagePostCreateRequest,
     StatusPagePostCreateRequestWrapper,
-    StatusPagePostQuery,
     StatusPagePostReference,
     StatusPagePostUpdate,
     StatusPagePostUpdateImpact,
-    StatusPagePostUpdateQuery,
     StatusPagePostUpdateRequest,
     StatusPagePostUpdateRequestWrapper,
-    StatusPageQuery,
     StatusPageReference,
     StatusPageServiceReference,
     StatusPageSeverity,
-    StatusPageSeverityQuery,
     StatusPageSeverityReference,
     StatusPageStatus,
-    StatusPageStatusQuery,
     StatusPageStatusReference,
 )
 from pagerduty_mcp.tools.status_pages import (
@@ -183,8 +177,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test basic Status Pages listing."""
         mock_paginate.return_value = [self.sample_status_page_data]
 
-        query = StatusPageQuery()
-        result = list_status_pages(query)
+        result = list_status_pages()
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -198,8 +191,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test Status Pages listing with type filter."""
         mock_paginate.return_value = [self.sample_status_page_data]
 
-        query = StatusPageQuery(status_page_type="private")
-        result = list_status_pages(query)
+        result = list_status_pages(status_page_type="private")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -211,8 +203,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test basic Severity listing."""
         mock_paginate.return_value = [self.sample_severity_data]
 
-        query = StatusPageSeverityQuery()
-        result = list_status_page_severities("PQ8W0D0", query)
+        result = list_status_page_severities("PQ8W0D0")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -226,8 +217,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test Severity listing with post type filter."""
         mock_paginate.return_value = [self.sample_severity_data]
 
-        query = StatusPageSeverityQuery(post_type="incident")
-        result = list_status_page_severities("PQ8W0D0", query)
+        result = list_status_page_severities("PQ8W0D0", post_type="incident")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -239,8 +229,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test basic Impact listing."""
         mock_paginate.return_value = [self.sample_impact_data]
 
-        query = StatusPageImpactQuery()
-        result = list_status_page_impacts("PQ8W0D0", query)
+        result = list_status_page_impacts("PQ8W0D0")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -254,8 +243,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test Impact listing with post type filter."""
         mock_paginate.return_value = [self.sample_impact_data]
 
-        query = StatusPageImpactQuery(post_type="incident")
-        result = list_status_page_impacts("PQ8W0D0", query)
+        result = list_status_page_impacts("PQ8W0D0", post_type="incident")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -267,8 +255,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test basic Status listing."""
         mock_paginate.return_value = [self.sample_status_data]
 
-        query = StatusPageStatusQuery()
-        result = list_status_page_statuses("PQ8W0D0", query)
+        result = list_status_page_statuses("PQ8W0D0")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -282,8 +269,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test Status listing with post type filter."""
         mock_paginate.return_value = [self.sample_status_data]
 
-        query = StatusPageStatusQuery(post_type="incident")
-        result = list_status_page_statuses("PQ8W0D0", query)
+        result = list_status_page_statuses("PQ8W0D0", post_type="incident")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -365,8 +351,7 @@ class TestStatusPagesTools(unittest.TestCase):
         mock_client.rget.return_value = {"post": self.sample_post_data}
         mock_get_client.return_value = mock_client
 
-        query = StatusPagePostQuery()
-        result = get_status_page_post("PR5LMML", "PIJ90N7", query)
+        result = get_status_page_post("PR5LMML", "PIJ90N7")
 
         self.assertIsInstance(result, StatusPagePost)
         self.assertEqual(result.id, "PIJ90N7")
@@ -380,8 +365,7 @@ class TestStatusPagesTools(unittest.TestCase):
         mock_client.rget.return_value = {"post": self.sample_post_data}
         mock_get_client.return_value = mock_client
 
-        query = StatusPagePostQuery(include=["status_page_post_update"])
-        result = get_status_page_post("PR5LMML", "PIJ90N7", query)
+        result = get_status_page_post("PR5LMML", "PIJ90N7", include=["status_page_post_update"])
 
         self.assertIsInstance(result, StatusPagePost)
         self.assertEqual(result.id, "PIJ90N7")
@@ -395,8 +379,7 @@ class TestStatusPagesTools(unittest.TestCase):
         mock_client.rget.return_value = self.sample_post_data
         mock_get_client.return_value = mock_client
 
-        query = StatusPagePostQuery()
-        result = get_status_page_post("PR5LMML", "PIJ90N7", query)
+        result = get_status_page_post("PR5LMML", "PIJ90N7")
 
         self.assertIsInstance(result, StatusPagePost)
         self.assertEqual(result.id, "PIJ90N7")
@@ -460,8 +443,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test basic Post Update listing."""
         mock_paginate.return_value = [self.sample_post_update_data]
 
-        query = StatusPagePostUpdateQuery()
-        result = list_status_page_post_updates("PR5LMML", "PIJ90N7", query)
+        result = list_status_page_post_updates("PR5LMML", "PIJ90N7")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -474,8 +456,7 @@ class TestStatusPagesTools(unittest.TestCase):
         """Test Post Update listing with reviewed status filter."""
         mock_paginate.return_value = [self.sample_post_update_data]
 
-        query = StatusPagePostUpdateQuery(reviewed_status="approved")
-        result = list_status_page_post_updates("PR5LMML", "PIJ90N7", query)
+        result = list_status_page_post_updates("PR5LMML", "PIJ90N7", reviewed_status="approved")
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)

@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
 from pagerduty_mcp.tools.log_entries import get_log_entry, list_incident_log_entries, list_log_entries
+# LogEntryQuery is kept for model-level tests below
 
 
 class TestLogEntryTools(unittest.TestCase):
@@ -123,10 +124,8 @@ class TestLogEntryTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
-        query_model = LogEntryQuery()
-
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries()
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -135,9 +134,10 @@ class TestLogEntryTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PLOGENTRY123")
         mock_paginate.assert_called_once()
 
-        # Verify that default timestamps were set (last 7 days)
-        self.assertIsNotNone(query_model.since)
-        self.assertIsNotNone(query_model.until)
+        # Verify that default timestamps were applied
+        call_args = mock_paginate.call_args
+        self.assertIn("since", call_args[1]["params"])
+        self.assertIn("until", call_args[1]["params"])
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
@@ -150,10 +150,9 @@ class TestLogEntryTools(unittest.TestCase):
 
         since = datetime.now() - timedelta(days=7)
         until = datetime.now()
-        query_model = LogEntryQuery(since=since, until=until, limit=50)
 
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries(since=since, until=until, limit=50)
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -173,10 +172,8 @@ class TestLogEntryTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = []
 
-        query_model = LogEntryQuery()
-
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries()
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -184,26 +181,24 @@ class TestLogEntryTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
-    def test_list_log_entries_with_empty_string_timestamps(self, mock_get_client, mock_paginate):
-        """Test that empty string timestamps are converted to None and then to defaults."""
+    def test_list_log_entries_with_none_timestamps(self, mock_get_client, mock_paginate):
+        """Test that None timestamps default to the last 7 days."""
         # Arrange
         mock_client = Mock()
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
-        # Create query with empty strings (simulating MCP interface behavior)
-        query_model = LogEntryQuery(since="", until="")
-
-        # Act
-        result = list_log_entries(query_model)
+        # Act - call with no since/until, defaults should be applied
+        result = list_log_entries(since=None, until=None)
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
 
-        # Verify that empty strings were converted to None and then to default values
-        self.assertIsNotNone(query_model.since)
-        self.assertIsNotNone(query_model.until)
+        # Verify that default timestamps were applied
+        call_args = mock_paginate.call_args
+        self.assertIn("since", call_args[1]["params"])
+        self.assertIn("until", call_args[1]["params"])
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
@@ -214,10 +209,8 @@ class TestLogEntryTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
-        query_model = LogEntryQuery(limit=25, offset=10)
-
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries(limit=25, offset=10)
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -254,10 +247,8 @@ class TestLogEntryTools(unittest.TestCase):
             self.sample_service_change_log_entry,
         ]
 
-        query_model = LogEntryQuery()
-
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries()
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)

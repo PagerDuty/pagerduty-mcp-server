@@ -20,11 +20,6 @@ from .analytics import (
     AnalyticsResponderMetrics,
     AnalyticsServiceMetrics,
     AnalyticsTeamMetrics,
-    GetIncidentMetricsAllRequest,
-    GetIncidentMetricsByServiceRequest,
-    GetIncidentMetricsByTeamRequest,
-    GetResponderLoadMetricsRequest,
-    GetResponderMetricsRequest,
 )
 from .escalation_policies import EscalationPolicy, EscalationPolicyCreate, EscalationPolicyQuery
 from .event_orchestrations import (
@@ -150,11 +145,6 @@ __all__ = [
     "EscalationPolicy",
     "EscalationPolicyCreate",
     "EscalationPolicyQuery",
-    "GetIncidentMetricsAllRequest",
-    "GetIncidentMetricsByServiceRequest",
-    "GetIncidentMetricsByTeamRequest",
-    "GetResponderLoadMetricsRequest",
-    "GetResponderMetricsRequest",
     "EventOrchestration",
     "EventOrchestrationCatchAll",
     "EventOrchestrationGlobal",

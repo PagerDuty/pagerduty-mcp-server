@@ -90,14 +90,22 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": self.sample_responder_data}
         mock_get_client.return_value = mock_client
 
-        request = GetResponderMetricsRequest(filters=self.responder_filters)
-        result = get_responder_metrics(request)
+        result = get_responder_metrics(
+            date_range_start="2026-01-01T00:00:00Z",
+            date_range_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(len(parsed["response"]), 1)
         self.assertEqual(parsed["response"][0]["responder_id"], "USER1")
         mock_client.rpost.assert_called_once_with(
-            "/analytics/metrics/responders/teams", json=request.to_body()
+            "/analytics/metrics/responders/teams",
+            json={
+                "filters": {
+                    "date_range_start": "2026-01-01T00:00:00Z",
+                    "date_range_end": "2026-01-31T23:59:59Z",
+                }
+            },
         )
 
     @patch("pagerduty_mcp.tools.analytics.get_client")
@@ -106,8 +114,10 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = self.sample_responder_data
         mock_get_client.return_value = mock_client
 
-        request = GetResponderMetricsRequest(filters=self.responder_filters)
-        result = get_responder_metrics(request)
+        result = get_responder_metrics(
+            date_range_start="2026-01-01T00:00:00Z",
+            date_range_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(len(parsed["response"]), 1)
@@ -118,8 +128,10 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": []}
         mock_get_client.return_value = mock_client
 
-        request = GetResponderMetricsRequest(filters=self.responder_filters)
-        result = get_responder_metrics(request)
+        result = get_responder_metrics(
+            date_range_start="2026-01-01T00:00:00Z",
+            date_range_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(parsed["response"], [])
@@ -130,24 +142,19 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": self.sample_responder_data}
         mock_get_client.return_value = mock_client
 
-        filters = AnalyticsFilters(
+        get_responder_metrics(
             date_range_start="2026-01-01T00:00:00Z",
             date_range_end="2026-01-31T23:59:59Z",
             team_ids=["TEAM1"],
             urgency="high",
+            time_zone="America/New_York",
+            order="desc",
+            order_by="total_interruptions",
         )
-        request = GetResponderMetricsRequest(
-            filters=filters, time_zone="America/New_York", order="desc", order_by="total_interruptions"
-        )
-        body = request.to_body()
 
-        get_responder_metrics(request)
-
-        mock_client.rpost.assert_called_once_with(
-            "/analytics/metrics/responders/teams", json=body
-        )
-        self.assertIn("team_ids", body["filters"])
-        self.assertEqual(body["time_zone"], "America/New_York")
+        call_kwargs = mock_client.rpost.call_args.kwargs["json"]
+        self.assertIn("team_ids", call_kwargs["filters"])
+        self.assertEqual(call_kwargs["time_zone"], "America/New_York")
 
     # --- get_incident_metrics_by_service ---
 
@@ -157,14 +164,22 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": self.sample_service_data}
         mock_get_client.return_value = mock_client
 
-        request = GetIncidentMetricsByServiceRequest(filters=self.incident_filters)
-        result = get_incident_metrics_by_service(request)
+        result = get_incident_metrics_by_service(
+            created_at_start="2026-01-01T00:00:00Z",
+            created_at_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(len(parsed["response"]), 1)
         self.assertEqual(parsed["response"][0]["service_id"], "SVC1")
         mock_client.rpost.assert_called_once_with(
-            "/analytics/metrics/incidents/services", json=request.to_body()
+            "/analytics/metrics/incidents/services",
+            json={
+                "filters": {
+                    "created_at_start": "2026-01-01T00:00:00Z",
+                    "created_at_end": "2026-01-31T23:59:59Z",
+                }
+            },
         )
 
     @patch("pagerduty_mcp.tools.analytics.get_client")
@@ -173,8 +188,10 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": []}
         mock_get_client.return_value = mock_client
 
-        request = GetIncidentMetricsByServiceRequest(filters=self.incident_filters)
-        result = get_incident_metrics_by_service(request)
+        result = get_incident_metrics_by_service(
+            created_at_start="2026-01-01T00:00:00Z",
+            created_at_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(parsed["response"], [])
@@ -187,14 +204,22 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": self.sample_team_data}
         mock_get_client.return_value = mock_client
 
-        request = GetIncidentMetricsByTeamRequest(filters=self.incident_filters)
-        result = get_incident_metrics_by_team(request)
+        result = get_incident_metrics_by_team(
+            created_at_start="2026-01-01T00:00:00Z",
+            created_at_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(len(parsed["response"]), 1)
         self.assertEqual(parsed["response"][0]["team_id"], "TEAM1")
         mock_client.rpost.assert_called_once_with(
-            "/analytics/metrics/incidents/teams", json=request.to_body()
+            "/analytics/metrics/incidents/teams",
+            json={
+                "filters": {
+                    "created_at_start": "2026-01-01T00:00:00Z",
+                    "created_at_end": "2026-01-31T23:59:59Z",
+                }
+            },
         )
 
     @patch("pagerduty_mcp.tools.analytics.get_client")
@@ -203,17 +228,14 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": self.sample_team_data}
         mock_get_client.return_value = mock_client
 
-        request = GetIncidentMetricsByTeamRequest(
-            filters=self.incident_filters, aggregate_unit="week"
+        get_incident_metrics_by_team(
+            created_at_start="2026-01-01T00:00:00Z",
+            created_at_end="2026-01-31T23:59:59Z",
+            aggregate_unit="week",
         )
-        body = request.to_body()
 
-        get_incident_metrics_by_team(request)
-
-        mock_client.rpost.assert_called_once_with(
-            "/analytics/metrics/incidents/teams", json=body
-        )
-        self.assertEqual(body["aggregate_unit"], "week")
+        call_kwargs = mock_client.rpost.call_args.kwargs["json"]
+        self.assertEqual(call_kwargs["aggregate_unit"], "week")
 
     # --- get_responder_load_metrics ---
 
@@ -223,14 +245,22 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": self.sample_load_data}
         mock_get_client.return_value = mock_client
 
-        request = GetResponderLoadMetricsRequest(filters=self.responder_filters)
-        result = get_responder_load_metrics(request)
+        result = get_responder_load_metrics(
+            date_range_start="2026-01-01T00:00:00Z",
+            date_range_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(len(parsed["response"]), 1)
         self.assertEqual(parsed["response"][0]["responder_id"], "USER1")
         mock_client.rpost.assert_called_once_with(
-            "/analytics/metrics/responders/all", json=request.to_body()
+            "/analytics/metrics/responders/all",
+            json={
+                "filters": {
+                    "date_range_start": "2026-01-01T00:00:00Z",
+                    "date_range_end": "2026-01-31T23:59:59Z",
+                }
+            },
         )
 
     @patch("pagerduty_mcp.tools.analytics.get_client")
@@ -239,8 +269,10 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = self.sample_load_data
         mock_get_client.return_value = mock_client
 
-        request = GetResponderLoadMetricsRequest(filters=self.responder_filters)
-        result = get_responder_load_metrics(request)
+        result = get_responder_load_metrics(
+            date_range_start="2026-01-01T00:00:00Z",
+            date_range_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(len(parsed["response"]), 1)
@@ -253,14 +285,22 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": [self.sample_all_data]}
         mock_get_client.return_value = mock_client
 
-        request = GetIncidentMetricsAllRequest(filters=self.incident_filters)
-        result = get_incident_metrics_all(request)
+        result = get_incident_metrics_all(
+            created_at_start="2026-01-01T00:00:00Z",
+            created_at_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertEqual(parsed["total_incident_count"], 50)
         self.assertEqual(parsed["p90_seconds_to_resolve"], 1800)
         mock_client.rpost.assert_called_once_with(
-            "/analytics/metrics/incidents/all", json=request.to_body()
+            "/analytics/metrics/incidents/all",
+            json={
+                "filters": {
+                    "created_at_start": "2026-01-01T00:00:00Z",
+                    "created_at_end": "2026-01-31T23:59:59Z",
+                }
+            },
         )
 
     @patch("pagerduty_mcp.tools.analytics.get_client")
@@ -269,8 +309,10 @@ class TestAnalyticsTools(unittest.TestCase):
         mock_client.rpost.return_value = {"data": []}
         mock_get_client.return_value = mock_client
 
-        request = GetIncidentMetricsAllRequest(filters=self.incident_filters)
-        result = get_incident_metrics_all(request)
+        result = get_incident_metrics_all(
+            created_at_start="2026-01-01T00:00:00Z",
+            created_at_end="2026-01-31T23:59:59Z",
+        )
 
         parsed = json.loads(result)
         self.assertIsNone(parsed["total_incident_count"])

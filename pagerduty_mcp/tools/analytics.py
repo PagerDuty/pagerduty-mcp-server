@@ -1,20 +1,26 @@
+from typing import Any
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models.analytics import (
+    AnalyticsAggregatedMetrics,
+    AnalyticsResponderLoad,
     AnalyticsResponderMetrics,
     AnalyticsServiceMetrics,
     AnalyticsTeamMetrics,
-    AnalyticsResponderLoad,
-    AnalyticsAggregatedMetrics,
-    GetResponderMetricsRequest,
-    GetIncidentMetricsByServiceRequest,
-    GetIncidentMetricsByTeamRequest,
-    GetResponderLoadMetricsRequest,
-    GetIncidentMetricsAllRequest,
 )
 from pagerduty_mcp.models.base import ListResponseModel
 
 
-def get_responder_metrics(request: GetResponderMetricsRequest) -> str:
+def get_responder_metrics(
+    date_range_start: str,
+    date_range_end: str,
+    team_ids: list[str] | None = None,
+    responder_ids: list[str] | None = None,
+    urgency: str | None = None,
+    time_zone: str | None = None,
+    order: str | None = None,
+    order_by: str | None = None,
+) -> str:
     """Get responder metrics aggregated by team from PagerDuty Analytics.
 
     Returns per-user oncall seconds, interruption counts (business hours, off hours, sleep hours),
@@ -22,17 +28,39 @@ def get_responder_metrics(request: GetResponderMetricsRequest) -> str:
     engine — oncall hours are computed authoritatively, accounting for schedule overlaps.
 
     Args:
-        request: Filters (required date range, optional team/responder/urgency filters),
-                 time zone, and sort options.
+        date_range_start: ISO8601 DateTime. Incidents with created_at before this value are omitted.
+        date_range_end: ISO8601 DateTime. Incidents with created_at >= this value are omitted.
+        team_ids: Only incidents related to these teams will be included.
+        responder_ids: Only incidents related to these responders will be included.
+        urgency: Filter by urgency: 'high' or 'low'.
+        time_zone: The time zone to use for results and grouping (e.g. 'America/New_York').
+        order: Sort order: 'asc' or 'desc'.
+        order_by: Field to sort results by.
 
     Returns:
         JSON string of ListResponseModel containing AnalyticsResponderMetrics objects.
     """
-    body = request.to_body()
+    body: dict[str, Any] = {
+        "filters": {
+            "date_range_start": date_range_start,
+            "date_range_end": date_range_end,
+        }
+    }
+    if team_ids:
+        body["filters"]["team_ids"] = team_ids
+    if responder_ids:
+        body["filters"]["responder_ids"] = responder_ids
+    if urgency:
+        body["filters"]["urgency"] = urgency
+    if time_zone:
+        body["time_zone"] = time_zone
+    if order:
+        body["order"] = order
+    if order_by:
+        body["order_by"] = order_by
+
     response = get_client().rpost("/analytics/metrics/responders/teams", json=body)
 
-    # The analytics endpoint returns {"data": [...], "filters": {...}, "time_zone": "..."}
-    # The pdpyras client may return the raw dict or unwrap it — handle both.
     if isinstance(response, dict):
         raw_data = response.get("data", [])
     elif isinstance(response, list):
@@ -44,7 +72,16 @@ def get_responder_metrics(request: GetResponderMetricsRequest) -> str:
     return ListResponseModel[AnalyticsResponderMetrics](response=metrics).model_dump_json()
 
 
-def get_incident_metrics_by_service(request: GetIncidentMetricsByServiceRequest) -> str:
+def get_incident_metrics_by_service(
+    created_at_start: str,
+    created_at_end: str,
+    team_ids: list[str] | None = None,
+    service_ids: list[str] | None = None,
+    urgency: str | None = None,
+    time_zone: str | None = None,
+    order: str | None = None,
+    order_by: str | None = None,
+) -> str:
     """Get aggregated incident metrics per service from PagerDuty Analytics.
 
     Returns service-level MTTA, mean MTTR, escalation counts, incident
@@ -52,13 +89,37 @@ def get_incident_metrics_by_service(request: GetIncidentMetricsByServiceRequest)
     service health metrics — data is pre-aggregated by PagerDuty's analytics engine.
 
     Args:
-        request: Filters (required date range, optional team/service/urgency filters),
-                 time zone, and sort options.
+        created_at_start: ISO8601 DateTime. Incidents created before this are omitted.
+        created_at_end: ISO8601 DateTime. Incidents created on/after this are omitted.
+        team_ids: Only incidents related to these teams will be included.
+        service_ids: Only incidents related to these services will be included.
+        urgency: Filter by urgency: 'high' or 'low'.
+        time_zone: The time zone for results (e.g. 'America/New_York').
+        order: Sort order: 'asc' or 'desc'.
+        order_by: Field to sort results by.
 
     Returns:
         JSON string of ListResponseModel containing AnalyticsServiceMetrics objects.
     """
-    body = request.to_body()
+    body: dict[str, Any] = {
+        "filters": {
+            "created_at_start": created_at_start,
+            "created_at_end": created_at_end,
+        }
+    }
+    if team_ids:
+        body["filters"]["team_ids"] = team_ids
+    if service_ids:
+        body["filters"]["service_ids"] = service_ids
+    if urgency:
+        body["filters"]["urgency"] = urgency
+    if time_zone:
+        body["time_zone"] = time_zone
+    if order:
+        body["order"] = order
+    if order_by:
+        body["order_by"] = order_by
+
     response = get_client().rpost("/analytics/metrics/incidents/services", json=body)
     if isinstance(response, dict):
         raw_data = response.get("data", [])
@@ -70,20 +131,58 @@ def get_incident_metrics_by_service(request: GetIncidentMetricsByServiceRequest)
     return ListResponseModel[AnalyticsServiceMetrics](response=metrics).model_dump_json()
 
 
-def get_incident_metrics_by_team(request: GetIncidentMetricsByTeamRequest) -> str:
+def get_incident_metrics_by_team(
+    created_at_start: str,
+    created_at_end: str,
+    team_ids: list[str] | None = None,
+    service_ids: list[str] | None = None,
+    urgency: str | None = None,
+    time_zone: str | None = None,
+    order: str | None = None,
+    order_by: str | None = None,
+    aggregate_unit: str | None = None,
+) -> str:
     """Get aggregated incident metrics per team from PagerDuty Analytics.
 
     Returns team-level MTTA, mean MTTR, escalation counts, incident
     volume, and uptime percentage. Use for team performance comparisons and dashboards.
 
     Args:
-        request: Filters (required date range, optional team/service/urgency filters),
-                 time zone, and sort options.
+        created_at_start: ISO8601 DateTime. Incidents created before this are omitted.
+        created_at_end: ISO8601 DateTime. Incidents created on/after this are omitted.
+        team_ids: Only incidents related to these teams will be included.
+        service_ids: Only incidents related to these services will be included.
+        urgency: Filter by urgency: 'high' or 'low'.
+        time_zone: The time zone for results (e.g. 'America/New_York').
+        order: Sort order: 'asc' or 'desc'.
+        order_by: Field to sort results by.
+        aggregate_unit: Time unit to aggregate metrics by: 'day', 'week', or 'month'.
+            If omitted, returns a single all-period row.
 
     Returns:
         JSON string of ListResponseModel containing AnalyticsTeamMetrics objects.
     """
-    body = request.to_body()
+    body: dict[str, Any] = {
+        "filters": {
+            "created_at_start": created_at_start,
+            "created_at_end": created_at_end,
+        }
+    }
+    if team_ids:
+        body["filters"]["team_ids"] = team_ids
+    if service_ids:
+        body["filters"]["service_ids"] = service_ids
+    if urgency:
+        body["filters"]["urgency"] = urgency
+    if time_zone:
+        body["time_zone"] = time_zone
+    if order:
+        body["order"] = order
+    if order_by:
+        body["order_by"] = order_by
+    if aggregate_unit:
+        body["aggregate_unit"] = aggregate_unit
+
     response = get_client().rpost("/analytics/metrics/incidents/teams", json=body)
     if isinstance(response, dict):
         raw_data = response.get("data", [])
@@ -95,20 +194,49 @@ def get_incident_metrics_by_team(request: GetIncidentMetricsByTeamRequest) -> st
     return ListResponseModel[AnalyticsTeamMetrics](response=metrics).model_dump_json()
 
 
-def get_responder_load_metrics(request: GetResponderLoadMetricsRequest) -> str:
+def get_responder_load_metrics(
+    date_range_start: str,
+    date_range_end: str,
+    team_ids: list[str] | None = None,
+    urgency: str | None = None,
+    time_zone: str | None = None,
+    order: str | None = None,
+    order_by: str | None = None,
+) -> str:
     """Get aggregated load metrics per responder from PagerDuty Analytics.
 
     Returns per-responder on-call hours, incident count, acknowledgment count,
     sleep-hour interruptions, and engaged time. Use for responder workload analysis.
 
     Args:
-        request: Filters (required date range, optional team/urgency filters),
-                 time zone, and sort options.
+        date_range_start: ISO8601 DateTime. Incidents with created_at before this value are omitted.
+        date_range_end: ISO8601 DateTime. Incidents with created_at >= this value are omitted.
+        team_ids: Only incidents related to these teams will be included.
+        urgency: Filter by urgency: 'high' or 'low'.
+        time_zone: The time zone for results (e.g. 'America/New_York').
+        order: Sort order: 'asc' or 'desc'.
+        order_by: Field to sort results by.
 
     Returns:
         JSON string of ListResponseModel containing AnalyticsResponderLoad objects.
     """
-    body = request.to_body()
+    body: dict[str, Any] = {
+        "filters": {
+            "date_range_start": date_range_start,
+            "date_range_end": date_range_end,
+        }
+    }
+    if team_ids:
+        body["filters"]["team_ids"] = team_ids
+    if urgency:
+        body["filters"]["urgency"] = urgency
+    if time_zone:
+        body["time_zone"] = time_zone
+    if order:
+        body["order"] = order
+    if order_by:
+        body["order_by"] = order_by
+
     response = get_client().rpost("/analytics/metrics/responders/all", json=body)
     if isinstance(response, dict):
         raw_data = response.get("data", [])
@@ -120,7 +248,16 @@ def get_responder_load_metrics(request: GetResponderLoadMetricsRequest) -> str:
     return ListResponseModel[AnalyticsResponderLoad](response=metrics).model_dump_json()
 
 
-def get_incident_metrics_all(request: GetIncidentMetricsAllRequest) -> str:
+def get_incident_metrics_all(
+    created_at_start: str,
+    created_at_end: str,
+    team_ids: list[str] | None = None,
+    service_ids: list[str] | None = None,
+    urgency: str | None = None,
+    time_zone: str | None = None,
+    order: str | None = None,
+    order_by: str | None = None,
+) -> str:
     """Get full-period aggregated incident metrics from PagerDuty Analytics.
 
     Returns rollup metrics for the entire requested period including percentile
@@ -129,13 +266,37 @@ def get_incident_metrics_all(request: GetIncidentMetricsAllRequest) -> str:
     grouped endpoints.
 
     Args:
-        request: Filters (required date range, optional team/service/urgency filters)
-                 and optional time zone.
+        created_at_start: ISO8601 DateTime. Incidents created before this are omitted.
+        created_at_end: ISO8601 DateTime. Incidents created on/after this are omitted.
+        team_ids: Only incidents related to these teams will be included.
+        service_ids: Only incidents related to these services will be included.
+        urgency: Filter by urgency: 'high' or 'low'.
+        time_zone: The time zone for results (e.g. 'America/New_York').
+        order: Sort order: 'asc' or 'desc'.
+        order_by: Field to sort results by.
 
     Returns:
         JSON string of AnalyticsAggregatedMetrics object.
     """
-    body = request.to_body()
+    body: dict[str, Any] = {
+        "filters": {
+            "created_at_start": created_at_start,
+            "created_at_end": created_at_end,
+        }
+    }
+    if team_ids:
+        body["filters"]["team_ids"] = team_ids
+    if service_ids:
+        body["filters"]["service_ids"] = service_ids
+    if urgency:
+        body["filters"]["urgency"] = urgency
+    if time_zone:
+        body["time_zone"] = time_zone
+    if order:
+        body["order"] = order
+    if order_by:
+        body["order_by"] = order_by
+
     response = get_client().rpost("/analytics/metrics/incidents/all", json=body)
     if isinstance(response, dict):
         data = response.get("data", [])

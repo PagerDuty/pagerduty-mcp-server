@@ -79,7 +79,7 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
         description="Find the most on-call user for a date range",
     ),
     OncallCompensationCompetencyTest(
-        query="Get on-call burden report for the engineering team T1 for Q1 2023",
+        query="Generate an on-call compensation report from 2023-01-01 to 2023-03-31 for team_ids T1",
         expected_tool_calls=[
             MockToolCall(
                 name="get_oncall_compensation_report",
@@ -143,7 +143,7 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
         description="Project on-call costs for a future month using forward mode",
     ),
     OncallCompensationCompetencyTest(
-        query="Who is scheduled on call from 2026-06-01 to 2026-06-30?",
+        query="Use get_oncall_compensation_report in forward mode to project on-call burden from 2026-06-01 to 2026-06-30",
         expected_tool_calls=[
             MockToolCall(
                 name="get_oncall_compensation_report",

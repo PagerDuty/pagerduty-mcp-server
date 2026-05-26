@@ -77,7 +77,7 @@ BUSINESS_SERVICES_COMPETENCY_TESTS = [
         description="Query business service dependencies as a question",
     ),
     BusinessServicesCompetencyTest(
-        query="Show service dependencies for BS2",
+        query="Get business service dependencies for BS2",
         expected_tool_calls=[
             MockToolCall(
                 name="get_business_service_dependencies",

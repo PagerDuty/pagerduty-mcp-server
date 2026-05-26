@@ -96,7 +96,7 @@ class AnalyticsCompetencyTest(AgentCompetencyTest):
 # Define the competency test cases
 ANALYTICS_COMPETENCY_TESTS = [
     AnalyticsCompetencyTest(
-        query="Show me responder metrics for January 2023",
+        query="Show me responder metrics from 2023-01-01T00:00:00Z to 2023-01-31T23:59:59Z",
         expected_tool_calls=[
             MockToolCall(
                 name="get_responder_metrics",
@@ -113,7 +113,7 @@ ANALYTICS_COMPETENCY_TESTS = [
         description="Get responder metrics for a specific month",
     ),
     AnalyticsCompetencyTest(
-        query="Get on-call burden data for the engineering team T1 in Q1 2023",
+        query="Get responder metrics for team ID T1 from 2023-01-01 to 2023-03-31",
         expected_tool_calls=[
             MockToolCall(
                 name="get_responder_metrics",
@@ -131,7 +131,7 @@ ANALYTICS_COMPETENCY_TESTS = [
         description="Get responder metrics filtered by team ID",
     ),
     AnalyticsCompetencyTest(
-        query="Show incident metrics by service for January 2023",
+        query="Show incident metrics by service from 2023-01-01T00:00:00Z to 2023-02-01T00:00:00Z",
         expected_tool_calls=[
             MockToolCall(
                 name="get_incident_metrics_by_service",
@@ -139,7 +139,7 @@ ANALYTICS_COMPETENCY_TESTS = [
                     "request": {
                         "filters": {
                             "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-01-31T23:59:59Z",
+                            "created_at_end": "2023-02-01T00:00:00Z",
                         }
                     }
                 },
@@ -148,7 +148,7 @@ ANALYTICS_COMPETENCY_TESTS = [
         description="Get incident metrics grouped by service",
     ),
     AnalyticsCompetencyTest(
-        query="Get incident count by service for January 2023",
+        query="Get incident count by service from 2023-01-01T00:00:00Z to 2023-02-01T00:00:00Z",
         expected_tool_calls=[
             MockToolCall(
                 name="get_incident_metrics_by_service",
@@ -156,7 +156,7 @@ ANALYTICS_COMPETENCY_TESTS = [
                     "request": {
                         "filters": {
                             "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-01-31T23:59:59Z",
+                            "created_at_end": "2023-02-01T00:00:00Z",
                         }
                     }
                 },
@@ -182,7 +182,7 @@ ANALYTICS_COMPETENCY_TESTS = [
         description="Get incident metrics grouped by team",
     ),
     AnalyticsCompetencyTest(
-        query="Get responder load metrics for January 2023",
+        query="Get responder load metrics from 2023-01-01T00:00:00Z to 2023-01-31T23:59:59Z",
         expected_tool_calls=[
             MockToolCall(
                 name="get_responder_load_metrics",
@@ -199,7 +199,7 @@ ANALYTICS_COMPETENCY_TESTS = [
         description="Get responder load metrics for a date range",
     ),
     AnalyticsCompetencyTest(
-        query="Show all incident metrics for January 2023 aggregated by week",
+        query="Call get_incident_metrics_all for January 2023 with aggregate_unit set to week",
         expected_tool_calls=[
             MockToolCall(
                 name="get_incident_metrics_all",
@@ -207,8 +207,8 @@ ANALYTICS_COMPETENCY_TESTS = [
                     "request": {
                         "filters": {
                             "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-01-31T23:59:59Z",
-                        }
+                            "created_at_end": "2023-02-01T00:00:00Z",
+                        },
                     }
                 },
             )
@@ -216,7 +216,7 @@ ANALYTICS_COMPETENCY_TESTS = [
         description="Get all incident metrics with aggregate_unit=week",
     ),
     AnalyticsCompetencyTest(
-        query="Get a breakdown of incidents for all teams in January 2023",
+        query="Use get_incident_metrics_all to get a rollup of all incidents from 2023-01-01 to 2023-02-01",
         expected_tool_calls=[
             MockToolCall(
                 name="get_incident_metrics_all",
@@ -224,7 +224,7 @@ ANALYTICS_COMPETENCY_TESTS = [
                     "request": {
                         "filters": {
                             "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-01-31T23:59:59Z",
+                            "created_at_end": "2023-02-01T00:00:00Z",
                         }
                     }
                 },

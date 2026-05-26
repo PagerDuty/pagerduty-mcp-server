@@ -6,12 +6,9 @@ from unittest.mock import Mock, patch
 
 from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
-    MAX_RESULTS,
     Alert,
     AlertQuery,
-    Assignment,
     AssignmentInput,
-    GetIncidentQuery,
     Incident,
     IncidentCreate,
     IncidentManageRequest,
@@ -20,11 +17,8 @@ from pagerduty_mcp.models import (
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
-    OutlierIncidentQuery,
     OutlierIncidentResponse,
-    PastIncidentsQuery,
     PastIncidentsResponse,
-    RelatedIncidentsQuery,
     RelatedIncidentsResponse,
     ServiceReference,
     UserReference,
@@ -324,8 +318,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = GetIncidentQuery(include=["users"])
-        result = get_incident("PINCIDENT123", query)
+        result = get_incident("PINCIDENT123", include=["users"])
 
         # Verify API call
         expected_params = {"include[]": ["users"]}
@@ -349,8 +342,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = GetIncidentQuery(include=["users", "teams", "services"])
-        result = get_incident("PINCIDENT123", query)
+        result = get_incident("PINCIDENT123", include=["users", "teams", "services"])
 
         # Verify API call
         expected_params = {"include[]": ["users", "teams", "services"]}
@@ -383,9 +375,8 @@ class TestIncidentTools(unittest.TestCase):
         mock_client.rget.return_value = self.sample_incident_data
         mock_get_client.return_value = mock_client
 
-        # Test
-        query = GetIncidentQuery()
-        result = get_incident("PINCIDENT123", query)
+        # Test - call without include parameter (empty params)
+        result = get_incident("PINCIDENT123")
 
         # Should have empty params
         mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={})
@@ -393,29 +384,65 @@ class TestIncidentTools(unittest.TestCase):
         # Verify result
         self.assertIsInstance(result, Incident)
 
-    def test_get_incident_query_to_params_with_include(self):
-        """Test GetIncidentQuery.to_params() with include parameter."""
-        query = GetIncidentQuery(include=["users", "teams"])
-        params = query.to_params()
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_external_references(self, mock_get_client):
+        """Test get_incident with external_references include returns integration links."""
+        mock_client = Mock()
+        incident_with_refs = {
+            **self.sample_incident_data,
+            "external_references": [
+                {"type": "servicenow_reference", "external_id": "INC001234", "sync": True},
+                {"type": "zendesk_reference", "external_id": "12345", "sync": False},
+            ],
+        }
+        mock_client.rget.return_value = incident_with_refs
+        mock_get_client.return_value = mock_client
 
-        expected_params = {"include[]": ["users", "teams"]}
-        self.assertEqual(params, expected_params)
+        result = get_incident("PINCIDENT123", include=["external_references"])
 
-    def test_get_incident_query_to_params_empty(self):
-        """Test GetIncidentQuery.to_params() with no parameters."""
-        query = GetIncidentQuery()
-        params = query.to_params()
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={"include[]": ["external_references"]})
+        self.assertIsInstance(result, Incident)
+        assert result.external_references is not None
+        self.assertEqual(len(result.external_references), 2)
+        self.assertEqual(result.external_references[0]["external_id"], "INC001234")
 
-        self.assertEqual(params, {})
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_get_incident_with_metadata(self, mock_get_client):
+        """Test get_incident with metadata include returns normalized ExternalIntegrationLink list."""
+        mock_client = Mock()
+        incident_with_metadata = {
+            **self.sample_incident_data,
+            "metadata": {
+                "servicenow_itsm_dev230942_INC0010016": {
+                    "external_name": "INC0010016 (dev230942)",
+                    "external_url": "https://dev230942.service-now.com/incident.do?sys_id=abc123",
+                }
+            },
+        }
+        mock_client.rget.return_value = incident_with_metadata
+        mock_get_client.return_value = mock_client
 
-    def test_get_incident_query_validation_extra_forbidden(self):
-        """Test GetIncidentQuery rejects extra fields."""
-        from pydantic import ValidationError
+        result = get_incident("PINCIDENT123", include=["metadata"])
 
-        with self.assertRaises(ValidationError) as ctx:
-            GetIncidentQuery(include=["users"], invalid_field="value")
+        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={"include[]": ["metadata"]})
+        self.assertIsInstance(result, Incident)
+        assert result.metadata is not None
+        self.assertEqual(len(result.metadata), 1)
+        self.assertEqual(result.metadata[0].integration_id, "servicenow_itsm_dev230942_INC0010016")
+        self.assertEqual(result.metadata[0].external_name, "INC0010016 (dev230942)")
+        self.assertEqual(result.metadata[0].external_url, "https://dev230942.service-now.com/incident.do?sys_id=abc123")
 
-        self.assertIn("Extra inputs are not permitted", str(ctx.exception))
+    def test_incident_model_external_references_defaults_to_none(self):
+        """Test Incident model has external_references as None when not included."""
+        from pagerduty_mcp.models.incidents import Incident
+        incident = Incident.model_validate(self.sample_incident_data)
+        self.assertIsNone(incident.external_references)
+
+    def test_incident_model_metadata_defaults_to_none(self):
+        """Test Incident model has metadata as None when not included."""
+        from pagerduty_mcp.models.incidents import Incident
+        incident = Incident.model_validate(self.sample_incident_data)
+        self.assertIsNone(incident.metadata)
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_incident_with_query_api_error(self, mock_get_client):
@@ -425,9 +452,8 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = GetIncidentQuery(include=["users"])
         with self.assertRaises(Exception) as context:
-            get_incident("PINCIDENT123", query)
+            get_incident("PINCIDENT123", include=["users"])
 
         self.assertIn("API Error", str(context.exception))
 
@@ -886,8 +912,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = OutlierIncidentQuery()
-        result = get_outlier_incident("PINCIDENT123", query)
+        result = get_outlier_incident("PINCIDENT123")
 
         # Assertions
         self.assertIsInstance(result, OutlierIncidentResponse)
@@ -908,8 +933,7 @@ class TestIncidentTools(unittest.TestCase):
         from datetime import datetime
 
         since_date = datetime(2023, 1, 1)
-        query = OutlierIncidentQuery(since=since_date)
-        result = get_outlier_incident("PINCIDENT123", query)
+        result = get_outlier_incident("PINCIDENT123", since=since_date)
 
         # Assertions
         self.assertIsInstance(result, OutlierIncidentResponse)
@@ -951,8 +975,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = OutlierIncidentQuery()
-        result = get_outlier_incident("PINCIDENT123", query)
+        result = get_outlier_incident("PINCIDENT123")
 
         # Assertions
         self.assertIsInstance(result, OutlierIncidentResponse)
@@ -969,8 +992,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = PastIncidentsQuery()
-        result = get_past_incidents("PINCIDENT123", query)
+        result = get_past_incidents("PINCIDENT123")
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -991,8 +1013,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test with limit and total parameters
-        query = PastIncidentsQuery(limit=10, total=True)
-        result = get_past_incidents("PINCIDENT123", query)
+        result = get_past_incidents("PINCIDENT123", limit=10, total=True)
 
         # Assertions
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -1012,8 +1033,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = RelatedIncidentsQuery()
-        result = get_related_incidents("PINCIDENT123", query)
+        result = get_related_incidents("PINCIDENT123")
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -1031,8 +1051,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test with additional_details parameter
-        query = RelatedIncidentsQuery(additional_details=["incident"])
-        result = get_related_incidents("PINCIDENT123", query)
+        result = get_related_incidents("PINCIDENT123", additional_details=["incident"])
 
         # Assertions
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -1051,9 +1070,8 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test that exception is raised
-        query = OutlierIncidentQuery()
         with self.assertRaises(Exception) as context:
-            get_outlier_incident("PINCIDENT123", query)
+            get_outlier_incident("PINCIDENT123")
 
         self.assertIn("API Error", str(context.exception))
 
@@ -1066,9 +1084,8 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test that exception is raised
-        query = PastIncidentsQuery()
         with self.assertRaises(Exception) as context:
-            get_past_incidents("PINCIDENT123", query)
+            get_past_incidents("PINCIDENT123")
 
         self.assertIn("API Error", str(context.exception))
 
@@ -1081,9 +1098,8 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test that exception is raised
-        query = RelatedIncidentsQuery()
         with self.assertRaises(Exception) as context:
-            get_related_incidents("PINCIDENT123", query)
+            get_related_incidents("PINCIDENT123")
 
         self.assertIn("API Error", str(context.exception))
 
@@ -1096,8 +1112,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = RelatedIncidentsQuery()
-        result = get_related_incidents("PINCIDENT123", query)
+        result = get_related_incidents("PINCIDENT123")
 
         # Should return empty related incidents response
         self.assertIsInstance(result, RelatedIncidentsResponse)
@@ -1132,8 +1147,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = OutlierIncidentQuery()
-        result = get_outlier_incident("PINCIDENT123", query)
+        result = get_outlier_incident("PINCIDENT123")
 
         # Assertions
         self.assertIsInstance(result, OutlierIncidentResponse)
@@ -1149,8 +1163,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = PastIncidentsQuery(limit=10)
-        result = get_past_incidents("PINCIDENT123", query)
+        result = get_past_incidents("PINCIDENT123", limit=10)
 
         # Should return empty past incidents response with correct default values
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -1187,8 +1200,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = PastIncidentsQuery(limit=10)
-        result = get_past_incidents("PINCIDENT123", query)
+        result = get_past_incidents("PINCIDENT123", limit=10)
 
         # Should parse unwrapped list correctly
         self.assertIsInstance(result, PastIncidentsResponse)
@@ -1244,8 +1256,7 @@ class TestIncidentTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
 
         # Test
-        query = RelatedIncidentsQuery()
-        result = get_related_incidents("PINCIDENT123", query)
+        result = get_related_incidents("PINCIDENT123")
 
         # Should parse unwrapped list correctly
         self.assertIsInstance(result, RelatedIncidentsResponse)

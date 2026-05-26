@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import TeamReference
-from pagerduty_mcp.models.users import User, UserQuery
-from pagerduty_mcp.tools.users import get_user_data, list_users
+from pagerduty_mcp.models.users import CreateUserRequest, User, UserQuery
+from pagerduty_mcp.tools.users import create_user, get_user_data, list_users
 
 
 class TestUserTools(unittest.TestCase):
@@ -51,6 +51,7 @@ class TestUserTools(unittest.TestCase):
         self.mock_client.reset_mock()
         # Clear any side effects
         self.mock_client.rget.side_effect = None
+        self.mock_client.rpost.side_effect = None
 
     @patch("pagerduty_mcp.tools.users.get_client")
     def test_get_user_data_success(self, mock_get_client):
@@ -301,6 +302,56 @@ class TestUserTools(unittest.TestCase):
 
         # Verify result
         self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_success_wrapped_response(self, mock_get_client):
+        """Test create_user when API wraps the user in a 'user' key."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = {"user": self.sample_user_response}
+
+        request = CreateUserRequest(name="John Doe", email="john.doe@example.com")
+        result = create_user(request)
+
+        self.assertIsInstance(result, User)
+        self.assertEqual(result.name, "John Doe")
+        self.assertEqual(result.email, "john.doe@example.com")
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_success_unwrapped_response(self, mock_get_client):
+        """Test create_user when API returns the user object directly."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = self.sample_user_response
+
+        request = CreateUserRequest(name="John Doe", email="john.doe@example.com")
+        result = create_user(request)
+
+        self.assertIsInstance(result, User)
+        self.assertEqual(result.id, "USER123")
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_calls_api_correctly(self, mock_get_client):
+        """Test that create_user calls rpost with the correct arguments."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = self.sample_user_response
+
+        request = CreateUserRequest(name="John Doe", email="john.doe@example.com")
+        create_user(request)
+
+        self.mock_client.rpost.assert_called_once_with(
+            "/users",
+            json=request.model_dump(),
+        )
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_client_error(self, mock_get_client):
+        """Test create_user propagates client exceptions."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.side_effect = Exception("Create Error")
+
+        with self.assertRaises(Exception) as ctx:
+            create_user(CreateUserRequest(name="John Doe", email="john.doe@example.com"))
+
+        self.assertEqual(str(ctx.exception), "Create Error")
 
 
 if __name__ == "__main__":

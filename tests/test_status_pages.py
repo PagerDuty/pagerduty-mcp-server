@@ -32,6 +32,7 @@ from pagerduty_mcp.models.status_pages import (
 )
 from pagerduty_mcp.tools.status_pages import (
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
     get_status_page_post,
     list_status_page_impacts,
@@ -602,6 +603,85 @@ class TestStatusPagesTools(unittest.TestCase):
             json_data["post_update"]["reported_at"], str, "reported_at must be serialized as ISO string"
         )
         self.assertEqual(json_data["post_update"]["reported_at"], "2023-12-12T14:30:00")
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_postmortem_success(self, mock_get_client):
+        """Test creating a post-mortem for a status page post successfully."""
+        import json as _json
+        mock_client = Mock()
+        mock_client.rput.return_value = {"id": "PM123", "message": "Post-incident review"}
+        mock_get_client.return_value = mock_client
+
+        result = create_status_page_post_postmortem("SP123", "P123", "Post-incident review")
+
+        self.assertIsInstance(result, str)
+        data = _json.loads(result)
+        self.assertEqual(data["message"], "Post-incident review")
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_postmortem_default_notify(self, mock_get_client):
+        """Test that create_status_page_post_postmortem defaults notify_subscribers to True."""
+        import json as _json
+        mock_client = Mock()
+        mock_client.rput.return_value = {}
+        mock_get_client.return_value = mock_client
+
+        create_status_page_post_postmortem("SP123", "P123", "Review message")
+
+        call_args = mock_client.rput.call_args
+        payload = call_args[1]["json"]
+        self.assertTrue(payload["postmortem"]["notify_subscribers"])
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_postmortem_no_notify(self, mock_get_client):
+        """Test create_status_page_post_postmortem with notify_subscribers=False."""
+        mock_client = Mock()
+        mock_client.rput.return_value = {}
+        mock_get_client.return_value = mock_client
+
+        create_status_page_post_postmortem("SP123", "P123", "Review message", notify_subscribers=False)
+
+        call_args = mock_client.rput.call_args
+        payload = call_args[1]["json"]
+        self.assertFalse(payload["postmortem"]["notify_subscribers"])
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_postmortem_calls_api_correctly(self, mock_get_client):
+        """Test that create_status_page_post_postmortem calls rput with correct URL and payload."""
+        mock_client = Mock()
+        mock_client.rput.return_value = {}
+        mock_get_client.return_value = mock_client
+
+        create_status_page_post_postmortem("SP123", "P123", "Post-incident review")
+
+        expected_payload = {
+            "postmortem": {
+                "message": "Post-incident review",
+                "notify_subscribers": True,
+                "post": {
+                    "id": "P123",
+                    "self": "https://api.pagerduty.com/status_pages/SP123/posts/P123",
+                    "type": "status_page_post",
+                },
+                "type": "status_page_post_postmortem",
+            }
+        }
+        mock_client.rput.assert_called_once_with(
+            "/status_pages/SP123/posts/P123/postmortem",
+            json=expected_payload,
+        )
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_postmortem_client_error(self, mock_get_client):
+        """Test create_status_page_post_postmortem propagates client exceptions."""
+        mock_client = Mock()
+        mock_client.rput.side_effect = Exception("Postmortem Error")
+        mock_get_client.return_value = mock_client
+
+        with self.assertRaises(Exception) as ctx:
+            create_status_page_post_postmortem("SP123", "P123", "Review message")
+
+        self.assertEqual(str(ctx.exception), "Postmortem Error")
 
 
 if __name__ == "__main__":

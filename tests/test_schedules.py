@@ -20,7 +20,9 @@ from pagerduty_mcp.models.users import User
 from pagerduty_mcp.tools.schedules import (
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     get_schedule,
+    list_schedule_overrides,
     list_schedule_users,
     list_schedules,
     update_schedule,
@@ -111,6 +113,8 @@ class TestScheduleTools(unittest.TestCase):
         # Clear any side effects
         self.mock_client.rget.side_effect = None
         self.mock_client.rpost.side_effect = None
+        self.mock_client.rput.side_effect = None
+        self.mock_client.rdelete.side_effect = None
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
     @patch("pagerduty_mcp.tools.schedules.get_client")
@@ -842,6 +846,91 @@ class TestScheduleTools(unittest.TestCase):
         self.assertEqual(str(context.exception), "Failed to update schedule SCHED123: API Error")
         mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once()
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_overrides_list_response(self, mock_get_client):
+        """Test list_schedule_overrides when API returns a list directly."""
+        import json as _json
+        mock_get_client.return_value = self.mock_client
+        overrides = [{"id": "OV1", "start": "2023-01-01T00:00:00Z", "end": "2023-01-02T00:00:00Z"}]
+        self.mock_client.rget.return_value = overrides
+
+        result = list_schedule_overrides("SCHED123", "2023-01-01", "2023-01-31")
+
+        self.assertIsInstance(result, str)
+        data = _json.loads(result)
+        self.assertEqual(len(data["overrides"]), 1)
+        self.assertEqual(data["overrides"][0]["id"], "OV1")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_overrides_dict_response(self, mock_get_client):
+        """Test list_schedule_overrides when API returns a dict with 'overrides' key."""
+        import json as _json
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = {"overrides": [{"id": "OV2"}]}
+
+        result = list_schedule_overrides("SCHED123", "2023-01-01", "2023-01-31")
+
+        data = _json.loads(result)
+        self.assertEqual(len(data["overrides"]), 1)
+        self.assertEqual(data["overrides"][0]["id"], "OV2")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_overrides_calls_api_correctly(self, mock_get_client):
+        """Test that list_schedule_overrides calls rget with correct arguments."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = []
+
+        list_schedule_overrides("SCHED123", "2023-01-01", "2023-01-31")
+
+        self.mock_client.rget.assert_called_once_with(
+            "/schedules/SCHED123/overrides",
+            params={"since": "2023-01-01", "until": "2023-01-31"},
+        )
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_overrides_empty_dict_response(self, mock_get_client):
+        """Test list_schedule_overrides when API returns empty dict."""
+        import json as _json
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = {}
+
+        result = list_schedule_overrides("SCHED123", "2023-01-01", "2023-01-31")
+
+        data = _json.loads(result)
+        self.assertEqual(data["overrides"], [])
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_delete_schedule_override_success(self, mock_get_client):
+        """Test successful deletion of a schedule override."""
+        import json as _json
+        mock_get_client.return_value = self.mock_client
+
+        result = delete_schedule_override("SCHED123", "OV123")
+
+        self.assertIsInstance(result, str)
+        data = _json.loads(result)
+        self.assertTrue(data["success"])
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_delete_schedule_override_calls_api_correctly(self, mock_get_client):
+        """Test that delete_schedule_override calls rdelete with correct URL."""
+        mock_get_client.return_value = self.mock_client
+
+        delete_schedule_override("SCHED123", "OV123")
+
+        self.mock_client.rdelete.assert_called_once_with("/schedules/SCHED123/overrides/OV123")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_delete_schedule_override_client_error(self, mock_get_client):
+        """Test delete_schedule_override propagates client exceptions."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rdelete.side_effect = Exception("Delete Error")
+
+        with self.assertRaises(Exception) as ctx:
+            delete_schedule_override("SCHED123", "OV123")
+
+        self.assertEqual(str(ctx.exception), "Delete Error")
 
 
 if __name__ == "__main__":

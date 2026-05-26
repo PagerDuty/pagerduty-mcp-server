@@ -97,7 +97,7 @@ class TestChangeEventTools(unittest.TestCase):
     @patch("pagerduty_mcp.tools.change_events.paginate")
     @patch("pagerduty_mcp.tools.change_events.get_client")
     def test_list_change_events_no_query_model(self, mock_get_client, mock_paginate):
-        """Test that list_change_events can be called with no arguments (no query_model)."""
+        """Test that list_change_events can be called with no arguments."""
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
@@ -106,15 +106,15 @@ class TestChangeEventTools(unittest.TestCase):
         mock_paginate.assert_called_once_with(
             client=self.mock_client,
             entity="change_events",
-            params={"limit": DEFAULT_PAGINATION_LIMIT},
-            maximum_records=DEFAULT_PAGINATION_LIMIT,
+            params={"limit": 100},
+            maximum_records=100,
         )
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
     @patch("pagerduty_mcp.tools.change_events.get_client")
     def test_list_service_change_events_no_query_model(self, mock_get_client, mock_paginate):
-        """Test that list_service_change_events can be called without query_model."""
+        """Test that list_service_change_events can be called without extra params."""
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
@@ -123,8 +123,8 @@ class TestChangeEventTools(unittest.TestCase):
         mock_paginate.assert_called_once_with(
             client=self.mock_client,
             entity="services/P43PBXB/change_events",
-            params={"limit": DEFAULT_PAGINATION_LIMIT},
-            maximum_records=DEFAULT_PAGINATION_LIMIT,
+            params={"limit": 100},
+            maximum_records=100,
         )
         self.assertEqual(len(result.response), 2)
 
@@ -135,15 +135,14 @@ class TestChangeEventTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
-        query = ChangeEventQuery()
-        result = list_change_events(query)
+        result = list_change_events()
 
         # Verify paginate call
         mock_paginate.assert_called_once_with(
             client=self.mock_client,
             entity="change_events",
-            params=query.to_params(),
-            maximum_records=DEFAULT_PAGINATION_LIMIT,
+            params={"limit": 100},
+            maximum_records=100,
         )
 
         # Verify result
@@ -162,16 +161,15 @@ class TestChangeEventTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_change_events_list_response[0]]
 
-        query = ChangeEventQuery(team_ids=["TEAM123"])
-        result = list_change_events(query)
+        result = list_change_events(team_ids=["TEAM123"])
 
         # Verify paginate call
-        expected_params = {"team_ids[]": ["TEAM123"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": ["TEAM123"], "limit": 100}
         mock_paginate.assert_called_once_with(
             client=self.mock_client,
             entity="change_events",
             params=expected_params,
-            maximum_records=DEFAULT_PAGINATION_LIMIT,
+            maximum_records=100,
         )
 
         # Verify result
@@ -187,20 +185,19 @@ class TestChangeEventTools(unittest.TestCase):
 
         since = datetime.now() - timedelta(days=7)
         until = datetime.now()
-        query = ChangeEventQuery(since=since, until=until)
-        result = list_change_events(query)
+        result = list_change_events(since=since, until=until)
 
         # Verify paginate call
         expected_params = {
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "limit": DEFAULT_PAGINATION_LIMIT,
+            "limit": 100,
         }
         mock_paginate.assert_called_once_with(
             client=self.mock_client,
             entity="change_events",
             params=expected_params,
-            maximum_records=DEFAULT_PAGINATION_LIMIT,
+            maximum_records=100,
         )
 
         # Verify result
@@ -213,16 +210,15 @@ class TestChangeEventTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_change_events_list_response[1]]
 
-        query = ChangeEventQuery(integration_ids=["P0Z3BFB"])
-        result = list_change_events(query)
+        result = list_change_events(integration_ids=["P0Z3BFB"])
 
         # Verify paginate call
-        expected_params = {"integration_ids[]": ["P0Z3BFB"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"integration_ids[]": ["P0Z3BFB"], "limit": 100}
         mock_paginate.assert_called_once_with(
             client=self.mock_client,
             entity="change_events",
             params=expected_params,
-            maximum_records=DEFAULT_PAGINATION_LIMIT,
+            maximum_records=100,
         )
 
         # Verify result
@@ -235,8 +231,7 @@ class TestChangeEventTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
-        query = ChangeEventQuery(limit=50)
-        result = list_change_events(query)
+        result = list_change_events(limit=50)
 
         # Verify paginate call
         expected_params = {"limit": 50}
@@ -254,8 +249,7 @@ class TestChangeEventTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_change_events_list_response[1]]
 
-        query = ChangeEventQuery(limit=25, offset=10, total=True)
-        result = list_change_events(query)
+        result = list_change_events(limit=25, offset=10, total=True)
 
         # Verify paginate call
         expected_params = {"limit": 25, "offset": 10, "total": True}
@@ -273,8 +267,7 @@ class TestChangeEventTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
-        query = ChangeEventQuery()
-        result = list_change_events(query)
+        result = list_change_events()
 
         # Verify result
         self.assertEqual(len(result.response), 0)
@@ -345,8 +338,7 @@ class TestChangeEventTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
-        query = ChangeEventQuery(limit=20)
-        result = list_service_change_events("P43PBXB", query)
+        result = list_service_change_events("P43PBXB", limit=20)
 
         # Verify paginate call
         expected_params = {"limit": 20}
@@ -367,8 +359,7 @@ class TestChangeEventTools(unittest.TestCase):
         mock_paginate.return_value = [self.sample_change_events_list_response[0]]
 
         since = datetime.now() - timedelta(hours=24)
-        query = ChangeEventQuery(since=since, limit=10)
-        result = list_service_change_events("P43PBXB", query)
+        result = list_service_change_events("P43PBXB", since=since, limit=10)
 
         # Verify paginate call
         expected_params = {"since": since.isoformat(), "limit": 10}

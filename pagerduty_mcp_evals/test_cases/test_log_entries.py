@@ -85,14 +85,14 @@ class LogEntryCompetencyTest(AgentCompetencyTest):
             MockMCPToolInvocationResponse(
                 tool_name="list_teams",
                 parameters=lambda params: (
-                    (params.get("query_model") or {}).get("query") == "TEAM1"
+                    params.get("query") == "TEAM1"
                 ),
                 response={"response": [{"id": "TEAM1", "name": "Team 1"}]},
             ),
             MockMCPToolInvocationResponse(
                 tool_name="list_teams",
                 parameters=lambda params: (
-                    (params.get("query_model") or {}).get("query") == "TEAM2"
+                    params.get("query") == "TEAM2"
                 ),
                 response={"response": [{"id": "TEAM2", "name": "Team 2"}]},
             ),
@@ -121,7 +121,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"limit": 100}},
+                parameters={"limit": 100},
             )
         ],
         description="List log entries with time range (LLM may calculate since timestamp)",
@@ -131,7 +131,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"limit": 50}},
+                parameters={"limit": 50},
             )
         ],
         description="List log entries with limit parameter",
@@ -141,7 +141,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"limit": 25}},
+                parameters={"limit": 25},
             )
         ],
         description="List log entries with explicit limit",
@@ -151,7 +151,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"offset": 10}},
+                parameters={"offset": 10},
             )
         ],
         description="List log entries with pagination offset",
@@ -191,7 +191,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"limit": 100, "offset": 50}},
+                parameters={"limit": 100, "offset": 50},
             )
         ],
         description="List log entries with both limit and offset for pagination",
@@ -201,7 +201,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"is_overview": True}},
+                parameters={"is_overview": True},
             )
         ],
         description="List log entries with is_overview filter for important changes only",
@@ -211,7 +211,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"include": ["incidents"]}},
+                parameters={"include": ["incidents"]},
             )
         ],
         description="List log entries with incidents included",
@@ -221,7 +221,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"team_ids": ["TEAM1", "TEAM2"]}},
+                parameters={"team_ids": ["TEAM1", "TEAM2"]},
             )
         ],
         description="List log entries filtered by team IDs",
@@ -231,7 +231,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"include": ["services", "teams"]}},
+                parameters={"include": ["services", "teams"]},
             )
         ],
         description="List log entries with multiple include parameters",
@@ -241,7 +241,7 @@ LOG_ENTRY_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_log_entries",
-                parameters={"query_model": {"time_zone": "America/New_York"}},
+                parameters={"time_zone": "America/New_York"},
             )
         ],
         description="List log entries with timezone specification",

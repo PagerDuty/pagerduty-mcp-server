@@ -24,10 +24,7 @@ class TeamsCompetencyTest(AgentCompetencyTest):
             ),
             MockMCPToolInvocationResponse(
                 tool_name="list_users",
-                parameters=lambda params: (
-                    params.get("query") == "Sara Connor"
-                    or (params.get("query_model") or {}).get("query") == "Sara Connor"
-                ),
+                parameters=lambda params: params.get("query") == "Sara Connor",
                 response={
                     "response": [
                         {
@@ -40,10 +37,7 @@ class TeamsCompetencyTest(AgentCompetencyTest):
             ),
             MockMCPToolInvocationResponse(
                 tool_name="list_users",
-                parameters=lambda params: (
-                    params.get("query") == "Kyle Reese"
-                    or (params.get("query_model") or {}).get("query") == "Kyle Reese"
-                ),
+                parameters=lambda params: params.get("query") == "Kyle Reese",
                 response={"response": [{"id": "USER456", "name": "Kyle Reese"}]},
             ),
         ]
@@ -61,7 +55,7 @@ TEAMS_COMPETENCY_TESTS = [
         query='Get the list of users in the "Dev Team" team.',
         expected_tool_calls=[
             MockToolCall(
-                name="list_teams", parameters={"query_model": {"query": "Dev Team"}}
+                name="list_teams", parameters={"query": "Dev Team"}
             ),
             MockToolCall(name="list_team_members", parameters={"team_id": "TEAM123"}),
         ],
@@ -85,7 +79,7 @@ TEAMS_COMPETENCY_TESTS = [
         query='Rename the team "Dev Team" to "Archival Support."',
         expected_tool_calls=[
             MockToolCall(
-                name="list_teams", parameters={"query_model": {"query": "Dev Team"}}
+                name="list_teams", parameters={"query": "Dev Team"}
             ),
             MockToolCall(
                 name="update_team",
@@ -101,7 +95,7 @@ TEAMS_COMPETENCY_TESTS = [
         query='Delete the team "Dev Team."',
         expected_tool_calls=[
             MockToolCall(
-                name="list_teams", parameters={"query_model": {"query": "Dev Team"}}
+                name="list_teams", parameters={"query": "Dev Team"}
             ),
             MockToolCall(name="delete_team", parameters={"team_id": "TEAM123"}),
         ],
@@ -111,11 +105,11 @@ TEAMS_COMPETENCY_TESTS = [
         query='Add user Sara Connor to the "Dev Team" team.',
         expected_tool_calls=[
             MockToolCall(
-                name="list_teams", parameters={"query_model": {"query": "Dev Team"}}
+                name="list_teams", parameters={"query": "Dev Team"}
             ),
             MockToolCall(
                 name="list_users",
-                parameters={"query_model": {"query": "Sara Connor"}},
+                parameters={"query": "Sara Connor"},
             ),
             MockToolCall(
                 name="add_team_member",
@@ -131,11 +125,11 @@ TEAMS_COMPETENCY_TESTS = [
         query='Remove user Kyle Reese from the "Dev Team" team.',
         expected_tool_calls=[
             MockToolCall(
-                name="list_teams", parameters={"query_model": {"query": "Dev Team"}}
+                name="list_teams", parameters={"query": "Dev Team"}
             ),
             MockToolCall(
                 name="list_users",
-                parameters={"query_model": {"query": "Kyle Reese"}},
+                parameters={"query": "Kyle Reese"},
             ),
             MockToolCall(
                 name="remove_team_member",
@@ -149,7 +143,7 @@ TEAMS_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_users",
-                parameters={"query_model": {"query": "Sara Connor"}},
+                parameters={"query": "Sara Connor"},
             )
         ],
         description="Find teams for a user",
@@ -162,7 +156,7 @@ TEAMS_COMPETENCY_TESTS = [
     TeamsCompetencyTest(
         query="Show me my teams",
         expected_tool_calls=[
-            MockToolCall(name="list_teams", parameters={"query_model": {"scope": "my"}})
+            MockToolCall(name="list_teams", parameters={"scope": "my"})
         ],
         description="List teams for the current user",
     ),

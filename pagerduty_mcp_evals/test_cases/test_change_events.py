@@ -90,20 +90,20 @@ CHANGE_EVENTS_COMPETENCY_TESTS = [
     ),
     ChangeEventsCompetencyTest(
         query="Show me the first 10 change events",
-        expected_tool_calls=[MockToolCall(name="list_change_events", parameters={"query_model": {"limit": 10}})],
+        expected_tool_calls=[MockToolCall(name="list_change_events", parameters={"limit": 10})],
         description="List change events with limit parameter",
     ),
     ChangeEventsCompetencyTest(
         query="List change events for team TEAM123",
         expected_tool_calls=[
-            MockToolCall(name="list_change_events", parameters={"query_model": {"team_ids": ["TEAM123"]}})
+            MockToolCall(name="list_change_events", parameters={"team_ids": ["TEAM123"]})
         ],
         description="List change events filtered by team",
     ),
     ChangeEventsCompetencyTest(
         query="Show change events for integration INT456",
         expected_tool_calls=[
-            MockToolCall(name="list_change_events", parameters={"query_model": {"integration_ids": ["INT456"]}})
+            MockToolCall(name="list_change_events", parameters={"integration_ids": ["INT456"]})
         ],
         description="List change events filtered by integration",
     ),
@@ -139,7 +139,7 @@ CHANGE_EVENTS_COMPETENCY_TESTS = [
     ChangeEventsCompetencyTest(
         query="Get the first 5 change events for service P43PBXB",
         expected_tool_calls=[
-            MockToolCall(name="list_service_change_events", parameters={"service_id": "P43PBXB", "query_model": {"limit": 5}})
+            MockToolCall(name="list_service_change_events", parameters={"service_id": "P43PBXB", "limit": 5})
         ],
         description="List service change events with limit",
     ),

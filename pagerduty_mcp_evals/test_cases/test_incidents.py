@@ -204,7 +204,7 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(
                 name="list_incidents",
                 parameters={
-                    "query_model": {"status": ["triggered", "acknowledged", "resolved"]}
+                    "statuses": ["triggered", "acknowledged", "resolved"]
                 },
             )
         ],
@@ -215,7 +215,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incidents",
-                parameters={"query_model": {"status": ["triggered", "acknowledged"]}},
+                parameters={"statuses": ["triggered", "acknowledged"]},
             )
         ],
         description="List incidents filtered by status",
@@ -230,7 +230,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incidents",
-                parameters={"query_model": {"status": ["triggered"]}},
+                parameters={"statuses": ["triggered"]},
             )
         ],
         description="List incidents filtered by status",
@@ -247,7 +247,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="get_incident",
-                parameters={"incident_id": "123", "query_model": {"include": ["users"]}},
+                parameters={"incident_id": "123", "include": ["users"]},
             )
         ],
         description="Get incident with users included",
@@ -259,7 +259,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "ABC456",
-                    "query_model": {"include": ["teams", "services"]},
+                    "include": ["teams", "services"],
                 },
             )
         ],
@@ -272,7 +272,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "789",
-                    "query_model": {"include": ["escalation_policies", "log_entries"]},
+                    "include": ["escalation_policies", "log_entries"],
                 },
             )
         ],
@@ -285,7 +285,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "XYZ999",
-                    "query_model": {"include": ["users", "teams", "notes", "assignments"]},
+                    "include": ["users", "teams", "notes", "assignments"],
                 },
             )
         ],
@@ -370,7 +370,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_outlier_incident",
                 parameters={
                     "incident_id": "789",
-                    "query_model": {"since": "2020-09-01T00:00:00Z"},
+                    "since": "2020-09-01T00:00:00Z",
                 },
             )
         ],
@@ -381,7 +381,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="get_past_incidents",
-                parameters={"incident_id": "ABC123", "query_model": {"limit": 10}},
+                parameters={"incident_id": "ABC123", "limit": 10},
             )
         ],
         description="Get past incidents with limit parameter to control result count",
@@ -391,7 +391,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="get_past_incidents",
-                parameters={"incident_id": "ABC123", "query_model": {"total": True}},
+                parameters={"incident_id": "ABC123", "total": True},
             )
         ],
         description="Get past incidents with total parameter to include total count",
@@ -403,7 +403,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_related_incidents",
                 parameters={
                     "incident_id": "DEF456",
-                    "query_model": {"additional_details": ["incident"]},
+                    "additional_details": ["incident"],
                 },
             )
         ],
@@ -466,7 +466,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_alerts_from_incident",
-                parameters={"incident_id": "ABC123", "query_model": {"limit": 10}},
+                parameters={"incident_id": "ABC123", "limit": 10},
             )
         ],
         description="List alerts with limit parameter",
@@ -584,7 +584,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "123",
-                    "query_model": {"include": ["external_references"]},
+                    "include": ["external_references"],
                 },
             )
         ],
@@ -597,7 +597,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "ABC456",
-                    "query_model": {"include": ["metadata"]},
+                    "include": ["metadata"],
                 },
             )
         ],
@@ -610,7 +610,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "789",
-                    "query_model": {"include": ["external_references", "metadata"]},
+                    "include": ["external_references", "metadata"],
                 },
             )
         ],

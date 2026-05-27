@@ -54,10 +54,8 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_oncall_compensation_report",
                 parameters={
-                    "request": {
-                        "since": "2023-01-01T00:00:00Z",
-                        "until": "2023-01-31T23:59:59Z",
-                    }
+                    "since": "2023-01-01T00:00:00Z",
+                    "until": "2023-01-31T23:59:59Z",
                 },
             )
         ],
@@ -69,10 +67,8 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_oncall_compensation_report",
                 parameters={
-                    "request": {
-                        "since": "2023-01-01T00:00:00Z",
-                        "until": "2023-01-31T23:59:59Z",
-                    }
+                    "since": "2023-01-01T00:00:00Z",
+                    "until": "2023-01-31T23:59:59Z",
                 },
             )
         ],
@@ -84,11 +80,9 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_oncall_compensation_report",
                 parameters={
-                    "request": {
-                        "since": "2023-01-01T00:00:00Z",
-                        "until": "2023-03-31T23:59:59Z",
-                        "team_ids": ["T1"],
-                    }
+                    "since": "2023-01-01T00:00:00Z",
+                    "until": "2023-03-31T23:59:59Z",
+                    "team_ids": ["T1"],
                 },
             )
         ],
@@ -100,11 +94,9 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_oncall_compensation_report",
                 parameters={
-                    "request": {
-                        "since": "2023-01-01T00:00:00Z",
-                        "until": "2023-01-31T23:59:59Z",
-                        "l1_rate_per_hour": 10.0,
-                    }
+                    "since": "2023-01-01T00:00:00Z",
+                    "until": "2023-01-31T23:59:59Z",
+                    "l1_rate_per_hour": 10.0,
                 },
             )
         ],
@@ -116,11 +108,9 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_oncall_compensation_report",
                 parameters={
-                    "request": {
-                        "since": "2023-01-01T00:00:00Z",
-                        "until": "2023-01-31T23:59:59Z",
-                        "compliance_template": "emea",
-                    }
+                    "since": "2023-01-01T00:00:00Z",
+                    "until": "2023-01-31T23:59:59Z",
+                    "compliance_template": "emea",
                 },
             )
         ],
@@ -132,11 +122,9 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_oncall_compensation_report",
                 parameters={
-                    "request": {
-                        "since": "2026-05-01T00:00:00Z",
-                        "until": "2026-05-31T23:59:59Z",
-                        "forward": True,
-                    }
+                    "since": "2026-05-01T00:00:00Z",
+                    "until": "2026-05-31T23:59:59Z",
+                    "forward": True,
                 },
             )
         ],
@@ -148,11 +136,9 @@ ONCALL_COMPENSATION_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_oncall_compensation_report",
                 parameters={
-                    "request": {
-                        "since": "2026-06-01T00:00:00Z",
-                        "until": "2026-06-30T23:59:59Z",
-                        "forward": True,
-                    }
+                    "since": "2026-06-01T00:00:00Z",
+                    "until": "2026-06-30T23:59:59Z",
+                    "forward": True,
                 },
             )
         ],

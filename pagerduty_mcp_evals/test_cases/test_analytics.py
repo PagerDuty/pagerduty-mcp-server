@@ -101,12 +101,8 @@ ANALYTICS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_responder_metrics",
                 parameters={
-                    "request": {
-                        "filters": {
-                            "date_range_start": "2023-01-01T00:00:00Z",
-                            "date_range_end": "2023-01-31T23:59:59Z",
-                        }
-                    }
+                    "date_range_start": "2023-01-01T00:00:00Z",
+                    "date_range_end": "2023-01-31T23:59:59Z",
                 },
             )
         ],
@@ -118,13 +114,9 @@ ANALYTICS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_responder_metrics",
                 parameters={
-                    "request": {
-                        "filters": {
-                            "date_range_start": "2023-01-01T00:00:00Z",
-                            "date_range_end": "2023-03-31T23:59:59Z",
-                            "team_ids": ["T1"],
-                        }
-                    }
+                    "date_range_start": "2023-01-01T00:00:00Z",
+                    "date_range_end": "2023-03-31T23:59:59Z",
+                    "team_ids": ["T1"],
                 },
             )
         ],
@@ -136,12 +128,8 @@ ANALYTICS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_incident_metrics_by_service",
                 parameters={
-                    "request": {
-                        "filters": {
-                            "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-02-01T00:00:00Z",
-                        }
-                    }
+                    "created_at_start": "2023-01-01T00:00:00Z",
+                    "created_at_end": "2023-02-01T00:00:00Z",
                 },
             )
         ],
@@ -153,12 +141,8 @@ ANALYTICS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_incident_metrics_by_service",
                 parameters={
-                    "request": {
-                        "filters": {
-                            "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-02-01T00:00:00Z",
-                        }
-                    }
+                    "created_at_start": "2023-01-01T00:00:00Z",
+                    "created_at_end": "2023-02-01T00:00:00Z",
                 },
             )
         ],
@@ -170,12 +154,8 @@ ANALYTICS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_incident_metrics_by_team",
                 parameters={
-                    "request": {
-                        "filters": {
-                            "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-03-31T23:59:59Z",
-                        }
-                    }
+                    "created_at_start": "2023-01-01T00:00:00Z",
+                    "created_at_end": "2023-03-31T23:59:59Z",
                 },
             )
         ],
@@ -187,12 +167,8 @@ ANALYTICS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_responder_load_metrics",
                 parameters={
-                    "request": {
-                        "filters": {
-                            "date_range_start": "2023-01-01T00:00:00Z",
-                            "date_range_end": "2023-01-31T23:59:59Z",
-                        }
-                    }
+                    "date_range_start": "2023-01-01T00:00:00Z",
+                    "date_range_end": "2023-01-31T23:59:59Z",
                 },
             )
         ],
@@ -204,12 +180,8 @@ ANALYTICS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_incident_metrics_all",
                 parameters={
-                    "request": {
-                        "filters": {
-                            "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-02-01T00:00:00Z",
-                        },
-                    }
+                    "created_at_start": "2023-01-01T00:00:00Z",
+                    "created_at_end": "2023-02-01T00:00:00Z",
                 },
             )
         ],
@@ -221,12 +193,8 @@ ANALYTICS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="get_incident_metrics_all",
                 parameters={
-                    "request": {
-                        "filters": {
-                            "created_at_start": "2023-01-01T00:00:00Z",
-                            "created_at_end": "2023-02-01T00:00:00Z",
-                        }
-                    }
+                    "created_at_start": "2023-01-01T00:00:00Z",
+                    "created_at_end": "2023-02-01T00:00:00Z",
                 },
             )
         ],

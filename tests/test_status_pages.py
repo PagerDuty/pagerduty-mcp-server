@@ -31,6 +31,7 @@ from pagerduty_mcp.tools.status_pages import (
     get_status_page_post,
     list_status_page_impacts,
     list_status_page_post_updates,
+    list_status_page_posts,
     list_status_page_severities,
     list_status_page_statuses,
     list_status_pages,
@@ -663,6 +664,47 @@ class TestStatusPagesTools(unittest.TestCase):
             create_status_page_post_postmortem("SP123", "P123", "Review message")
 
         self.assertEqual(str(ctx.exception), "Postmortem Error")
+
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_posts_basic(self, mock_paginate, mock_get_client):
+        """Test basic Status Page posts listing."""
+        mock_paginate.return_value = [self.sample_post_data]
+
+        import json
+        result = list_status_page_posts("PR5LMML")
+
+        mock_paginate.assert_called_once()
+        call_kwargs = mock_paginate.call_args[1]
+        self.assertEqual(call_kwargs["entity"], "/status_pages/PR5LMML/posts")
+        self.assertEqual(call_kwargs["params"], {})
+        parsed = json.loads(result)
+        self.assertEqual(len(parsed["response"]), 1)
+        self.assertEqual(parsed["response"][0]["id"], "PIJ90N7")
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_posts_empty(self, mock_paginate, mock_get_client):
+        """Test Status Page posts listing returns empty list when no posts exist."""
+        mock_paginate.return_value = []
+
+        import json
+        result = list_status_page_posts("PR5LMML")
+
+        parsed = json.loads(result)
+        self.assertEqual(parsed["response"], [])
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_posts_uses_status_page_id(self, mock_paginate, mock_get_client):
+        """Test that list_status_page_posts uses the provided status_page_id in the API path."""
+        mock_paginate.return_value = []
+
+        list_status_page_posts("CUSTOM_ID")
+
+        call_kwargs = mock_paginate.call_args[1]
+        self.assertIn("CUSTOM_ID", call_kwargs["entity"])
 
 
 if __name__ == "__main__":

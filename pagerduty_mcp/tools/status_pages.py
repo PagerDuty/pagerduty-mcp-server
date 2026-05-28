@@ -286,9 +286,13 @@ def create_status_page_post_postmortem(
     Publishes a post-mortem document to a Status Page Post. If a postmortem
     already exists for the post it will be updated; otherwise one is created.
 
+    IMPORTANT: Postmortems can only be attached to posts with post_type="incident".
+    Calling this on a maintenance post will return a 400 error. Use get_status_page_post
+    or list_status_page_posts to verify the post_type is "incident" before calling this tool.
+
     Args:
         status_page_id: The ID of the Status Page
-        post_id: The ID of the Status Page Post to attach the postmortem to
+        post_id: The ID of the Status Page Post to attach the postmortem to (must be an incident-type post)
         message: The postmortem message body (supports rich text / markdown)
         notify_subscribers: Whether to notify status page subscribers (defaults to True)
 

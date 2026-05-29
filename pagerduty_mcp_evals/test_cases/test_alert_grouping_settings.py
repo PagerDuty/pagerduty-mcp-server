@@ -28,13 +28,13 @@ class AlertGroupingSettingsCompetencyTest(AgentCompetencyTest):
         # Mock service lookup by name
             MockMCPToolInvocationResponse(
                 tool_name="list_services",
-                parameters=lambda params: params.get("query_model", {}).get("query") == "Web Service",
+                parameters=lambda params: params.get("query") == "Web Service",
                 response={"response": [{"id": "SVC123", "name": "Web Service", "summary": "Main web application service"}]},
             ),
 
             MockMCPToolInvocationResponse(
                 tool_name="list_services",
-                parameters=lambda params: params.get("query_model", {}).get("query") == "Database Service",
+                parameters=lambda params: params.get("query") == "Database Service",
                 response={"response": [{"id": "SVC456", "name": "Database Service", "summary": "Primary database service"}]},
             ),
 
@@ -79,7 +79,7 @@ class AlertGroupingSettingsCompetencyTest(AgentCompetencyTest):
         # Mock alert grouping settings filtered by service
             MockMCPToolInvocationResponse(
                 tool_name="list_alert_grouping_settings",
-                parameters=lambda params: params.get("query_model", {}).get("service_ids") == ["SVC123"],
+                parameters=lambda params: params.get("service_ids") == ["SVC123"],
                 response={
                 "response": [
                     {
@@ -107,7 +107,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
     AlertGroupingSettingsCompetencyTest(
         query="List alert grouping settings for service SVC123",
         expected_tool_calls=[
-            MockToolCall(name="list_alert_grouping_settings", parameters={"query_model": {"service_ids": ["SVC123"]}})
+            MockToolCall(name="list_alert_grouping_settings", parameters={"service_ids": ["SVC123"]})
         ],
         description="List alert grouping settings filtered by service ID",
     ),
@@ -230,7 +230,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
     AlertGroupingSettingsCompetencyTest(
         query="Create a content-based alert grouping setting for the 'Web Service' that groups alerts by summary",
         expected_tool_calls=[
-            MockToolCall(name="list_services", parameters={"query_model": {"query": "Web Service"}}),
+            MockToolCall(name="list_services", parameters={"query": "Web Service"}),
             MockToolCall(
                 name="create_alert_grouping_setting",
                 parameters={
@@ -250,15 +250,15 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
     AlertGroupingSettingsCompetencyTest(
         query="Show me all alert grouping settings for the 'Database Service'",
         expected_tool_calls=[
-            MockToolCall(name="list_services", parameters={"query_model": {"query": "Database Service"}}),
-            MockToolCall(name="list_alert_grouping_settings", parameters={"query_model": {"service_ids": ["SVC456"]}}),
+            MockToolCall(name="list_services", parameters={"query": "Database Service"}),
+            MockToolCall(name="list_alert_grouping_settings", parameters={"service_ids": ["SVC456"]}),
         ],
         description="List alert grouping settings for named service (requires service lookup)",
     ),
     # Pagination scenario
     AlertGroupingSettingsCompetencyTest(
         query="List the first 5 alert grouping settings",
-        expected_tool_calls=[MockToolCall(name="list_alert_grouping_settings", parameters={"query_model": {"limit": 5}})],
+        expected_tool_calls=[MockToolCall(name="list_alert_grouping_settings", parameters={"limit": 5})],
         description="List alert grouping settings with pagination limit",
     ),
     # Complex content-based setting with all fields aggregation

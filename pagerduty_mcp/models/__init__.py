@@ -38,7 +38,6 @@ from .incident_workflows import (
     IncidentWorkflowInstance,
     IncidentWorkflowInstanceCreate,
     IncidentWorkflowInstanceRequest,
-    IncidentWorkflowQuery,
     InlineStepInput,
     Step,
 )
@@ -123,9 +122,10 @@ __all__ = [
     "AlertGroupingSetting",
     "AlertGroupingSettingCreate",
     "AlertGroupingSettingCreateRequest",
+    # TODO: Remove remaining *Query models from __all__ once PRs D and E
+    # land the updated test files that no longer import them directly.
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
-    "AlertQuery",
     "Assignment",
     "AssignmentInput",
     "ChangeEvent",
@@ -149,7 +149,6 @@ __all__ = [
     "EventOrchestrationRuleCreateRequest",
     "EventOrchestrationRuleSet",
     "EventOrchestrationService",
-    "GetIncidentQuery",
     "Incident",
     "IncidentCreate",
     "IncidentCreateRequest",
@@ -163,7 +162,6 @@ __all__ = [
     "IncidentWorkflowInstance",
     "IncidentWorkflowInstanceCreate",
     "IncidentWorkflowInstanceRequest",
-    "IncidentWorkflowQuery",
     "InlineStepInput",
     "IntegrationReference",
     "IntelligentGroupingConfig",

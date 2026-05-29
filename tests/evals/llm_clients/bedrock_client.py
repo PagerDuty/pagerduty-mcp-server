@@ -362,7 +362,9 @@ class BedrockClient(LLMClient):
             # Handle tool calls in assistant messages
             if role == "assistant" and message.get("tool_calls"):
                 tool_calls = message["tool_calls"]
-                content_parts = bedrock_message.get("content", [])
+                # Llama/Mistral reject mixed text+toolUse in the same content array;
+                # drop any text parts when the turn is a tool call.
+                content_parts = []
 
                 for tool_call in tool_calls:
                     tool_use = {

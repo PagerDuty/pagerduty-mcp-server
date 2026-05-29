@@ -1,3 +1,5 @@
+from typing import Any
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
@@ -5,23 +7,27 @@ from pagerduty_mcp.models import (
     Team,
     TeamCreateRequest,
     TeamMemberAdd,
-    TeamQuery,
     UserReference,
 )
 from pagerduty_mcp.utils import paginate
 
 
-def list_teams(query_model: TeamQuery | None = None) -> ListResponseModel[Team]:
-    """List teams based on the provided query model.
+def list_teams(
+    scope: str | None = None,
+    query: str | None = None,
+    limit: int | None = None,
+) -> ListResponseModel[Team]:
+    """List teams with optional filtering.
 
     Args:
-        query_model: The model containing the query parameters
+        scope: 'all' for all teams, 'my' for teams the current user belongs to
+        query: Filter by team name
+        limit: Max results to return
+
     Returns:
         List of teams.
     """
-    if query_model is None:
-        query_model = TeamQuery()
-    if query_model.scope == "my":
+    if scope == "my":
         # get my team references from /users/me
         user_data = ContextResolver.get_user()
         if user_data is None:
@@ -31,10 +37,15 @@ def list_teams(query_model: TeamQuery | None = None) -> ListResponseModel[Team]:
         # Now get all team resources. Paginate limits to 1000 results by default
         # TODO: Alternative approach. Fetch each team by ID.
         # TODO: No way to fetch multiple teams by ID in a single request - API improvement area
-        results = paginate(client=ContextResolver.get_client(), entity="teams", params={})
+        results = paginate(client=get_client(), entity="teams", params={})
         teams = [Team(**team) for team in results if team["id"] in user_team_ids]
     else:
-        response = paginate(client=ContextResolver.get_client(), entity="teams", params=query_model.to_params())
+        params: dict[str, Any] = {}
+        if query:
+            params["query"] = query
+        if limit is not None:
+            params["limit"] = limit
+        response = paginate(client=get_client(), entity="teams", params=params)
         teams = [Team(**team) for team in response]
     return ListResponseModel[Team](response=teams)
 

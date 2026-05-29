@@ -1,8 +1,9 @@
+from typing import Any, Literal
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
     EventOrchestration,
     EventOrchestrationGlobal,
-    EventOrchestrationQuery,
     EventOrchestrationRouter,
     EventOrchestrationRouterUpdateRequest,
     EventOrchestrationRuleCreateRequest,
@@ -13,19 +14,38 @@ from pagerduty_mcp.utils import paginate
 
 
 def list_event_orchestrations(
-    query_model: EventOrchestrationQuery | None = None,
+    limit: int | None = 100,
+    offset: int | None = None,
+    sort_by: Literal[
+        "name:asc", "name:desc", "routes:asc", "routes:desc", "created_at:asc", "created_at:desc"
+    ] | None = "name:asc",
 ) -> ListResponseModel[EventOrchestration]:
     """List event orchestrations with optional filtering.
 
     Args:
-        query_model: Optional filtering parameters
+        limit: The number of results per page. Default 100.
+        offset: Offset to start pagination search results.
+        sort_by: Field and direction to sort by. Default 'name:asc'. Options:
+            'name:asc', 'name:desc', 'routes:asc', 'routes:desc',
+            'created_at:asc', 'created_at:desc'.
 
     Returns:
         List of event orchestrations matching the query parameters
     """
-    if query_model is None:
-        query_model = EventOrchestrationQuery()
-    response = paginate(client=get_client(), entity="event_orchestrations", params=query_model.to_params())
+    params: dict[str, Any] = {}
+    if limit is not None:
+        params["limit"] = limit
+    if offset is not None:
+        params["offset"] = offset
+    if sort_by:
+        params["sort_by"] = sort_by
+
+    response = paginate(
+        client=get_client(),
+        entity="event_orchestrations",
+        params=params,
+        maximum_records=limit or 100,
+    )
     orchestrations = [EventOrchestration(**orchestration) for orchestration in response]
     return ListResponseModel[EventOrchestration](response=orchestrations)
 

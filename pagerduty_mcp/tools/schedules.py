@@ -124,6 +124,20 @@ def list_schedule_overrides(schedule_id: str, since: str, until: str) -> str:
     return json.dumps({"overrides": overrides})
 
 
+def delete_schedule_override(schedule_id: str, override_id: str) -> str:
+    """Delete a schedule override.
+
+    Args:
+        schedule_id: The ID of the schedule
+        override_id: The ID of the override to delete
+
+    Returns:
+        JSON string confirming deletion
+    """
+    get_client().rdelete(f"/schedules/{schedule_id}/overrides/{override_id}")
+    return json.dumps({"success": True})
+
+
 def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
     """Create a new on-call schedule.
 

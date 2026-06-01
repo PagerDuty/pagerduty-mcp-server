@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Any
 
@@ -26,7 +27,7 @@ def list_incidents(
     until: datetime | None = None,
     user_ids: list[str] | None = None,
     service_ids: list[str] | None = None,
-    team_ids: list[str] | None = None,
+    teams_ids: list[str] | None = None,
     urgencies: list[str] | None = None,
     sort_by: list[str] | None = None,
     request_scope: str | None = None,
@@ -42,7 +43,7 @@ def list_incidents(
         until: Filter incidents until a specific date
         user_ids: Filter by user IDs
         service_ids: Filter by service IDs
-        team_ids: Filter by team IDs
+        teams_ids: Filter by team IDs
         urgencies: Filter by urgency (high, low)
         sort_by: Sort fields and directions (e.g. ['created_at:desc'])
         request_scope: 'all', 'teams' (my teams), or 'assigned' (assigned to me)
@@ -60,8 +61,8 @@ def list_incidents(
         params["until"] = until.isoformat()
     if service_ids:
         params["service_ids[]"] = service_ids
-    if team_ids:
-        params["team_ids[]"] = team_ids
+    if teams_ids:
+        params["teams_ids[]"] = teams_ids
     if user_ids:
         params["user_ids[]"] = user_ids
     if urgencies:
@@ -78,7 +79,7 @@ def list_incidents(
             params["user_ids[]"] = [user_data.id]
         elif request_scope == "teams":
             user_team_ids = [team.id for team in user_data.teams]
-            params["team_ids[]"] = user_team_ids
+            params["teams_ids[]"] = user_team_ids
 
     response = paginate(
         client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=limit or MAX_RESULTS
@@ -280,6 +281,27 @@ def add_note_to_incident(incident_id: str, note: str) -> IncidentNote:
         json={"note": {"content": note}},
     )
     return IncidentNote.model_validate(response)
+
+
+def create_incident_status_update(incident_id: str, message: str) -> str:
+    """Create a status update on an incident.
+
+    Posts a status update message to an incident, notifying subscribers and
+    stakeholders of the current state. The message appears in the incident
+    timeline and is sent to notification subscribers.
+
+    Args:
+        incident_id: The ID of the incident to post the status update to
+        message: The status update message text
+
+    Returns:
+        JSON string of the created status update
+    """
+    response = get_client().rpost(
+        f"/incidents/{incident_id}/status_updates",
+        json={"message": message},
+    )
+    return json.dumps(response)
 
 
 def get_outlier_incident(

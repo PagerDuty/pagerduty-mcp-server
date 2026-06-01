@@ -15,14 +15,12 @@ from .change_events import (
     list_incident_change_events,
     list_service_change_events,
 )
-
-# Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
-    # create_escalation_policy,
+    create_escalation_policy,
+    delete_escalation_policy,
     get_escalation_policy,
-    # get_escalation_policy_on_call,
-    # get_escalation_policy_services,
     list_escalation_policies,
+    update_escalation_policy,
 )
 from .event_orchestrations import (
     append_event_orchestration_router_rule,
@@ -42,6 +40,7 @@ from .incidents import (
     add_note_to_incident,
     add_responders,
     create_incident,
+    create_incident_status_update,
     get_incident,
     get_outlier_incident,
     get_past_incidents,
@@ -59,6 +58,7 @@ from .oncalls import list_oncalls
 from .schedules import (
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     get_schedule,
     list_schedule_overrides,
     list_schedule_users,
@@ -74,6 +74,7 @@ from .services import (
 )
 from .status_pages import (
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
     get_status_page_post,
     list_status_page_impacts,
@@ -93,7 +94,7 @@ from .teams import (
     remove_team_member,
     update_team,
 )
-from .users import get_user_data, list_users
+from .users import create_user, get_user_data, list_users
 
 # Read-only tools (safe, non-destructive operations)
 read_tools = [
@@ -118,6 +119,12 @@ read_tools = [
     # Incident Workflows
     list_incident_workflows,
     get_incident_workflow,
+    # Log Entries
+    list_log_entries,
+    get_log_entry,
+    list_incident_log_entries,
+    # On-calls
+    list_oncalls,
     # Services
     list_services,
     get_service,
@@ -134,12 +141,6 @@ read_tools = [
     get_schedule,
     list_schedule_users,
     list_schedule_overrides,
-    # On-calls
-    list_oncalls,
-    # Log Entries
-    list_log_entries,
-    get_log_entry,
-    list_incident_log_entries,
     # Escalation Policies
     list_escalation_policies,
     get_escalation_policy,
@@ -170,6 +171,7 @@ write_tools = [
     manage_incidents,
     add_responders,
     add_note_to_incident,
+    create_incident_status_update,
     # Incident Workflows
     start_incident_workflow,
     # Services
@@ -181,18 +183,24 @@ write_tools = [
     delete_team,
     add_team_member,
     remove_team_member,
+    # Users
+    create_user,
     # Schedules
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     update_schedule,
+    # Escalation Policies
+    create_escalation_policy,
+    update_escalation_policy,
+    delete_escalation_policy,
     # Event Orchestrations
     update_event_orchestration_router,
     append_event_orchestration_router_rule,
     # Status Pages
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
-    # Escalation Policies - currently disabled
-    # create_escalation_policy,
 ]
 
 # All tools (combined list for backward compatibility)

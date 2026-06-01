@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch
 from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
     Alert,
-    AlertQuery,
     AssignmentInput,
     Incident,
     IncidentCreate,
@@ -34,6 +33,7 @@ from pagerduty_mcp.tools.incidents import (
     add_note_to_incident,
     add_responders,
     create_incident,
+    create_incident_status_update,
     get_incident,
     get_outlier_incident,
     get_past_incidents,
@@ -230,8 +230,8 @@ class TestIncidentTools(unittest.TestCase):
         _ = list_incidents(request_scope="teams")
 
         call_args = mock_paginate.call_args
-        self.assertIn("team_ids[]", call_args[1]["params"])
-        self.assertEqual(call_args[1]["params"]["team_ids[]"], ["PTEAM123"])
+        self.assertIn("teams_ids[]", call_args[1]["params"])
+        self.assertEqual(call_args[1]["params"]["teams_ids[]"], ["PTEAM123"])
 
     def test_list_incidents_user_required_error(self):
         """If the request_scope requires user context but none is available, an error should be raised."""
@@ -1347,6 +1347,46 @@ class TestIncidentTools(unittest.TestCase):
             str(ctx.exception),
         )
 
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_create_incident_status_update_success(self, mock_get_client):
+        """Test creating a status update for an incident successfully."""
+        mock_client = Mock()
+        mock_client.rpost.return_value = {"id": "SU123", "message": "System is recovering"}
+        mock_get_client.return_value = mock_client
+
+        result = create_incident_status_update("P123", "System is recovering")
+
+        self.assertIsInstance(result, str)
+        import json as _json
+        data = _json.loads(result)
+        self.assertEqual(data["message"], "System is recovering")
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_create_incident_status_update_calls_api_correctly(self, mock_get_client):
+        """Test that create_incident_status_update calls rpost with correct arguments."""
+        mock_client = Mock()
+        mock_client.rpost.return_value = {"id": "SU123", "message": "System is recovering"}
+        mock_get_client.return_value = mock_client
+
+        create_incident_status_update("P123", "System is recovering")
+
+        mock_client.rpost.assert_called_once_with(
+            "/incidents/P123/status_updates",
+            json={"message": "System is recovering"},
+        )
+
+    @patch("pagerduty_mcp.tools.incidents.get_client")
+    def test_create_incident_status_update_client_error(self, mock_get_client):
+        """Test create_incident_status_update propagates client exceptions."""
+        mock_client = Mock()
+        mock_client.rpost.side_effect = Exception("Status Update Error")
+        mock_get_client.return_value = mock_client
+
+        with self.assertRaises(Exception) as ctx:
+            create_incident_status_update("P123", "System is recovering")
+
+        self.assertEqual(str(ctx.exception), "Status Update Error")
+
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
     def test_list_incident_log_entries_success(self, mock_get_client, mock_paginate):
@@ -1469,10 +1509,8 @@ class TestAlertTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_alert_data]
 
-        query_model = AlertQuery(limit=10, offset=0)
-
         # Act
-        result = list_alerts_from_incident("PINCIDENT123", query_model)
+        result = list_alerts_from_incident("PINCIDENT123", limit=10, offset=0)
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -1490,10 +1528,8 @@ class TestAlertTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = []
 
-        query_model = AlertQuery()
-
         # Act
-        result = list_alerts_from_incident("PINCIDENT123", query_model)
+        result = list_alerts_from_incident("PINCIDENT123")
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)

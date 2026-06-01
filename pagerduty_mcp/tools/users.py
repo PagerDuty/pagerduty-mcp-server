@@ -2,6 +2,8 @@ from typing import Any
 
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import ListResponseModel, User
+from pagerduty_mcp.models.users import CreateUserRequest
+
 
 def get_user_data() -> User:
     """Get the current user's data.
@@ -41,3 +43,16 @@ def list_users(
     return ListResponseModel[User](response=users)
 
 
+def create_user(request: CreateUserRequest) -> User:
+    """Create a new PagerDuty user account. No invitation email is sent.
+
+    Args:
+        request: User creation parameters (name, email, role, time_zone)
+
+    Returns:
+        The created User object.
+    """
+    response = get_client().rpost("/users", json=request.model_dump())
+    if isinstance(response, dict) and "user" in response:
+        return User(**response["user"])
+    return User.model_validate(response)

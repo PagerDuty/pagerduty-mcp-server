@@ -20,6 +20,7 @@ from pagerduty_mcp.models.users import User
 from pagerduty_mcp.tools.schedules import (
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     get_schedule,
     list_schedule_overrides,
     list_schedule_users,
@@ -898,6 +899,39 @@ class TestScheduleTools(unittest.TestCase):
 
         data = _json.loads(result)
         self.assertEqual(data["overrides"], [])
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_delete_schedule_override_success(self, mock_get_client):
+        """Test successful deletion of a schedule override."""
+        import json as _json
+        mock_get_client.return_value = self.mock_client
+
+        result = delete_schedule_override("SCHED123", "OV123")
+
+        self.assertIsInstance(result, str)
+        data = _json.loads(result)
+        self.assertTrue(data["success"])
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_delete_schedule_override_calls_api_correctly(self, mock_get_client):
+        """Test that delete_schedule_override calls rdelete with correct URL."""
+        mock_get_client.return_value = self.mock_client
+
+        delete_schedule_override("SCHED123", "OV123")
+
+        self.mock_client.rdelete.assert_called_once_with("/schedules/SCHED123/overrides/OV123")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_delete_schedule_override_client_error(self, mock_get_client):
+        """Test delete_schedule_override propagates client exceptions."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rdelete.side_effect = Exception("Delete Error")
+
+        with self.assertRaises(Exception) as ctx:
+            delete_schedule_override("SCHED123", "OV123")
+
+        self.assertEqual(str(ctx.exception), "Delete Error")
+
 
 if __name__ == "__main__":
     unittest.main()

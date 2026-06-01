@@ -36,6 +36,20 @@ Get details for a specific service.
 
 ---
 
+### `get_technical_service_dependencies`
+
+Get the service dependencies for a technical service. Returns the `relationships` array showing which services this technical service depends on and which services depend on it.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `service_id` | `string` | Yes | The ID of the technical service |
+
+**Example prompt:**
+
+> "What services does the payment-gateway service depend on?"
+
+---
+
 ### `create_service` *(write)*
 
 Create a new service.

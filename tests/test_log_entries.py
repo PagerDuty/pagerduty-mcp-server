@@ -5,7 +5,8 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import Mock, patch
 
 from pagerduty_mcp.models import ListResponseModel, LogEntry, LogEntryQuery
-from pagerduty_mcp.tools.log_entries import get_log_entry, list_log_entries
+from pagerduty_mcp.tools.log_entries import get_log_entry, list_incident_log_entries, list_log_entries
+# LogEntryQuery is kept for model-level tests below
 
 
 class TestLogEntryTools(unittest.TestCase):
@@ -123,10 +124,8 @@ class TestLogEntryTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
-        query_model = LogEntryQuery()
-
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries()
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -135,9 +134,10 @@ class TestLogEntryTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "PLOGENTRY123")
         mock_paginate.assert_called_once()
 
-        # Verify that default timestamps were set (last 7 days)
-        self.assertIsNotNone(query_model.since)
-        self.assertIsNotNone(query_model.until)
+        # Verify that default timestamps were applied
+        call_args = mock_paginate.call_args
+        self.assertIn("since", call_args[1]["params"])
+        self.assertIn("until", call_args[1]["params"])
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
@@ -150,10 +150,9 @@ class TestLogEntryTools(unittest.TestCase):
 
         since = datetime.now() - timedelta(days=7)
         until = datetime.now()
-        query_model = LogEntryQuery(since=since, until=until, limit=50)
 
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries(since=since, until=until, limit=50)
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -173,10 +172,8 @@ class TestLogEntryTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = []
 
-        query_model = LogEntryQuery()
-
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries()
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -184,26 +181,24 @@ class TestLogEntryTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
-    def test_list_log_entries_with_empty_string_timestamps(self, mock_get_client, mock_paginate):
-        """Test that empty string timestamps are converted to None and then to defaults."""
+    def test_list_log_entries_with_none_timestamps(self, mock_get_client, mock_paginate):
+        """Test that None timestamps default to the last 7 days."""
         # Arrange
         mock_client = Mock()
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
-        # Create query with empty strings (simulating MCP interface behavior)
-        query_model = LogEntryQuery(since="", until="")
-
-        # Act
-        result = list_log_entries(query_model)
+        # Act - call with no since/until, defaults should be applied
+        result = list_log_entries(since=None, until=None)
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
 
-        # Verify that empty strings were converted to None and then to default values
-        self.assertIsNotNone(query_model.since)
-        self.assertIsNotNone(query_model.until)
+        # Verify that default timestamps were applied
+        call_args = mock_paginate.call_args
+        self.assertIn("since", call_args[1]["params"])
+        self.assertIn("until", call_args[1]["params"])
 
     @patch("pagerduty_mcp.tools.log_entries.paginate")
     @patch("pagerduty_mcp.tools.log_entries.get_client")
@@ -214,10 +209,8 @@ class TestLogEntryTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_log_entry_data]
 
-        query_model = LogEntryQuery(limit=25, offset=10)
-
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries(limit=25, offset=10)
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -254,10 +247,8 @@ class TestLogEntryTools(unittest.TestCase):
             self.sample_service_change_log_entry,
         ]
 
-        query_model = LogEntryQuery()
-
         # Act
-        result = list_log_entries(query_model)
+        result = list_log_entries()
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -376,6 +367,72 @@ class TestLogEntryTools(unittest.TestCase):
         self.assertEqual(params["team_ids[]"], ["TEAM1"])
         self.assertEqual(params["time_zone"], "UTC")
         self.assertTrue(params["total"])
+
+    @patch("pagerduty_mcp.tools.log_entries.paginate")
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_incident_log_entries_success(self, mock_get_client, mock_paginate):
+        """Test listing log entries for an incident successfully."""
+        import json as _json
+        mock_get_client.return_value = Mock()
+        mock_log_entry = {
+            "id": "LOG1",
+            "type": "trigger_log_entry",
+            "summary": "triggered",
+            "self": "https://api.pagerduty.com/log_entries/LOG1",
+            "created_at": "2023-01-01T12:00:00Z",
+            "agent": None,
+            "channel": {"type": "web_trigger"},
+            "service": None,
+            "incident": None,
+            "teams": [],
+        }
+        mock_paginate.return_value = [mock_log_entry]
+
+        result = list_incident_log_entries("PINC123")
+
+        self.assertIsInstance(result, str)
+        data = _json.loads(result)
+        self.assertEqual(len(data["response"]), 1)
+
+    @patch("pagerduty_mcp.tools.log_entries.paginate")
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_incident_log_entries_with_limit(self, mock_get_client, mock_paginate):
+        """Test list_incident_log_entries respects the limit parameter."""
+        mock_get_client.return_value = Mock()
+        mock_paginate.return_value = []
+
+        list_incident_log_entries("PINC123", limit=50)
+
+        call_kwargs = mock_paginate.call_args[1]
+        self.assertEqual(call_kwargs["maximum_records"], 50)
+        self.assertEqual(call_kwargs["params"]["limit"], 50)
+
+    @patch("pagerduty_mcp.tools.log_entries.paginate")
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_incident_log_entries_default_params(self, mock_get_client, mock_paginate):
+        """Test list_incident_log_entries uses defaults when no limit given."""
+        mock_get_client.return_value = Mock()
+        mock_paginate.return_value = []
+
+        list_incident_log_entries("PINC123")
+
+        call_kwargs = mock_paginate.call_args[1]
+        self.assertEqual(call_kwargs["params"], {"is_overview": "false"})
+        self.assertEqual(call_kwargs["maximum_records"], 100)
+
+    @patch("pagerduty_mcp.tools.log_entries.paginate")
+    @patch("pagerduty_mcp.tools.log_entries.get_client")
+    def test_list_incident_log_entries_empty_response(self, mock_get_client, mock_paginate):
+        """Test list_incident_log_entries returns valid JSON with empty response list."""
+        import json as _json
+        mock_get_client.return_value = Mock()
+        mock_paginate.return_value = []
+
+        result = list_incident_log_entries("PINC123")
+
+        self.assertIsInstance(result, str)
+        data = _json.loads(result)
+        self.assertEqual(data["response"], [])
 
 
 if __name__ == "__main__":

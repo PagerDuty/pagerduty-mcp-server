@@ -58,7 +58,9 @@ from .oncalls import list_oncalls
 from .schedules import (
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     get_schedule,
+    list_schedule_overrides,
     list_schedule_users,
     list_schedules,
     update_schedule,
@@ -128,6 +130,7 @@ read_tools = [
     list_schedules,
     get_schedule,
     list_schedule_users,
+    list_schedule_overrides,
     # On-calls
     list_oncalls,
     # Log Entries
@@ -176,6 +179,7 @@ write_tools = [
     # Schedules
     create_schedule,
     create_schedule_override,
+    delete_schedule_override,
     update_schedule,
     # Event Orchestrations
     update_event_orchestration_router,

@@ -21,6 +21,7 @@ from pagerduty_mcp.tools.schedules import (
     create_schedule,
     create_schedule_override,
     get_schedule,
+    list_schedule_overrides,
     list_schedule_users,
     list_schedules,
     update_schedule,
@@ -111,6 +112,8 @@ class TestScheduleTools(unittest.TestCase):
         # Clear any side effects
         self.mock_client.rget.side_effect = None
         self.mock_client.rpost.side_effect = None
+        self.mock_client.rput.side_effect = None
+        self.mock_client.rdelete.side_effect = None
 
     @patch("pagerduty_mcp.tools.schedules.paginate")
     @patch("pagerduty_mcp.tools.schedules.get_client")
@@ -121,7 +124,7 @@ class TestScheduleTools(unittest.TestCase):
 
         result = list_schedules()
 
-        expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
         self.assertEqual(len(result.response), 2)
 
@@ -132,11 +135,10 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
-        query = ScheduleQuery()
-        result = list_schedules(query)
+        result = list_schedules()
 
         # Verify paginate call
-        expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
 
         # Verify result
@@ -155,11 +157,10 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_schedules_list_response[0]]
 
-        query = ScheduleQuery(query="Primary")
-        result = list_schedules(query)
+        result = list_schedules(query="Primary")
 
         # Verify paginate call
-        expected_params = {"query": "Primary", "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"query": "Primary"}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
 
         # Verify result
@@ -173,11 +174,10 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
-        query = ScheduleQuery(team_ids=["TEAM123"])
-        result = list_schedules(query)
+        result = list_schedules(team_ids=["TEAM123"])
 
         # Verify paginate call
-        expected_params = {"team_ids[]": ["TEAM123"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": ["TEAM123"]}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
 
         # Verify result
@@ -190,11 +190,10 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
-        query = ScheduleQuery(user_ids=["USER123", "USER456"])
-        result = list_schedules(query)
+        result = list_schedules(user_ids=["USER123", "USER456"])
 
         # Verify paginate call
-        expected_params = {"user_ids[]": ["USER123", "USER456"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"user_ids[]": ["USER123", "USER456"]}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
 
         # Verify result
@@ -207,11 +206,10 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
-        query = ScheduleQuery(include=["schedule_layers"])
-        result = list_schedules(query)
+        result = list_schedules(include=["schedule_layers"])
 
         # Verify paginate call
-        expected_params = {"include[]": ["schedule_layers"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"include[]": ["schedule_layers"]}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
 
         # Verify result
@@ -224,14 +222,13 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_schedules_list_response[0]]
 
-        query = ScheduleQuery(
+        result = list_schedules(
             query="Primary",
             team_ids=["TEAM123"],
             user_ids=["USER123"],
             include=["schedule_layers"],
             limit=50,
         )
-        result = list_schedules(query)
 
         # Verify paginate call
         expected_params = {
@@ -253,8 +250,7 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_schedules_list_response
 
-        query = ScheduleQuery(limit=50)
-        result = list_schedules(query)
+        result = list_schedules(limit=50)
 
         # Verify paginate call
         expected_params = {"limit": 50}
@@ -270,11 +266,10 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
-        query = ScheduleQuery(query="NonExistentSchedule")
-        result = list_schedules(query)
+        result = list_schedules(query="NonExistentSchedule")
 
         # Verify paginate call
-        expected_params = {"query": "NonExistentSchedule", "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"query": "NonExistentSchedule"}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="schedules", params=expected_params)
 
         # Verify result
@@ -287,10 +282,8 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.side_effect = Exception("Pagination Error")
 
-        query = ScheduleQuery()
-
         with self.assertRaises(Exception) as context:
-            list_schedules(query)
+            list_schedules()
 
         self.assertEqual(str(context.exception), "Pagination Error")
 
@@ -853,6 +846,58 @@ class TestScheduleTools(unittest.TestCase):
         mock_get_client.assert_called_once()
         self.mock_client.rput.assert_called_once()
 
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_overrides_list_response(self, mock_get_client):
+        """Test list_schedule_overrides when API returns a list directly."""
+        import json as _json
+        mock_get_client.return_value = self.mock_client
+        overrides = [{"id": "OV1", "start": "2023-01-01T00:00:00Z", "end": "2023-01-02T00:00:00Z"}]
+        self.mock_client.rget.return_value = overrides
+
+        result = list_schedule_overrides("SCHED123", "2023-01-01", "2023-01-31")
+
+        self.assertIsInstance(result, str)
+        data = _json.loads(result)
+        self.assertEqual(len(data["overrides"]), 1)
+        self.assertEqual(data["overrides"][0]["id"], "OV1")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_overrides_dict_response(self, mock_get_client):
+        """Test list_schedule_overrides when API returns a dict with 'overrides' key."""
+        import json as _json
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = {"overrides": [{"id": "OV2"}]}
+
+        result = list_schedule_overrides("SCHED123", "2023-01-01", "2023-01-31")
+
+        data = _json.loads(result)
+        self.assertEqual(len(data["overrides"]), 1)
+        self.assertEqual(data["overrides"][0]["id"], "OV2")
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_overrides_calls_api_correctly(self, mock_get_client):
+        """Test that list_schedule_overrides calls rget with correct arguments."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = []
+
+        list_schedule_overrides("SCHED123", "2023-01-01", "2023-01-31")
+
+        self.mock_client.rget.assert_called_once_with(
+            "/schedules/SCHED123/overrides",
+            params={"since": "2023-01-01", "until": "2023-01-31"},
+        )
+
+    @patch("pagerduty_mcp.tools.schedules.get_client")
+    def test_list_schedule_overrides_empty_dict_response(self, mock_get_client):
+        """Test list_schedule_overrides when API returns empty dict."""
+        import json as _json
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = {}
+
+        result = list_schedule_overrides("SCHED123", "2023-01-01", "2023-01-31")
+
+        data = _json.loads(result)
+        self.assertEqual(data["overrides"], [])
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,15 +4,15 @@ sidebar_position: 1
 
 # Tools Overview
 
-The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default, only the 42 read-only tools are available. The 22 write tools require starting the server with `--enable-write-tools`.
+The PagerDuty MCP Server exposes **69 tools** across **14 domains**. By default, only the 47 read-only tools are available. The 22 write tools require starting the server with `--enable-write-tools`.
 
 ## Read vs. Write Tools
 
 | Type | Count | Flag Required |
 |------|-------|---------------|
-| Read-only | 42 | None (always available) |
+| Read-only | 47 | None (always available) |
 | Write | 22 | `--enable-write-tools` |
-| **Total** | **64** | |
+| **Total** | **69** | |
 
 ## Complete Tool Reference
 
@@ -47,7 +47,7 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 | Tool | Type | Description |
 |------|------|-------------|
 | `list_incidents` | Read | List incidents with filters |
-| `get_incident` | Read | Get a specific incident by ID |
+| `get_incident` | Read | Get a specific incident by ID (supports `include=["external_references","metadata"]`) |
 | `get_outlier_incident` | Read | Get outlier incident analysis |
 | `get_past_incidents` | Read | Get past incidents similar to a given one |
 | `get_related_incidents` | Read | Get incidents related to a given one |
@@ -71,6 +71,7 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 |------|------|-------------|
 | `list_services` | Read | List all services |
 | `get_service` | Read | Get a specific service |
+| `get_technical_service_dependencies` | Read | Get technical service dependency graph |
 | `create_service` | Write | Create a new service |
 | `update_service` | Write | Update a service configuration |
 
@@ -101,6 +102,7 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 | `list_schedules` | Read | List all on-call schedules |
 | `get_schedule` | Read | Get a specific schedule |
 | `list_schedule_users` | Read | List users on a schedule for a time range |
+| `list_schedule_overrides` | Read | List overrides for a schedule in a date window |
 | `create_schedule` | Write | Create a new on-call schedule |
 | `create_schedule_override` | Write | Add an override to a schedule |
 | `update_schedule` | Write | Update an existing schedule |
@@ -117,6 +119,7 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 |------|------|-------------|
 | `list_log_entries` | Read | List log entries (audit trail) |
 | `get_log_entry` | Read | Get a specific log entry |
+| `list_incident_log_entries` | Read | List log entries for a specific incident |
 
 ### Escalation Policies
 
@@ -147,6 +150,7 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 | `list_status_page_statuses` | Read | List status options for a status page |
 | `get_status_page_post` | Read | Get a specific status page post |
 | `list_status_page_post_updates` | Read | List updates for a status page post |
+| `list_status_page_posts` | Read | List all posts for a specific status page |
 | `create_status_page_post` | Write | Create a new status page post |
 | `create_status_page_post_update` | Write | Add an update to a status page post |
 

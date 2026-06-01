@@ -50,6 +50,22 @@ List users in a schedule.
 
 ---
 
+### `list_schedule_overrides`
+
+List overrides for a schedule within a date range.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `schedule_id` | `string` | Yes | The ID of the schedule |
+| `since` | `string` | Yes | Start of the date range (ISO 8601) |
+| `until` | `string` | Yes | End of the date range (ISO 8601) |
+
+**Example prompt:**
+
+> "Show me all overrides for schedule PXXXXXX this week"
+
+---
+
 ### `create_schedule` *(write)*
 
 Create a new on-call schedule. Each schedule layer requires a `name` field to identify the layer.
@@ -83,6 +99,25 @@ Requires `--enable-write-tools` flag.
 **Example prompt:**
 
 > "Create an override for schedule PXXXXXX putting user PYYYYYY on-call from 2025-01-15T09:00:00Z to 2025-01-15T17:00:00Z"
+
+---
+
+### `delete_schedule_override` *(write)*
+
+Delete a schedule override.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `schedule_id` | `string` | Yes | The ID of the schedule |
+| `override_id` | `string` | Yes | The ID of the override to delete |
+
+:::note
+Requires `--enable-write-tools` flag.
+:::
+
+**Example prompt:**
+
+> "Delete override PXXXXXX from schedule PYYYYYY"
 
 ---
 

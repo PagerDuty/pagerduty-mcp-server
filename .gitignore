@@ -198,3 +198,4 @@ test_run_output.log
 website/node_modules/
 website/build/
 website/.docusaurus/
+mcp-apps/

@@ -4,69 +4,113 @@ from typing import Any
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
-    GetIncidentQuery,
+    MAX_RESULTS,
     Incident,
     IncidentCreate,
     IncidentManageRequest,
     IncidentNote,
-    IncidentQuery,
     IncidentResponderRequest,
     IncidentResponderRequestResponse,
     ListResponseModel,
-    OutlierIncidentQuery,
     OutlierIncidentResponse,
-    PastIncidentsQuery,
     PastIncidentsResponse,
-    RelatedIncidentsQuery,
     RelatedIncidentsResponse,
     UserReference,
 )
 from pagerduty_mcp.utils import paginate
 
 
-def list_incidents(query_model: IncidentQuery | None = None) -> ListResponseModel[Incident]:
+def list_incidents(
+    statuses: list[str] | None = None,
+    since: datetime | None = None,
+    until: datetime | None = None,
+    user_ids: list[str] | None = None,
+    service_ids: list[str] | None = None,
+    team_ids: list[str] | None = None,
+    urgencies: list[str] | None = None,
+    sort_by: list[str] | None = None,
+    request_scope: str | None = None,
+    limit: int | None = None,
+) -> ListResponseModel[Incident]:
     """List incidents with optional filtering.
 
     Args:
-        query_model: Optional filtering parameters
+        statuses: Filter by status (triggered, acknowledged, resolved).
+            Note: "open" incidents include BOTH "triggered" and "acknowledged" statuses.
+            To list all open incidents pass statuses=["triggered", "acknowledged"].
+        since: Filter incidents since a specific date
+        until: Filter incidents until a specific date
+        user_ids: Filter by user IDs
+        service_ids: Filter by service IDs
+        team_ids: Filter by team IDs
+        urgencies: Filter by urgency (high, low)
+        sort_by: Sort fields and directions (e.g. ['created_at:desc'])
+        request_scope: 'all', 'teams' (my teams), or 'assigned' (assigned to me)
+        limit: Max results to return
 
     Returns:
-        List of Incident objects matching the query parameters
-
+        List of incidents matching the query parameters
     """
-    if query_model is None:
-        query_model = IncidentQuery()
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if statuses:
+        params["statuses[]"] = statuses
+    if since:
+        params["since"] = since.isoformat()
+    if until:
+        params["until"] = until.isoformat()
+    if service_ids:
+        params["service_ids[]"] = service_ids
+    if team_ids:
+        params["team_ids[]"] = team_ids
+    if user_ids:
+        params["user_ids[]"] = user_ids
+    if urgencies:
+        params["urgencies[]"] = urgencies
+    if sort_by:
+        params["sort_by"] = ",".join(sort_by)
 
-    if query_model.request_scope in ["assigned", "teams"]:
+    if request_scope in ["assigned", "teams"]:
         user_data = ContextResolver.get_user()
         if user_data is None:
-            raise ValueError(f"Cannot filter incidents by \"{query_model.request_scope}\" with account-level auth. Please provide a user token, or scope the request differently.")
+            raise ValueError(f"Cannot filter incidents by \"{request_scope}\" with account-level auth. Please provide a user token, or scope the request differently.")
 
-        if query_model.request_scope == "assigned":
+        if request_scope == "assigned":
             params["user_ids[]"] = [user_data.id]
-        elif query_model.request_scope == "teams":
+        elif request_scope == "teams":
             user_team_ids = [team.id for team in user_data.teams]
             params["team_ids[]"] = user_team_ids
 
     response = paginate(
-        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=query_model.limit or 100
+        client=ContextResolver.get_client(), entity="incidents", params=params, maximum_records=limit or MAX_RESULTS
     )
     incidents = [Incident(**incident) for incident in response]
     return ListResponseModel[Incident](response=incidents)
 
 
-def get_incident(incident_id: str, query_model: GetIncidentQuery | None = None) -> Incident:
+def get_incident(
+    incident_id: str,
+    include: list[str] | None = None,
+) -> Incident:
     """Get a specific incident.
 
     Args:
         incident_id: The ID or number of the incident to retrieve.
-        query_model: Optional query parameters for additional information to include
+        include: List of additional information to include in the response.
+            Available options: 'users', 'services', 'assignments', 'acknowledgers',
+            'custom_fields', 'teams', 'escalation_policies', 'log_entries', 'notes',
+            'urgencies', 'priorities', 'external_references', 'metadata'.
+            Use 'external_references' to include external system integration links such as
+            ServiceNow, Zendesk, and other third-party integrations associated with the incident.
+            Use 'metadata' to include additional metadata associated with the incident.
+            Use 'log_entries' to include the incident's log/audit entries inline (do NOT call
+            list_log_entries separately when this option suffices).
 
     Returns:
         Incident details
     """
-    params = query_model.to_params() if query_model else {}
+    params: dict[str, Any] = {}
+    if include:
+        params["include[]"] = include
     response = get_client().rget(f"/incidents/{incident_id}", params=params)
     return Incident.model_validate(response)
 
@@ -238,7 +282,10 @@ def add_note_to_incident(incident_id: str, note: str) -> IncidentNote:
     return IncidentNote.model_validate(response)
 
 
-def get_outlier_incident(incident_id: str, query_model: OutlierIncidentQuery) -> OutlierIncidentResponse:
+def get_outlier_incident(
+    incident_id: str,
+    since: datetime | None = None,
+) -> OutlierIncidentResponse:
     """Get Outlier Incident information for a given Incident on its Service.
 
     Outlier Incident returns incident that deviates from the expected patterns
@@ -247,39 +294,48 @@ def get_outlier_incident(incident_id: str, query_model: OutlierIncidentQuery) ->
 
     Args:
         incident_id: The ID of the incident to get outlier incident information for
-        query_model: Query parameters including date range and additional details
+        since: The start of the date range over which you want to search.
+            Maximum range is 6 months.
 
     Returns:
         Outlier incident information calculated over the same Service as the given Incident
     """
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if since:
+        params["since"] = since.isoformat()
     response = get_client().rget(f"/incidents/{incident_id}/outlier_incident", params=params)
-
     return OutlierIncidentResponse.from_api_response(response)
 
 
-def get_past_incidents(incident_id: str, query_model: PastIncidentsQuery) -> PastIncidentsResponse:
+def get_past_incidents(
+    incident_id: str,
+    limit: int = 5,
+    total: bool = False,
+) -> PastIncidentsResponse:
     """Get Past Incidents related to a specific incident ID.
 
     Past Incidents returns Incidents within the past 6 months that have similar
     metadata and were generated on the same Service as the parent Incident.
-    By default, 50 Past Incidents are returned. This feature is currently available
-    as part of the Event Intelligence package or Digital Operations plan only.
+    This feature is currently available as part of the Event Intelligence package
+    or Digital Operations plan only.
 
     Args:
         incident_id: The ID of the incident to get past incidents for
-        query_model: Query parameters including limit and total flag
+        limit: The number of results to be returned. Default is 5, maximum is 999.
+        total: Include the total number of Past Incidents in the response. Default is False.
 
     Returns:
         List of past incidents with similarity scores
     """
-    params = query_model.to_params()
+    params: dict[str, Any] = {"limit": limit, "total": total}
     response = get_client().rget(f"/incidents/{incident_id}/past_incidents", params=params)
+    return PastIncidentsResponse.from_api_response(response, default_limit=limit)
 
-    return PastIncidentsResponse.from_api_response(response, default_limit=query_model.limit)
 
-
-def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) -> RelatedIncidentsResponse:
+def get_related_incidents(
+    incident_id: str,
+    additional_details: list[str] | None = None,
+) -> RelatedIncidentsResponse:
     """Get Related Incidents for a specific incident ID.
 
     Returns the 20 most recent Related Incidents that are impacting other Responders
@@ -288,12 +344,14 @@ def get_related_incidents(incident_id: str, query_model: RelatedIncidentsQuery) 
 
     Args:
         incident_id: The ID of the incident to get related incidents for
-        query_model: Query parameters including additional details
+        additional_details: Array of additional attributes to include on returned incidents.
+            Allowed values are 'incident'.
 
     Returns:
         List of related incidents and their relationships
     """
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if additional_details:
+        params["additional_details[]"] = additional_details
     response = get_client().rget(f"/incidents/{incident_id}/related_incidents", params=params)
-
     return RelatedIncidentsResponse.from_api_response(response)

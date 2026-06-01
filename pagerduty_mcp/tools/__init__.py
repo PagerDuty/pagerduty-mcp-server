@@ -52,6 +52,7 @@ from .incidents import (
 )
 from .log_entries import (
     get_log_entry,
+    list_incident_log_entries,
     list_log_entries,
 )
 from .oncalls import list_oncalls
@@ -59,6 +60,7 @@ from .schedules import (
     create_schedule,
     create_schedule_override,
     get_schedule,
+    list_schedule_overrides,
     list_schedule_users,
     list_schedules,
     update_schedule,
@@ -66,6 +68,7 @@ from .schedules import (
 from .services import (
     create_service,
     get_service,
+    get_technical_service_dependencies,
     list_services,
     update_service,
 )
@@ -75,6 +78,7 @@ from .status_pages import (
     get_status_page_post,
     list_status_page_impacts,
     list_status_page_post_updates,
+    list_status_page_posts,
     list_status_page_severities,
     list_status_page_statuses,
     list_status_pages,
@@ -117,6 +121,7 @@ read_tools = [
     # Services
     list_services,
     get_service,
+    get_technical_service_dependencies,
     # Teams
     list_teams,
     get_team,
@@ -128,11 +133,13 @@ read_tools = [
     list_schedules,
     get_schedule,
     list_schedule_users,
+    list_schedule_overrides,
     # On-calls
     list_oncalls,
     # Log Entries
     list_log_entries,
     get_log_entry,
+    list_incident_log_entries,
     # Escalation Policies
     list_escalation_policies,
     get_escalation_policy,
@@ -149,6 +156,7 @@ read_tools = [
     list_status_page_statuses,
     get_status_page_post,
     list_status_page_post_updates,
+    list_status_page_posts,
 ]
 
 # Write tools (potentially dangerous operations that modify state)

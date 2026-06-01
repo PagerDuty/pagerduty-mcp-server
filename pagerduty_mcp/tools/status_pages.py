@@ -1,42 +1,47 @@
+import json
+from typing import Any, Literal
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import ListResponseModel
+from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT
 from pagerduty_mcp.models.status_pages import (
     StatusPage,
     StatusPageImpact,
-    StatusPageImpactQuery,
     StatusPagePost,
     StatusPagePostCreateRequestWrapper,
-    StatusPagePostQuery,
     StatusPagePostUpdate,
-    StatusPagePostUpdateQuery,
     StatusPagePostUpdateRequestWrapper,
-    StatusPageQuery,
     StatusPageSeverity,
-    StatusPageSeverityQuery,
     StatusPageStatus,
-    StatusPageStatusQuery,
 )
 from pagerduty_mcp.utils import paginate
 
 
-def list_status_pages(query_model: StatusPageQuery | None = None) -> ListResponseModel[StatusPage]:
+def list_status_pages(
+    status_page_type: Literal["public", "private", "audience_specific"] | None = None,
+    limit: int | None = DEFAULT_PAGINATION_LIMIT,
+) -> ListResponseModel[StatusPage]:
     """List Status Pages with optional filtering.
 
     Args:
-        query_model: Optional filtering parameters
+        status_page_type: Filter by the type of the Status Page.
+            Options: 'public', 'private', 'audience_specific'.
+        limit: Maximum number of results to return. Default 20.
 
     Returns:
-        List of StatusPage objects matching the query parameters
+        List of StatusPage objects
     """
-    if query_model is None:
-        query_model = StatusPageQuery()
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if status_page_type:
+        params["status_page_type"] = status_page_type
+    if limit:
+        params["limit"] = limit
 
     response = paginate(
         client=get_client(),
         entity="status_pages",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=limit or DEFAULT_PAGINATION_LIMIT,
     )
 
     status_pages = [StatusPage(**item) for item in response]
@@ -44,26 +49,31 @@ def list_status_pages(query_model: StatusPageQuery | None = None) -> ListRespons
 
 
 def list_status_page_severities(
-    status_page_id: str, query_model: StatusPageSeverityQuery | None = None
+    status_page_id: str,
+    post_type: Literal["incident", "maintenance"] | None = None,
+    limit: int | None = DEFAULT_PAGINATION_LIMIT,
 ) -> ListResponseModel[StatusPageSeverity]:
     """List Severities for a Status Page by Status Page ID.
 
     Args:
         status_page_id: The ID of the Status Page
-        query_model: Optional filtering parameters
+        post_type: Filter by post type: 'incident' or 'maintenance'.
+        limit: Maximum number of results to return. Default 20.
 
     Returns:
         List of StatusPageSeverity objects for the given Status Page
     """
-    if query_model is None:
-        query_model = StatusPageSeverityQuery()
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if post_type:
+        params["post_type"] = post_type
+    if limit:
+        params["limit"] = limit
 
     response = paginate(
         client=get_client(),
         entity=f"/status_pages/{status_page_id}/severities",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=limit or DEFAULT_PAGINATION_LIMIT,
     )
 
     severities = [StatusPageSeverity(**item) for item in response]
@@ -71,26 +81,31 @@ def list_status_page_severities(
 
 
 def list_status_page_impacts(
-    status_page_id: str, query_model: StatusPageImpactQuery | None = None
+    status_page_id: str,
+    post_type: Literal["incident", "maintenance"] | None = None,
+    limit: int | None = DEFAULT_PAGINATION_LIMIT,
 ) -> ListResponseModel[StatusPageImpact]:
     """List Impacts for a Status Page by Status Page ID.
 
     Args:
         status_page_id: The ID of the Status Page
-        query_model: Optional filtering parameters
+        post_type: Filter by post type: 'incident' or 'maintenance'.
+        limit: Maximum number of results to return. Default 20.
 
     Returns:
         List of StatusPageImpact objects for the given Status Page
     """
-    if query_model is None:
-        query_model = StatusPageImpactQuery()
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if post_type:
+        params["post_type"] = post_type
+    if limit:
+        params["limit"] = limit
 
     response = paginate(
         client=get_client(),
         entity=f"/status_pages/{status_page_id}/impacts",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=limit or DEFAULT_PAGINATION_LIMIT,
     )
 
     impacts = [StatusPageImpact(**item) for item in response]
@@ -98,26 +113,31 @@ def list_status_page_impacts(
 
 
 def list_status_page_statuses(
-    status_page_id: str, query_model: StatusPageStatusQuery | None = None
+    status_page_id: str,
+    post_type: Literal["incident", "maintenance"] | None = None,
+    limit: int | None = DEFAULT_PAGINATION_LIMIT,
 ) -> ListResponseModel[StatusPageStatus]:
     """List Statuses for a Status Page by Status Page ID.
 
     Args:
         status_page_id: The ID of the Status Page
-        query_model: Optional filtering parameters
+        post_type: Filter by post type: 'incident' or 'maintenance'.
+        limit: Maximum number of results to return. Default 20.
 
     Returns:
         List of StatusPageStatus objects for the given Status Page
     """
-    if query_model is None:
-        query_model = StatusPageStatusQuery()
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if post_type:
+        params["post_type"] = post_type
+    if limit:
+        params["limit"] = limit
 
     response = paginate(
         client=get_client(),
         entity=f"/status_pages/{status_page_id}/statuses",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=limit or DEFAULT_PAGINATION_LIMIT,
     )
 
     statuses = [StatusPageStatus(**item) for item in response]
@@ -149,18 +169,24 @@ def create_status_page_post(status_page_id: str, create_model: StatusPagePostCre
     return StatusPagePost.from_api_response(response)
 
 
-def get_status_page_post(status_page_id: str, post_id: str, query_model: StatusPagePostQuery) -> StatusPagePost:
+def get_status_page_post(
+    status_page_id: str,
+    post_id: str,
+    include: list[str] | None = None,
+) -> StatusPagePost:
     """Get a Post for a Status Page by Status Page ID and Post ID.
 
     Args:
         status_page_id: The ID of the Status Page
         post_id: The ID of the Status Page Post
-        query_model: Optional query parameters (e.g., include related resources)
+        include: Optional list of related resources to include (e.g. 'post_updates').
 
     Returns:
         StatusPagePost details
     """
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if include:
+        params["include[]"] = include
     response = get_client().rget(f"/status_pages/{status_page_id}/posts/{post_id}", params=params)
 
     return StatusPagePost.from_api_response(response)
@@ -198,28 +224,54 @@ def create_status_page_post_update(
 
 
 def list_status_page_post_updates(
-    status_page_id: str, post_id: str, query_model: StatusPagePostUpdateQuery | None = None
+    status_page_id: str,
+    post_id: str,
+    reviewed_status: Literal["approved", "not_reviewed"] | None = None,
+    limit: int | None = DEFAULT_PAGINATION_LIMIT,
 ) -> ListResponseModel[StatusPagePostUpdate]:
     """List Post Updates for a Status Page by Status Page ID and Post ID.
 
     Args:
         status_page_id: The ID of the Status Page
         post_id: The ID of the Status Page Post
-        query_model: Optional filtering parameters
+        reviewed_status: Filter by review status: 'approved' or 'not_reviewed'.
+        limit: Maximum number of results to return. Default 20.
 
     Returns:
         List of StatusPagePostUpdate objects for the given Post
     """
-    if query_model is None:
-        query_model = StatusPagePostUpdateQuery()
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if reviewed_status:
+        params["reviewed_status"] = reviewed_status
+    if limit:
+        params["limit"] = limit
 
     response = paginate(
         client=get_client(),
         entity=f"/status_pages/{status_page_id}/posts/{post_id}/post_updates",
         params=params,
-        maximum_records=query_model.limit or 100,
+        maximum_records=limit or DEFAULT_PAGINATION_LIMIT,
     )
 
     post_updates = [StatusPagePostUpdate(**item) for item in response]
     return ListResponseModel[StatusPagePostUpdate](response=post_updates)
+
+
+def list_status_page_posts(status_page_id: str) -> str:
+    """List Posts for a Status Page by Status Page ID.
+
+    Args:
+        status_page_id: The ID of the Status Page
+
+    Returns:
+        JSON string containing a list of posts for the given Status Page
+    """
+    response = paginate(
+        client=get_client(),
+        entity=f"/status_pages/{status_page_id}/posts",
+        params={},
+        maximum_records=100,
+    )
+    return json.dumps({"response": response})
+
+

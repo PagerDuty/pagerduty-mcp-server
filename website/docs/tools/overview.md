@@ -4,15 +4,15 @@ sidebar_position: 1
 
 # Tools Overview
 
-The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default, only the 42 read-only tools are available. The 22 write tools require starting the server with `--enable-write-tools`.
+The PagerDuty MCP Server exposes **72 tools** across **17 domains**. By default, only the 50 read-only tools are available. The 22 write tools require starting the server with `--enable-write-tools`.
 
 ## Read vs. Write Tools
 
 | Type | Count | Flag Required |
 |------|-------|---------------|
-| Read-only | 42 | None (always available) |
+| Read-only | 50 | None (always available) |
 | Write | 22 | `--enable-write-tools` |
-| **Total** | **64** | |
+| **Total** | **72** | |
 
 ## Complete Tool Reference
 
@@ -32,6 +32,23 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 |------|------|-------------|
 | `list_alerts_from_incident` | Read | List alerts associated with an incident |
 | `get_alert_from_incident` | Read | Get a specific alert from an incident |
+
+### Analytics
+
+| Tool | Type | Description |
+|------|------|-------------|
+| `get_responder_metrics` | Read | Get per-responder on-call hours and interruption counts by team |
+| `get_incident_metrics_by_service` | Read | Get aggregated MTTA, MTTR, and uptime metrics per service |
+| `get_incident_metrics_by_team` | Read | Get aggregated incident metrics per team with optional time-series breakdown |
+| `get_responder_load_metrics` | Read | Get per-responder load metrics across all teams |
+| `get_incident_metrics_all` | Read | Get full-period aggregated metrics including P50-P95 percentiles |
+
+### Business Services
+
+| Tool | Type | Description |
+|------|------|-------------|
+| `list_business_services` | Read | List all business services |
+| `get_business_service_dependencies` | Read | Get technical service dependencies for a business service |
 
 ### Change Events
 
@@ -111,6 +128,12 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 |------|------|-------------|
 | `list_oncalls` | Read | List current on-call assignments |
 
+### Priorities
+
+| Tool | Type | Description |
+|------|------|-------------|
+| `list_priorities` | Read | List all incident priority levels configured in the account |
+
 ### Log Entries
 
 | Tool | Type | Description |
@@ -154,8 +177,10 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 
 See the individual domain pages for parameter details and usage examples:
 
-- [Alert Grouping](./alert-grouping) · [Alerts](./alerts) · [Change Events](./change-events)
+- [Alert Grouping](./alert-grouping) · [Alerts](./alerts) · [Analytics](./analytics)
+- [Business Services](./business-services) · [Change Events](./change-events)
 - [Incidents](./incidents) · [Incident Workflows](./incident-workflows)
 - [Services](./services) · [Teams](./teams) · [Users](./users)
-- [Schedules](./schedules) · [On-Call](./oncalls) · [Log Entries](./log-entries)
-- [Escalation Policies](./escalation-policies) · [Event Orchestrations](./event-orchestrations) · [Status Pages](./status-pages)
+- [Schedules](./schedules) · [On-Call](./oncalls) · [Priorities](./priorities)
+- [Log Entries](./log-entries) · [Escalation Policies](./escalation-policies)
+- [Event Orchestrations](./event-orchestrations) · [Status Pages](./status-pages)

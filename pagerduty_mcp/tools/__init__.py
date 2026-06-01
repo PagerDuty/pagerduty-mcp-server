@@ -89,7 +89,7 @@ from .teams import (
     remove_team_member,
     update_team,
 )
-from .users import get_user_data, list_users
+from .users import create_user, get_user_data, list_users
 
 # Read-only tools (safe, non-destructive operations)
 read_tools = [
@@ -183,6 +183,8 @@ write_tools = [
     # Status Pages
     create_status_page_post,
     create_status_page_post_update,
+    # Users
+    create_user,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

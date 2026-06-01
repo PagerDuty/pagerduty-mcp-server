@@ -112,7 +112,7 @@ from .status_pages import (
     StatusPageStatusReference,
 )
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
-from .users import User, UserQuery
+from .users import CreateUserRequest, User, UserQuery
 
 __all__ = [
     "MAX_RESULTS",
@@ -228,4 +228,5 @@ __all__ = [
     "User",
     "UserQuery",
     "UserReference",
+    "CreateUserRequest",
 ]

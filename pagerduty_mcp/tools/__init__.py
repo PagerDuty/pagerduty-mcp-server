@@ -71,10 +71,12 @@ from .services import (
 )
 from .status_pages import (
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
     get_status_page_post,
     list_status_page_impacts,
     list_status_page_post_updates,
+    list_status_page_posts,
     list_status_page_severities,
     list_status_page_statuses,
     list_status_pages,
@@ -144,6 +146,7 @@ read_tools = [
     get_event_orchestration_global,
     # Status Pages
     list_status_pages,
+    list_status_page_posts,
     list_status_page_severities,
     list_status_page_impacts,
     list_status_page_statuses,
@@ -183,6 +186,7 @@ write_tools = [
     # Status Pages
     create_status_page_post,
     create_status_page_post_update,
+    create_status_page_post_postmortem,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

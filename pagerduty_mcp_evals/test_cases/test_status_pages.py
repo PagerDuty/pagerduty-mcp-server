@@ -13,6 +13,33 @@ class StatusPagesCompetencyTest(AgentCompetencyTest):
     def __init__(self, **kwargs) -> None:
         mock_responses = [
             MockMCPToolInvocationResponse(
+                tool_name="list_status_page_posts",
+                parameters=lambda params: True,
+                response={
+                    "response": [
+                        {
+                            "id": "PIJ90N7",
+                            "title": "Database Maintenance",
+                            "post_type": "maintenance",
+                            "status_page": {"id": "PT4KHLK", "type": "status_page"},
+                            "starts_at": "2023-12-12T11:00:00Z",
+                            "ends_at": "2023-12-12T12:00:00Z",
+                        }
+                    ]
+                },
+            ),
+            MockMCPToolInvocationResponse(
+                tool_name="create_status_page_post_postmortem",
+                parameters=lambda params: True,
+                response={
+                    "id": "PWZ0PTR",
+                    "message": "<p>Something wrong happened and this is a postmortem.</p>",
+                    "notify_subscribers": True,
+                    "post": {"id": "PIJ90N7", "type": "status_page_post"},
+                    "type": "status_page_post_postmortem",
+                },
+            ),
+            MockMCPToolInvocationResponse(
                 tool_name="list_status_pages",
                 parameters=lambda params: True,
                 response={
@@ -287,5 +314,51 @@ STATUS_PAGES_COMPETENCY_TESTS = [
             )
         ],
         description="Create a status page post update",
+    ),
+    StatusPagesCompetencyTest(
+        query="List all posts for status page PT4KHLK",
+        expected_tool_calls=[
+            MockToolCall(
+                name="list_status_page_posts",
+                parameters={"status_page_id": "PT4KHLK", "query_model": {}},
+            )
+        ],
+        description="List all posts for a specific status page",
+    ),
+    StatusPagesCompetencyTest(
+        query="Show me only maintenance posts for status page PT4KHLK",
+        expected_tool_calls=[
+            MockToolCall(
+                name="list_status_page_posts",
+                parameters={
+                    "status_page_id": "PT4KHLK",
+                    "query_model": {"post_type": "maintenance"},
+                },
+            )
+        ],
+        description="List posts filtered by post type",
+    ),
+    StatusPagesCompetencyTest(
+        query=(
+            "Create a postmortem for post PIJ90N7 on status page PT4KHLK "
+            "with message '<p>Root cause identified.</p>' and notify subscribers"
+        ),
+        expected_tool_calls=[
+            MockToolCall(
+                name="create_status_page_post_postmortem",
+                parameters={
+                    "status_page_id": "PT4KHLK",
+                    "post_id": "PIJ90N7",
+                    "create_model": {
+                        "postmortem": {
+                            "post": {"id": "PIJ90N7"},
+                            "message": "<p>Root cause identified.</p>",
+                            "notify_subscribers": True,
+                        }
+                    },
+                },
+            )
+        ],
+        description="Create a postmortem for a status page post",
     ),
 ]

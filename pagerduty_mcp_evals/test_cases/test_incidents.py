@@ -148,6 +148,24 @@ class IncidentCompetencyTest(AgentCompetencyTest):
                 },
             ),
             MockMCPToolInvocationResponse(
+                tool_name="get_incident",
+                parameters=lambda params: True,
+                response={
+                    "id": "PINCIDENT123",
+                    "incident_number": 123,
+                    "title": "Test Incident",
+                    "status": "triggered",
+                    "created_at": "2023-01-01T00:00:00Z",
+                    "updated_at": "2023-01-01T00:00:00Z",
+                    "service": {"id": "SVC123", "type": "service_reference"},
+                    "external_references": [
+                        {"type": "servicenow_reference", "external_id": "INC001234", "sync": True},
+                        {"type": "zendesk_reference", "external_id": "12345", "sync": False},
+                    ],
+                    "metadata": {"custom_key": "custom_value", "source": "monitoring"},
+                },
+            ),
+            MockMCPToolInvocationResponse(
                 tool_name="add_responders",
                 parameters=lambda params: True,
                 response={
@@ -186,7 +204,7 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(
                 name="list_incidents",
                 parameters={
-                    "query_model": {"status": ["triggered", "acknowledged", "resolved"]}
+                    "statuses": ["triggered", "acknowledged", "resolved"]
                 },
             )
         ],
@@ -197,7 +215,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incidents",
-                parameters={"query_model": {"status": ["triggered", "acknowledged"]}},
+                parameters={"statuses": ["triggered", "acknowledged"]},
             )
         ],
         description="List incidents filtered by status",
@@ -212,7 +230,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incidents",
-                parameters={"query_model": {"status": ["triggered"]}},
+                parameters={"statuses": ["triggered"]},
             )
         ],
         description="List incidents filtered by status",
@@ -229,7 +247,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="get_incident",
-                parameters={"incident_id": "123", "query_model": {"include": ["users"]}},
+                parameters={"incident_id": "123", "include": ["users"]},
             )
         ],
         description="Get incident with users included",
@@ -241,7 +259,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "ABC456",
-                    "query_model": {"include": ["teams", "services"]},
+                    "include": ["teams", "services"],
                 },
             )
         ],
@@ -254,7 +272,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "789",
-                    "query_model": {"include": ["escalation_policies", "log_entries"]},
+                    "include": ["escalation_policies", "log_entries"],
                 },
             )
         ],
@@ -267,7 +285,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_incident",
                 parameters={
                     "incident_id": "XYZ999",
-                    "query_model": {"include": ["users", "teams", "notes", "assignments"]},
+                    "include": ["users", "teams", "notes", "assignments"],
                 },
             )
         ],
@@ -279,11 +297,9 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(
                 name="create_incident",
                 parameters={
-                    "create_model": {
-                        "incident": {
-                            "title": "Testing MCP",
-                            "service": {"id": "1234"},
-                        }
+                    "incident": {
+                        "title": "Testing MCP",
+                        "service": {"id": "1234"},
                     }
                 },
             )
@@ -296,9 +312,7 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(
                 name="create_incident",
                 parameters={
-                    "create_model": {
-                        "incident": {"title": "Server down", "urgency": "high"}
-                    }
+                    "incident": {"title": "Server down", "urgency": "high"}
                 },
             )
         ],
@@ -356,7 +370,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_outlier_incident",
                 parameters={
                     "incident_id": "789",
-                    "query_model": {"since": "2020-09-01T00:00:00Z"},
+                    "since": "2020-09-01T00:00:00Z",
                 },
             )
         ],
@@ -367,7 +381,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="get_past_incidents",
-                parameters={"incident_id": "ABC123", "query_model": {"limit": 10}},
+                parameters={"incident_id": "ABC123", "limit": 10},
             )
         ],
         description="Get past incidents with limit parameter to control result count",
@@ -377,7 +391,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="get_past_incidents",
-                parameters={"incident_id": "ABC123", "query_model": {"total": True}},
+                parameters={"incident_id": "ABC123", "total": True},
             )
         ],
         description="Get past incidents with total parameter to include total count",
@@ -389,7 +403,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 name="get_related_incidents",
                 parameters={
                     "incident_id": "DEF456",
-                    "query_model": {"additional_details": ["incident"]},
+                    "additional_details": ["incident"],
                 },
             )
         ],
@@ -452,7 +466,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_alerts_from_incident",
-                parameters={"incident_id": "ABC123", "query_model": {"limit": 10}},
+                parameters={"incident_id": "ABC123", "limit": 10},
             )
         ],
         description="List alerts with limit parameter",
@@ -562,6 +576,45 @@ INCIDENT_COMPETENCY_TESTS = [
             )
         ],
         description="Add an escalation policy as responder to an incident",
+    ),
+    IncidentCompetencyTest(
+        query="Get incident 123 with its ServiceNow and Zendesk integration links",
+        expected_tool_calls=[
+            MockToolCall(
+                name="get_incident",
+                parameters={
+                    "incident_id": "123",
+                    "include": ["external_references"],
+                },
+            )
+        ],
+        description="Get incident with external references (ServiceNow, Zendesk integration links)",
+    ),
+    IncidentCompetencyTest(
+        query="Fetch incident ABC456 including its metadata",
+        expected_tool_calls=[
+            MockToolCall(
+                name="get_incident",
+                parameters={
+                    "incident_id": "ABC456",
+                    "include": ["metadata"],
+                },
+            )
+        ],
+        description="Get incident with metadata included",
+    ),
+    IncidentCompetencyTest(
+        query="Get incident 789 with external references and metadata",
+        expected_tool_calls=[
+            MockToolCall(
+                name="get_incident",
+                parameters={
+                    "incident_id": "789",
+                    "include": ["external_references", "metadata"],
+                },
+            )
+        ],
+        description="Get incident with both external_references and metadata included",
     ),
     IncidentCompetencyTest(
         query="Add users USER111 and USER222 as responders to incident 999 with the message 'All hands on deck'",

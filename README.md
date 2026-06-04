@@ -262,6 +262,36 @@ To integrate the Docker container with MCP clients, you can use Docker as the co
 
 > **Note**: The Docker container uses stdio transport, making it compatible with MCP clients that expect standard input/output communication. Ensure you build the image first using `docker build -t pagerduty-mcp:latest .`
 
+## Transport modes
+
+The server supports three MCP transports, selected via the `--transport` flag:
+
+| Transport         | Use case                                                    | Default |
+|-------------------|-------------------------------------------------------------|---------|
+| `stdio`           | Local clients launched as a subprocess (Cursor, VS Code).   | ✅      |
+| `streamable-http` | Long-running remote/server deployments. MCP endpoint at `/mcp`. |     |
+| `sse`             | Legacy Server-Sent Events transport.                        |         |
+
+For HTTP-based transports, `--host` (default `127.0.0.1`) and `--port` (default `8000`) control the listen address.
+
+**Example: run as a remote streamable-HTTP server**
+
+```bash
+pagerduty-mcp --transport streamable-http --host 0.0.0.0 --port 8000
+# MCP endpoint: http://localhost:8000/mcp
+```
+
+**Docker:**
+
+```bash
+docker run -d -p 8000:8000 \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  pagerduty-mcp:latest \
+  --transport streamable-http --host 0.0.0.0 --port 8000
+```
+
+The default remains `stdio` so existing local integrations are unaffected.
+
 ## Set up locally
 
 1.  **Clone the repository** 

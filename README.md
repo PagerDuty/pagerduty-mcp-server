@@ -61,8 +61,6 @@ Step-by-step PagerDuty account setup:
 - ✅ Direct access to all PagerDuty MCP tools
 - ✅ Simple deployment: `uv run pagerduty-mcp`
 
-See [mcp-apps/README.md](mcp-apps/README.md) for development instructions and customization.
-
 ## Prerequisites
 
 *   [asdf-vm](https://asdf-vm.com/) installed.

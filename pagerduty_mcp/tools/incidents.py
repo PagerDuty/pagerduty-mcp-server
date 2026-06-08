@@ -73,7 +73,10 @@ def list_incidents(
     if request_scope in ["assigned", "teams"]:
         user_data = ContextResolver.get_user()
         if user_data is None:
-            raise ValueError(f"Cannot filter incidents by \"{request_scope}\" with account-level auth. Please provide a user token, or scope the request differently.")
+            raise ValueError(
+                f'Cannot filter incidents by "{request_scope}" with account-level auth. '
+                "Please provide a user token, or scope the request differently."
+            )
 
         if request_scope == "assigned":
             params["user_ids[]"] = [user_data.id]
@@ -220,9 +223,7 @@ def manage_incidents(
     return ListResponseModel[Incident](response=[])
 
 
-def add_responders(
-    incident_id: str, request: IncidentResponderRequest
-) -> IncidentResponderRequestResponse | str:
+def add_responders(incident_id: str, request: IncidentResponderRequest) -> IncidentResponderRequestResponse | str:
     """Add responders to an incident.
 
     Args:
@@ -332,6 +333,7 @@ def get_outlier_incident(
 def get_past_incidents(
     incident_id: str,
     limit: int = 5,
+    *,
     total: bool = False,
 ) -> PastIncidentsResponse:
     """Get Past Incidents related to a specific incident ID.

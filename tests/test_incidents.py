@@ -399,7 +399,9 @@ class TestIncidentTools(unittest.TestCase):
 
         result = get_incident("PINCIDENT123", include=["external_references"])
 
-        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123", params={"include[]": ["external_references"]})
+        mock_client.rget.assert_called_once_with(
+            "/incidents/PINCIDENT123", params={"include[]": ["external_references"]}
+        )
         self.assertIsInstance(result, Incident)
         assert result.external_references is not None
         self.assertEqual(len(result.external_references), 2)
@@ -434,12 +436,14 @@ class TestIncidentTools(unittest.TestCase):
     def test_incident_model_external_references_defaults_to_none(self):
         """Test Incident model has external_references as None when not included."""
         from pagerduty_mcp.models.incidents import Incident
+
         incident = Incident.model_validate(self.sample_incident_data)
         self.assertIsNone(incident.external_references)
 
     def test_incident_model_metadata_defaults_to_none(self):
         """Test Incident model has metadata as None when not included."""
         from pagerduty_mcp.models.incidents import Incident
+
         incident = Incident.model_validate(self.sample_incident_data)
         self.assertIsNone(incident.metadata)
 
@@ -1001,7 +1005,9 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(result.total, 2)
         self.assertEqual(result.limit, 5)
         # limit=5 and total=False are the API defaults
-        mock_client.rget.assert_called_once_with("/incidents/PINCIDENT123/past_incidents", params={"limit": 5, "total": False})
+        mock_client.rget.assert_called_once_with(
+            "/incidents/PINCIDENT123/past_incidents", params={"limit": 5, "total": False}
+        )
 
     @patch("pagerduty_mcp.tools.incidents.get_client")
     def test_get_past_incidents_with_params(self, mock_get_client):
@@ -1358,6 +1364,7 @@ class TestIncidentTools(unittest.TestCase):
 
         self.assertIsInstance(result, str)
         import json as _json
+
         data = _json.loads(result)
         self.assertEqual(data["message"], "System is recovering")
 
@@ -1410,6 +1417,7 @@ class TestIncidentTools(unittest.TestCase):
 
         self.assertIsInstance(result, str)
         import json as _json
+
         data = _json.loads(result)
         self.assertEqual(len(data["response"]), 1)
 

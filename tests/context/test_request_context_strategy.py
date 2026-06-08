@@ -1,12 +1,13 @@
-import pytest
-
 from unittest.mock import MagicMock
 
+import pytest
 from pagerduty.rest_api_v2_client import RestApiV2Client
+
 from pagerduty_mcp.context import ContextResolver, application_context_strategy
 from pagerduty_mcp.context.mcp_context import MCPContext
 from pagerduty_mcp.context.request_context_strategy import RequestContextStrategy
 from pagerduty_mcp.models.users import User
+
 
 @pytest.fixture
 def prepare_env(monkeypatch):
@@ -14,22 +15,27 @@ def prepare_env(monkeypatch):
     yield
     ContextResolver._context_strategy = None
 
+
 @pytest.fixture
 def mock_client(monkeypatch):
+    """Fixture that provides a mock RestApiV2Client with patched PagerdutyMCPClient."""
     mock_client = MagicMock(RestApiV2Client)
     mock_client.headers = {}
 
     monkeypatch.setattr(application_context_strategy, "PagerdutyMCPClient", lambda _: mock_client)
     return mock_client
 
+
 @pytest.fixture
 def mock_user(mock_client):
+    """Fixture that configures mock_client to return a test user from rget."""
     user_fields = {"email": "test@example.com", "name": "blah", "role": "admin", "teams": []}
     mock_user = User(**user_fields)
 
     mock_client.rget.return_value = user_fields
 
     return mock_user
+
 
 class TestRequestContextStrategy:
     """Test cases for the RequestContextStrategy and its integration with MCPContext."""
@@ -40,16 +46,16 @@ class TestRequestContextStrategy:
         ContextResolver.set_strategy(strategy)
 
         with strategy.use_context(context):
-             assert ContextResolver.get_user() == mock_user
+            assert ContextResolver.get_user() == mock_user
 
         # also works from manager class
         with ContextResolver.use_context(context):
-             assert ContextResolver.get_user() == mock_user
+            assert ContextResolver.get_user() == mock_user
 
         # indulge my light paranoia
         context = MCPContext(MagicMock(RestApiV2Client))
         with strategy.use_context(context):
-             assert ContextResolver.get_user() == None
+            assert ContextResolver.get_user() is None
 
     def test_get_client(self, prepare_env, mock_client):
         mock_context = MCPContext(mock_client)
@@ -78,7 +84,7 @@ class TestRequestContextStrategy:
         ContextResolver.set_strategy(strategy)
 
         with strategy.use_context(mock_context):
-            assert ContextResolver.get_user() == None
+            assert ContextResolver.get_user() is None
 
     def test_raises_when_no_context(self, prepare_env):
         ContextResolver.set_strategy(RequestContextStrategy())

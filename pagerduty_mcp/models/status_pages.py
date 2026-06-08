@@ -264,9 +264,7 @@ class StatusPagePost(BaseModel):
 
 class StatusPagePostUpdateRequest(BaseModel):
     message: str = Field(description="The message of the Post Update")
-    status: StatusPageStatusReference = Field(
-        description="Status Page Status reference (required when creating posts)"
-    )
+    status: StatusPageStatusReference = Field(description="Status Page Status reference (required when creating posts)")
     severity: StatusPageSeverityReference = Field(
         description="Status Page Severity reference (required when creating posts)"
     )
@@ -301,8 +299,7 @@ class StatusPagePostCreateRequest(BaseModel):
     post_type: Literal["incident", "maintenance"] = Field(description="The type of the Post")
     starts_at: datetime = Field(
         description=(
-            "The date and time the Post intent becomes effective "
-            "(required for both incident and maintenance posts)"
+            "The date and time the Post intent becomes effective (required for both incident and maintenance posts)"
         )
     )
     ends_at: datetime = Field(
@@ -313,9 +310,7 @@ class StatusPagePostCreateRequest(BaseModel):
             "Post Updates to be associated with a Post. At least one update is required when creating a post."
         ),
     )
-    status_page: StatusPageReference = Field(
-        description="Status Page reference"
-    )
+    status_page: StatusPageReference = Field(description="Status Page reference")
 
     @computed_field
     @property
@@ -337,6 +332,76 @@ class StatusPagePostQuery(BaseModel):
         if self.include:
             params["include[]"] = self.include
         return params
+
+
+class StatusPagePostListQuery(BaseModel):
+    post_type: Literal["incident", "maintenance"] | None = Field(default=None, description="Filter by Post type")
+    reviewed_status: Literal["approved", "not_reviewed"] | None = Field(
+        default=None, description="Filter by the reviewed status of the Post to retrieve"
+    )
+    status: list[str] | None = Field(default=None, description="Filter by an array of Status identifiers")
+    limit: int | None = Field(
+        ge=1,
+        le=MAXIMUM_PAGINATION_LIMIT,
+        default=DEFAULT_PAGINATION_LIMIT,
+        description="Maximum number of results to return",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.post_type:
+            params["post_type"] = self.post_type
+        if self.reviewed_status:
+            params["reviewed_status"] = self.reviewed_status
+        if self.status:
+            params["status[]"] = self.status
+        if self.limit:
+            params["limit"] = self.limit
+        return params
+
+
+class StatusPagePostmortem(BaseModel):
+    id: str | None = Field(
+        default=None,
+        description="An unique identifier within Status Page scope that defines a single Postmortem resource",
+    )
+    self_: str | None = Field(default=None, alias="self", description="The API resource URL of the Postmortem")
+    post: StatusPagePostReference | None = Field(default=None, description="Status Page Post reference")
+    message: str | None = Field(default=None, description="The message of the Postmortem (supports Rich-Text)")
+    notify_subscribers: bool | None = Field(
+        default=None,
+        description="Whether or not subscribers of the Status Page should be notified about the Postmortem",
+    )
+    reported_at: datetime | None = Field(default=None, description="The date and time the Postmortem was reported")
+
+    @computed_field
+    @property
+    def type(self) -> Literal["status_page_post_postmortem"]:
+        return "status_page_post_postmortem"
+
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any]) -> "StatusPagePostmortem":
+        """Handle both wrapped and unwrapped API responses."""
+        if "postmortem" in response_data:
+            return cls.model_validate(response_data["postmortem"])
+        return cls.model_validate(response_data)
+
+
+class StatusPagePostmortemRequest(BaseModel):
+    post: StatusPagePostReference = Field(description="Status Page Post reference (only id required)")
+    message: str = Field(description="The message of the Postmortem (supports Rich-Text)", max_length=10000)
+    notify_subscribers: bool = Field(
+        description="Whether or not subscribers of the Status Page should be notified about the Postmortem"
+    )
+
+    @computed_field
+    @property
+    def type(self) -> Literal["status_page_post_postmortem"]:
+        return "status_page_post_postmortem"
+
+
+class StatusPagePostmortemRequestWrapper(BaseModel):
+    postmortem: StatusPagePostmortemRequest = Field(description="The postmortem to create or update")
 
 
 class StatusPagePostUpdateQuery(BaseModel):

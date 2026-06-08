@@ -63,6 +63,22 @@ Get a specific status page post by post ID.
 
 ---
 
+### `list_status_page_posts`
+
+List all posts for a specific Status Page.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status_page_id` | `string` | Yes | The ID of the Status Page |
+| `query_model` | `StatusPagePostListQuery` | No | Optional filtering parameters |
+
+Optional filter fields in `query_model`:
+- `post_type` — Filter by `"incident"` or `"maintenance"`
+- `reviewed_status` — Filter by `"approved"` or `"not_reviewed"`
+- `status` — Filter by an array of Status identifiers
+
+---
+
 ### `list_status_page_post_updates`
 
 List updates for a specific status page post.
@@ -125,3 +141,28 @@ Optional fields:
 :::note
 Requires `--enable-write-tools` flag.
 :::
+
+---
+
+### `create_status_page_post_postmortem` *(write)*
+
+Create a postmortem for an existing status page post. Use this after an incident or maintenance window to publish a follow-up communication to subscribers.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status_page_id` | `string` | Yes | The ID of the Status Page |
+| `post_id` | `string` | Yes | The ID of the Status Page Post |
+| `create_model` | `StatusPagePostmortemRequestWrapper` | Yes | The postmortem creation request |
+
+The `create_model` must include:
+- `postmortem.post` — Post reference with `id` (required)
+- `postmortem.message` — The postmortem message text; supports Rich-Text HTML (required, max 10000 chars)
+- `postmortem.notify_subscribers` — Whether to notify Status Page subscribers (required)
+
+:::note
+Requires `--enable-write-tools` flag.
+:::
+
+**Example prompt:**
+
+> "Create a postmortem for post PXXXXXX on status page PYYYYYY explaining the root cause"

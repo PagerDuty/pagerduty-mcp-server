@@ -13,6 +13,10 @@ from pagerduty_mcp.models.status_pages import (
     StatusPagePost,
     StatusPagePostCreateRequest,
     StatusPagePostCreateRequestWrapper,
+    StatusPagePostListQuery,
+    StatusPagePostmortem,
+    StatusPagePostmortemRequest,
+    StatusPagePostmortemRequestWrapper,
     StatusPagePostQuery,
     StatusPagePostReference,
     StatusPagePostUpdate,
@@ -32,10 +36,12 @@ from pagerduty_mcp.models.status_pages import (
 )
 from pagerduty_mcp.tools.status_pages import (
     create_status_page_post,
+    create_status_page_post_postmortem,
     create_status_page_post_update,
     get_status_page_post,
     list_status_page_impacts,
     list_status_page_post_updates,
+    list_status_page_posts,
     list_status_page_severities,
     list_status_page_statuses,
     list_status_pages,
@@ -602,6 +608,135 @@ class TestStatusPagesTools(unittest.TestCase):
             json_data["post_update"]["reported_at"], str, "reported_at must be serialized as ISO string"
         )
         self.assertEqual(json_data["post_update"]["reported_at"], "2023-12-12T14:30:00")
+
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_posts_no_query_model(self, mock_paginate, mock_get_client):
+        """Test that list_status_page_posts can be called without query_model."""
+        mock_paginate.return_value = [self.sample_post_data]
+
+        result = list_status_page_posts("PR5LMML")
+
+        mock_paginate.assert_called_once()
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_posts_basic(self, mock_paginate, mock_get_client):
+        """Test basic status page posts listing."""
+        mock_paginate.return_value = [self.sample_post_data]
+
+        query = StatusPagePostListQuery()
+        result = list_status_page_posts("PR5LMML", query)
+
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+        self.assertIsInstance(result.response[0], StatusPagePost)
+        self.assertEqual(result.response[0].id, "PIJ90N7")
+        self.assertEqual(result.response[0].title, "maintenance window for database upgrade")
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_posts_filter_by_post_type(self, mock_paginate, mock_get_client):
+        """Test status page posts listing with post_type filter."""
+        mock_paginate.return_value = [self.sample_post_data]
+
+        query = StatusPagePostListQuery(post_type="maintenance")
+        result = list_status_page_posts("PR5LMML", query)
+
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+        call_args = mock_paginate.call_args
+        self.assertIn("post_type", call_args.kwargs["params"])
+        self.assertEqual(call_args.kwargs["params"]["post_type"], "maintenance")
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_postmortem_success(self, mock_get_client):
+        """Test creating a status page post postmortem successfully."""
+        sample_postmortem_data = {
+            "id": "PIJ90N7",
+            "self": "https://api.pagerduty.com/status_pages/PR5LMML/posts/P6F2CJ3/postmortem",
+            "post": {"id": "P6F2CJ3", "type": "status_page_post"},
+            "message": "<p>Something wrong happened and this is a postmortem.</p>",
+            "notify_subscribers": True,
+            "reported_at": "2023-09-13T10:34:04Z",
+            "type": "status_page_post_postmortem",
+        }
+        mock_client = Mock()
+        mock_client.rpost.return_value = {"postmortem": sample_postmortem_data}
+        mock_get_client.return_value = mock_client
+
+        postmortem_request = StatusPagePostmortemRequest(
+            post=StatusPagePostReference(id="P6F2CJ3"),
+            message="<p>Something wrong happened and this is a postmortem.</p>",
+            notify_subscribers=True,
+        )
+        wrapper = StatusPagePostmortemRequestWrapper(postmortem=postmortem_request)
+        result = create_status_page_post_postmortem("PR5LMML", "P6F2CJ3", wrapper)
+
+        self.assertIsInstance(result, StatusPagePostmortem)
+        self.assertEqual(result.id, "PIJ90N7")
+        self.assertEqual(result.message, "<p>Something wrong happened and this is a postmortem.</p>")
+        self.assertTrue(result.notify_subscribers)
+        mock_client.rpost.assert_called_once()
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_postmortem_unwrapped_response(self, mock_get_client):
+        """Test creating a postmortem with unwrapped API response."""
+        sample_postmortem_data = {
+            "id": "PIJ90N7",
+            "post": {"id": "P6F2CJ3", "type": "status_page_post"},
+            "message": "<p>Postmortem message.</p>",
+            "notify_subscribers": False,
+            "type": "status_page_post_postmortem",
+        }
+        mock_client = Mock()
+        mock_client.rpost.return_value = sample_postmortem_data
+        mock_get_client.return_value = mock_client
+
+        postmortem_request = StatusPagePostmortemRequest(
+            post=StatusPagePostReference(id="P6F2CJ3"),
+            message="<p>Postmortem message.</p>",
+            notify_subscribers=False,
+        )
+        wrapper = StatusPagePostmortemRequestWrapper(postmortem=postmortem_request)
+        result = create_status_page_post_postmortem("PR5LMML", "P6F2CJ3", wrapper)
+
+        self.assertIsInstance(result, StatusPagePostmortem)
+        self.assertEqual(result.id, "PIJ90N7")
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    def test_create_status_page_post_postmortem_payload_no_self(self, mock_get_client):
+        """Test that create_status_page_post_postmortem does not include 'self' in the request payload."""
+        sample_postmortem_data = {
+            "id": "PIJ90N7",
+            "post": {"id": "P6F2CJ3", "type": "status_page_post"},
+            "message": "<p>Postmortem.</p>",
+            "notify_subscribers": True,
+            "type": "status_page_post_postmortem",
+        }
+        mock_client = Mock()
+        mock_client.rpost.return_value = {"postmortem": sample_postmortem_data}
+        mock_get_client.return_value = mock_client
+
+        postmortem_request = StatusPagePostmortemRequest(
+            post=StatusPagePostReference(id="P6F2CJ3"),
+            message="<p>Postmortem.</p>",
+            notify_subscribers=True,
+        )
+        wrapper = StatusPagePostmortemRequestWrapper(postmortem=postmortem_request)
+        create_status_page_post_postmortem("PR5LMML", "P6F2CJ3", wrapper)
+
+        call_args = mock_client.rpost.call_args
+        json_data = call_args.kwargs["json"]
+        self.assertIn("postmortem", json_data)
+        self.assertNotIn("self", json_data["postmortem"])
+        self.assertNotIn("self", json_data["postmortem"].get("post", {}))
+        self.assertEqual(json_data["postmortem"]["post"]["id"], "P6F2CJ3")
+        self.assertEqual(json_data["postmortem"]["message"], "<p>Postmortem.</p>")
+        self.assertTrue(json_data["postmortem"]["notify_subscribers"])
 
 
 if __name__ == "__main__":

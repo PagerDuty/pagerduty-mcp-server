@@ -6,6 +6,9 @@ from pagerduty_mcp.models.status_pages import (
     StatusPageImpactQuery,
     StatusPagePost,
     StatusPagePostCreateRequestWrapper,
+    StatusPagePostListQuery,
+    StatusPagePostmortem,
+    StatusPagePostmortemRequestWrapper,
     StatusPagePostQuery,
     StatusPagePostUpdate,
     StatusPagePostUpdateQuery,
@@ -223,3 +226,57 @@ def list_status_page_post_updates(
 
     post_updates = [StatusPagePostUpdate(**item) for item in response]
     return ListResponseModel[StatusPagePostUpdate](response=post_updates)
+
+
+def list_status_page_posts(
+    status_page_id: str, query_model: StatusPagePostListQuery | None = None
+) -> ListResponseModel[StatusPagePost]:
+    """List Posts for a Status Page by Status Page ID.
+
+    Args:
+        status_page_id: The ID of the Status Page
+        query_model: Optional filtering parameters
+
+    Returns:
+        List of StatusPagePost objects for the given Status Page
+    """
+    if query_model is None:
+        query_model = StatusPagePostListQuery()
+    params = query_model.to_params()
+
+    response = paginate(
+        client=get_client(),
+        entity=f"/status_pages/{status_page_id}/posts",
+        params=params,
+        maximum_records=query_model.limit or 100,
+    )
+
+    posts = [StatusPagePost(**item) for item in response]
+    return ListResponseModel[StatusPagePost](response=posts)
+
+
+def create_status_page_post_postmortem(
+    status_page_id: str, post_id: str, create_model: StatusPagePostmortemRequestWrapper
+) -> StatusPagePostmortem:
+    """Create a Postmortem for a Status Page Post by Post ID.
+
+    This tool creates (or replaces) the postmortem attached to an existing status page post.
+    Use this after an incident or maintenance window to publish a follow-up message.
+
+    Args:
+        status_page_id: The ID of the Status Page
+        post_id: The ID of the Status Page Post
+        create_model: The postmortem creation request. Must include:
+            - postmortem.post: Post reference with id (required)
+            - postmortem.message: The postmortem message text (supports Rich-Text HTML, max 10000 chars)
+            - postmortem.notify_subscribers: Whether to notify Status Page subscribers (required)
+
+    Returns:
+        The created StatusPagePostmortem
+    """
+    response = get_client().rpost(
+        f"/status_pages/{status_page_id}/posts/{post_id}/postmortem",
+        json=create_model.model_dump(mode="json"),
+    )
+
+    return StatusPagePostmortem.from_api_response(response)

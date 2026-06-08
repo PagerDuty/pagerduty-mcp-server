@@ -38,7 +38,7 @@ def list_escalation_policies(
     if limit:
         params["limit"] = limit
     response = paginate(
-        client=get_client(), entity="escalation_policies", params=params
+        client=get_client(), entity="escalation_policies", params=params, maximum_records=limit or 1000
     )
     policies = [EscalationPolicy(**policy) for policy in response]
     return ListResponseModel[EscalationPolicy](response=policies)

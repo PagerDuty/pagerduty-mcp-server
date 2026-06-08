@@ -111,7 +111,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         result = list_escalation_policies()
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params={}
+            client=self.mock_client, entity="escalation_policies", params={}, maximum_records=1000
         )
         self.assertEqual(len(result.response), 2)
 
@@ -125,7 +125,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         result = list_escalation_policies()
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params={}
+            client=self.mock_client, entity="escalation_policies", params={}, maximum_records=1000
         )
 
         self.assertEqual(len(result.response), 2)
@@ -146,7 +146,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         result = list_escalation_policies(query="Engineering")
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params={"query": "Engineering"}
+            client=self.mock_client, entity="escalation_policies", params={"query": "Engineering"}, maximum_records=1000
         )
 
         self.assertEqual(len(result.response), 1)
@@ -162,7 +162,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         result = list_escalation_policies(user_ids=["USER123", "USER456"])
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params={"user_ids[]": ["USER123", "USER456"]}
+            client=self.mock_client, entity="escalation_policies", params={"user_ids[]": ["USER123", "USER456"]}, maximum_records=1000
         )
 
         self.assertEqual(len(result.response), 2)
@@ -177,7 +177,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         result = list_escalation_policies(team_ids=["TEAM123"])
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params={"team_ids[]": ["TEAM123"]}
+            client=self.mock_client, entity="escalation_policies", params={"team_ids[]": ["TEAM123"]}, maximum_records=1000
         )
 
         self.assertEqual(len(result.response), 2)
@@ -192,7 +192,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         result = list_escalation_policies(include=["services", "teams"])
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params={"include[]": ["services", "teams"]}
+            client=self.mock_client, entity="escalation_policies", params={"include[]": ["services", "teams"]}, maximum_records=1000
         )
 
         self.assertEqual(len(result.response), 2)
@@ -222,6 +222,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
                 "include[]": ["services"],
                 "limit": 50,
             },
+            maximum_records=50,
         )
 
         self.assertEqual(len(result.response), 1)
@@ -236,7 +237,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         result = list_escalation_policies(limit=50)
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params={"limit": 50}
+            client=self.mock_client, entity="escalation_policies", params={"limit": 50}, maximum_records=50
         )
 
         self.assertEqual(len(result.response), 2)
@@ -251,7 +252,7 @@ class TestEscalationPolicyTools(unittest.TestCase):
         result = list_escalation_policies(query="NonExistentPolicy")
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="escalation_policies", params={"query": "NonExistentPolicy"}
+            client=self.mock_client, entity="escalation_policies", params={"query": "NonExistentPolicy"}, maximum_records=1000
         )
 
         self.assertEqual(len(result.response), 0)
@@ -303,8 +304,10 @@ class TestEscalationPolicyTools(unittest.TestCase):
         self.assertEqual(target.summary, "John Doe - Senior Engineer")
 
         # Verify references
+        assert result.services is not None
         self.assertEqual(len(result.services), 1)
         self.assertEqual(result.services[0].id, "SVC123")
+        assert result.teams is not None
         self.assertEqual(len(result.teams), 1)
         self.assertEqual(result.teams[0].id, "TEAM123")
 

@@ -90,7 +90,7 @@ class TestOncallTools(unittest.TestCase):
         result = list_oncalls()
 
         expected_params = {"earliest": "true"}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.oncalls.paginate")
@@ -104,7 +104,7 @@ class TestOncallTools(unittest.TestCase):
 
         # Verify paginate call — earliest defaults to True
         expected_params = {"earliest": "true"}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -129,7 +129,7 @@ class TestOncallTools(unittest.TestCase):
             "time_zone": "America/New_York",
             "earliest": "true",
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -148,7 +148,7 @@ class TestOncallTools(unittest.TestCase):
             "user_ids[]": ["USER123"],
             "earliest": "true",
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -168,7 +168,7 @@ class TestOncallTools(unittest.TestCase):
             "escalation_policy_ids[]": ["EP123"],
             "earliest": "true",
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -190,7 +190,7 @@ class TestOncallTools(unittest.TestCase):
             "schedule_ids[]": ["SCHED123"],
             "earliest": "true",
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -215,7 +215,7 @@ class TestOncallTools(unittest.TestCase):
             "until": "2023-12-31T00:00:00",
             "earliest": "true",
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -231,7 +231,7 @@ class TestOncallTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"earliest": "false"}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -267,7 +267,7 @@ class TestOncallTools(unittest.TestCase):
             "earliest": "true",
             "limit": 50,
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=50)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -283,7 +283,7 @@ class TestOncallTools(unittest.TestCase):
 
         # Verify paginate call — earliest defaults to True
         expected_params = {"earliest": "true", "limit": 100}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=100)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -302,7 +302,7 @@ class TestOncallTools(unittest.TestCase):
             "user_ids[]": ["NONEXISTENT_USER"],
             "earliest": "true",
         }
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="oncalls", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 0)

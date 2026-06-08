@@ -44,7 +44,7 @@ def list_event_orchestrations(
         client=get_client(),
         entity="event_orchestrations",
         params=params,
-        maximum_records=limit or 100,
+        maximum_records=limit or 1000,
     )
     orchestrations = [EventOrchestration(**orchestration) for orchestration in response]
     return ListResponseModel[EventOrchestration](response=orchestrations)

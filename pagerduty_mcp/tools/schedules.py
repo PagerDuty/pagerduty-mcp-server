@@ -44,7 +44,7 @@ def list_schedules(
     if limit:
         params["limit"] = limit
     response = paginate(
-        client=get_client(), entity="schedules", params=params
+        client=get_client(), entity="schedules", params=params, maximum_records=limit or 1000
     )
     schedules = [Schedule(**schedule) for schedule in response]
     return ListResponseModel[Schedule](response=schedules)

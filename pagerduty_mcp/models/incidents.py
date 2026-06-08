@@ -114,7 +114,13 @@ class GetIncidentQuery(BaseModel):
         default=None,
         description="List of additional information to include in the response. "
         "Available options: 'users', 'services', 'assignments', 'acknowledgers', 'custom_fields', "
-        "'teams', 'escalation_policies', 'notes', 'urgencies', 'priorities'",
+        "'teams', 'escalation_policies', 'log_entries', 'notes', 'urgencies', 'priorities', "
+        "'external_references', 'metadata'. "
+        "Use 'external_references' to include external system integration links such as ServiceNow, "
+        "Zendesk, and other third-party integrations associated with the incident. "
+        "Use 'metadata' to include additional metadata associated with the incident. "
+        "Use 'log_entries' to include the incident's log/audit entries inline (do NOT call "
+        "list_incident_log_entries separately when this option suffices).",
     )
 
     def to_params(self) -> dict[str, Any]:
@@ -182,6 +188,22 @@ class RelatedIncidentsQuery(BaseModel):
         return params
 
 
+class ExternalIntegrationLink(BaseModel):
+    """A typed link to an external system record (ServiceNow, Zendesk, etc.)."""
+
+    integration_id: str = Field(
+        description="The integration identifier (e.g. 'servicenow_itsm_dev230942_INC0010016')"
+    )
+    external_name: str | None = Field(
+        default=None,
+        description="Human-readable name of the external record (e.g. 'INC0010016 (dev230942)')",
+    )
+    external_url: str | None = Field(
+        default=None,
+        description="Direct URL to the record in the external system",
+    )
+
+
 # TODO: This should be moved to its own file
 class AssignmentInput(BaseModel):
     """Assignment for creating/updating incidents (no 'at' field required)."""
@@ -213,6 +235,26 @@ class Incident(BaseModel):
         default=None,
         description="The users assigned to the incident",
     )
+    metadata: list[ExternalIntegrationLink] | None = Field(
+        default=None,
+        description="External integration links associated with the incident, normalized from the raw metadata dict. "
+        "Each entry has integration_id, external_name, and external_url. "
+        "Populated when include=['metadata'] is passed.",
+    )
+    external_references: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="External system integration links (ServiceNow, Zendesk, etc.). Populated when include=['external_references'] is passed.",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_metadata(cls, data: Any) -> Any:
+        if isinstance(data, dict) and isinstance(data.get("metadata"), dict):
+            data["metadata"] = [
+                {"integration_id": k, **v}
+                for k, v in data["metadata"].items()
+            ]
+        return data
 
     @computed_field
     @property

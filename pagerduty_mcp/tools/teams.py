@@ -37,7 +37,7 @@ def list_teams(
         # Now get all team resources. Paginate limits to 1000 results by default
         # TODO: Alternative approach. Fetch each team by ID.
         # TODO: No way to fetch multiple teams by ID in a single request - API improvement area
-        results = paginate(client=get_client(), entity="teams", params={})
+        results = paginate(client=get_client(), entity="teams", params={}, maximum_records=1000)
         teams = [Team(**team) for team in results if team["id"] in user_team_ids]
     else:
         params: dict[str, Any] = {}
@@ -45,7 +45,7 @@ def list_teams(
             params["query"] = query
         if limit is not None:
             params["limit"] = limit
-        response = paginate(client=get_client(), entity="teams", params=params)
+        response = paginate(client=get_client(), entity="teams", params=params, maximum_records=limit or 1000)
         teams = [Team(**team) for team in response]
     return ListResponseModel[Team](response=teams)
 
@@ -115,7 +115,7 @@ def list_team_members(team_id: str) -> ListResponseModel[UserReference]:
     Returns:
         List of UserReference objects
     """
-    response = paginate(client=get_client(), entity=f"/teams/{team_id}/members", params={})
+    response = paginate(client=get_client(), entity=f"/teams/{team_id}/members", params={}, maximum_records=1000)
     # The response is already a list, so we process it and wrap it
     users = [UserReference(**user.get("user")) for user in response]
     return ListResponseModel[UserReference](response=users)

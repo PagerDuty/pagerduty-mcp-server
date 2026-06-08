@@ -66,7 +66,7 @@ def list_oncalls(
         params["escalation_policy_ids[]"] = ep_ids
 
     response = paginate(
-        client=client, entity="oncalls", params=params
+        client=client, entity="oncalls", params=params, maximum_records=limit or 1000
     )
     oncalls = [Oncall(**oncall) for oncall in response]
     return ListResponseModel[Oncall](response=oncalls)

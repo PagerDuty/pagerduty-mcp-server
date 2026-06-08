@@ -82,7 +82,7 @@ class TestServiceTools(unittest.TestCase):
 
         result = list_services()
 
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={})
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={}, maximum_records=1000)
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.services.paginate")
@@ -95,7 +95,7 @@ class TestServiceTools(unittest.TestCase):
         result = list_services()
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={})
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={}, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -117,7 +117,7 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "Web"}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -134,7 +134,7 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM2"]}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -151,7 +151,7 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"limit": 50}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params, maximum_records=50)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -167,7 +167,7 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "Web", "team_ids[]": ["TEAM1"], "limit": 10}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params, maximum_records=10)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -184,7 +184,7 @@ class TestServiceTools(unittest.TestCase):
 
         # Verify paginate call
         expected_params = {"query": "NonExistentService"}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 0)

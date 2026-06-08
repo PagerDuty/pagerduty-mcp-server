@@ -28,7 +28,7 @@ def list_services(
         params["team_ids[]"] = teams_ids
     if limit:
         params["limit"] = limit
-    response = paginate(client=get_client(), entity="services", params=params)
+    response = paginate(client=get_client(), entity="services", params=params, maximum_records=limit or 1000)
     services = [Service(**service) for service in response]
     return ListResponseModel[Service](response=services)
 

@@ -339,5 +339,34 @@ class TestUserTools(unittest.TestCase):
         self.assertEqual(str(ctx.exception), "Create Error")
 
 
+class TestUserModelTimeZoneAndJobTitle(unittest.TestCase):
+    """Tests for time_zone and job_title fields on the User read model (from PR #131)."""
+
+    def test_user_model_job_title_and_time_zone_default_none(self):
+        """time_zone and job_title default to None — backwards compatible with existing payloads."""
+        user = User(name="Test User", email="test@example.com", role="user", teams=[])
+        self.assertIsNone(user.job_title)
+        self.assertIsNone(user.time_zone)
+
+    def test_user_model_job_title_and_time_zone_populated(self):
+        """time_zone and job_title round-trip from API payload."""
+        user = User(
+            name="Test User",
+            email="test@example.com",
+            role="user",
+            teams=[],
+            job_title="Senior Engineer",
+            time_zone="America/New_York",
+        )
+        self.assertEqual(user.job_title, "Senior Engineer")
+        self.assertEqual(user.time_zone, "America/New_York")
+
+    def test_user_model_time_zone_iana_format(self):
+        """time_zone accepts standard IANA timezone names."""
+        for tz in ("Europe/Lisbon", "Asia/Tokyo", "UTC", "America/Chicago"):
+            user = User(name="u", email="u@example.com", role="user", teams=[], time_zone=tz)
+            self.assertEqual(user.time_zone, tz)
+
+
 if __name__ == "__main__":
     unittest.main()

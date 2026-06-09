@@ -57,7 +57,7 @@ TEAMS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="list_teams", parameters={"query_model": {"query": "Dev Team"}}
             ),
-            MockToolCall(name="list_team_members", parameters={"team_id": "TEAM123"}),
+            MockToolCall(name="list_team_users", parameters={"team_id": "TEAM123"}),
         ],
         description="List incidents filtered by status",
     ),
@@ -109,7 +109,7 @@ TEAMS_COMPETENCY_TESTS = [
             ),
             MockToolCall(name="list_users", parameters={"query": "Sara Connor"}),
             MockToolCall(
-                name="add_team_member",
+                name="update_team_user",
                 parameters={
                     "team_id": "TEAM123",
                     "member_data": {"user_id": "USER123"},
@@ -126,7 +126,7 @@ TEAMS_COMPETENCY_TESTS = [
             ),
             MockToolCall(name="list_users", parameters={"query": "Kyle Reese"}),
             MockToolCall(
-                name="remove_team_member",
+                name="delete_team_user",
                 parameters={"team_id": "TEAM123", "user_id": "USER456"},
             ),
         ],

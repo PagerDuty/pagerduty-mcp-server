@@ -176,7 +176,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Acknowledge incident 456",
         expected_tool_calls=[
             MockToolCall(
-                name="manage_incidents",
+                name="update_incidents",
                 parameters={
                     "manage_request": {
                         "incident_ids": ["456"],

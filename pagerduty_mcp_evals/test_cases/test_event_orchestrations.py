@@ -41,7 +41,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
             # Mock response for getting a specific event orchestration
             MockMCPToolInvokationResponse(
-                tool_name="get_event_orchestration",
+                tool_name="get_orchestration",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH123",
                 response={
                     "id": "ORCH123",
@@ -55,7 +55,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
             # Mock response for getting event orchestration router ORCH123
             MockMCPToolInvokationResponse(
-                tool_name="get_event_orchestration_router",
+                tool_name="get_orch_path_router",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH123",
                 response={
                     "orchestration_path": {
@@ -93,7 +93,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
             # Mock response for getting event orchestration router ORCH456
             MockMCPToolInvokationResponse(
-                tool_name="get_event_orchestration_router",
+                tool_name="get_orch_path_router",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH456",
                 response={
                     "orchestration_path": {
@@ -121,7 +121,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
             # Mock response for updating event orchestration router
             MockMCPToolInvokationResponse(
-                tool_name="update_event_orchestration_router",
+                tool_name="update_orch_path_router",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH123",
                 response={
                     "orchestration_path": {
@@ -151,7 +151,7 @@ class EventOrchestrationsCompetencyTest(AgentCompetencyTest):
             ),
             # Mock response for appending event orchestration router rule
             MockMCPToolInvokationResponse(
-                tool_name="append_event_orchestration_router_rule",
+                tool_name="update_orch_path_router",
                 parameters=lambda params: params.get("orchestration_id") == "ORCH123",
                 response={
                     "orchestration_path": {
@@ -229,7 +229,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
         query="Get details for event orchestration ORCH123",
         expected_tool_calls=[
             MockToolCall(
-                name="get_event_orchestration",
+                name="get_orchestration",
                 parameters={"orchestration_id": "ORCH123"},
             )
         ],
@@ -243,7 +243,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
                 parameters={"query_model": {}},
             ),
             MockToolCall(
-                name="get_event_orchestration",
+                name="get_orchestration",
                 parameters={"orchestration_id": "ORCH123"},
             ),
         ],
@@ -254,7 +254,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
         query="Show me the router configuration for event orchestration ORCH123",
         expected_tool_calls=[
             MockToolCall(
-                name="get_event_orchestration_router",
+                name="get_orch_path_router",
                 parameters={"orchestration_id": "ORCH123"},
             )
         ],
@@ -268,7 +268,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
                 parameters={"query_model": {}},
             ),
             MockToolCall(
-                name="get_event_orchestration_router",
+                name="get_orch_path_router",
                 parameters={"orchestration_id": "ORCH123"},
             ),
         ],
@@ -282,11 +282,11 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
         ),
         expected_tool_calls=[
             MockToolCall(
-                name="get_event_orchestration_router",
+                name="get_orch_path_router",
                 parameters={"orchestration_id": "ORCH123"},
             ),
             MockToolCall(
-                name="update_event_orchestration_router",
+                name="update_orch_path_router",
                 parameters={
                     "orchestration_id": "ORCH123",
                     "router_update": {
@@ -335,7 +335,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
         ),
         expected_tool_calls=[
             MockToolCall(
-                name="append_event_orchestration_router_rule",
+                name="update_orch_path_router",
                 parameters={
                     "orchestration_id": "ORCH123",
                 },
@@ -354,7 +354,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
                 parameters={"query_model": {}},
             ),
             MockToolCall(
-                name="append_event_orchestration_router_rule",
+                name="update_orch_path_router",
                 parameters={
                     "orchestration_id": "ORCH123",
                 },
@@ -371,7 +371,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
                 parameters={"query_model": {}},
             ),
             MockToolCall(
-                name="get_event_orchestration_router",
+                name="get_orch_path_router",
                 parameters={"orchestration_id": "ORCH123"},
             ),
         ],
@@ -385,7 +385,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
                 parameters={"query_model": {}},
             ),
             MockToolCall(
-                name="get_event_orchestration_router",
+                name="get_orch_path_router",
                 parameters={"orchestration_id": "ORCH456"},
             ),
         ],
@@ -396,7 +396,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
         query="Get event orchestration with ID NONEXISTENT123",
         expected_tool_calls=[
             MockToolCall(
-                name="get_event_orchestration",
+                name="get_orchestration",
                 parameters={"orchestration_id": "NONEXISTENT123"},
             )
         ],
@@ -421,11 +421,11 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
                 parameters={"query_model": {}},
             ),
             MockToolCall(
-                name="get_event_orchestration_router",
+                name="get_orch_path_router",
                 parameters={"orchestration_id": "ORCH123"},
             ),
             MockToolCall(
-                name="get_event_orchestration_router",
+                name="get_orch_path_router",
                 parameters={"orchestration_id": "ORCH456"},
             ),
         ],

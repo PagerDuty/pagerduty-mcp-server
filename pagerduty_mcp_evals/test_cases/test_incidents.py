@@ -308,7 +308,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Acknowledge incident 456",
         expected_tool_calls=[
             MockToolCall(
-                name="update_incidents",
+                name="update_incident",
                 parameters={
                     "manage_request": {
                         "incident_ids": ["456"],
@@ -482,7 +482,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Resolve incidents 123 and 456",
         expected_tool_calls=[
             MockToolCall(
-                name="update_incidents",
+                name="update_incident",
                 parameters={
                     "manage_request": {"incident_ids": ["123", "456"], "status": "resolved"}
                 },
@@ -494,7 +494,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Change the urgency of incident ABC123 to low",
         expected_tool_calls=[
             MockToolCall(
-                name="update_incidents",
+                name="update_incident",
                 parameters={
                     "manage_request": {"incident_ids": ["ABC123"], "urgency": "low"}
                 },
@@ -506,7 +506,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Reassign incident 789 to user USER456",
         expected_tool_calls=[
             MockToolCall(
-                name="update_incidents",
+                name="update_incident",
                 parameters={
                     "manage_request": {
                         "incident_ids": ["789"],

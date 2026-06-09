@@ -12,9 +12,9 @@ Alert grouping settings control how PagerDuty automatically groups alerts into i
 
 List all alert grouping settings with optional filtering.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `query_model` | `AlertGroupingSettingQuery` | No | Optional filtering parameters |
+| Parameter     | Type                        | Required | Description                   |
+| ------------- | --------------------------- | -------- | ----------------------------- |
+| `query_model` | `AlertGroupingSettingQuery` | No       | Optional filtering parameters |
 
 ---
 
@@ -22,19 +22,19 @@ List all alert grouping settings with optional filtering.
 
 Get details for a specific alert grouping setting.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `setting_id` | `string` | Yes | The ID of the alert grouping setting to retrieve |
+| Parameter    | Type     | Required | Description                                      |
+| ------------ | -------- | -------- | ------------------------------------------------ |
+| `setting_id` | `string` | Yes      | The ID of the alert grouping setting to retrieve |
 
 ---
 
-### `create_alert_grouping_setting` *(write)*
+### `post_alert_grouping_setting` _(write)_
 
 Create a new alert grouping setting.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `create_model` | `AlertGroupingSettingCreateRequest` | Yes | The alert grouping setting creation request |
+| Parameter      | Type                                | Required | Description                                 |
+| -------------- | ----------------------------------- | -------- | ------------------------------------------- |
+| `create_model` | `AlertGroupingSettingCreateRequest` | Yes      | The alert grouping setting creation request |
 
 :::note
 Requires `--enable-write-tools` flag.
@@ -42,14 +42,14 @@ Requires `--enable-write-tools` flag.
 
 ---
 
-### `update_alert_grouping_setting` *(write)*
+### `put_alert_grouping_setting` _(write)_
 
 Update an existing alert grouping setting.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `setting_id` | `string` | Yes | The ID of the alert grouping setting to update |
-| `update_model` | `AlertGroupingSettingUpdateRequest` | Yes | The alert grouping setting update request |
+| Parameter      | Type                                | Required | Description                                    |
+| -------------- | ----------------------------------- | -------- | ---------------------------------------------- |
+| `setting_id`   | `string`                            | Yes      | The ID of the alert grouping setting to update |
+| `update_model` | `AlertGroupingSettingUpdateRequest` | Yes      | The alert grouping setting update request      |
 
 :::note
 Requires `--enable-write-tools` flag.
@@ -57,13 +57,13 @@ Requires `--enable-write-tools` flag.
 
 ---
 
-### `delete_alert_grouping_setting` *(write)*
+### `delete_alert_grouping_setting` _(write)_
 
 Delete an alert grouping setting.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `setting_id` | `string` | Yes | The ID of the alert grouping setting to delete |
+| Parameter    | Type     | Required | Description                                    |
+| ------------ | -------- | -------- | ---------------------------------------------- |
+| `setting_id` | `string` | Yes      | The ID of the alert grouping setting to delete |
 
 :::note
 Requires `--enable-write-tools` flag.

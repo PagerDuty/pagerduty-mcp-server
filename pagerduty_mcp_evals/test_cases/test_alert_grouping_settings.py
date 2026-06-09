@@ -125,7 +125,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
         ),
         expected_tool_calls=[
             MockToolCall(
-                name="create_alert_grouping_setting",
+                name="post_alert_grouping_setting",
                 parameters={
                     "create_model": {
                         "alert_grouping_setting": {
@@ -145,7 +145,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
         query="Create a time-based alert grouping setting with 10-minute timeout for service SVC456",
         expected_tool_calls=[
             MockToolCall(
-                name="create_alert_grouping_setting",
+                name="post_alert_grouping_setting",
                 parameters={
                     "create_model": {
                         "alert_grouping_setting": {
@@ -164,7 +164,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
         query="Create an intelligent alert grouping setting with 20-minute time window for service SVC123",
         expected_tool_calls=[
             MockToolCall(
-                name="create_alert_grouping_setting",
+                name="post_alert_grouping_setting",
                 parameters={
                     "create_model": {
                         "alert_grouping_setting": {
@@ -186,7 +186,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
         ),
         expected_tool_calls=[
             MockToolCall(
-                name="create_alert_grouping_setting",
+                name="post_alert_grouping_setting",
                 parameters={
                     "create_model": {
                         "alert_grouping_setting": {
@@ -205,7 +205,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
         query="Update alert grouping setting PAGS123 to use a 2-hour time window",
         expected_tool_calls=[
             MockToolCall(
-                name="update_alert_grouping_setting",
+                name="put_alert_grouping_setting",
                 parameters={
                     "setting_id": "PAGS123",
                     "update_model": {
@@ -232,7 +232,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(name="list_services", parameters={"query_model": {"query": "Web Service"}}),
             MockToolCall(
-                name="create_alert_grouping_setting",
+                name="post_alert_grouping_setting",
                 parameters={
                     "create_model": {
                         "alert_grouping_setting": {
@@ -269,7 +269,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
         ),
         expected_tool_calls=[
             MockToolCall(
-                name="create_alert_grouping_setting",
+                name="post_alert_grouping_setting",
                 parameters={
                     "create_model": {
                         "alert_grouping_setting": {
@@ -295,7 +295,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
         ),
         expected_tool_calls=[
             MockToolCall(
-                name="create_alert_grouping_setting",
+                name="post_alert_grouping_setting",
                 parameters={
                     "create_model": {
                         "alert_grouping_setting": {

@@ -57,7 +57,7 @@ class ChangeEventsCompetencyTest(AgentCompetencyTest):
                 },
             ),
             MockMCPToolInvocationResponse(
-                tool_name="list_incident_change_events",
+                tool_name="list_incident_related_change_events",
                 parameters=lambda params: True,
                 response={
                     "response": [
@@ -146,28 +146,28 @@ CHANGE_EVENTS_COMPETENCY_TESTS = [
     ChangeEventsCompetencyTest(
         query="List change events related to incident Q3QCNPM78BXOAL",
         expected_tool_calls=[
-            MockToolCall(name="list_incident_change_events", parameters={"incident_id": "Q3QCNPM78BXOAL"})
+            MockToolCall(name="list_incident_related_change_events", parameters={"incident_id": "Q3QCNPM78BXOAL"})
         ],
         description="List change events related to an incident",
     ),
     ChangeEventsCompetencyTest(
         query="Show me what changed before incident Q3QCNPM78BXOAL",
         expected_tool_calls=[
-            MockToolCall(name="list_incident_change_events", parameters={"incident_id": "Q3QCNPM78BXOAL"})
+            MockToolCall(name="list_incident_related_change_events", parameters={"incident_id": "Q3QCNPM78BXOAL"})
         ],
         description="List incident-related change events with natural language",
     ),
     ChangeEventsCompetencyTest(
         query="Get change events for incident Q3QCNPM78BXOAL with limit 5",
         expected_tool_calls=[
-            MockToolCall(name="list_incident_change_events", parameters={"incident_id": "Q3QCNPM78BXOAL", "limit": 5})
+            MockToolCall(name="list_incident_related_change_events", parameters={"incident_id": "Q3QCNPM78BXOAL", "limit": 5})
         ],
         description="List incident change events with limit parameter",
     ),
     ChangeEventsCompetencyTest(
         query="Show me changes that may have caused incident Q3QCNPM78BXOAL",
         expected_tool_calls=[
-            MockToolCall(name="list_incident_change_events", parameters={"incident_id": "Q3QCNPM78BXOAL"})
+            MockToolCall(name="list_incident_related_change_events", parameters={"incident_id": "Q3QCNPM78BXOAL"})
         ],
         description="List incident-related change events with causal language",
     ),

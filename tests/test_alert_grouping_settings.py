@@ -17,11 +17,11 @@ from pagerduty_mcp.models import (
     TimeGroupingConfig,
 )
 from pagerduty_mcp.tools.alert_grouping_settings import (
-    create_alert_grouping_setting,
+    post_alert_grouping_setting,
     delete_alert_grouping_setting,
     get_alert_grouping_setting,
     list_alert_grouping_settings,
-    update_alert_grouping_setting,
+    put_alert_grouping_setting,
 )
 
 
@@ -247,7 +247,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         self.assertEqual(result.config.iag_fields, ["summary", "component"])
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
-    def test_create_alert_grouping_setting_content_based(self, mock_get_client):
+    def test_post_alert_grouping_setting_content_based(self, mock_get_client):
         """Test successful creation of content-based alert grouping setting."""
         mock_get_client.return_value = self.mock_client
         self.mock_client.rpost.return_value = self.sample_alert_grouping_setting
@@ -264,7 +264,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         )
         request = AlertGroupingSettingCreateRequest(alert_grouping_setting=setting)
 
-        result = create_alert_grouping_setting(request)
+        result = post_alert_grouping_setting(request)
 
         # Verify API call
         mock_get_client.assert_called_once()
@@ -278,7 +278,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         self.assertEqual(result.name, "Test Alert Grouping Setting")
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
-    def test_create_alert_grouping_setting_wrapped_response(self, mock_get_client):
+    def test_post_alert_grouping_setting_wrapped_response(self, mock_get_client):
         """Test creation with wrapped API response."""
         mock_get_client.return_value = self.mock_client
         wrapped_response = {"alert_grouping_setting": self.sample_alert_grouping_setting}
@@ -292,14 +292,14 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         )
         request = AlertGroupingSettingCreateRequest(alert_grouping_setting=setting)
 
-        result = create_alert_grouping_setting(request)
+        result = post_alert_grouping_setting(request)
 
         # Verify result
         self.assertIsInstance(result, AlertGroupingSetting)
         self.assertEqual(result.id, "PAGS123")
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
-    def test_create_alert_grouping_setting_intelligent(self, mock_get_client):
+    def test_post_alert_grouping_setting_intelligent(self, mock_get_client):
         """Test creation of intelligent alert grouping setting."""
         mock_get_client.return_value = self.mock_client
         self.mock_client.rpost.return_value = self.sample_intelligent_setting
@@ -312,14 +312,14 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         )
         request = AlertGroupingSettingCreateRequest(alert_grouping_setting=setting)
 
-        result = create_alert_grouping_setting(request)
+        result = post_alert_grouping_setting(request)
 
         # Verify result
         self.assertIsInstance(result, AlertGroupingSetting)
         self.assertEqual(result.type, "intelligent")
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
-    def test_update_alert_grouping_setting_success(self, mock_get_client):
+    def test_put_alert_grouping_setting_success(self, mock_get_client):
         """Test successful update of alert grouping setting."""
         mock_get_client.return_value = self.mock_client
         updated_setting = self.sample_alert_grouping_setting.copy()
@@ -334,7 +334,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         )
         request = AlertGroupingSettingUpdateRequest(alert_grouping_setting=setting)
 
-        result = update_alert_grouping_setting("PAGS123", request)
+        result = put_alert_grouping_setting("PAGS123", request)
 
         # Verify API call
         mock_get_client.assert_called_once()
@@ -347,7 +347,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         self.assertEqual(result.name, "Updated Alert Grouping Setting")
 
     @patch("pagerduty_mcp.tools.alert_grouping_settings.get_client")
-    def test_update_alert_grouping_setting_wrapped_response(self, mock_get_client):
+    def test_put_alert_grouping_setting_wrapped_response(self, mock_get_client):
         """Test update with wrapped API response."""
         mock_get_client.return_value = self.mock_client
         wrapped_response = {"alert_grouping_setting": self.sample_alert_grouping_setting}
@@ -361,7 +361,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         )
         request = AlertGroupingSettingUpdateRequest(alert_grouping_setting=setting)
 
-        result = update_alert_grouping_setting("PAGS123", request)
+        result = put_alert_grouping_setting("PAGS123", request)
 
         # Verify result
         self.assertIsInstance(result, AlertGroupingSetting)

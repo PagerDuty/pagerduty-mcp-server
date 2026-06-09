@@ -20,7 +20,7 @@ from pagerduty_mcp.models.users import User
 from pagerduty_mcp.tools.schedules import (
     create_schedule,
     create_schedule_override,
-    get_schedule,
+    get_schedule_v3,
     list_schedule_users,
     list_schedules,
     update_schedule,
@@ -295,12 +295,12 @@ class TestScheduleTools(unittest.TestCase):
         self.assertEqual(str(context.exception), "Pagination Error")
 
     @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_get_schedule_success(self, mock_get_client):
+    def test_get_schedule_v3_success(self, mock_get_client):
         """Test successful retrieval of a specific schedule."""
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_schedule_response
 
-        result = get_schedule("SCHED123")
+        result = get_schedule_v3("SCHED123")
 
         # Verify API call
         mock_get_client.assert_called_once()
@@ -316,13 +316,13 @@ class TestScheduleTools(unittest.TestCase):
         self.assertEqual(result.type, "schedule")
 
     @patch("pagerduty_mcp.tools.schedules.get_client")
-    def test_get_schedule_client_error(self, mock_get_client):
-        """Test get_schedule when client raises an exception."""
+    def test_get_schedule_v3_client_error(self, mock_get_client):
+        """Test get_schedule_v3 when client raises an exception."""
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
-            get_schedule("SCHED123")
+            get_schedule_v3("SCHED123")
 
         self.assertEqual(str(context.exception), "API Error")
         mock_get_client.assert_called_once()

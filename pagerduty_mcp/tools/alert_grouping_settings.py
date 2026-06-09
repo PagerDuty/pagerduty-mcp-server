@@ -52,7 +52,7 @@ def get_alert_grouping_setting(setting_id: str) -> AlertGroupingSetting:
     return AlertGroupingSetting.model_validate(response)
 
 
-def create_alert_grouping_setting(create_model: AlertGroupingSettingCreateRequest) -> AlertGroupingSetting:
+def post_alert_grouping_setting(create_model: AlertGroupingSettingCreateRequest) -> AlertGroupingSetting:
     """Create a new alert grouping setting.
 
     Args:
@@ -70,7 +70,7 @@ def create_alert_grouping_setting(create_model: AlertGroupingSettingCreateReques
     return AlertGroupingSetting.model_validate(response)
 
 
-def update_alert_grouping_setting(
+def put_alert_grouping_setting(
     setting_id: str, update_model: AlertGroupingSettingUpdateRequest
 ) -> AlertGroupingSetting:
     """Update an existing alert grouping setting.

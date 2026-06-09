@@ -12,9 +12,9 @@ On-call schedules define who is on-call at any given time. These tools let you v
 
 List schedules with optional filtering.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `query_model` | `ScheduleQuery` | No | Optional filtering parameters (name, pagination) |
+| Parameter     | Type            | Required | Description                                      |
+| ------------- | --------------- | -------- | ------------------------------------------------ |
+| `query_model` | `ScheduleQuery` | No       | Optional filtering parameters (name, pagination) |
 
 **Example prompt:**
 
@@ -22,13 +22,13 @@ List schedules with optional filtering.
 
 ---
 
-### `get_schedule`
+### `get_schedule_v3`
 
 Get a specific schedule by ID.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `schedule_id` | `string` | Yes | The ID of the schedule to retrieve |
+| Parameter     | Type     | Required | Description                        |
+| ------------- | -------- | -------- | ---------------------------------- |
+| `schedule_id` | `string` | Yes      | The ID of the schedule to retrieve |
 
 **Example prompt:**
 
@@ -40,9 +40,9 @@ Get a specific schedule by ID.
 
 List users in a schedule.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `schedule_id` | `string` | Yes | The ID of the schedule |
+| Parameter     | Type     | Required | Description            |
+| ------------- | -------- | -------- | ---------------------- |
+| `schedule_id` | `string` | Yes      | The ID of the schedule |
 
 **Example prompt:**
 
@@ -50,13 +50,13 @@ List users in a schedule.
 
 ---
 
-### `create_schedule` *(write)*
+### `create_schedule` _(write)_
 
 Create a new on-call schedule. Each schedule layer requires a `name` field to identify the layer.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `create_model` | `ScheduleCreateRequest` | Yes | The schedule creation data |
+| Parameter      | Type                    | Required | Description                |
+| -------------- | ----------------------- | -------- | -------------------------- |
+| `create_model` | `ScheduleCreateRequest` | Yes      | The schedule creation data |
 
 :::note
 Requires `--enable-write-tools` flag.
@@ -64,17 +64,18 @@ Requires `--enable-write-tools` flag.
 
 ---
 
-### `create_schedule_override` *(write)*
+### `create_schedule_override` _(write)_
 
 Create an override for a schedule. The `override_request` contains an `overrides` array. Each override requires:
+
 - `start` — ISO datetime when the override begins
 - `end` — ISO datetime when the override ends
 - `user_id` — The PagerDuty ID of the user covering the override
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `schedule_id` | `string` | Yes | The ID of the schedule to override |
-| `override_request` | `ScheduleOverrideCreate` | Yes | Data for the schedule override |
+| Parameter          | Type                     | Required | Description                        |
+| ------------------ | ------------------------ | -------- | ---------------------------------- |
+| `schedule_id`      | `string`                 | Yes      | The ID of the schedule to override |
+| `override_request` | `ScheduleOverrideCreate` | Yes      | Data for the schedule override     |
 
 :::note
 Requires `--enable-write-tools` flag.
@@ -86,14 +87,14 @@ Requires `--enable-write-tools` flag.
 
 ---
 
-### `update_schedule` *(write)*
+### `update_schedule` _(write)_
 
 Update an existing schedule.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `schedule_id` | `string` | Yes | The ID of the schedule to update |
-| `update_model` | `ScheduleUpdateRequest` | Yes | The updated schedule data |
+| Parameter      | Type                    | Required | Description                      |
+| -------------- | ----------------------- | -------- | -------------------------------- |
+| `schedule_id`  | `string`                | Yes      | The ID of the schedule to update |
+| `update_model` | `ScheduleUpdateRequest` | Yes      | The updated schedule data        |
 
 :::note
 Requires `--enable-write-tools` flag.

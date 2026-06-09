@@ -9,7 +9,7 @@ The PagerDuty MCP Server exposes **55 tools** across 14 domains. While comprehen
 This guide explains how to filter tools using [`mcp-proxy`](https://github.com/TBXark/mcp-proxy), a lightweight proxy server that sits between your MCP client and the PagerDuty MCP Server.
 
 :::info Background
-This solution addresses the request in [GitHub Issue #68](https://github.com/PagerDuty/pagerduty-mcp-server/issues/68): *"Can we add a flag to filter MCP tools by area?"* While native filtering is not yet built into the server, the `mcp-proxy` approach provides an effective workaround.
+This solution addresses the request in [GitHub Issue #68](https://github.com/PagerDuty/pagerduty-mcp-server/issues/68): _"Can we add a flag to filter MCP tools by area?"_ While native filtering is not yet built into the server, the `mcp-proxy` approach provides an effective workaround.
 :::
 
 :::caution Local Server Only
@@ -189,10 +189,10 @@ Point your client to the proxy instead of running the server directly.
 
 ## Suggested Tool Sets by Use Case
 
-| Use Case | Recommended Tools |
-|----------|-------------------|
+| Use Case            | Recommended Tools                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
 | Incident Management | `list_incidents`, `get_incident`, `list_incident_notes`, `manage_incidents`, `add_note_to_incident` |
-| On-Call Overview | `list_oncalls`, `list_schedules`, `get_schedule`, `list_schedule_users` |
-| Service Health | `list_services`, `get_service`, `list_change_events`, `list_log_entries` |
-| Team Operations | `list_teams`, `get_team`, `list_team_members`, `list_users` |
-| Minimal Read-Only | `get_user_data`, `list_incidents`, `get_incident`, `list_oncalls`, `list_schedules` |
+| On-Call Overview    | `list_oncalls`, `list_schedules`, `get_schedule_v3`, `list_schedule_users`                          |
+| Service Health      | `list_services`, `get_service`, `list_change_events`, `list_log_entries`                            |
+| Team Operations     | `list_teams`, `get_team`, `list_team_members`, `list_users`                                         |
+| Minimal Read-Only   | `get_user_data`, `list_incidents`, `get_incident`, `list_oncalls`, `list_schedules`                 |

@@ -10,15 +10,15 @@ sidebar_position: 2
 
 ## Tools involved
 
-| Tool | Purpose |
-|------|---------|
-| `list_incidents` | Find the active incident(s) |
-| `get_incident` | Pull full incident details |
-| `list_alerts_from_incident` | See every alert grouped into the incident |
-| `list_incident_notes` | Read the timeline of responder notes |
-| `list_incident_change_events` | Correlate recent deploys or config changes |
-| `get_past_incidents` | Find similar incidents from the last 6 months |
-| `get_related_incidents` | Identify other services currently impacted |
+| Tool                                  | Purpose                                       |
+| ------------------------------------- | --------------------------------------------- |
+| `list_incidents`                      | Find the active incident(s)                   |
+| `get_incident`                        | Pull full incident details                    |
+| `list_alerts_from_incident`           | See every alert grouped into the incident     |
+| `list_incident_notes`                 | Read the timeline of responder notes          |
+| `list_incident_related_change_events` | Correlate recent deploys or config changes    |
+| `get_past_incidents`                  | Find similar incidents from the last 6 months |
+| `get_related_incidents`               | Identify other services currently impacted    |
 
 ## Example prompts
 

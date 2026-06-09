@@ -24,7 +24,7 @@ def list_schedules(query_model: ScheduleQuery | None = None) -> ListResponseMode
     return ListResponseModel[Schedule](response=schedules)
 
 
-def get_schedule(schedule_id: str) -> Schedule:
+def get_schedule_v3(schedule_id: str) -> Schedule:
     """Get a specific schedule by ID.
 
     Args:

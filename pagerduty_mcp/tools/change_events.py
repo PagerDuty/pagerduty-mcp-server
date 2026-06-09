@@ -71,7 +71,7 @@ def list_service_change_events(
     return ListResponseModel[ChangeEvent](response=change_events)
 
 
-def list_incident_change_events(incident_id: str, limit: int | None = None) -> ListResponseModel[ChangeEvent]:
+def list_incident_related_change_events(incident_id: str, limit: int | None = None) -> ListResponseModel[ChangeEvent]:
     """List change events related to a specific incident.
 
     Args:

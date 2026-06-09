@@ -23,7 +23,7 @@ class SchedulesCompetencyTest(AgentCompetencyTest):
                 },
             ),
             MockMCPToolInvocationResponse(
-                tool_name="get_schedule",
+                tool_name="get_schedule_v3",
                 parameters=lambda params: params.get("schedule_id") == "SCHED123",
                 response={"id": "SCHED123", "name": "Primary On-Call", "summary": "Primary on-call schedule"},
             ),
@@ -61,7 +61,7 @@ SCHEDULES_COMPETENCY_TESTS = [
     SchedulesCompetencyTest(
         query="Get details for schedule SCHED123",
         expected_tool_calls=[
-            MockToolCall(name="get_schedule", parameters={"schedule_id": "SCHED123"})
+            MockToolCall(name="get_schedule_v3", parameters={"schedule_id": "SCHED123"})
         ],
         description="Get specific schedule by ID",
     ),

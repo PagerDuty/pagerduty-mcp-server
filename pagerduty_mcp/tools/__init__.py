@@ -1,9 +1,9 @@
 from .alert_grouping_settings import (
-    create_alert_grouping_setting,
+    post_alert_grouping_setting,
     delete_alert_grouping_setting,
     get_alert_grouping_setting,
     list_alert_grouping_settings,
-    update_alert_grouping_setting,
+    put_alert_grouping_setting,
 )
 from .alerts import (
     get_alert_from_incident,
@@ -12,7 +12,7 @@ from .alerts import (
 from .change_events import (
     get_change_event,
     list_change_events,
-    list_incident_change_events,
+    list_incident_related_change_events,
     list_service_change_events,
 )
 
@@ -58,7 +58,7 @@ from .oncalls import list_oncalls
 from .schedules import (
     create_schedule,
     create_schedule_override,
-    get_schedule,
+    get_schedule_v3,
     list_schedule_users,
     list_schedules,
     update_schedule,
@@ -103,7 +103,7 @@ read_tools = [
     list_change_events,
     get_change_event,
     list_service_change_events,
-    list_incident_change_events,
+    list_incident_related_change_events,
     # Incidents
     list_incidents,
     get_incident,
@@ -126,7 +126,7 @@ read_tools = [
     list_users,
     # Schedules
     list_schedules,
-    get_schedule,
+    get_schedule_v3,
     list_schedule_users,
     # On-calls
     list_oncalls,
@@ -154,8 +154,8 @@ read_tools = [
 # Write tools (potentially dangerous operations that modify state)
 write_tools = [
     # Alert Grouping Settings
-    create_alert_grouping_setting,
-    update_alert_grouping_setting,
+    post_alert_grouping_setting,
+    put_alert_grouping_setting,
     delete_alert_grouping_setting,
     # Incidents
     create_incident,

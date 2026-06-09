@@ -12,9 +12,9 @@ Change Events represent changes to systems, services, and applications that can 
 
 List all change events with optional filtering.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `query_model` | `ChangeEventQuery` | No | Query parameters for filtering change events |
+| Parameter     | Type               | Required | Description                                  |
+| ------------- | ------------------ | -------- | -------------------------------------------- |
+| `query_model` | `ChangeEventQuery` | No       | Query parameters for filtering change events |
 
 **Example prompt:**
 
@@ -26,9 +26,9 @@ List all change events with optional filtering.
 
 Get details about a specific change event.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `change_event_id` | `string` | Yes | The ID of the change event to retrieve |
+| Parameter         | Type     | Required | Description                            |
+| ----------------- | -------- | -------- | -------------------------------------- |
+| `change_event_id` | `string` | Yes      | The ID of the change event to retrieve |
 
 ---
 
@@ -36,10 +36,10 @@ Get details about a specific change event.
 
 List all change events for a specific service.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `service_id` | `string` | Yes | The ID of the service |
-| `query_model` | `ChangeEventQuery` | No | Query parameters for filtering change events |
+| Parameter     | Type               | Required | Description                                  |
+| ------------- | ------------------ | -------- | -------------------------------------------- |
+| `service_id`  | `string`           | Yes      | The ID of the service                        |
+| `query_model` | `ChangeEventQuery` | No       | Query parameters for filtering change events |
 
 **Example prompt:**
 
@@ -47,14 +47,14 @@ List all change events for a specific service.
 
 ---
 
-### `list_incident_change_events`
+### `list_incident_related_change_events`
 
 List change events related to a specific incident.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `incident_id` | `string` | Yes | The ID of the incident |
-| `limit` | `integer` | No | Maximum number of results to return |
+| Parameter     | Type      | Required | Description                         |
+| ------------- | --------- | -------- | ----------------------------------- |
+| `incident_id` | `string`  | Yes      | The ID of the incident              |
+| `limit`       | `integer` | No       | Maximum number of results to return |
 
 **Example prompt:**
 

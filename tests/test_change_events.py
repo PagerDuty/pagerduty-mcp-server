@@ -11,7 +11,7 @@ from pagerduty_mcp.models.references import IntegrationReference, ServiceReferen
 from pagerduty_mcp.tools.change_events import (
     get_change_event,
     list_change_events,
-    list_incident_change_events,
+    list_incident_related_change_events,
     list_service_change_events,
 )
 
@@ -381,12 +381,12 @@ class TestChangeEventTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
     @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_incident_change_events_success(self, mock_get_client, mock_paginate):
+    def test_list_incident_related_change_events_success(self, mock_get_client, mock_paginate):
         """Test listing change events related to an incident."""
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
-        result = list_incident_change_events("INC123", limit=10)
+        result = list_incident_related_change_events("INC123", limit=10)
 
         # Verify paginate call
         expected_params = {"limit": 10}
@@ -403,12 +403,12 @@ class TestChangeEventTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.change_events.paginate")
     @patch("pagerduty_mcp.tools.change_events.get_client")
-    def test_list_incident_change_events_no_limit(self, mock_get_client, mock_paginate):
+    def test_list_incident_related_change_events_no_limit(self, mock_get_client, mock_paginate):
         """Test listing incident change events without limit."""
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_change_events_list_response
 
-        result = list_incident_change_events("INC123")
+        result = list_incident_related_change_events("INC123")
 
         # Verify paginate call with default limit
         expected_params = {}

@@ -60,7 +60,7 @@ class IncidentWorkflowCompetencyTest(AgentCompetencyTest):
                 },
             ),
             MockMCPToolInvocationResponse(
-                tool_name="start_incident_workflow",
+                tool_name="create_incident_workflow_instance",
                 parameters=lambda params: True,
                 response={
                     "id": "P3SNKQS",
@@ -167,7 +167,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="Start incident workflow PSFEVL7 for incident Q1R2DLCB21K7NP",
         expected_tool_calls=[
             MockToolCall(
-                name="start_incident_workflow",
+                name="create_incident_workflow_instance",
                 parameters={
                     "workflow_id": "PSFEVL7",
                     "instance_request": {
@@ -184,7 +184,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="Trigger workflow ABC123 on incident XYZ789",
         expected_tool_calls=[
             MockToolCall(
-                name="start_incident_workflow",
+                name="create_incident_workflow_instance",
                 parameters={
                     "workflow_id": "ABC123",
                     "instance_request": {
@@ -199,7 +199,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="Run incident workflow PSFEVL7 for incident Q1R2DLCB21K7NP",
         expected_tool_calls=[
             MockToolCall(
-                name="start_incident_workflow",
+                name="create_incident_workflow_instance",
                 parameters={
                     "workflow_id": "PSFEVL7",
                     "instance_request": {

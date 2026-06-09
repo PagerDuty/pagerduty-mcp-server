@@ -112,7 +112,7 @@ class IncidentCompetencyTest(AgentCompetencyTest):
                 },
             ),
             MockMCPToolInvocationResponse(
-                tool_name="list_alerts_from_incident",
+                tool_name="list_incident_alerts",
                 parameters=lambda params: True,
                 response={
                     "response": [
@@ -132,7 +132,7 @@ class IncidentCompetencyTest(AgentCompetencyTest):
                 },
             ),
             MockMCPToolInvocationResponse(
-                tool_name="get_alert_from_incident",
+                tool_name="get_incident_alert",
                 parameters=lambda params: True,
                 response={
                     "id": "PALERT123",
@@ -148,7 +148,7 @@ class IncidentCompetencyTest(AgentCompetencyTest):
                 },
             ),
             MockMCPToolInvocationResponse(
-                tool_name="add_responders",
+                tool_name="create_incident_responder_request",
                 parameters=lambda params: True,
                 response={
                     "responder_request": {
@@ -308,7 +308,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Acknowledge incident 456",
         expected_tool_calls=[
             MockToolCall(
-                name="manage_incidents",
+                name="update_incidents",
                 parameters={
                     "manage_request": {
                         "incident_ids": ["456"],
@@ -431,7 +431,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Show me all alerts for incident 123",
         expected_tool_calls=[
             MockToolCall(
-                name="list_alerts_from_incident",
+                name="list_incident_alerts",
                 parameters={"incident_id": "123", "query_model": {}},
             )
         ],
@@ -441,7 +441,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="What alerts are on incident PINCIDENT123?",
         expected_tool_calls=[
             MockToolCall(
-                name="list_alerts_from_incident",
+                name="list_incident_alerts",
                 parameters={"incident_id": "PINCIDENT123", "query_model": {}},
             )
         ],
@@ -451,7 +451,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Get the first 10 alerts for incident ABC123",
         expected_tool_calls=[
             MockToolCall(
-                name="list_alerts_from_incident",
+                name="list_incident_alerts",
                 parameters={"incident_id": "ABC123", "query_model": {"limit": 10}},
             )
         ],
@@ -461,7 +461,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Show me alert PALERT123 from incident PINCIDENT456",
         expected_tool_calls=[
             MockToolCall(
-                name="get_alert_from_incident",
+                name="get_incident_alert",
                 parameters={"incident_id": "PINCIDENT456", "alert_id": "PALERT123"},
             )
         ],
@@ -471,7 +471,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Get details of alert XYZ789 for incident 123",
         expected_tool_calls=[
             MockToolCall(
-                name="get_alert_from_incident",
+                name="get_incident_alert",
                 parameters={"incident_id": "123", "alert_id": "XYZ789"},
             )
         ],
@@ -482,7 +482,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Resolve incidents 123 and 456",
         expected_tool_calls=[
             MockToolCall(
-                name="manage_incidents",
+                name="update_incidents",
                 parameters={
                     "manage_request": {"incident_ids": ["123", "456"], "status": "resolved"}
                 },
@@ -494,7 +494,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Change the urgency of incident ABC123 to low",
         expected_tool_calls=[
             MockToolCall(
-                name="manage_incidents",
+                name="update_incidents",
                 parameters={
                     "manage_request": {"incident_ids": ["ABC123"], "urgency": "low"}
                 },
@@ -506,7 +506,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Reassign incident 789 to user USER456",
         expected_tool_calls=[
             MockToolCall(
-                name="manage_incidents",
+                name="update_incidents",
                 parameters={
                     "manage_request": {
                         "incident_ids": ["789"],
@@ -522,7 +522,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Add user USER456 as a responder to incident 123 with the message 'Need help with this incident'",
         expected_tool_calls=[
             MockToolCall(
-                name="add_responders",
+                name="create_incident_responder_request",
                 parameters={
                     "incident_id": "123",
                     "request": {
@@ -545,7 +545,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Request escalation policy EP123 as responder for incident ABC456",
         expected_tool_calls=[
             MockToolCall(
-                name="add_responders",
+                name="create_incident_responder_request",
                 parameters={
                     "incident_id": "ABC456",
                     "request": {
@@ -567,7 +567,7 @@ INCIDENT_COMPETENCY_TESTS = [
         query="Add users USER111 and USER222 as responders to incident 999 with the message 'All hands on deck'",
         expected_tool_calls=[
             MockToolCall(
-                name="add_responders",
+                name="create_incident_responder_request",
                 parameters={
                     "incident_id": "999",
                     "request": {

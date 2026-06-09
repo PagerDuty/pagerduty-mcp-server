@@ -74,6 +74,18 @@ class TestServiceTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.services.paginate")
     @patch("pagerduty_mcp.tools.services.get_client")
+    def test_list_services_no_query_model(self, mock_get_client, mock_paginate):
+        """Test that list_services can be called with no arguments (no query_model)."""
+        mock_get_client.return_value = self.mock_client
+        mock_paginate.return_value = self.sample_services_list_response
+
+        result = list_services()
+
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={"limit": DEFAULT_PAGINATION_LIMIT})
+        self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.services.paginate")
+    @patch("pagerduty_mcp.tools.services.get_client")
     def test_list_services_no_filters(self, mock_get_client, mock_paginate):
         """Test listing services without any filters."""
         mock_get_client.return_value = self.mock_client
@@ -123,7 +135,7 @@ class TestServiceTools(unittest.TestCase):
         result = list_services(query)
 
         # Verify paginate call
-        expected_params = {"teams_ids[]": ["TEAM2"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": ["TEAM2"], "limit": DEFAULT_PAGINATION_LIMIT}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
         # Verify result
@@ -158,7 +170,7 @@ class TestServiceTools(unittest.TestCase):
         result = list_services(query)
 
         # Verify paginate call
-        expected_params = {"query": "Web", "teams_ids[]": ["TEAM1"], "limit": 10}
+        expected_params = {"query": "Web", "team_ids[]": ["TEAM1"], "limit": 10}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
         # Verify result
@@ -395,7 +407,7 @@ class TestServiceTools(unittest.TestCase):
 
         params = query.to_params()
 
-        expected_params = {"query": "test service", "teams_ids[]": ["TEAM1", "TEAM2"], "limit": 25}
+        expected_params = {"query": "test service", "team_ids[]": ["TEAM1", "TEAM2"], "limit": 25}
         self.assertEqual(params, expected_params)
 
     def test_service_query_to_params_partial_fields(self):

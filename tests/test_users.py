@@ -91,6 +91,18 @@ class TestUserTools(unittest.TestCase):
         self.mock_client.rget.assert_called_once_with("/users/me")
 
     @patch("pagerduty_mcp.tools.users.get_client")
+    def test_list_users_no_query_model(self, mock_get_client):
+        """Test that list_users can be called with no arguments (no query_model)."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rget.return_value = self.sample_users_list_response
+
+        result = list_users()
+
+        expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
+        self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
+        self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.users.get_client")
     def test_list_users_no_filters(self, mock_get_client):
         """Test listing users without any filters."""
         mock_get_client.return_value = self.mock_client
@@ -140,7 +152,7 @@ class TestUserTools(unittest.TestCase):
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"teams_ids[]": team_ids, "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": team_ids, "limit": DEFAULT_PAGINATION_LIMIT}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result
@@ -174,7 +186,7 @@ class TestUserTools(unittest.TestCase):
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"query": "John", "teams_ids[]": team_ids, "limit": 10}
+        expected_params = {"query": "John", "team_ids[]": team_ids, "limit": 10}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result
@@ -215,7 +227,7 @@ class TestUserTools(unittest.TestCase):
 
         params = query.to_params()
 
-        expected_params = {"query": "test query", "teams_ids[]": ["TEAM1", "TEAM2"], "limit": 25}
+        expected_params = {"query": "test query", "team_ids[]": ["TEAM1", "TEAM2"], "limit": 25}
         self.assertEqual(params, expected_params)
 
     def test_user_query_to_params_partial_fields(self):
@@ -258,7 +270,7 @@ class TestUserTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.users.get_client")
     def test_list_users_single_team_filter(self, mock_get_client):
-        """Test listing users with single team in teams_ids filter."""
+        """Test listing users with single team in team_ids filter."""
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = [self.sample_users_list_response[0]]
 
@@ -266,7 +278,7 @@ class TestUserTools(unittest.TestCase):
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"teams_ids[]": ["TEAM1"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": ["TEAM1"], "limit": DEFAULT_PAGINATION_LIMIT}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result
@@ -284,7 +296,7 @@ class TestUserTools(unittest.TestCase):
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"query": "John", "teams_ids[]": ["TEAM1"], "limit": 10}
+        expected_params = {"query": "John", "team_ids[]": ["TEAM1"], "limit": 10}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result

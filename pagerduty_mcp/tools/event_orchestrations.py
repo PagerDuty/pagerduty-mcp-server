@@ -12,7 +12,9 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_event_orchestrations(query_model: EventOrchestrationQuery) -> ListResponseModel[EventOrchestration]:
+def list_event_orchestrations(
+    query_model: EventOrchestrationQuery | None = None,
+) -> ListResponseModel[EventOrchestration]:
     """List event orchestrations with optional filtering.
 
     Args:
@@ -21,6 +23,8 @@ def list_event_orchestrations(query_model: EventOrchestrationQuery) -> ListRespo
     Returns:
         List of event orchestrations matching the query parameters
     """
+    if query_model is None:
+        query_model = EventOrchestrationQuery()
     response = paginate(client=get_client(), entity="event_orchestrations", params=query_model.to_params())
     orchestrations = [EventOrchestration(**orchestration) for orchestration in response]
     return ListResponseModel[EventOrchestration](response=orchestrations)

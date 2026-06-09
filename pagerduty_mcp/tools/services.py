@@ -3,7 +3,7 @@ from pagerduty_mcp.models import ListResponseModel, Service, ServiceCreate, Serv
 from pagerduty_mcp.utils import paginate
 
 
-def list_services(query_model: ServiceQuery) -> ListResponseModel[Service]:
+def list_services(query_model: ServiceQuery | None = None) -> ListResponseModel[Service]:
     """List all services.
 
     Args:
@@ -12,6 +12,8 @@ def list_services(query_model: ServiceQuery) -> ListResponseModel[Service]:
     Returns:
         List of services matching the query parameters
     """
+    if query_model is None:
+        query_model = ServiceQuery()
     response = paginate(client=get_client(), entity="services", params=query_model.to_params())
     services = [Service(**service) for service in response]
     return ListResponseModel[Service](response=services)
@@ -34,10 +36,14 @@ def get_service(service_id: str) -> Service:
 def create_service(service_data: ServiceCreate) -> Service:
     """Create a new service.
 
+    The escalation_policy reference only requires the 'id' field. The 'summary'
+    field is server-generated and ignored for object references.
+
+    Example escalation_policy: {"id": "PXXXXXX"}
+
     Args:
         service_data: The data for the new service.
         Do not include the ID in the data since it is auto-generated.
-        Always include the summary field for all references if available.
 
     Returns:
         The created service

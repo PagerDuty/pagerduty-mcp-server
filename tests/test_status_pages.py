@@ -118,6 +118,66 @@ class TestStatusPagesTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.status_pages.get_client")
     @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_pages_no_query_model(self, mock_paginate, mock_get_client):
+        """Test that list_status_pages can be called with no arguments (no query_model)."""
+        mock_paginate.return_value = [self.sample_status_page_data]
+
+        result = list_status_pages()
+
+        mock_paginate.assert_called_once()
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_severities_no_query_model(self, mock_paginate, mock_get_client):
+        """Test that list_status_page_severities can be called without query_model."""
+        mock_paginate.return_value = [self.sample_severity_data]
+
+        result = list_status_page_severities("PQ8W0D0")
+
+        mock_paginate.assert_called_once()
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_impacts_no_query_model(self, mock_paginate, mock_get_client):
+        """Test that list_status_page_impacts can be called without query_model."""
+        mock_paginate.return_value = [self.sample_impact_data]
+
+        result = list_status_page_impacts("PQ8W0D0")
+
+        mock_paginate.assert_called_once()
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_statuses_no_query_model(self, mock_paginate, mock_get_client):
+        """Test that list_status_page_statuses can be called without query_model."""
+        mock_paginate.return_value = [self.sample_status_data]
+
+        result = list_status_page_statuses("PQ8W0D0")
+
+        mock_paginate.assert_called_once()
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
+    def test_list_status_page_post_updates_no_query_model(self, mock_paginate, mock_get_client):
+        """Test that list_status_page_post_updates can be called without query_model."""
+        mock_paginate.return_value = [self.sample_post_update_data]
+
+        result = list_status_page_post_updates("PQ8W0D0", "PIJ90N7")
+
+        mock_paginate.assert_called_once()
+        self.assertIsInstance(result, ListResponseModel)
+        self.assertEqual(len(result.response), 1)
+
+    @patch("pagerduty_mcp.tools.status_pages.get_client")
+    @patch("pagerduty_mcp.tools.status_pages.paginate")
     def test_list_status_pages_basic(self, mock_paginate, mock_get_client):
         """Test basic Status Pages listing."""
         mock_paginate.return_value = [self.sample_status_page_data]

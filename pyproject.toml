@@ -1,6 +1,6 @@
 [project]
 name = "pagerduty-mcp"
-version = "0.9.2"
+version = "0.17.0"
 description = "PagerDuty's official local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account directly from your MCP-enabled client."
 readme = "README.md"
 requires-python = "~=3.12.0"
@@ -88,6 +88,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 ignore-var-parameters = true
+
+[tool.pytest.ini_options]
+norecursedirs = ["tests/evals"]
 
 [build-system]
 requires = ["setuptools"]

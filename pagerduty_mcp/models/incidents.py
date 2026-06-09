@@ -30,6 +30,11 @@ class IncidentQuery(BaseModel):
     service_ids: list[str] | None = Field(description="Filter incidents by service IDs", default=None)
     teams_ids: list[str] | None = Field(description="Filter incidents by team IDs", default=None)
     urgencies: list[Urgency] | None = Field(description="Filter incidents by urgency", default=None)
+    date_range: Literal["all"] | None = Field(
+        default=None,
+        description="When set to 'all', the since and until parameters and defaults are ignored. "
+        "Use this to retrieve incidents across all time ranges.",
+    )
     request_scope: IncidentRequestScope = Field(
         description="Filter incidents by request . Either all, my teams or assigned to me",
         default="all",
@@ -37,8 +42,8 @@ class IncidentQuery(BaseModel):
     limit: int | None = Field(
         ge=1,
         le=MAX_RESULTS,
-        default=MAX_RESULTS,
-        description="Maximum number of results to return. The maximum is 1000",
+        default=100,
+        description="Maximum number of results to return. Default is 100, maximum is 1000.",
     )
     sort_by: (
         list[
@@ -88,13 +93,34 @@ class IncidentQuery(BaseModel):
         if self.service_ids:
             params["service_ids[]"] = self.service_ids
         if self.teams_ids:
-            params["teams_ids[]"] = self.teams_ids
+            params["team_ids[]"] = self.teams_ids
         if self.user_ids:
             params["user_ids[]"] = self.user_ids
         if self.urgencies:
             params["urgencies[]"] = self.urgencies
+        if self.date_range:
+            params["date_range"] = self.date_range
         if self.sort_by:
             params["sort_by"] = ",".join(self.sort_by)
+        return params
+
+
+class GetIncidentQuery(BaseModel):
+    """Query model for retrieving a specific incident with optional parameters."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    include: list[str] | None = Field(
+        default=None,
+        description="List of additional information to include in the response. "
+        "Available options: 'users', 'services', 'assignments', 'acknowledgers', 'custom_fields', "
+        "'teams', 'escalation_policies', 'notes', 'urgencies', 'priorities'",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.include:
+            params["include[]"] = self.include
         return params
 
 
@@ -120,23 +146,21 @@ class PastIncidentsQuery(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    limit: int | None = Field(
-        default=None,
+    limit: int = Field(
+        default=5,
         ge=1,
         le=999,
         description="The number of results to be returned in the response. Default is 5, maximum is 999.",
     )
-    total: bool | None = Field(
-        default=None,
-        description="Set to true to include the total number of Past Incidents in the response",
+    total: bool = Field(
+        default=False,
+        description="Include the total number of Past Incidents in the response. Default is False.",
     )
 
     def to_params(self) -> dict[str, Any]:
         params = {}
-        if self.limit is not None:
-            params["limit"] = self.limit
-        if self.total is not None:
-            params["total"] = self.total
+        params["limit"] = self.limit
+        params["total"] = self.total
         return params
 
 
@@ -159,7 +183,15 @@ class RelatedIncidentsQuery(BaseModel):
 
 
 # TODO: This should be moved to its own file
+class AssignmentInput(BaseModel):
+    """Assignment for creating/updating incidents (no 'at' field required)."""
+
+    assignee: UserReference = Field(description="The user to assign to the incident")
+
+
 class Assignment(BaseModel):
+    """Assignment as returned by the API (includes timestamp)."""
+
     at: datetime = Field(description="Time at which the assignment was created.")
     assignee: UserReference = Field(description="The user assigned to the incident")
 
@@ -206,6 +238,12 @@ class IncidentCreate(BaseModel):
         description="The body of the incident. This is a free-form text field that can be used to "
         "provide additional details about the incident.",
     )
+    assignments: list[AssignmentInput] | None = Field(
+        default=None,
+        description="List of assignees for the incident. Each assignment requires an 'assignee' "
+        "with 'id' (user ID) and 'type' set to 'user_reference'. When provided, only the assigned "
+        "user(s) receive the initial notification instead of the default service owner.",
+    )
 
     @computed_field
     @property
@@ -251,7 +289,6 @@ class ResponderRequestTarget(BaseModel):
 
 
 class IncidentResponderRequest(BaseModel):
-    requester_id: str | None = Field(description="User ID of the requester")
     message: str = Field(
         description="Optional message to include with the responder request",
     )
@@ -370,6 +407,7 @@ class PastIncidentsResponse(BaseModel):
 
         Handles both wrapped and direct response formats:
         - Standard dict: {"past_incidents": [...], "limit": 5, "total": 10}
+        - Direct list: [...] (list of past incident objects, unwrapped)
         - Edge case: [] (empty list, returns default structure)
 
         Args:
@@ -379,9 +417,17 @@ class PastIncidentsResponse(BaseModel):
         Returns:
             PastIncidentsResponse instance
         """
-        # Handle edge case: empty list
-        if isinstance(response_data, list) and len(response_data) == 0:
-            return cls(past_incidents=[], limit=default_limit, total=0)
+        # Handle list responses (both empty and non-empty)
+        if isinstance(response_data, list):
+            if len(response_data) == 0:
+                return cls(past_incidents=[], limit=default_limit, total=0)
+            # Non-empty list: API returned unwrapped list of past incidents
+            # Note: We set total=None because unwrapped format doesn't include total metadata
+            return cls(
+                past_incidents=[PastIncident.model_validate(item) for item in response_data],
+                limit=default_limit,
+                total=None,
+            )
 
         # Handle normal dict response
         if isinstance(response_data, dict):
@@ -411,6 +457,7 @@ class RelatedIncidentsResponse(BaseModel):
 
         Handles both wrapped and direct response formats:
         - Standard dict: {"related_incidents": [...]}
+        - Direct list: [...] (list of related incident objects, unwrapped)
         - Edge case: [] (empty list, returns default structure)
 
         Args:
@@ -419,9 +466,12 @@ class RelatedIncidentsResponse(BaseModel):
         Returns:
             RelatedIncidentsResponse instance
         """
-        # Handle edge case: empty list
-        if isinstance(response_data, list) and len(response_data) == 0:
-            return cls(related_incidents=[])
+        # Handle list responses (both empty and non-empty)
+        if isinstance(response_data, list):
+            if len(response_data) == 0:
+                return cls(related_incidents=[])
+            # Non-empty list: API returned unwrapped list of related incidents
+            return cls(related_incidents=[RelatedIncident.model_validate(item) for item in response_data])
 
         # Handle normal dict response
         if isinstance(response_data, dict):

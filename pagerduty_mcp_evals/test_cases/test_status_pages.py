@@ -2,7 +2,7 @@
 
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
-    MockMCPToolInvokationResponse,
+    MockMCPToolInvocationResponse,
     MockToolCall,
 )
 
@@ -12,7 +12,7 @@ class StatusPagesCompetencyTest(AgentCompetencyTest):
 
     def __init__(self, **kwargs) -> None:
         mock_responses = [
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_status_pages",
                 parameters=lambda params: True,
                 response={
@@ -26,7 +26,7 @@ class StatusPagesCompetencyTest(AgentCompetencyTest):
                     ]
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_status_page_severities",
                 parameters=lambda params: True,
                 response={
@@ -44,7 +44,7 @@ class StatusPagesCompetencyTest(AgentCompetencyTest):
                     ]
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_status_page_impacts",
                 parameters=lambda params: True,
                 response={
@@ -62,7 +62,7 @@ class StatusPagesCompetencyTest(AgentCompetencyTest):
                     ]
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_status_page_statuses",
                 parameters=lambda params: True,
                 response={
@@ -80,7 +80,7 @@ class StatusPagesCompetencyTest(AgentCompetencyTest):
                     ]
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="get_status_page_post",
                 parameters=lambda params: True,
                 response={
@@ -90,7 +90,7 @@ class StatusPagesCompetencyTest(AgentCompetencyTest):
                     "status_page": {"id": "PT4KHLK", "type": "status_page"},
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_status_page_post_updates",
                 parameters=lambda params: True,
                 response={

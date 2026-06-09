@@ -30,6 +30,10 @@ class OncallQuery(BaseModel):
     user_ids: list[str] | None = Field(description="Filter by user IDs", default=None)
     escalation_policy_ids: list[str] | None = Field(description="Filter by escalation policy IDs", default=None)
     schedule_ids: list[str] | None = Field(description="Filter by schedule IDs", default=None)
+    service_ids: list[str] | None = Field(
+        description="Filter by service IDs. Resolves each service to its escalation policy to find on-call responders.",
+        default=None,
+    )
     since: datetime | None = Field(description="Start of timerange - defaults to current time", default=None)
     until: datetime | None = Field(description="End of timerange - defaults to current time", default=None)
     earliest: bool | None = Field(

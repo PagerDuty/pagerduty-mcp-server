@@ -2,7 +2,7 @@
 
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
-    MockMCPToolInvokationResponse,
+    MockMCPToolInvocationResponse,
     MockToolCall,
 )
 
@@ -12,17 +12,17 @@ class TeamsCompetencyTest(AgentCompetencyTest):
 
     def __init__(self, **kwargs) -> None:
         mock_responses = [
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_teams",
                 parameters=lambda params: True,
                 response={"response": [{"id": "TEAM123", "name": "Dev Team"}]},
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_services",
                 parameters=lambda params: True,
                 response={"response": [{"id": "SVC123", "name": "Web Service"}]},
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_users",
                 parameters=lambda params: params.get("query") == "Sara Connor",
                 response={
@@ -35,7 +35,7 @@ class TeamsCompetencyTest(AgentCompetencyTest):
                     ]
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_users",
                 parameters=lambda params: params.get("query") == "Kyle Reese",
                 response={"response": [{"id": "USER456", "name": "Kyle Reese"}]},
@@ -57,7 +57,7 @@ TEAMS_COMPETENCY_TESTS = [
             MockToolCall(
                 name="list_teams", parameters={"query_model": {"query": "Dev Team"}}
             ),
-            MockToolCall(name="list_team_users", parameters={"team_id": "TEAM123"}),
+            MockToolCall(name="list_team_members", parameters={"team_id": "TEAM123"}),
         ],
         description="List incidents filtered by status",
     ),
@@ -109,7 +109,7 @@ TEAMS_COMPETENCY_TESTS = [
             ),
             MockToolCall(name="list_users", parameters={"query": "Sara Connor"}),
             MockToolCall(
-                name="update_team_user",
+                name="add_team_member",
                 parameters={
                     "team_id": "TEAM123",
                     "member_data": {"user_id": "USER123"},
@@ -126,7 +126,7 @@ TEAMS_COMPETENCY_TESTS = [
             ),
             MockToolCall(name="list_users", parameters={"query": "Kyle Reese"}),
             MockToolCall(
-                name="delete_team_user",
+                name="remove_team_member",
                 parameters={"team_id": "TEAM123", "user_id": "USER456"},
             ),
         ],

@@ -4,6 +4,65 @@
 
 PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
+## Embedded MCP Apps (Developer Experience)
+
+Interactive React UIs for PagerDuty incident management, embedded directly in the Python MCP server for seamless IDE integration. Manage your full incident lifecycle without leaving your IDE.
+
+**Available Apps:**
+
+### 1. **Incident Command Center** 🚨
+Full incident lifecycle management from your IDE:
+- Real-time incident feed with auto-refresh
+- Deep incident details: timeline, notes, alerts, changes
+- Quick actions: acknowledge, resolve, escalate
+- AI-powered similar incident detection
+- Alert inspection with raw data
+
+**Usage in VS Code:** Ask Claude: `Show me the incident command center`
+
+### 2. **On-Call Manager** 📅
+Schedule management with override CRUD and coverage wizards:
+- View current on-call rotations across schedules
+- Create, edit, and delete schedule overrides
+- Escalation policy management with modal-based UI
+
+**Usage in VS Code:** Ask Claude: `Show me the on-call manager`
+
+### 3. **On-Call Compensation Report** 💰
+Per-user on-call metrics with compliance tracking:
+- Hours worked, incident counts, interruption rates
+- Business hours vs. off-hours breakdown
+- Compliance status with EU Working Time Directive limits
+- Fairness/equity scoring across responders
+- CSV export
+
+**Usage in VS Code:** Ask Claude: `Show me the oncall compensation report`
+
+### 4. **Service Dependency Graph** 🕸️
+Interactive graph of service relationships and dependencies:
+- Directed graph visualization
+- Impact sidebar showing upstream/downstream services
+
+**Usage in VS Code:** Ask Claude: `Show me the service dependency graph`
+
+### 5. **Onboarding Wizard** 🧙
+Step-by-step PagerDuty account setup:
+- Team creation and user onboarding
+- Schedule setup with timezone support
+- Escalation policy and service configuration
+- AIOps / alert grouping configuration
+- Incident workflow setup
+
+**Usage in VS Code:** Ask Claude: `Open the onboarding wizard`
+
+**Architecture:**
+- ✅ Native VS Code integration (MCP resources)
+- ✅ Single process, no HTTP server management
+- ✅ Direct access to all PagerDuty MCP tools
+- ✅ Simple deployment: `uv run pagerduty-mcp`
+
+See [mcp-apps/README.md](mcp-apps/README.md) for development instructions and customization.
+
 ## Prerequisites
 
 *   [asdf-vm](https://asdf-vm.com/) installed.
@@ -135,6 +194,74 @@ You can configure this MCP server to work with Claude Desktop by adding it to Cl
 
     > **Security Note:** Unlike VS Code's secure input prompts, Claude Desktop requires you to store your API key directly in the configuration file. Ensure this file has appropriate permissions (readable only by your user account) and consider the security implications of storing credentials in plain text.
 
+## Running with Docker
+
+The PagerDuty MCP server can be run in a Docker container, providing an isolated and portable deployment option. The Docker image uses stdio transport for MCP communication.
+
+### Prerequisites
+
+- Docker installed
+- A PagerDuty User API Token (see [Prerequisites](#prerequisites))
+
+### Quick Start
+
+**Build the Docker image:**
+
+```bash
+docker build -t pagerduty-mcp:latest .
+```
+
+**Run in read-only mode (default):**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  pagerduty-mcp:latest
+```
+
+**Run with write tools enabled:**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  pagerduty-mcp:latest --enable-write-tools
+```
+
+**For EU region:**
+
+```bash
+docker run -i --rm \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  -e PAGERDUTY_API_HOST="https://api.eu.pagerduty.com" \
+  pagerduty-mcp:latest
+```
+
+### Using with MCP Clients via Docker
+
+To integrate the Docker container with MCP clients, you can use Docker as the command:
+
+**Claude Desktop example:**
+
+```json
+{
+  "mcpServers": {
+    "pagerduty-mcp": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "PAGERDUTY_USER_API_KEY=your-api-key-here",
+        "pagerduty-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+> **Note**: The Docker container uses stdio transport, making it compatible with MCP clients that expect standard input/output communication. Ensure you build the image first using `docker build -t pagerduty-mcp:latest .`
+
 ## Set up locally
 
 1.  **Clone the repository** 
@@ -204,6 +331,10 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_alert_grouping_setting    | Alert Grouping | Retrieves a specific alert grouping setting         | ✅         |
 | list_alert_grouping_settings  | Alert Grouping | Lists alert grouping settings with filtering        | ✅         |
 | update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting          | ❌         |
+| get_change_event       | Change Events      | Retrieves a specific change event                   | ✅         |
+| list_change_events     | Change Events      | Lists change events with optional filtering         | ✅         |
+| list_incident_change_events | Change Events | Lists change events related to a specific incident  | ✅         |
+| list_service_change_events | Change Events  | Lists change events for a specific service          | ✅         |
 | get_event_orchestration | Event Orchestrations | Retrieves a specific event orchestration           | ✅         |
 | get_event_orchestration_global | Event Orchestrations | Gets the global orchestration configuration for an event orchestration | ✅         |
 | get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅         |
@@ -216,15 +347,20 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | add_note_to_incident     | Incidents          | Adds note to an incident                            | ❌         |
 | add_responders           | Incidents          | Adds responders to an incident                      | ❌         |
 | create_incident          | Incidents          | Creates a new incident                              | ❌         |
+| get_alert_from_incident  | Incidents          | Retrieves a specific alert from an incident         | ✅         |
 | get_incident             | Incidents          | Retrieves a specific incident                       | ✅         |
 | get_outlier_incident     | Incidents          | Retrieves outlier incident information for a specific incident | ✅         |
 | get_past_incidents       | Incidents          | Retrieves past incidents related to a specific incident | ✅         |
 | get_related_incidents    | Incidents          | Retrieves related incidents for a specific incident | ✅         |
+| list_alerts_from_incident | Incidents         | Lists all alerts for a specific incident with pagination | ✅         |
+| list_incident_notes      | Incidents          | Lists all notes for a specific incident             | ✅         |
 | list_incidents           | Incidents          | Lists incidents                                     | ✅         |
 | manage_incidents         | Incidents          | Updates status, urgency, assignment, or escalation level | ❌     |
 | get_incident_workflow    | Incident Workflows | Retrieves a specific incident workflow              | ✅         |
 | list_incident_workflows  | Incident Workflows | Lists incident workflows with optional filtering    | ✅         |
 | start_incident_workflow  | Incident Workflows | Starts a workflow instance for an incident          | ❌         |
+| get_log_entry            | Log Entries        | Retrieves a specific log entry by ID                | ✅         |
+| list_log_entries         | Log Entries        | Lists all log entries across the account with time filtering | ✅ |
 | add_team_member          | Teams              | Adds a user to a team with a specific role          | ❌         |
 | create_team              | Teams              | Creates a new team                                  | ❌         |
 | delete_team              | Teams              | Deletes a team                                      | ❌         |

@@ -2,7 +2,7 @@
 
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
-    MockMCPToolInvokationResponse,
+    MockMCPToolInvocationResponse,
     MockToolCall,
 )
 
@@ -12,7 +12,7 @@ class IncidentWorkflowCompetencyTest(AgentCompetencyTest):
 
     def __init__(self, **kwargs) -> None:
         mock_responses = [
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="list_incident_workflows",
                 parameters=lambda params: True,
                 response={
@@ -28,7 +28,7 @@ class IncidentWorkflowCompetencyTest(AgentCompetencyTest):
                     ]
                 },
             ),
-            MockMCPToolInvokationResponse(
+            MockMCPToolInvocationResponse(
                 tool_name="get_incident_workflow",
                 parameters=lambda params: True,
                 response={
@@ -59,8 +59,8 @@ class IncidentWorkflowCompetencyTest(AgentCompetencyTest):
                     ],
                 },
             ),
-            MockMCPToolInvokationResponse(
-                tool_name="create_incident_workflow_instance",
+            MockMCPToolInvocationResponse(
+                tool_name="start_incident_workflow",
                 parameters=lambda params: True,
                 response={
                     "id": "P3SNKQS",
@@ -167,7 +167,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="Start incident workflow PSFEVL7 for incident Q1R2DLCB21K7NP",
         expected_tool_calls=[
             MockToolCall(
-                name="create_incident_workflow_instance",
+                name="start_incident_workflow",
                 parameters={
                     "workflow_id": "PSFEVL7",
                     "instance_request": {
@@ -184,7 +184,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="Trigger workflow ABC123 on incident XYZ789",
         expected_tool_calls=[
             MockToolCall(
-                name="create_incident_workflow_instance",
+                name="start_incident_workflow",
                 parameters={
                     "workflow_id": "ABC123",
                     "instance_request": {
@@ -199,7 +199,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="Run incident workflow PSFEVL7 for incident Q1R2DLCB21K7NP",
         expected_tool_calls=[
             MockToolCall(
-                name="create_incident_workflow_instance",
+                name="start_incident_workflow",
                 parameters={
                     "workflow_id": "PSFEVL7",
                     "instance_request": {

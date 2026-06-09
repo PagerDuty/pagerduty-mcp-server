@@ -11,7 +11,9 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_alert_grouping_settings(query_model: AlertGroupingSettingQuery) -> ListResponseModel[AlertGroupingSetting]:
+def list_alert_grouping_settings(
+    query_model: AlertGroupingSettingQuery | None = None,
+) -> ListResponseModel[AlertGroupingSetting]:
     """List all alert grouping settings with optional filtering.
 
     Args:
@@ -20,6 +22,8 @@ def list_alert_grouping_settings(query_model: AlertGroupingSettingQuery) -> List
     Returns:
         List of alert grouping settings matching the query parameters
     """
+    if query_model is None:
+        query_model = AlertGroupingSettingQuery()
     params = query_model.to_params()
 
     response = paginate(
@@ -89,14 +93,14 @@ def update_alert_grouping_setting(
     return AlertGroupingSetting.model_validate(response)
 
 
-def delete_alert_grouping_setting(setting_id: str) -> None:
+def delete_alert_grouping_setting(setting_id: str) -> str:
     """Delete an alert grouping setting.
 
     Args:
         setting_id: The ID of the alert grouping setting to delete
 
     Returns:
-        None (successful deletion returns no content)
+        Confirmation message
     """
     get_client().rdelete(f"/alert_grouping_settings/{setting_id}")
-    # The API returns 204 No Content for successful deletion
+    return f"Successfully deleted alert grouping setting {setting_id}"

@@ -12,7 +12,7 @@ def get_user_data() -> User:
     return User.model_validate(response)
 
 
-def list_users(query_model: UserQuery) -> ListResponseModel[User]:
+def list_users(query_model: UserQuery | None = None) -> ListResponseModel[User]:
     """List users, optionally filtering by name (query) and team IDs.
 
     Args:
@@ -21,6 +21,8 @@ def list_users(query_model: UserQuery) -> ListResponseModel[User]:
     Returns:
         List of users matching the criteria.
     """
+    if query_model is None:
+        query_model = UserQuery()
     response = get_client().rget("/users", params=query_model.to_params())
     users = [User(**user) for user in response]
     return ListResponseModel[User](response=users)

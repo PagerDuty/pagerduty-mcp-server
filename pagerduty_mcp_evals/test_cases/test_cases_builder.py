@@ -6,10 +6,17 @@ from pagerduty_mcp_evals.test_cases.test_incident_workflows import (
     INCIDENT_WORKFLOW_COMPETENCY_TESTS,
 )
 from pagerduty_mcp_evals.test_cases.test_incidents import INCIDENT_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_schedules import SCHEDULES_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_services import SERVICES_COMPETENCY_TESTS
 from pagerduty_mcp_evals.test_cases.test_status_pages import (
     STATUS_PAGES_COMPETENCY_TESTS,
 )
 from pagerduty_mcp_evals.test_cases.test_teams import TEAMS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_alert_grouping_settings import (
+    ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
+)
+from pagerduty_mcp_evals.test_cases.test_change_events import CHANGE_EVENTS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
 
 test_mapping = {
     "incidents": INCIDENT_COMPETENCY_TESTS,
@@ -17,12 +24,22 @@ test_mapping = {
     "teams": TEAMS_COMPETENCY_TESTS,
     "event-orchestrations": EVENT_ORCHESTRATIONS_COMPETENCY_TESTS,
     "status-pages": STATUS_PAGES_COMPETENCY_TESTS,
+    "alert-grouping-settings": ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
+    "change-events": CHANGE_EVENTS_COMPETENCY_TESTS,
+    "log-entries": LOG_ENTRY_COMPETENCY_TESTS,
+    "schedules": SCHEDULES_COMPETENCY_TESTS,
+    "services": SERVICES_COMPETENCY_TESTS,
     "all": (
         INCIDENT_COMPETENCY_TESTS
         + TEAMS_COMPETENCY_TESTS
         + EVENT_ORCHESTRATIONS_COMPETENCY_TESTS
         + INCIDENT_WORKFLOW_COMPETENCY_TESTS
         + STATUS_PAGES_COMPETENCY_TESTS
+        + ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
+        + CHANGE_EVENTS_COMPETENCY_TESTS
+        + LOG_ENTRY_COMPETENCY_TESTS
+        + SCHEDULES_COMPETENCY_TESTS
+        + SERVICES_COMPETENCY_TESTS
     ),
 }
 

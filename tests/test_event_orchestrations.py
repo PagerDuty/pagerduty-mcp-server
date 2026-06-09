@@ -178,8 +178,21 @@ class TestEventOrchestrationTools(unittest.TestCase):
         params = query.to_params()
         self.assertEqual(params, {})
 
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
     @patch("pagerduty_mcp.tools.event_orchestrations.paginate")
-    def test_list_event_orchestrations_success(self, mock_paginate):
+    def test_list_event_orchestrations_no_query_model(self, mock_paginate, mock_get_client):
+        """Test that list_event_orchestrations can be called with no arguments (no query_model)."""
+        mock_paginate.return_value = self.sample_orchestrations_list_response
+
+        result = list_event_orchestrations()
+
+        mock_paginate.assert_called_once()
+        self.assertEqual(len(result.response), 2)
+        self.assertIsInstance(result.response[0], EventOrchestration)
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    @patch("pagerduty_mcp.tools.event_orchestrations.paginate")
+    def test_list_event_orchestrations_success(self, mock_paginate, mock_get_client):
         """Test successful list_event_orchestrations call."""
         # Mock the paginate response
         mock_paginate.return_value = self.sample_orchestrations_list_response
@@ -201,8 +214,9 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(result.response[0].id, "b02e973d-9620-4e0a-9edc-00fedf7d4694")
         self.assertEqual(result.response[0].name, "Shopping Cart Orchestration")
 
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
     @patch("pagerduty_mcp.tools.event_orchestrations.paginate")
-    def test_list_event_orchestrations_empty_response(self, mock_paginate):
+    def test_list_event_orchestrations_empty_response(self, mock_paginate, mock_get_client):
         """Test list_event_orchestrations with empty response."""
         mock_paginate.return_value = []
 

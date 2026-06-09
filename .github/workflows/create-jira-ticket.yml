@@ -1,150 +1,146 @@
-name: Create Jira Ticket for New GitHub Issues
+  name: Create Jira Ticket for New GitHub Issues
 
-on:
-  issues:
-    types: [opened]
+  on:
+    issues:
+      types: [opened]
 
-jobs:
-  create-jira-ticket:
-    runs-on: ubuntu-latest
+  jobs:
+    create-jira-ticket:
+      runs-on: ubuntu-latest
 
-    steps:
-    - name: Create Jira Ticket
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const issueData = context.payload.issue;
-          const issueLabels = issueData.labels.map(label => label.name);
-          console.log(`Processing GitHub issue #${issueData.number}: ${issueData.title}`);
-          console.log(`Labels: ${issueLabels.join(', ')}`);
-          // Determine issue type and priority based on GitHub labels
-          let jiraIssueType = "13880"; // Default to Task
-          let priority = "Medium";
-          let issueTypeForLog = "Task";
-          if (issueLabels.includes('bug')) {
-            jiraIssueType = "11"; // Bug
-            priority = "High";
-            issueTypeForLog = "Bug";
-          } else if (issueLabels.includes('enhancement')) {
-            jiraIssueType = "13880"; // Task
-            priority = "Medium";
-            issueTypeForLog = "Task";
-          }
-          console.log(`Mapping to Jira: Type=${issueTypeForLog} (ID: ${jiraIssueType}), Priority=${priority}`);
-          // Format labels for Jira description
-          const labelsText = issueLabels.length > 0 ? issueLabels.join(', ') : 'None';
-          // Create description with GitHub information
-          const description = "*GitHub Issue:* " + issueData.html_url + "\n\n" +
-            "*Reporter:* " + issueData.user.login + "\n" +
-            "*Labels:* " + labelsText + "\n" +
-            "*Created:* " + new Date(issueData.created_at).toLocaleString() + "\n\n" +
-            "----\n\n" +
-            "h3. Description\n\n" +
-            (issueData.body || 'No description provided') + "\n\n" +
-            "----\n\n" +
-            "_This ticket was automatically created from a GitHub issue in the PagerDuty MCP Server repository._";
-          // Create Jira ticket payload
-          const jiraPayload = {
-            fields: {
-              project: {
-                key: "CSGINS"
-              },
-              parent: {
-                key: "CSGINS-2353"
-              },
-              summary: "[GitHub MCP] " + issueData.title,
-              description: description,
-              issuetype: {
-                id: jiraIssueType
-              },
-              priority: {
-                name: priority
-              },
-              assignee: {
-                emailAddress: "jruiz@pagerduty.com"
-              },
-              labels: [
-                "github-mcp",
-                "auto-created"
-              ].concat(issueLabels.map(label => label.replace(/[^a-zA-Z0-9]/g, '-'))),
-              components: [
-                {
-                  name: "CSG APPS"
-                }
-              ]
+      steps:
+      - name: Create Jira Ticket
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueData = context.payload.issue;
+            const issueLabels = issueData.labels.map(label => label.name);
+            console.log(`Processing GitHub issue #${issueData.number}: ${issueData.title}`);
+            console.log(`Labels: ${issueLabels.join(', ')}`);
+            // Determine issue type and priority based on GitHub labels
+            let jiraIssueType = "13880"; // Default to Task
+            let priority = "Medium";
+            let issueTypeForLog = "Task";
+            if (issueLabels.includes('bug')) {
+              jiraIssueType = "11"; // Bug
+              priority = "High";
+              issueTypeForLog = "Bug";
+            } else if (issueLabels.includes('enhancement')) {
+              jiraIssueType = "13880"; // Task
+              priority = "Medium";
+              issueTypeForLog = "Task";
             }
-          };
-          console.log('Jira payload prepared');
-          // Create Jira ticket
-          const jiraAuth = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_API_TOKEN}`).toString('base64');
-          try {
-            console.log('Sending request to Jira API...');
-            const response = await fetch(`${process.env.JIRA_BASE_URL}/rest/api/2/issue`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Basic ${jiraAuth}`,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(jiraPayload)
-            });
-            if (!response.ok) {
-              const errorData = await response.text();
-              console.error(`Jira API Error: ${response.status} - ${errorData}`);
-              throw new Error(`Jira API error: ${response.status} - ${errorData}`);
+            console.log(`Mapping to Jira: Type=${issueTypeForLog} (ID: ${jiraIssueType}), ` + `Priority=${priority}`);
+            // Format labels for Jira description
+            const labelsText = issueLabels.length > 0 ? issueLabels.join(', ') : 'None';
+            // Create description with GitHub information
+            const description = "*GitHub Issue:* " + issueData.html_url + "\n\n" +
+              "*Reporter:* " + issueData.user.login + "\n" +
+              "*Labels:* " + labelsText + "\n" +
+              "*Created:* " + new Date(issueData.created_at).toLocaleString() + "\n\n" +
+              "----\n\n" +
+              "h3. Description\n\n" +
+              (issueData.body || 'No description provided') + "\n\n" +
+              "----\n\n" +
+              "_This ticket was automatically created from a GitHub issue in the PagerDuty MCP Server repository._";
+            // Create Jira ticket payload
+            const jiraPayload = {
+              fields: {
+                project: {
+                  key: process.env.JIRA_PROJECT_KEY
+                },
+                parent: {
+                  key: process.env.JIRA_PARENT_KEY
+                },
+                summary: "[GitHub MCP] " + issueData.title,
+                description: description,
+                issuetype: {
+                  id: jiraIssueType
+                },
+                priority: {
+                  name: priority
+                },
+                assignee: {
+                  emailAddress: process.env.JIRA_ASSIGNEE_EMAIL
+                },
+                labels: [
+                  "github-mcp",
+                  "auto-created",
+                  process.env.JIRA_LABEL_PROJECT
+                ].concat(issueLabels.map(label => label.replace(/[^a-zA-Z0-9]/g, '-')))
+              }
+            };
+            console.log('Jira payload prepared');
+            // Create Jira ticket
+            const jiraAuth = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_API_TOKEN}`).toString('base64');
+            try {
+              console.log('Sending request to Jira API...');
+              const response = await fetch(`${process.env.JIRA_BASE_URL}/rest/api/2/issue`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Basic ${jiraAuth}`,
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jiraPayload)
+              });
+              if (!response.ok) {
+                const errorData = await response.text();
+                console.error(`Jira API Error: ${response.status} - ${errorData}`);
+                throw new Error(`Jira API error: ${response.status} - ${errorData}`);
+              }
+              const jiraTicket = await response.json();
+              console.log(`✅ Created Jira ticket: ${jiraTicket.key}`);
+              // Add success comment to GitHub issue - Community focused without Jira link
+              const successComment = "🙏 **Thanks for contributing to the PagerDuty MCP Server!**\n\n" +
+                "Your issue has been logged and a ticket has been created for our development team. We appreciate you taking the time to help us improve.\n\n" +
+                "**What happens next:**\n" +
+                "- Our team will review and prioritize your issue\n" +
+                "- Updates will be posted here as we make progress\n" +
+                "- Feel free to add more details if you think of anything else\n\n" +
+                "We'll keep you in the loop! 📬";
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueData.number,
+                body: successComment
+              });
+              console.log('✅ Added success comment to GitHub issue');
+            } catch (error) {
+              console.error('❌ Error creating Jira ticket:', error.message);
+              // Add detailed error comment to GitHub issue
+              const errorComment = "❌ **Failed to create Jira ticket**\n\n" +
+                "**Error**: " + error.message + "\n\n" +
+                "**Attempted Configuration:**\n" +
+                "- Issue Type: " + issueTypeForLog + " (ID: " + jiraIssueType + ")\n" +
+                "- Priority: " + priority + "\n\n" +
+                "Please check the [GitHub Actions logs](https://github.com/" + context.repo.owner + "/" + context.repo.repo + "/actions) for more details, or create the Jira ticket manually.";
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueData.number,
+                body: errorComment
+              });
+              // Re-throw error to mark the action as failed
+              throw error;
             }
-            const jiraTicket = await response.json();
-            console.log(`✅ Created Jira ticket: ${jiraTicket.key}`);
-            // Add success comment to GitHub issue - Community focused without Jira link
-            const successComment = "🙏 **Thanks for contributing to the PagerDuty MCP Server!**\n\n" +
-              "Your issue has been logged and a ticket has been created for our development team. We appreciate you taking the time to help us improve.\n\n" +
-              "**What happens next:**\n" +
-              "- Our team will review and prioritize your issue\n" +
-              "- Updates will be posted here as we make progress\n" +
-              "- Feel free to add more details if you think of anything else\n\n" +
-              "We'll keep you in the loop! 📬";
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueData.number,
-              body: successComment
-            });
-            console.log('✅ Added success comment to GitHub issue');
-          } catch (error) {
-            console.error('❌ Error creating Jira ticket:', error.message);
-            // Add detailed error comment to GitHub issue
-            const errorComment = "❌ **Failed to create Jira ticket**\n\n" +
-              "**Error**: " + error.message + "\n\n" +
-              "**Attempted Configuration:**\n" +
-              "- Project: CSGINS\n" +
-              "- Epic: CSGINS-2353\n" +
-              "- Issue Type: " + issueTypeForLog + " (ID: " + jiraIssueType + ")\n" +
-              "- Priority: " + priority + "\n" +
-              "- Assignee: jruiz@pagerduty.com\n" +
-              "- Component: CSG APPS\n\n" +
-              "Please check the [GitHub Actions logs](https://github.com/" + context.repo.owner + "/" + context.repo.repo + "/actions) for more details, or create the Jira ticket manually.";
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueData.number,
-              body: errorComment
-            });
-            // Re-throw error to mark the action as failed
-            throw error;
-          }
-      env:
-        JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-        JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
-        JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+          JIRA_PARENT_KEY: ${{ secrets.JIRA_PARENT_KEY }}
+          JIRA_ASSIGNEE_EMAIL: ${{ secrets.JIRA_ASSIGNEE_EMAIL }}
+          JIRA_LABEL_PROJECT: ${{ secrets.JIRA_LABEL_PROJECT }}
 
-    - name: Notify on Success
-      if: success()
-      run: |
-        echo "✅ Jira ticket created successfully!"
-        echo "Check the GitHub issue for the Jira ticket link."
-    - name: Notify on Failure
-      if: failure()
-      run: |
-        echo "❌ Failed to create Jira ticket."
-        echo "Check the GitHub issue for error details."
-        echo "Review the action logs for debugging information."
+      - name: Notify on Success
+        if: success()
+        run: |
+          echo "✅ Jira ticket created successfully!"
+          echo "Check the GitHub issue for the Jira ticket link."
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Failed to create Jira ticket."
+          echo "Check the GitHub issue for error details."
+          echo "Review the action logs for debugging information."

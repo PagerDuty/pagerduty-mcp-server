@@ -11,12 +11,14 @@ from pagerduty_mcp.models import (
 from pagerduty_mcp.utils import paginate
 
 
-def list_schedules(query_model: ScheduleQuery) -> ListResponseModel[Schedule]:
+def list_schedules(query_model: ScheduleQuery | None = None) -> ListResponseModel[Schedule]:
     """List schedules with optional filtering.
 
     Returns:
         List of schedules matching the query parameters
     """
+    if query_model is None:
+        query_model = ScheduleQuery()
     response = paginate(client=get_client(), entity="schedules", params=query_model.to_params())
     schedules = [Schedule(**schedule) for schedule in response]
     return ListResponseModel[Schedule](response=schedules)
@@ -38,6 +40,9 @@ def get_schedule(schedule_id: str) -> Schedule:
 def create_schedule_override(schedule_id: str, override_request: ScheduleOverrideCreate) -> dict | list:
     """Create an override for a schedule.
 
+    The override_request contains an 'overrides' array. Each override requires
+    'start' (ISO datetime), 'end' (ISO datetime), and 'user_id' (the user's PagerDuty ID).
+
     Args:
         schedule_id: The ID of the schedule to override
         override_request: Data for the schedule override
@@ -49,6 +54,7 @@ def create_schedule_override(schedule_id: str, override_request: ScheduleOverrid
     for override in request_data["overrides"]:
         override["start"] = override["start"].isoformat()
         override["end"] = override["end"].isoformat()
+        override["user"] = {"id": override.pop("user_id"), "type": "user_reference"}
 
     return get_client().rpost(f"/schedules/{schedule_id}/overrides", json=request_data)
 
@@ -69,6 +75,8 @@ def list_schedule_users(schedule_id: str) -> ListResponseModel[User]:
 
 def create_schedule(create_model: ScheduleCreateRequest) -> Schedule:
     """Create a new on-call schedule.
+
+    Each schedule layer requires a 'name' field to identify the layer.
 
     Args:
         create_model: The schedule creation data

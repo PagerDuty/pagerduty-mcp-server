@@ -9,8 +9,9 @@ from .alert_grouping_settings import (
     IntelligentGroupingConfig,
     TimeGroupingConfig,
 )
+from .alerts import Alert, AlertQuery
 from .base import MAX_RESULTS, ListResponseModel
-from .context import MCPContext
+from .change_events import ChangeEvent, ChangeEventQuery
 from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
 from .event_orchestrations import (
     EventOrchestration,
@@ -42,6 +43,9 @@ from .incident_workflows import (
     Step,
 )
 from .incidents import (
+    Assignment,
+    AssignmentInput,
+    GetIncidentQuery,
     Incident,
     IncidentCreate,
     IncidentCreateRequest,
@@ -59,8 +63,16 @@ from .incidents import (
     ResponderRequest,
     ResponderRequestTarget,
 )
+from .log_entries import LogEntry, LogEntryQuery
 from .oncalls import Oncall, OncallQuery
-from .references import IncidentReference, ScheduleReference, ServiceReference, TeamReference, UserReference
+from .references import (
+    IncidentReference,
+    IntegrationReference,
+    ScheduleReference,
+    ServiceReference,
+    TeamReference,
+    UserReference,
+)
 from .schedules import (
     Schedule,
     ScheduleCreateData,
@@ -107,11 +119,17 @@ __all__ = [
     "ActionConfiguration",
     "ActionInput",
     "ActionOutput",
+    "Alert",
     "AlertGroupingSetting",
     "AlertGroupingSettingCreate",
     "AlertGroupingSettingCreateRequest",
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
+    "AlertQuery",
+    "Assignment",
+    "AssignmentInput",
+    "ChangeEvent",
+    "ChangeEventQuery",
     "ContentBasedConfig",
     "ContentBasedIntelligentConfig",
     "EscalationPolicy",
@@ -131,6 +149,7 @@ __all__ = [
     "EventOrchestrationRuleCreateRequest",
     "EventOrchestrationRuleSet",
     "EventOrchestrationService",
+    "GetIncidentQuery",
     "Incident",
     "IncidentCreate",
     "IncidentCreateRequest",
@@ -146,9 +165,11 @@ __all__ = [
     "IncidentWorkflowInstanceRequest",
     "IncidentWorkflowQuery",
     "InlineStepInput",
+    "IntegrationReference",
     "IntelligentGroupingConfig",
     "ListResponseModel",
-    "MCPContext",
+    "LogEntry",
+    "LogEntryQuery",
     "Oncall",
     "OncallQuery",
     "OutlierIncidentQuery",

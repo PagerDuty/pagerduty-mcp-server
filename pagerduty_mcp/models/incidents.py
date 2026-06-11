@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
 from pagerduty_mcp.models.base import MAX_RESULTS
 from pagerduty_mcp.models.references import ServiceReference, UserReference
@@ -21,6 +21,8 @@ IncidentRequestScope = Literal["all", "teams", "assigned"]
 
 
 class IncidentQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     status: list[IncidentStatus] | None = Field(description="filter incidents by status", default=None)
     since: datetime | None = Field(description="filter incidents since a specific date", default=None)
     until: datetime | None = Field(description="filter incidents until a specific date", default=None)
@@ -28,6 +30,11 @@ class IncidentQuery(BaseModel):
     service_ids: list[str] | None = Field(description="Filter incidents by service IDs", default=None)
     teams_ids: list[str] | None = Field(description="Filter incidents by team IDs", default=None)
     urgencies: list[Urgency] | None = Field(description="Filter incidents by urgency", default=None)
+    date_range: Literal["all"] | None = Field(
+        default=None,
+        description="When set to 'all', the since and until parameters and defaults are ignored. "
+        "Use this to retrieve incidents across all time ranges.",
+    )
     request_scope: IncidentRequestScope = Field(
         description="Filter incidents by request . Either all, my teams or assigned to me",
         default="all",
@@ -35,8 +42,8 @@ class IncidentQuery(BaseModel):
     limit: int | None = Field(
         ge=1,
         le=MAX_RESULTS,
-        default=MAX_RESULTS,
-        description="Maximum number of results to return. The maximum is 1000",
+        default=100,
+        description="Maximum number of results to return. Default is 100, maximum is 1000.",
     )
     sort_by: (
         list[
@@ -63,6 +70,17 @@ class IncidentQuery(BaseModel):
         ),
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_statuses_param(cls, data: Any):
+        # Provide a helpful error when a user mistakenly passes 'statuses' instead of 'status'
+        if isinstance(data, dict) and "statuses" in data:
+            raise ValueError(
+                'The correct parameter to filter by multiple Incidents statuses is "status", not "statuses",'
+                " please correct your input and try again"
+            )
+        return data
+
     # TODO: Create parent class and generalize the to_params method
     def to_params(self) -> dict[str, Any]:
         params = {}
@@ -75,18 +93,105 @@ class IncidentQuery(BaseModel):
         if self.service_ids:
             params["service_ids[]"] = self.service_ids
         if self.teams_ids:
-            params["teams_ids[]"] = self.teams_ids
+            params["team_ids[]"] = self.teams_ids
         if self.user_ids:
             params["user_ids[]"] = self.user_ids
         if self.urgencies:
             params["urgencies[]"] = self.urgencies
+        if self.date_range:
+            params["date_range"] = self.date_range
         if self.sort_by:
             params["sort_by"] = ",".join(self.sort_by)
         return params
 
 
+class GetIncidentQuery(BaseModel):
+    """Query model for retrieving a specific incident with optional parameters."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    include: list[str] | None = Field(
+        default=None,
+        description="List of additional information to include in the response. "
+        "Available options: 'users', 'services', 'assignments', 'acknowledgers', 'custom_fields', "
+        "'teams', 'escalation_policies', 'notes', 'urgencies', 'priorities'",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.include:
+            params["include[]"] = self.include
+        return params
+
+
+class OutlierIncidentQuery(BaseModel):
+    """Query model for retrieving outlier incident information."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    since: datetime | None = Field(
+        default=None,
+        description="The start of the date range over which you want to search. Maximum range is 6 months.",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.since:
+            params["since"] = self.since.isoformat()
+        return params
+
+
+class PastIncidentsQuery(BaseModel):
+    """Query model for retrieving past incidents related to a specific incident."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    limit: int = Field(
+        default=5,
+        ge=1,
+        le=999,
+        description="The number of results to be returned in the response. Default is 5, maximum is 999.",
+    )
+    total: bool = Field(
+        default=False,
+        description="Include the total number of Past Incidents in the response. Default is False.",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        params["limit"] = self.limit
+        params["total"] = self.total
+        return params
+
+
+class RelatedIncidentsQuery(BaseModel):
+    """Query model for retrieving related incidents for a specific incident."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    additional_details: list[str] | None = Field(
+        default=None,
+        description="Array of additional attributes to any of the returned incidents for related incidents. "
+        "Allowed values are 'incident'",
+    )
+
+    def to_params(self) -> dict[str, Any]:
+        params = {}
+        if self.additional_details:
+            params["additional_details[]"] = self.additional_details
+        return params
+
+
 # TODO: This should be moved to its own file
+class AssignmentInput(BaseModel):
+    """Assignment for creating/updating incidents (no 'at' field required)."""
+
+    assignee: UserReference = Field(description="The user to assign to the incident")
+
+
 class Assignment(BaseModel):
+    """Assignment as returned by the API (includes timestamp)."""
+
     at: datetime = Field(description="Time at which the assignment was created.")
     assignee: UserReference = Field(description="The user assigned to the incident")
 
@@ -133,6 +238,12 @@ class IncidentCreate(BaseModel):
         description="The body of the incident. This is a free-form text field that can be used to "
         "provide additional details about the incident.",
     )
+    assignments: list[AssignmentInput] | None = Field(
+        default=None,
+        description="List of assignees for the incident. Each assignment requires an 'assignee' "
+        "with 'id' (user ID) and 'type' set to 'user_reference'. When provided, only the assigned "
+        "user(s) receive the initial notification instead of the default service owner.",
+    )
 
     @computed_field
     @property
@@ -165,27 +276,24 @@ class IncidentManageRequest(BaseModel):
 
 
 class ResponderRequest(BaseModel):
-    id: str = Field(description="The ID of the user to request as a responder")
-
-    @computed_field
-    @property
-    def type(self) -> Literal["user_reference"]:
-        return "user_reference"
+    id: str = Field(description="The ID of the user or escalation policy to request as a responder")
+    type: Literal["user_reference", "escalation_policy_reference"] = Field(
+        description="The type of target (either a user or an escalation policy)"
+    )
 
 
 class ResponderRequestTarget(BaseModel):
     responder_request_target: ResponderRequest = Field(
-        description="Array of user IDs to request as responders",
+        description="Array of user or escalation policy IDs to request as responders",
     )
 
 
 class IncidentResponderRequest(BaseModel):
-    requester_id: str | None = Field(description="User ID of the requester")
     message: str = Field(
         description="Optional message to include with the responder request",
     )
     responder_request_targets: list[ResponderRequestTarget] = Field(
-        description="Array of user IDs to request as responders",
+        description="Array of user or escalation policy IDs to request as responders",
     )
 
 
@@ -194,3 +302,179 @@ class IncidentResponderRequestResponse(BaseModel):
     requested_at: datetime = Field(description="When the request was made")
     message: str | None = Field(default=None, description="The message included with the request")
     responder_request_targets: list[dict[str, Any]] = Field(description="The users requested to respond")
+
+
+class IncidentNote(BaseModel):
+    id: str | None = Field(description="The ID of the note", default=None)
+    content: str = Field(description="The content of the note")
+    created_at: datetime = Field(description="The time the note was created")
+    user: UserReference = Field(description="The user who created the note")
+
+
+class Occurrence(BaseModel):
+    """Occurrence information for an outlier incident."""
+
+    count: int = Field(description="The number of times this incident pattern has occurred")
+    frequency: float = Field(description="The frequency of occurrence")
+    category: str = Field(description="The category of occurrence (e.g., 'rare')")
+    since: datetime = Field(description="The start of the occurrence time range")
+    until: datetime = Field(description="The end of the occurrence time range")
+
+
+class OutlierIncidentReference(BaseModel):
+    """Minimal incident reference returned by the outlier incident endpoint."""
+
+    id: str = Field(description="The globally unique identifier of the incident")
+    created_at: datetime = Field(description="The date/time the incident was first triggered")
+    self: str = Field(description="The URL at which the object is accessible")
+    title: str | None = Field(
+        default=None, description="The description of the nature, symptoms, cause, or effect of the incident"
+    )
+    occurrence: Occurrence = Field(description="Occurrence information for this outlier incident")
+
+
+class IncidentTemplate(BaseModel):
+    """Template information for an outlier incident."""
+
+    id: str = Field(description="The ID of the incident template")
+    cluster_id: str = Field(description="The cluster ID")
+    mined_text: str = Field(description="The mined text pattern for this incident template")
+
+
+class OutlierIncident(BaseModel):
+    incident: OutlierIncidentReference = Field(description="The outlier incident details")
+    incident_template: IncidentTemplate = Field(description="The incident template information")
+
+
+class OutlierIncidentResponse(BaseModel):
+    outlier_incident: OutlierIncident = Field(description="Outlier incident information")
+
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any] | list) -> "OutlierIncidentResponse":
+        """Create OutlierIncidentResponse from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Wrapped: {"outlier_incident": {...}}
+        - Direct: {...} (outlier incident data directly)
+        - Edge case: [] (empty list, treated as error)
+
+        Args:
+            response_data: The API response data
+
+        Returns:
+            OutlierIncidentResponse instance
+
+        Raises:
+            ValueError: If response is an empty list or invalid format
+        """
+        # Handle edge case: empty list
+        if isinstance(response_data, list) and len(response_data) == 0:
+            raise ValueError("Empty response from outlier incident endpoint")
+
+        # Handle wrapped format: {"outlier_incident": {...}}
+        if isinstance(response_data, dict) and "outlier_incident" in response_data:
+            return cls.model_validate(response_data)
+
+        # Handle direct format: {...} (outlier incident data directly)
+        if isinstance(response_data, dict):
+            return cls(outlier_incident=OutlierIncident.model_validate(response_data))
+
+        raise ValueError(f"Unexpected response format: {type(response_data)}")
+
+
+class PastIncidentReference(BaseModel):
+    id: str = Field(description="The globally unique identifier of the incident")
+    created_at: datetime = Field(description="The date/time the incident was first triggered")
+    self: str = Field(description="The URL at which the object is accessible")
+    title: str = Field(description="The description of the nature, symptoms, cause, or effect of the incident")
+
+
+class PastIncident(BaseModel):
+    incident: PastIncidentReference = Field(description="Past incident reference")
+    score: float = Field(description="The computed similarity score associated with the incident and parent incident")
+
+
+class PastIncidentsResponse(BaseModel):
+    past_incidents: list[PastIncident] = Field(description="List of past incidents")
+    total: int | None = Field(
+        default=None, description="The total number of Past Incidents if the total parameter was set"
+    )
+    limit: int = Field(description="The maximum number of Incidents requested")
+
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any] | list, default_limit: int = 5) -> "PastIncidentsResponse":
+        """Create PastIncidentsResponse from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Standard dict: {"past_incidents": [...], "limit": 5, "total": 10}
+        - Direct list: [...] (list of past incident objects, unwrapped)
+        - Edge case: [] (empty list, returns default structure)
+
+        Args:
+            response_data: The API response data
+            default_limit: The default limit to use if not present in response (default: 5)
+
+        Returns:
+            PastIncidentsResponse instance
+        """
+        # Handle list responses (both empty and non-empty)
+        if isinstance(response_data, list):
+            if len(response_data) == 0:
+                return cls(past_incidents=[], limit=default_limit, total=0)
+            # Non-empty list: API returned unwrapped list of past incidents
+            # Note: We set total=None because unwrapped format doesn't include total metadata
+            return cls(
+                past_incidents=[PastIncident.model_validate(item) for item in response_data],
+                limit=default_limit,
+                total=None,
+            )
+
+        # Handle normal dict response
+        if isinstance(response_data, dict):
+            return cls.model_validate(response_data)
+
+        raise ValueError(f"Unexpected response format: {type(response_data)}")
+
+
+class Relationship(BaseModel):
+    """Relationship information for a related incident."""
+
+    type: str = Field(description="The type of relationship (e.g., 'machine_learning_inferred', 'service_dependency')")
+    metadata: dict[str, Any] = Field(description="Metadata about the relationship, structure varies by type")
+
+
+class RelatedIncident(BaseModel):
+    incident: PastIncidentReference = Field(description="The related incident reference")
+    relationships: list[Relationship] = Field(description="List of relationships to the parent incident")
+
+
+class RelatedIncidentsResponse(BaseModel):
+    related_incidents: list[RelatedIncident] = Field(description="List of related incidents")
+
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any] | list) -> "RelatedIncidentsResponse":
+        """Create RelatedIncidentsResponse from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Standard dict: {"related_incidents": [...]}
+        - Direct list: [...] (list of related incident objects, unwrapped)
+        - Edge case: [] (empty list, returns default structure)
+
+        Args:
+            response_data: The API response data
+
+        Returns:
+            RelatedIncidentsResponse instance
+        """
+        # Handle list responses (both empty and non-empty)
+        if isinstance(response_data, list):
+            if len(response_data) == 0:
+                return cls(related_incidents=[])
+            # Non-empty list: API returned unwrapped list of related incidents
+            return cls(related_incidents=[RelatedIncident.model_validate(item) for item in response_data])
+
+        # Handle normal dict response
+        if isinstance(response_data, dict):
+            return cls.model_validate(response_data)
+
+        raise ValueError(f"Unexpected response format: {type(response_data)}")

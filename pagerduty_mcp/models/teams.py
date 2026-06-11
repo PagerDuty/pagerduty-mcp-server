@@ -11,6 +11,7 @@ from pagerduty_mcp.models.base import (
 TeamDefaultRole = Literal["manager", "none"]
 TeamMemberRole = Literal["observer", "responder", "manager"]
 
+
 class Team(BaseModel):
     id: str | None = Field(description="The ID of the team", default=None)
     summary: str | None = Field(

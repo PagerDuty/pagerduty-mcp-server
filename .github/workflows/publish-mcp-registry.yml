@@ -1,0 +1,71 @@
+# This workflow publishes the PagerDuty MCP server to the MCP Registry
+# Trigger manually from the Actions tab in GitHub
+
+name: Publish to MCP Registry
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write  # Required for GitHub OIDC authentication
+
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install jsonschema
+
+      - name: Sync version from pyproject.toml to server.json
+        run: |
+          python -c "
+          import json
+          import tomllib as tomli
+
+          # Read version from pyproject.toml
+          with open('pyproject.toml', 'rb') as f:
+              pyproject = tomli.load(f)
+              version = pyproject['project']['version']
+
+          # Update server.json with the version
+          with open('server.json', 'r') as f:
+              server_config = json.load(f)
+
+          server_config['version'] = version
+          # Also update package version if it exists
+          if 'packages' in server_config:
+              for package in server_config['packages']:
+                  package['version'] = version
+
+          with open('server.json', 'w') as f:
+              json.dump(server_config, f, indent=2)
+
+          print(f'Updated server.json to version {version}')
+          "
+
+      - name: Validate server.json
+        run: |
+          python scripts/validate_server_json.py
+
+      - name: Install MCP Publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.2.3/mcp-publisher_1.2.3_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Authenticate with MCP Registry
+        run: |
+          ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: |
+          ./mcp-publisher publish

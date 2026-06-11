@@ -12,9 +12,6 @@ Information on the published vulnerabilities for a PagerDuty project can usually
 - If a published vulnerability applies to specific versions of PagerDuty that you are using.
 - If a published vulnerability applies to the configuration of the PagerDuty instance you are using.
 - Obtaining further information on a published vulnerability.
-- The availability of patches and/or new releases to address a published vulnerability.
-
-## VULNERABILITY HANDLING
-An overview of the vulnerability handling process is: The reporter reports the vulnerability privately to PagerDuty. The appropriate project's security team works privately with the reporter to resolve the vulnerability. A new release of the PagerDuty package concerned is made that includes the fix. The vulnerability is publicly announced. 
+- The availability of patches and/or new releases to address a published vulnerability. 
 
 [Submit a vulnerability report](https://www.pagerduty.com/security/disclosure/)

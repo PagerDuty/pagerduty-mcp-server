@@ -1,4 +1,4 @@
-from typing import Generic, Literal, TypeVar
+from typing import Literal, TypeVar
 
 from pydantic import BaseModel, computed_field
 
@@ -11,7 +11,7 @@ MAX_RESULTS = 1000
 T = TypeVar("T", bound=BaseModel)
 
 
-class ListResponseModel(BaseModel, Generic[T]):
+class ListResponseModel[T: BaseModel](BaseModel):
     """List response model.
 
     This model is used to wrap the responses from a list request
@@ -24,8 +24,16 @@ class ListResponseModel(BaseModel, Generic[T]):
     @computed_field
     @property
     def response_summary(self) -> str:
+        """Generate a summary of the response."""
         count = len(self.response)
-        entity_type = self.response[0].__class__.__name__ if self.response else "Unknown"
+        # Always resolve from generic type parameter when available
+        generic_meta = getattr(type(self), "__pydantic_generic_metadata__", None)
+        if generic_meta and generic_meta.get("args"):
+            entity_type = generic_meta["args"][0].__name__
+        elif self.response:
+            entity_type = self.response[0].__class__.__name__
+        else:
+            entity_type = "Unknown"
         summary = [
             f"ListResponseModel<{entity_type}>:",
             f"- Returned {count} record(s) of type '{entity_type}'.",

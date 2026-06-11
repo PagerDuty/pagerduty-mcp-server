@@ -26,7 +26,7 @@ If applicable, add screenshots to help explain your problem.
 **Environment (please complete the following information):**
  - OS: [e.g. MacOS]
  - Client [e.g. VSCode]
- - Version [e.g. 22]
+ - LLM [e.g. GPT-4.1]
 
 **Additional context**
 Add any other context about the problem here.

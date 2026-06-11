@@ -1,18 +1,33 @@
+from typing import Any
+
 from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import ListResponseModel, Service, ServiceCreate, ServiceQuery
+from pagerduty_mcp.models import ListResponseModel, Service, ServiceCreate
 from pagerduty_mcp.utils import paginate
 
 
-def list_services(query_model: ServiceQuery) -> ListResponseModel[Service]:
+def list_services(
+    query: str | None = None,
+    teams_ids: list[str] | None = None,
+    limit: int | None = None,
+) -> ListResponseModel[Service]:
     """List all services.
 
     Args:
-        query_model: Optional filtering parameters
+        query: Filter by name
+        teams_ids: Filter by team IDs
+        limit: Max results to return
 
     Returns:
         List of services matching the query parameters
     """
-    response = paginate(client=get_client(), entity="services", params=query_model.to_params())
+    params: dict[str, Any] = {}
+    if query:
+        params["query"] = query
+    if teams_ids:
+        params["team_ids[]"] = teams_ids
+    if limit:
+        params["limit"] = limit
+    response = paginate(client=get_client(), entity="services", params=params)
     services = [Service(**service) for service in response]
     return ListResponseModel[Service](response=services)
 
@@ -29,14 +44,19 @@ def get_service(service_id: str) -> Service:
     response = get_client().rget(f"/services/{service_id}")
     return Service.model_validate(response)
 
+
 # TODO: Add deterministic check for summary field
 def create_service(service_data: ServiceCreate) -> Service:
     """Create a new service.
 
+    The escalation_policy reference only requires the 'id' field. The 'summary'
+    field is server-generated and ignored for object references.
+
+    Example escalation_policy: {"id": "PXXXXXX"}
+
     Args:
         service_data: The data for the new service.
         Do not include the ID in the data since it is auto-generated.
-        Always include the summary field for all references if available.
 
     Returns:
         The created service

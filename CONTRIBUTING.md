@@ -56,7 +56,15 @@ Do your thing but please make sure you follow the rules:
     >
     > There is also a pre-commit hook configured to prevent not doing so.
 
-### Step 4: Pull Request
+### Step 4: Run Evals
+
+When making changes to an MCP server, it's critical to ensure that the tools and their descriptions are suitable for the expected use cases. To run a set of test questions against the modified MCP server run:
+
+```
+python tests/evals/run_tests.py
+```
+
+### Step 5: Pull Request
 
 Once you're done with your changes, you can open a pull request. Make sure to follow the checklist inside the pull request template.
 
@@ -78,13 +86,10 @@ Once the pull request is submitted, a reviewer will be assigned by the maintaine
 
 Discuss review comments and iterate until you get at least one "Approve". When iterating, push new commits to the same branch. Usually, all these are going to be squashed when the maintainers merge to `next` and finally to `main`. The commit messages should be hints for you when you finalize your merge commit message.
 
-## Step 5: Merge
+
+### Step 6: Merge
 
 Once approved and tested, one of the maintainers will squash-merge to `next` and finally `main` and will use your PR title/description as the commit message. Your name will be also added to the Release Notes of the next release.
-
-## Legal notice
-
-Please do not remove the legal notice at the end of the PR message. This is a requirement for any pull request to be reviewed & accepted into the project.
 
 ## Thank you!
 

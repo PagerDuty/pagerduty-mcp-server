@@ -6,6 +6,8 @@ We as members, contributors, and leaders pledge to make participation in our com
 
 We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
 
+Because this code leverages artificial intelligence, any contributions and use of the code must comply with applicable laws, including artificial intelligence laws.
+
 ## Our Standards
 
 Examples of behavior that contributes to a positive environment for our
@@ -25,6 +27,7 @@ Examples of unacceptable behavior include:
 * Public or private harassment
 * Publishing others' private information, such as a physical or email address, without their explicit permission
 * Other conduct which could reasonably be considered inappropriate in a professional setting
+* Conduct that violates applicable laws
 
 ## Enforcement Responsibilities
 

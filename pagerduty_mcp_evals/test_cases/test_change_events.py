@@ -80,12 +80,12 @@ class ChangeEventsCompetencyTest(AgentCompetencyTest):
 CHANGE_EVENTS_COMPETENCY_TESTS = [
     ChangeEventsCompetencyTest(
         query="List all change events",
-        expected_tool_calls=[MockToolCall(name="list_change_events", parameters={"query_model": None})],
+        expected_tool_calls=[MockToolCall(name="list_change_events", parameters={})],
         description="Basic change events listing",
     ),
     ChangeEventsCompetencyTest(
         query="Show me recent change events",
-        expected_tool_calls=[MockToolCall(name="list_change_events", parameters={"query_model": None})],
+        expected_tool_calls=[MockToolCall(name="list_change_events", parameters={})],
         description="Basic change events listing with natural language",
     ),
     ChangeEventsCompetencyTest(
@@ -125,14 +125,14 @@ CHANGE_EVENTS_COMPETENCY_TESTS = [
     ChangeEventsCompetencyTest(
         query="List change events for service P43PBXB",
         expected_tool_calls=[
-            MockToolCall(name="list_service_change_events", parameters={"service_id": "P43PBXB", "query_model": None})
+            MockToolCall(name="list_service_change_events", parameters={"service_id": "P43PBXB"})
         ],
         description="List change events for a specific service",
     ),
     ChangeEventsCompetencyTest(
         query="Show me recent changes for service P43PBXB",
         expected_tool_calls=[
-            MockToolCall(name="list_service_change_events", parameters={"service_id": "P43PBXB", "query_model": None})
+            MockToolCall(name="list_service_change_events", parameters={"service_id": "P43PBXB"})
         ],
         description="List service change events with natural language",
     ),

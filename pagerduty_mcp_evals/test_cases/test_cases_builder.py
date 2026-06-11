@@ -17,14 +17,6 @@ from pagerduty_mcp_evals.test_cases.test_alert_grouping_settings import (
 )
 from pagerduty_mcp_evals.test_cases.test_change_events import CHANGE_EVENTS_COMPETENCY_TESTS
 from pagerduty_mcp_evals.test_cases.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_analytics import ANALYTICS_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_priorities import PRIORITIES_COMPETENCY_TESTS
-from pagerduty_mcp_evals.test_cases.test_business_services import (
-    BUSINESS_SERVICES_COMPETENCY_TESTS,
-)
-from pagerduty_mcp_evals.test_cases.test_oncall_compensation import (
-    ONCALL_COMPENSATION_COMPETENCY_TESTS,
-)
 
 test_mapping = {
     "incidents": INCIDENT_COMPETENCY_TESTS,
@@ -37,10 +29,6 @@ test_mapping = {
     "log-entries": LOG_ENTRY_COMPETENCY_TESTS,
     "schedules": SCHEDULES_COMPETENCY_TESTS,
     "services": SERVICES_COMPETENCY_TESTS,
-    "analytics": ANALYTICS_COMPETENCY_TESTS,
-    "priorities": PRIORITIES_COMPETENCY_TESTS,
-    "business-services": BUSINESS_SERVICES_COMPETENCY_TESTS,
-    "oncall-compensation": ONCALL_COMPENSATION_COMPETENCY_TESTS,
     "all": (
         INCIDENT_COMPETENCY_TESTS
         + TEAMS_COMPETENCY_TESTS
@@ -52,10 +40,6 @@ test_mapping = {
         + LOG_ENTRY_COMPETENCY_TESTS
         + SCHEDULES_COMPETENCY_TESTS
         + SERVICES_COMPETENCY_TESTS
-        + ANALYTICS_COMPETENCY_TESTS
-        + PRIORITIES_COMPETENCY_TESTS
-        + BUSINESS_SERVICES_COMPETENCY_TESTS
-        + ONCALL_COMPENSATION_COMPETENCY_TESTS
     ),
 }
 

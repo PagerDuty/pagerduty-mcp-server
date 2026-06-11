@@ -101,7 +101,7 @@ ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS = [
     # Basic listing operations
     AlertGroupingSettingsCompetencyTest(
         query="Show me all alert grouping settings",
-        expected_tool_calls=[MockToolCall(name="list_alert_grouping_settings", parameters={"query_model": {}})],
+        expected_tool_calls=[MockToolCall(name="list_alert_grouping_settings", parameters={})],
         description="Basic alert grouping settings listing",
     ),
     AlertGroupingSettingsCompetencyTest(

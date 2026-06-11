@@ -82,7 +82,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="List all incident workflows",
         expected_tool_calls=[
             MockToolCall(
-                name="list_incident_workflows", parameters={"query_model": None}
+                name="list_incident_workflows", parameters={}
             )
         ],
         description="Basic workflow listing",
@@ -91,7 +91,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="Show me all incident workflows",
         expected_tool_calls=[
             MockToolCall(
-                name="list_incident_workflows", parameters={"query_model": None}
+                name="list_incident_workflows", parameters={}
             )
         ],
         description="Basic workflow listing with natural language",

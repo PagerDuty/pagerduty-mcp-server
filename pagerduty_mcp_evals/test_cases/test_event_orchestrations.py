@@ -174,20 +174,20 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
     # Basic listing tests
     EventOrchestrationsCompetencyTest(
         query="Show all event orchestrations in PagerDuty",
-        expected_tool_calls=[MockToolCall(name="list_event_orchestrations", parameters={"query_model": {}})],
+        expected_tool_calls=[MockToolCall(name="list_event_orchestrations", parameters={})],
         description="Basic event orchestrations listing",
     ),
     EventOrchestrationsCompetencyTest(
         query="List event orchestrations for the Platform Team",
         expected_tool_calls=[
-            MockToolCall(name="list_event_orchestrations", parameters={"query_model": {}})
+            MockToolCall(name="list_event_orchestrations", parameters={})
         ],
         description="List event orchestrations filtered by team name (LLM filters client-side)",
     ),
     EventOrchestrationsCompetencyTest(
         query="Find all event orchestrations with 'critical' in the name",
         expected_tool_calls=[
-            MockToolCall(name="list_event_orchestrations", parameters={"query_model": {}})
+            MockToolCall(name="list_event_orchestrations", parameters={})
         ],
         description="List event orchestrations filtered by name keyword (LLM filters client-side)",
     ),
@@ -204,7 +204,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
             # After that it may call get_event_orchestration, get_event_orchestration_router,
             # get_event_orchestration_global, or a combination — all are valid ways to
             # "tell about" an orchestration.  We only require the list lookup step.
-            MockToolCall(name="list_event_orchestrations", parameters={"query_model": {}}),
+            MockToolCall(name="list_event_orchestrations", parameters={}),
         ],
         description="Get event orchestration by name (requires lookup)",
     ),
@@ -270,7 +270,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
     EventOrchestrationsCompetencyTest(
         query="Show me all event orchestrations and then get the router configuration for the first one",
         expected_tool_calls=[
-            MockToolCall(name="list_event_orchestrations", parameters={"query_model": {}}),
+            MockToolCall(name="list_event_orchestrations", parameters={}),
             MockToolCall(name="get_event_orchestration_router", parameters={"orchestration_id": "ORCH123"}),
         ],
         description="Multi-step workflow: list orchestrations then get router config",
@@ -278,7 +278,7 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
     EventOrchestrationsCompetencyTest(
         query="Find the Critical Services Orchestration and show me its routing rules",
         expected_tool_calls=[
-            MockToolCall(name="list_event_orchestrations", parameters={"query_model": {}}),
+            MockToolCall(name="list_event_orchestrations", parameters={}),
             MockToolCall(name="get_event_orchestration_router", parameters={"orchestration_id": "ORCH456"}),
         ],
         description="Complex workflow: find orchestration by name and get its router config",
@@ -292,13 +292,13 @@ EVENT_ORCHESTRATIONS_COMPETENCY_TESTS = [
     # Edge cases
     EventOrchestrationsCompetencyTest(
         query="How many event orchestrations do we have?",
-        expected_tool_calls=[MockToolCall(name="list_event_orchestrations", parameters={"query_model": {}})],
+        expected_tool_calls=[MockToolCall(name="list_event_orchestrations", parameters={})],
         description="Count event orchestrations (requires listing all)",
     ),
     EventOrchestrationsCompetencyTest(
         query="Which event orchestration has the most routing rules?",
         expected_tool_calls=[
-            MockToolCall(name="list_event_orchestrations", parameters={"query_model": {}}),
+            MockToolCall(name="list_event_orchestrations", parameters={}),
             MockToolCall(name="get_event_orchestration_router", parameters={"orchestration_id": "ORCH123"}),
             MockToolCall(name="get_event_orchestration_router", parameters={"orchestration_id": "ORCH456"}),
         ],

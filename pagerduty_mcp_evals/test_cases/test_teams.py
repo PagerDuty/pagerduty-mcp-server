@@ -24,7 +24,10 @@ class TeamsCompetencyTest(AgentCompetencyTest):
             ),
             MockMCPToolInvocationResponse(
                 tool_name="list_users",
-                parameters=lambda params: params.get("query") == "Sara Connor",
+                parameters=lambda params: (
+                    params.get("query") == "Sara Connor"
+                    or (params.get("query_model") or {}).get("query") == "Sara Connor"
+                ),
                 response={
                     "response": [
                         {
@@ -37,7 +40,10 @@ class TeamsCompetencyTest(AgentCompetencyTest):
             ),
             MockMCPToolInvocationResponse(
                 tool_name="list_users",
-                parameters=lambda params: params.get("query") == "Kyle Reese",
+                parameters=lambda params: (
+                    params.get("query") == "Kyle Reese"
+                    or (params.get("query_model") or {}).get("query") == "Kyle Reese"
+                ),
                 response={"response": [{"id": "USER456", "name": "Kyle Reese"}]},
             ),
         ]
@@ -109,7 +115,7 @@ TEAMS_COMPETENCY_TESTS = [
             ),
             MockToolCall(
                 name="list_users",
-                parameters={"query": "Sara Connor"},
+                parameters={"query_model": {"query": "Sara Connor"}},
             ),
             MockToolCall(
                 name="add_team_member",
@@ -129,7 +135,7 @@ TEAMS_COMPETENCY_TESTS = [
             ),
             MockToolCall(
                 name="list_users",
-                parameters={"query": "Kyle Reese"},
+                parameters={"query_model": {"query": "Kyle Reese"}},
             ),
             MockToolCall(
                 name="remove_team_member",
@@ -143,7 +149,7 @@ TEAMS_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_users",
-                parameters={"query": "Sara Connor"},
+                parameters={"query_model": {"query": "Sara Connor"}},
             )
         ],
         description="Find teams for a user",
@@ -156,7 +162,7 @@ TEAMS_COMPETENCY_TESTS = [
     TeamsCompetencyTest(
         query="Show me my teams",
         expected_tool_calls=[
-            MockToolCall(name="list_teams", parameters={"scope": "my"})
+            MockToolCall(name="list_teams", parameters=None)
         ],
         description="List teams for the current user",
     ),

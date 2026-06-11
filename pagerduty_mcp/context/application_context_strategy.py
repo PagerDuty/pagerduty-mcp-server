@@ -15,24 +15,15 @@ class PagerdutyMCPClient(RestApiV2Client):
         return f"{DIST_NAME}/{metadata.version(DIST_NAME)} {super().user_agent}"
 
 
-_VALID_AUTH_TYPES = ("token", "oauth2")
-
-
 def create_pd_client() -> RestApiV2Client:
     """Create a PagerDuty client."""
     api_key = os.getenv("PAGERDUTY_USER_API_KEY")
     api_host = os.getenv("PAGERDUTY_API_HOST", "https://api.pagerduty.com")
-    auth_type = os.getenv("PAGERDUTY_AUTH_TYPE", "token")
 
     if not api_key:
         raise RuntimeError("An API key is required to call the PagerDuty API.")
 
-    if auth_type not in _VALID_AUTH_TYPES:
-        raise ValueError(
-            f"Invalid PAGERDUTY_AUTH_TYPE value. Allowed values are: {', '.join(_VALID_AUTH_TYPES)}."
-        )
-
-    pd_client = PagerdutyMCPClient(api_key, auth_type=auth_type)
+    pd_client = PagerdutyMCPClient(api_key)
     if api_host:
         pd_client.url = api_host
     return pd_client

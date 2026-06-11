@@ -24,7 +24,7 @@ def mock_client(monkeypatch):
     mock_client.headers = {}
 
     # mock the method used to create the client
-    monkeypatch.setattr(application_context_strategy, "PagerdutyMCPClient", lambda *args, **kwargs: mock_client)
+    monkeypatch.setattr(application_context_strategy, "PagerdutyMCPClient", lambda _: mock_client)
     return mock_client
 
 

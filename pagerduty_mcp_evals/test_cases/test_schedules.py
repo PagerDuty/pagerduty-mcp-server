@@ -54,7 +54,7 @@ class SchedulesCompetencyTest(AgentCompetencyTest):
 # Define the competency test cases
 SCHEDULES_COMPETENCY_TESTS = [
     SchedulesCompetencyTest(
-        query="Show me all on-call schedules",
+        query="List all schedules in PagerDuty",
         expected_tool_calls=[MockToolCall(name="list_schedules", parameters={})],
         description="Basic schedules listing",
     ),

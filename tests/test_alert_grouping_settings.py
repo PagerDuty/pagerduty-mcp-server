@@ -16,6 +16,7 @@ from pagerduty_mcp.models import (
     ServiceReference,
     TimeGroupingConfig,
 )
+# AlertGroupingSettingQuery is kept for model-level tests below
 from pagerduty_mcp.tools.alert_grouping_settings import (
     create_alert_grouping_setting,
     delete_alert_grouping_setting,
@@ -118,15 +119,14 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_list_response
 
-        query = AlertGroupingSettingQuery()
-        result = list_alert_grouping_settings(query)
+        result = list_alert_grouping_settings()
 
         # Verify paginate call
         mock_paginate.assert_called_once_with(
             client=self.mock_client,
             entity="alert_grouping_settings",
-            params=query.to_params(),
-            maximum_records=query.limit or 1000,
+            params={"limit": 1000},
+            maximum_records=1000,
         )
 
         # Verify result
@@ -146,8 +146,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_alert_grouping_setting]
 
-        query = AlertGroupingSettingQuery(service_ids=["PSERVICE1"])
-        result = list_alert_grouping_settings(query)
+        result = list_alert_grouping_settings(service_ids=["PSERVICE1"], limit=20)
 
         # Verify paginate call with correct parameters
         mock_paginate.assert_called_once_with(
@@ -168,8 +167,7 @@ class TestAlertGroupingSettingsTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_list_response[:2]
 
-        query = AlertGroupingSettingQuery(limit=50)
-        result = list_alert_grouping_settings(query)
+        result = list_alert_grouping_settings(limit=50)
 
         # Verify paginate call with custom limit
         mock_paginate.assert_called_once_with(

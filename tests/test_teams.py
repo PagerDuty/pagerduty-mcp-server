@@ -16,8 +16,8 @@ from pagerduty_mcp.tools.teams import (
     remove_team_member,
     update_team,
 )
-
 from tests.mock_context_strategy import MockContextStrategy
+
 
 class TestTeamTools(unittest.TestCase):
     """Test cases for team tools."""
@@ -89,11 +89,10 @@ class TestTeamTools(unittest.TestCase):
         """Test listing teams with 'all' scope."""
         mock_paginate.return_value = self.sample_teams_list_response
 
-        query = TeamQuery(scope="all")
-        result = list_teams(query)
+        result = list_teams(scope="all")
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=query.to_params())
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params={}, maximum_records=1000)
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -110,11 +109,10 @@ class TestTeamTools(unittest.TestCase):
         mock_paginate.return_value = self.sample_teams_list_response
         self.mock_strategy.context.user = User.model_validate(self.sample_user_data)
 
-        query = TeamQuery(scope="my")
-        result = list_teams(query)
+        result = list_teams(scope="my")
 
         # Verify paginate call to get all teams
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params={})
+        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params={}, maximum_records=1000)
 
         # Verify result - should only include teams user is member of
         self.assertEqual(len(result.response), 1)  # Only TEAM123 matches user's teams
@@ -125,10 +123,8 @@ class TestTeamTools(unittest.TestCase):
         """Test listing teams with 'my' scope when no user is in context."""
         self.mock_strategy.context.user = None  # Ensure no user in context
 
-        query = TeamQuery(scope="my")
-
         with self.assertRaises(ValueError) as context:
-            list_teams(query)
+            list_teams(scope="my")
 
         self.assertIn("Cannot fetch 'my' teams", str(context.exception))
 
@@ -139,12 +135,13 @@ class TestTeamTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = [self.sample_teams_list_response[0]]
 
-        query = TeamQuery(query="Backend", scope="all")
-        result = list_teams(query)
+        result = list_teams(query="Backend", scope="all")
 
         # Verify paginate call
-        expected_params = {"query": "Backend", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=expected_params)
+        expected_params = {"query": "Backend"}
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client, entity="teams", params=expected_params, maximum_records=1000
+        )
 
         # Verify result
         self.assertEqual(len(result.response), 1)
@@ -157,12 +154,13 @@ class TestTeamTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_teams_list_response
 
-        query = TeamQuery(limit=50, scope="all")
-        result = list_teams(query)
+        result = list_teams(limit=50, scope="all")
 
         # Verify paginate call
         expected_params = {"limit": 50}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=expected_params)
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client, entity="teams", params=expected_params, maximum_records=50
+        )
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -174,12 +172,13 @@ class TestTeamTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = []
 
-        query = TeamQuery(query="NonExistentTeam", scope="all")
-        result = list_teams(query)
+        result = list_teams(query="NonExistentTeam", scope="all")
 
         # Verify paginate call
-        expected_params = {"query": "NonExistentTeam", "limit": DEFAULT_PAGINATION_LIMIT}
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="teams", params=expected_params)
+        expected_params = {"query": "NonExistentTeam"}
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client, entity="teams", params=expected_params, maximum_records=1000
+        )
 
         # Verify result
         self.assertEqual(len(result.response), 0)
@@ -385,7 +384,9 @@ class TestTeamTools(unittest.TestCase):
         result = list_team_members("TEAM123")
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="/teams/TEAM123/members", params={})
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client, entity="/teams/TEAM123/members", params={}, maximum_records=1000
+        )
 
         # Verify result
         self.assertEqual(len(result.response), 2)
@@ -404,7 +405,9 @@ class TestTeamTools(unittest.TestCase):
         result = list_team_members("TEAM123")
 
         # Verify paginate call
-        mock_paginate.assert_called_once_with(client=self.mock_client, entity="/teams/TEAM123/members", params={})
+        mock_paginate.assert_called_once_with(
+            client=self.mock_client, entity="/teams/TEAM123/members", params={}, maximum_records=1000
+        )
 
         # Verify result
         self.assertEqual(len(result.response), 0)

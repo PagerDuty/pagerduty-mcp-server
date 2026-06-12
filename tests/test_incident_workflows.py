@@ -9,7 +9,6 @@ from pagerduty_mcp.models import (
     IncidentWorkflowInstance,
     IncidentWorkflowInstanceCreate,
     IncidentWorkflowInstanceRequest,
-    IncidentWorkflowQuery,
     ListResponseModel,
 )
 from pagerduty_mcp.tools.incident_workflows import (
@@ -89,8 +88,7 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         """Test basic workflow listing."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
-        query = IncidentWorkflowQuery()
-        result = list_incident_workflows(query)
+        result = list_incident_workflows()
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
@@ -105,8 +103,7 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         """Test workflow listing with query filter."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
-        query = IncidentWorkflowQuery(query="example", limit=10)
-        result = list_incident_workflows(query)
+        result = list_incident_workflows(query="example", limit=10)
 
         self.assertEqual(len(result.response), 1)
         mock_paginate.assert_called_once()
@@ -120,8 +117,7 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         """Test workflow listing with include parameter."""
         mock_paginate.return_value = [self.sample_workflow_with_steps]
 
-        query = IncidentWorkflowQuery(include=["steps", "team"])
-        result = list_incident_workflows(query)
+        result = list_incident_workflows(include=["steps", "team"])
 
         self.assertEqual(len(result.response), 1)
         self.assertIsNotNone(result.response[0].steps)
@@ -134,8 +130,7 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         """Test workflow listing with empty results."""
         mock_paginate.return_value = []
 
-        query = IncidentWorkflowQuery()
-        result = list_incident_workflows(query)
+        result = list_incident_workflows()
 
         self.assertEqual(len(result.response), 0)
 
@@ -157,11 +152,11 @@ class TestIncidentWorkflowTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.incident_workflows.get_client")
     @patch("pagerduty_mcp.tools.incident_workflows.paginate")
-    def test_list_incident_workflows_explicit_none(self, mock_paginate, mock_get_client):
-        """Test workflow listing with explicit None parameter."""
+    def test_list_incident_workflows_explicit_none_limit(self, mock_paginate, mock_get_client):
+        """Test workflow listing with explicit None limit (falls back to 100)."""
         mock_paginate.return_value = [self.sample_workflow_data]
 
-        result = list_incident_workflows(None)
+        result = list_incident_workflows(limit=None)
 
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)

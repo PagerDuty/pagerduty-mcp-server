@@ -431,6 +431,37 @@ class TestServiceTools(unittest.TestCase):
 
         self.assertEqual(service.type, "service")
 
+    def test_get_service_includes_status_field(self):
+        """Test that get_service returns a Service with the status field populated."""
+        sample = dict(self.sample_service_response)
+        sample["status"] = "active"
+        self.mock_client.rget.return_value = sample
+        with patch("pagerduty_mcp.tools.services.get_client", return_value=self.mock_client):
+            result = get_service("SVC123")
+        self.assertEqual(result.status, "active")
+
+    def test_list_services_includes_status_field(self):
+        """Test that list_services returns Services with the status field populated."""
+        samples = [dict(s) for s in self.sample_services_list_response]
+        samples[0]["status"] = "active"
+        samples[1]["status"] = "disabled"
+        with patch("pagerduty_mcp.tools.services.paginate", return_value=samples), \
+             patch("pagerduty_mcp.tools.services.get_client", return_value=self.mock_client):
+            result = list_services()
+        self.assertEqual(result.response[0].status, "active")
+        self.assertEqual(result.response[1].status, "disabled")
+
+    def test_service_model_accepts_various_status_values(self):
+        """Test that the Service model accepts all valid PagerDuty status values."""
+        escalation_policy = EscalationPolicyReference(id="EP123", summary="Test Escalation Policy")
+        for value in ("active", "warning", "critical", "maintenance", "disabled"):
+            svc = Service(
+                name="x",
+                escalation_policy=escalation_policy,
+                status=value,
+            )
+            self.assertEqual(svc.status, value)
+
 
 if __name__ == "__main__":
     unittest.main()

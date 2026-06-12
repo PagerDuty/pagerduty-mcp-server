@@ -82,7 +82,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="List all incident workflows",
         expected_tool_calls=[
             MockToolCall(
-                name="list_incident_workflows", parameters={"query_model": None}
+                name="list_incident_workflows", parameters={}
             )
         ],
         description="Basic workflow listing",
@@ -91,7 +91,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         query="Show me all incident workflows",
         expected_tool_calls=[
             MockToolCall(
-                name="list_incident_workflows", parameters={"query_model": None}
+                name="list_incident_workflows", parameters={}
             )
         ],
         description="Basic workflow listing with natural language",
@@ -101,7 +101,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incident_workflows",
-                parameters={"query_model": {"query": "example"}},
+                parameters={"query": "example"},
             )
         ],
         description="List workflows with query filter",
@@ -111,7 +111,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incident_workflows",
-                parameters={"query_model": {"limit": 5}},
+                parameters={"limit": 5},
             )
         ],
         description="List workflows with limit parameter",
@@ -121,7 +121,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incident_workflows",
-                parameters={"query_model": {"include": ["steps"]}},
+                parameters={"include": ["steps"]},
             )
         ],
         description="List workflows with include parameter for steps",
@@ -131,7 +131,7 @@ INCIDENT_WORKFLOW_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incident_workflows",
-                parameters={"query_model": {"include": ["team"]}},
+                parameters={"include": ["team"]},
             )
         ],
         description="List workflows with include parameter for team",

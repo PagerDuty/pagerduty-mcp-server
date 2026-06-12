@@ -15,7 +15,8 @@ class MockMCPToolInvocationResponse:
 
 
 class MockToolCall(BaseModel):
-    name: str
+    name: str | list[str]
+    """Tool name to match. May be a list to accept any of several tool names."""
     parameters: dict[str, Any] | None = None
     message_intent: str | None = None
 

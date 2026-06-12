@@ -13,6 +13,7 @@ class Service(BaseModel):
     description: str | None = Field(default=None, description="The description of the service")
     escalation_policy: EscalationPolicyReference
     teams: list[TeamReference] | None = Field(default=None, description="List of teams associated with the service")
+    status: str | None = Field(default=None, description="The current state of the service")
 
     @computed_field
     @property

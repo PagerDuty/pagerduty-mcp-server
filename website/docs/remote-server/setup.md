@@ -9,7 +9,7 @@ The **PagerDuty Remote MCP Server** is a PagerDuty-hosted service that lets you 
 It supports both OAuth and API keys for authentication (including OAuth metadata discovery), making it easy to set up across teams and enterprise environments.
 
 :::info API Reference
-Explore the PagerDuty MCP API specification on the [PagerDuty Developer Portal]((https://developer.pagerduty.com/api-reference/83ebf88243817-mcp-endpoint).
+Explore the PagerDuty MCP API specification on the [PagerDuty Developer Portal](https://developer.pagerduty.com/api-reference/83ebf88243817-mcp-endpoint).
 :::
 
 ## Prerequisites

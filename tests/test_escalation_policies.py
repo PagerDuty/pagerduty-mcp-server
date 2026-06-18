@@ -4,13 +4,17 @@ from unittest.mock import MagicMock, patch
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.escalation_policies import (
     EscalationPolicy,
+    EscalationPolicyCreate,
     EscalationPolicyQuery,
     EscalationRule,
     EscalationTarget,
 )
+from pagerduty_mcp.models.references import TeamReference
 from pagerduty_mcp.tools.escalation_policies import (
+    create_escalation_policy,
     get_escalation_policy,
     list_escalation_policies,
+    update_escalation_policy,
 )
 
 
@@ -387,6 +391,143 @@ class TestEscalationPolicyTools(unittest.TestCase):
         )
 
         self.assertEqual(policy.type, "escalation_policy")
+
+
+class TestEscalationPolicyWriteTools(unittest.TestCase):
+    """Test cases for escalation policy write tools."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.sample_escalation_rule = {
+            "id": "RULE123",
+            "escalation_delay_in_minutes": 30,
+            "targets": [{"id": "USER123", "type": "user_reference", "summary": "John Doe"}],
+            "escalation_rule_assignment_strategy": "assign_to_everyone",
+        }
+
+        cls.sample_escalation_policy_response = {
+            "id": "EP123",
+            "summary": "Engineering Escalation Policy",
+            "name": "Engineering Team Escalation",
+            "description": "Escalation policy for engineering incidents",
+            "escalation_rules": [cls.sample_escalation_rule],
+            "num_loops": 2,
+            "on_call_handoff_notifications": "if_has_services",
+            "teams": [{"id": "TEAM123", "summary": "Engineering Team", "type": "team_reference"}],
+        }
+
+        cls.mock_client = MagicMock()
+
+    def setUp(self):
+        self.mock_client.reset_mock()
+        self.mock_client.rpost.side_effect = None
+        self.mock_client.rput.side_effect = None
+
+    def _make_escalation_policy_create(self):
+        rule = EscalationRule(
+            escalation_delay_in_minutes=30,
+            targets=[EscalationTarget(id="USER123", type="user_reference", summary="John Doe")],
+        )
+        policy = EscalationPolicy(
+            name="Engineering Team Escalation",
+            description="Escalation policy for engineering incidents",
+            escalation_rules=[rule],
+            num_loops=2,
+            teams=[TeamReference(id="TEAM123", summary="Engineering Team")],
+        )
+        return EscalationPolicyCreate(escalation_policy=policy)
+
+    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
+    def test_create_escalation_policy_wrapped_response(self, mock_get_client):
+        """Test successful escalation policy creation with wrapped response."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = {"escalation_policy": self.sample_escalation_policy_response}
+
+        policy_create = self._make_escalation_policy_create()
+        result = create_escalation_policy(policy_create)
+
+        mock_get_client.assert_called_once()
+        self.mock_client.rpost.assert_called_once_with("/escalation_policies", json=policy_create.model_dump(exclude_none=True))
+        self.assertIsInstance(result, EscalationPolicy)
+        self.assertEqual(result.id, "EP123")
+        self.assertEqual(result.name, "Engineering Team Escalation")
+
+    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
+    def test_create_escalation_policy_direct_response(self, mock_get_client):
+        """Test successful escalation policy creation with direct response."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = self.sample_escalation_policy_response
+
+        policy_create = self._make_escalation_policy_create()
+        result = create_escalation_policy(policy_create)
+
+        mock_get_client.assert_called_once()
+        self.mock_client.rpost.assert_called_once_with("/escalation_policies", json=policy_create.model_dump(exclude_none=True))
+        self.assertIsInstance(result, EscalationPolicy)
+        self.assertEqual(result.id, "EP123")
+        self.assertEqual(result.name, "Engineering Team Escalation")
+
+    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
+    def test_create_escalation_policy_client_error(self, mock_get_client):
+        """Test create_escalation_policy when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.side_effect = Exception("API Error")
+
+        policy_create = self._make_escalation_policy_create()
+
+        with self.assertRaises(Exception) as context:
+            create_escalation_policy(policy_create)
+
+        self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
+
+    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
+    def test_update_escalation_policy_wrapped_response(self, mock_get_client):
+        """Test successful escalation policy update with wrapped response."""
+        mock_get_client.return_value = self.mock_client
+        updated_policy = self.sample_escalation_policy_response.copy()
+        updated_policy["name"] = "Updated Escalation Policy"
+        self.mock_client.rput.return_value = {"escalation_policy": updated_policy}
+
+        policy_create = self._make_escalation_policy_create()
+        result = update_escalation_policy("EP123", policy_create)
+
+        mock_get_client.assert_called_once()
+        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_create.model_dump(exclude_none=True))
+        self.assertIsInstance(result, EscalationPolicy)
+        self.assertEqual(result.id, "EP123")
+        self.assertEqual(result.name, "Updated Escalation Policy")
+
+    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
+    def test_update_escalation_policy_direct_response(self, mock_get_client):
+        """Test successful escalation policy update with direct response."""
+        mock_get_client.return_value = self.mock_client
+        updated_policy = self.sample_escalation_policy_response.copy()
+        updated_policy["name"] = "Updated Escalation Policy"
+        self.mock_client.rput.return_value = updated_policy
+
+        policy_create = self._make_escalation_policy_create()
+        result = update_escalation_policy("EP123", policy_create)
+
+        mock_get_client.assert_called_once()
+        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_create.model_dump(exclude_none=True))
+        self.assertIsInstance(result, EscalationPolicy)
+        self.assertEqual(result.id, "EP123")
+        self.assertEqual(result.name, "Updated Escalation Policy")
+
+    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
+    def test_update_escalation_policy_client_error(self, mock_get_client):
+        """Test update_escalation_policy when client raises an exception."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rput.side_effect = Exception("API Error")
+
+        policy_create = self._make_escalation_policy_create()
+
+        with self.assertRaises(Exception) as context:
+            update_escalation_policy("EP123", policy_create)
+
+        self.assertEqual(str(context.exception), "API Error")
+        mock_get_client.assert_called_once()
 
 
 if __name__ == "__main__":

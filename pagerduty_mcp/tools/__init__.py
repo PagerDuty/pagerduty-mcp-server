@@ -28,13 +28,11 @@ from .change_events import (
     list_service_change_events,
 )
 
-# Currently disabled to prevent issues with the escalation policies domain
 from .escalation_policies import (
-    # create_escalation_policy,
+    create_escalation_policy,
     get_escalation_policy,
-    # get_escalation_policy_on_call,
-    # get_escalation_policy_services,
     list_escalation_policies,
+    update_escalation_policy,
 )
 from .event_orchestrations import (
     append_event_orchestration_router_rule,
@@ -269,8 +267,9 @@ write_tools = [
     create_status_page_post_update,
     # Users
     create_user,
-    # Escalation Policies - currently disabled
-    # create_escalation_policy,
+    # Escalation Policies
+    create_escalation_policy,
+    update_escalation_policy,
     # Webhooks
     create_webhook_subscription,
     update_webhook_subscription,

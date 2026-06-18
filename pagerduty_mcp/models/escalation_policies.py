@@ -51,10 +51,11 @@ class EscalationPolicyReference(BaseModel):
 
 
 class EscalationPolicy(BaseModel):
-    id: str = Field(description="The ID of the escalation policy")
-    summary: str = Field(
+    id: str | None = Field(default=None, description="The ID of the escalation policy")
+    summary: str | None = Field(
+        default=None,
         description="A short-form, server-generated string that provides succinct information"
-        " about the escalation policy"
+        " about the escalation policy",
     )
     name: str = Field(description="The name of the escalation policy")
     description: str | None = Field(default=None, description="The description of the escalation policy")
@@ -88,6 +89,12 @@ class EscalationPolicy(BaseModel):
     @property
     def type(self) -> Literal["escalation_policy"]:
         return "escalation_policy"
+
+
+class EscalationPolicyCreate(BaseModel):
+    escalation_policy: EscalationPolicy = Field(
+        description="The escalation policy to create or update"
+    )
 
 
 class EscalationPolicyQuery(BaseModel):

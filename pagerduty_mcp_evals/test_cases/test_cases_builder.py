@@ -16,6 +16,9 @@ from pagerduty_mcp_evals.test_cases.test_alert_grouping_settings import (
     ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
 )
 from pagerduty_mcp_evals.test_cases.test_change_events import CHANGE_EVENTS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_escalation_policies import (
+    ESCALATION_POLICIES_COMPETENCY_TESTS,
+)
 from pagerduty_mcp_evals.test_cases.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
 
 test_mapping = {
@@ -27,6 +30,7 @@ test_mapping = {
     "alert-grouping-settings": ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
     "change-events": CHANGE_EVENTS_COMPETENCY_TESTS,
     "log-entries": LOG_ENTRY_COMPETENCY_TESTS,
+    "escalation-policies": ESCALATION_POLICIES_COMPETENCY_TESTS,
     "schedules": SCHEDULES_COMPETENCY_TESTS,
     "services": SERVICES_COMPETENCY_TESTS,
     "all": (
@@ -38,6 +42,7 @@ test_mapping = {
         + ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
         + CHANGE_EVENTS_COMPETENCY_TESTS
         + LOG_ENTRY_COMPETENCY_TESTS
+        + ESCALATION_POLICIES_COMPETENCY_TESTS
         + SCHEDULES_COMPETENCY_TESTS
         + SERVICES_COMPETENCY_TESTS
     ),

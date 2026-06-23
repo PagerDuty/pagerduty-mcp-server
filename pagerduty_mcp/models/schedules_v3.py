@@ -1,11 +1,17 @@
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 
 class ScheduleV3(BaseModel):
-    """A PagerDuty v3 schedule (next-gen scheduling system)."""
+    """A PagerDuty v3 schedule (next-gen, shift-based scheduling system)."""
 
+    # Normalized discriminator shared with the v2 Schedule model so both can live in a
+    # single discriminated union (ScheduleDetail) without losing their distinct shapes.
+    kind: Literal["shift_based"] = Field(
+        default="shift_based",
+        description="Identifies this as a next-gen shift-based (v3) schedule",
+    )
     id: str | None = Field(default=None, description="The ID of the v3 schedule")
     name: str | None = Field(default=None, description="The name of the v3 schedule")
     description: str | None = Field(default=None, description="A description of the v3 schedule")
@@ -48,6 +54,4 @@ class ScheduleV3Update(BaseModel):
     teams: list[dict[str, Any]] | None = Field(
         default=None, description="Updated teams to associate with this schedule"
     )
-    rotations: list[dict[str, Any]] | None = Field(
-        default=None, description="Updated rotations for the v3 schedule"
-    )
+    rotations: list[dict[str, Any]] | None = Field(default=None, description="Updated rotations for the v3 schedule")

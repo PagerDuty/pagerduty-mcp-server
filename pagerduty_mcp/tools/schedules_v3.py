@@ -25,22 +25,38 @@ def _unwrap_schedule(response: Any) -> dict:
     return response
 
 
-def list_schedules_v3(
+def _extract_api_message(resp: Any) -> str:
+    """Pull the human-readable error message out of a v3 API error body."""
+    try:
+        body = resp.json()
+    except Exception:  # noqa: BLE001 - any parse failure falls back to raw text
+        return getattr(resp, "text", "") or "unknown error"
+    if isinstance(body, dict):
+        err = body.get("error")
+        if isinstance(err, dict):
+            return err.get("message") or err.get("code") or str(err)
+        if isinstance(err, str):
+            return err
+    return str(body)
+
+
+def _check_v3_response(resp: Any) -> None:
+    """Raise an informative error on a non-2xx v3 response.
+
+    We surface the API's own message (e.g. "This is a layer-based schedule. Use the v2
+    Schedules API to access it.") so the caller never gets an opaque failure or a silent no-op.
+    """
+    if getattr(resp, "ok", True):
+        return
+    status = getattr(resp, "status_code", "?")
+    raise RuntimeError(f"PagerDuty v3 Schedules API error (HTTP {status}): {_extract_api_message(resp)}")
+
+
+def _get_v3_schedules_page(
     query: str | None = None,
     limit: int | None = None,
-) -> ListResponseModel[ScheduleV3]:
-    """List v3 schedules with optional filtering.
-
-    Use this tool to list schedules created with PagerDuty's next-gen scheduling system (v3).
-    Classic (v2) schedules are listed with list_schedules.
-
-    Args:
-        query: Filter v3 schedules by name
-        limit: Max results to return
-
-    Returns:
-        List of v3 schedules
-    """
+) -> tuple[list[dict], bool]:
+    """Fetch one page of raw v3 schedule references and whether more pages exist."""
     params: dict[str, Any] = {}
     if query:
         params["query"] = query
@@ -49,17 +65,33 @@ def list_schedules_v3(
 
     client = get_client()
     resp = client.get(_v3_url(client, "/v3/schedules"), params=params)
-    resp.raise_for_status()
+    _check_v3_response(resp)
     data = resp.json()
 
     if isinstance(data, dict) and "schedules" in data:
-        raw_schedules = data["schedules"]
-    elif isinstance(data, list):
-        raw_schedules = data
-    else:
-        logger.warning("Unexpected response format from /v3/schedules: %s", type(data).__name__)
-        raw_schedules = []
+        return data["schedules"], bool(data.get("more"))
+    if isinstance(data, list):
+        return data, False
+    logger.warning("Unexpected response format from /v3/schedules: %s", type(data).__name__)
+    return [], False
 
+
+def list_schedules_v3(
+    query: str | None = None,
+    limit: int | None = None,
+) -> ListResponseModel[ScheduleV3]:
+    """List v3 (shift-based) schedules. Internal helper — not registered as an MCP tool.
+
+    The unified `list_schedules` tool calls this so the LLM sees a single schedule list.
+
+    Args:
+        query: Filter v3 schedules by name
+        limit: Max results to return
+
+    Returns:
+        List of v3 schedules
+    """
+    raw_schedules, _ = _get_v3_schedules_page(query=query, limit=limit)
     schedules = [ScheduleV3(**s) for s in raw_schedules]
     return ListResponseModel[ScheduleV3](response=schedules)
 
@@ -75,7 +107,7 @@ def get_schedule_v3(schedule_id: str) -> ScheduleV3:
     """
     client = get_client()
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))
 
 
@@ -93,7 +125,7 @@ def create_schedule_v3(schedule_data: ScheduleV3Create) -> ScheduleV3:
         _v3_url(client, "/v3/schedules"),
         json={"schedule": schedule_data.model_dump(exclude_none=True)},
     )
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))
 
 
@@ -112,5 +144,5 @@ def update_schedule_v3(schedule_id: str, schedule_data: ScheduleV3Update) -> Sch
         _v3_url(client, f"/v3/schedules/{schedule_id}"),
         json={"schedule": schedule_data.model_dump(exclude_none=True)},
     )
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))

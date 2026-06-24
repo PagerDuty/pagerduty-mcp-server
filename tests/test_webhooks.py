@@ -119,7 +119,7 @@ class TestWebhookSubscriptionTools(unittest.TestCase):
         result = list_webhook_subscriptions()
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="webhook_subscriptions", params={}
+            client=self.mock_client, entity="webhook_subscriptions", params={}, maximum_records=1000
         )
         self.assertEqual(len(result.response), 1)
         self.assertIsInstance(result.response[0], WebhookSubscription)
@@ -138,6 +138,7 @@ class TestWebhookSubscriptionTools(unittest.TestCase):
             client=self.mock_client,
             entity="webhook_subscriptions",
             params={"filter_type": "account_reference", "limit": 25},
+            maximum_records=25,
         )
 
     @patch("pagerduty_mcp.tools.webhooks.get_client")
@@ -195,6 +196,26 @@ class TestWebhookSubscriptionTools(unittest.TestCase):
         self.assertEqual(result.delivery_method.secret, "s3cr3t_signing_key")
 
     @patch("pagerduty_mcp.tools.webhooks.get_client")
+    def test_create_webhook_subscription_unwrapped(self, mock_get_client):
+        """Test create_webhook_subscription handles SDK-unwrapped response."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = self.sample_subscription
+
+        webhook_data = WebhookCreate(
+            delivery_method=WebhookDeliveryMethod(
+                type="http_delivery_method",
+                url="https://example.com/hook",
+            ),
+            events=["incident.triggered"],
+            filter=WebhookFilter(type="account_reference"),
+        )
+
+        result = create_webhook_subscription(webhook_data)
+
+        self.assertIsInstance(result, WebhookSubscription)
+        self.assertEqual(result.id, "WH123")
+
+    @patch("pagerduty_mcp.tools.webhooks.get_client")
     def test_update_webhook_subscription(self, mock_get_client):
         """Test update_webhook_subscription puts correct payload."""
         mock_get_client.return_value = self.mock_client
@@ -211,6 +232,21 @@ class TestWebhookSubscriptionTools(unittest.TestCase):
             json={"webhook_subscription": update_data.model_dump(exclude_none=True)},
         )
         self.assertIsInstance(result, WebhookSubscription)
+
+    @patch("pagerduty_mcp.tools.webhooks.get_client")
+    def test_update_webhook_subscription_unwrapped(self, mock_get_client):
+        """Test update_webhook_subscription handles SDK-unwrapped response."""
+        mock_get_client.return_value = self.mock_client
+        updated = dict(self.sample_subscription)
+        updated["active"] = False
+        self.mock_client.rput.return_value = updated
+
+        update_data = WebhookUpdate(active=False)
+
+        result = update_webhook_subscription("WH123", update_data)
+
+        self.assertIsInstance(result, WebhookSubscription)
+        self.assertEqual(result.active, False)
 
     @patch("pagerduty_mcp.tools.webhooks.get_client")
     def test_delete_webhook_subscription(self, mock_get_client):
@@ -253,7 +289,7 @@ class TestExtensionSchemaTools(unittest.TestCase):
         result = list_extension_schemas()
 
         mock_paginate.assert_called_once_with(
-            client=self.mock_client, entity="extension_schemas", params={}
+            client=self.mock_client, entity="extension_schemas", params={}, maximum_records=1000
         )
         self.assertEqual(len(result.response), 1)
         self.assertIsInstance(result.response[0], ExtensionSchema)

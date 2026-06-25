@@ -112,6 +112,7 @@ from .status_pages import (
 )
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
 from .users import CreateUserRequest, User, UserQuery
+from .webhooks import ExtensionSchema, WebhookCreate, WebhookSubscription, WebhookUpdate
 
 __all__ = [
     "MAX_RESULTS",
@@ -149,6 +150,7 @@ __all__ = [
     "EventOrchestrationRuleCreateRequest",
     "EventOrchestrationRuleSet",
     "EventOrchestrationService",
+    "ExtensionSchema",
     "Incident",
     "IncidentCreate",
     "IncidentCreateRequest",
@@ -227,4 +229,7 @@ __all__ = [
     "UserQuery",
     "UserReference",
     "CreateUserRequest",
+    "WebhookCreate",
+    "WebhookSubscription",
+    "WebhookUpdate",
 ]

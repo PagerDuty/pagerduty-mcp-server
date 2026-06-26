@@ -4,15 +4,15 @@ sidebar_position: 1
 
 # Tools Overview
 
-The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default, only the 42 read-only tools are available. The 22 write tools require starting the server with `--enable-write-tools`.
+The PagerDuty MCP Server exposes **65 tools** across **15 domains**. By default, only the 43 read-only tools are available. The 22 write tools require starting the server with `--enable-write-tools`.
 
 ## Read vs. Write Tools
 
 | Type | Count | Flag Required |
 |------|-------|---------------|
-| Read-only | 42 | None (always available) |
+| Read-only | 43 | None (always available) |
 | Write | 22 | `--enable-write-tools` |
-| **Total** | **64** | |
+| **Total** | **65** | |
 
 ## Complete Tool Reference
 
@@ -111,6 +111,12 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 |------|------|-------------|
 | `list_oncalls` | Read | List current on-call assignments |
 
+### On-Call Compensation
+
+| Tool | Type | Description |
+|------|------|-------------|
+| `get_oncall_compensation_report` | Read | Compute on-call hours, cost estimates, and compliance checks for a time window |
+
 ### Log Entries
 
 | Tool | Type | Description |
@@ -157,5 +163,5 @@ See the individual domain pages for parameter details and usage examples:
 - [Alert Grouping](./alert-grouping) · [Alerts](./alerts) · [Change Events](./change-events)
 - [Incidents](./incidents) · [Incident Workflows](./incident-workflows)
 - [Services](./services) · [Teams](./teams) · [Users](./users)
-- [Schedules](./schedules) · [On-Call](./oncalls) · [Log Entries](./log-entries)
+- [Schedules](./schedules) · [On-Call](./oncalls) · [On-Call Compensation](./oncall-compensation) · [Log Entries](./log-entries)
 - [Escalation Policies](./escalation-policies) · [Event Orchestrations](./event-orchestrations) · [Status Pages](./status-pages)

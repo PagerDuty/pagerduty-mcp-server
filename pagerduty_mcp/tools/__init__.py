@@ -54,6 +54,7 @@ from .log_entries import (
     get_log_entry,
     list_log_entries,
 )
+from .oncall_compensation import get_oncall_compensation_report
 from .oncalls import list_oncalls
 from .schedules import (
     create_schedule,
@@ -139,6 +140,8 @@ read_tools = [
     list_schedule_users,
     # On-calls
     list_oncalls,
+    # On-Call Compensation
+    get_oncall_compensation_report,
     # Log Entries
     list_log_entries,
     get_log_entry,

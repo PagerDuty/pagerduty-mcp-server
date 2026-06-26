@@ -55,6 +55,7 @@ const sidebars = {
         'tools/users',
         'tools/schedules',
         'tools/oncalls',
+        'tools/oncall-compensation',
         'tools/log-entries',
         'tools/escalation-policies',
         'tools/event-orchestrations',

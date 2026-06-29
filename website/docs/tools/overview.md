@@ -22,7 +22,7 @@ The PagerDuty MCP Server exposes **64 tools** across **14 domains**. By default,
 | ------------------------------- | ----- | ------------------------------------- |
 | `list_alert_grouping_settings`  | Read  | List all alert grouping settings      |
 | `get_alert_grouping_setting`    | Read  | Get a specific alert grouping setting |
-| `post_alert_grouping_setting`   | Write | Create a new alert grouping setting   |
+| `post_alert_grouping_settings`  | Write | Create a new alert grouping setting   |
 | `put_alert_grouping_setting`    | Write | Update an alert grouping setting      |
 | `delete_alert_grouping_setting` | Write | Delete an alert grouping setting      |
 

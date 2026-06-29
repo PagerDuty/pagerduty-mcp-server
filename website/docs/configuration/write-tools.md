@@ -43,16 +43,16 @@ docker run --rm -i \
 
 ## Write Tools by Domain
 
-| Domain               | Write Tools                                                                                  |
-| -------------------- | -------------------------------------------------------------------------------------------- |
-| Alert Grouping       | `post_alert_grouping_setting`, `put_alert_grouping_setting`, `delete_alert_grouping_setting` |
-| Incidents            | `create_incident`, `manage_incidents`, `add_responders`, `add_note_to_incident`              |
-| Incident Workflows   | `start_incident_workflow`                                                                    |
-| Services             | `create_service`, `update_service`                                                           |
-| Teams                | `create_team`, `update_team`, `delete_team`, `add_team_member`, `remove_team_member`         |
-| Schedules            | `create_schedule`, `create_schedule_override`, `update_schedule`                             |
-| Event Orchestrations | `update_event_orchestration_router`, `append_event_orchestration_router_rule`                |
-| Status Pages         | `create_status_page_post`, `create_status_page_post_update`                                  |
+| Domain               | Write Tools                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| Alert Grouping       | `post_alert_grouping_settings`, `put_alert_grouping_setting`, `delete_alert_grouping_setting` |
+| Incidents            | `create_incident`, `manage_incidents`, `add_responders`, `add_note_to_incident`               |
+| Incident Workflows   | `start_incident_workflow`                                                                     |
+| Services             | `create_service`, `update_service`                                                            |
+| Teams                | `create_team`, `update_team`, `delete_team`, `add_team_member`, `remove_team_member`          |
+| Schedules            | `create_schedule`, `create_schedule_override`, `update_schedule`                              |
+| Event Orchestrations | `update_event_orchestration_router`, `append_event_orchestration_router_rule`                 |
+| Status Pages         | `create_status_page_post`, `create_status_page_post_update`                                   |
 
 ## Security Considerations
 

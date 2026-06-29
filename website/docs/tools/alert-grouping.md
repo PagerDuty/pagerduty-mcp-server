@@ -28,7 +28,7 @@ Get details for a specific alert grouping setting.
 
 ---
 
-### `post_alert_grouping_setting` _(write)_
+### `post_alert_grouping_settings` _(write)_
 
 Create a new alert grouping setting.
 

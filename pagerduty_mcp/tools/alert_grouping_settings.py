@@ -52,7 +52,7 @@ def get_alert_grouping_setting(setting_id: str) -> AlertGroupingSetting:
     return AlertGroupingSetting.model_validate(response)
 
 
-def post_alert_grouping_setting(create_model: AlertGroupingSettingCreateRequest) -> AlertGroupingSetting:
+def post_alert_grouping_settings(create_model: AlertGroupingSettingCreateRequest) -> AlertGroupingSetting:
     """Create a new alert grouping setting.
 
     Args:

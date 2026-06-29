@@ -1,5 +1,5 @@
 from .alert_grouping_settings import (
-    post_alert_grouping_setting,
+    post_alert_grouping_settings,
     delete_alert_grouping_setting,
     get_alert_grouping_setting,
     list_alert_grouping_settings,
@@ -154,7 +154,7 @@ read_tools = [
 # Write tools (potentially dangerous operations that modify state)
 write_tools = [
     # Alert Grouping Settings
-    post_alert_grouping_setting,
+    post_alert_grouping_settings,
     put_alert_grouping_setting,
     delete_alert_grouping_setting,
     # Incidents

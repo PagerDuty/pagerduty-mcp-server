@@ -334,7 +334,7 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 
 | Tool                                   | Area                 | Description                                                            | Read-only |
 | -------------------------------------- | -------------------- | ---------------------------------------------------------------------- | --------- |
-| post_alert_grouping_setting            | Alert Grouping       | Creates a new alert grouping setting                                   | ❌        |
+| post_alert_grouping_settings           | Alert Grouping       | Creates a new alert grouping setting                                   | ❌        |
 | delete_alert_grouping_setting          | Alert Grouping       | Deletes an alert grouping setting                                      | ❌        |
 | get_alert_grouping_setting             | Alert Grouping       | Retrieves a specific alert grouping setting                            | ✅        |
 | list_alert_grouping_settings           | Alert Grouping       | Lists alert grouping settings with filtering                           | ✅        |

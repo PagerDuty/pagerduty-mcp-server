@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from enum import Enum
 
 import typer
 from mcp.server.fastmcp import FastMCP
@@ -8,6 +9,15 @@ from mcp.types import ToolAnnotations
 from pagerduty_mcp.tools import read_tools, write_tools
 from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
+
+
+class Transport(str, Enum):
+    """MCP transport protocols supported by the server."""
+
+    stdio = "stdio"
+    sse = "sse"
+    streamable_http = "streamable-http"
+
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -50,17 +60,28 @@ def add_write_tool(mcp_instance: FastMCP, tool: Callable) -> None:
 
 
 @app.command()
-def run(*, enable_write_tools: bool = False) -> None:
+def run(
+    *,
+    enable_write_tools: bool = False,
+    transport: Transport = Transport.stdio,
+    host: str = "127.0.0.1",
+    port: int = 8000,
+) -> None:
     """Run the MCP server with the specified configuration.
 
     Args:
         enable_write_tools: Flag to enable write tools
+        transport: Transport protocol to use (stdio, sse, or streamable-http)
+        host: Host to bind to for HTTP-based transports
+        port: Port to bind to for HTTP-based transports
     """
     ContextResolver.set_strategy(ApplicationContextStrategy())
 
     mcp = FastMCP(
         "PagerDuty MCP Server",
         instructions=MCP_SERVER_INSTRUCTIONS,
+        host=host,
+        port=port,
     )
     for tool in read_tools:
         add_read_only_tool(mcp, tool)
@@ -69,4 +90,4 @@ def run(*, enable_write_tools: bool = False) -> None:
         for tool in write_tools:
             add_write_tool(mcp, tool)
 
-    mcp.run()
+    mcp.run(transport=transport.value)

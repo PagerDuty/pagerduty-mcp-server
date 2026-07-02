@@ -338,6 +338,14 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_alert_grouping_setting    | Alert Grouping | Retrieves a specific alert grouping setting         | ✅         |
 | list_alert_grouping_settings  | Alert Grouping | Lists alert grouping settings with filtering        | ✅         |
 | update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting          | ❌         |
+| get_incident_metrics_all      | Analytics      | Retrieves aggregated incident metrics across all services | ✅    |
+| get_incident_metrics_by_service | Analytics    | Retrieves incident metrics grouped by service       | ✅         |
+| get_incident_metrics_by_team  | Analytics      | Retrieves incident metrics grouped by team          | ✅         |
+| get_responder_load_metrics    | Analytics      | Retrieves responder load metrics                    | ✅         |
+| get_responder_metrics         | Analytics      | Retrieves responder performance metrics             | ✅         |
+| get_business_service_dependencies | Business Services | Retrieves dependencies for a specific business service | ✅  |
+| get_technical_service_dependencies | Business Services | Retrieves technical service dependencies for a business service | ✅ |
+| list_business_services        | Business Services | Lists business services                            | ✅         |
 | get_change_event       | Change Events      | Retrieves a specific change event                   | ✅         |
 | list_change_events     | Change Events      | Lists change events with optional filtering         | ✅         |
 | list_incident_change_events | Change Events | Lists change events related to a specific incident  | ✅         |
@@ -379,6 +387,7 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_user_data            | Users              | Gets the current user's data                        | ✅         |
 | list_users               | Users              | Lists users in the PagerDuty account                | ✅         |
 | list_oncalls             | On-call            | Lists on-call schedules                             | ✅         |
+| list_priorities          | Priorities         | Lists priorities defined in the account             | ✅         |
 | create_schedule_override | Schedules          | Creates an override for a schedule                  | ❌         |
 | get_schedule             | Schedules          | Retrieves a specific schedule                       | ✅         |
 | list_schedule_users      | Schedules          | Lists users in a schedule                           | ✅         |

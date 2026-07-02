@@ -143,7 +143,7 @@ def update_event_orchestration_global(
         The updated global orchestration configuration
     """
     response = get_client().rput(
-        f"/event_orchestrations/{orchestration_id}/global", json=global_update.model_dump()
+        f"/event_orchestrations/{orchestration_id}/global", json=global_update.model_dump(exclude_none=True)
     )
     return EventOrchestrationGlobal.from_api_response(response)
 
@@ -167,7 +167,7 @@ def update_event_orchestration_unrouted(
         The updated unrouted orchestration configuration
     """
     response = get_client().rput(
-        f"/event_orchestrations/{orchestration_id}/unrouted", json=unrouted_update.model_dump()
+        f"/event_orchestrations/{orchestration_id}/unrouted", json=unrouted_update.model_dump(exclude_none=True)
     )
     return EventOrchestrationUnrouted.from_api_response(response)
 
@@ -189,7 +189,7 @@ def update_event_orchestration_service(
         The updated service orchestration configuration
     """
     response = get_client().rput(
-        f"/event_orchestrations/services/{service_id}", json=service_update.model_dump()
+        f"/event_orchestrations/services/{service_id}", json=service_update.model_dump(exclude_none=True)
     )
     return EventOrchestrationService.from_api_response(response)
 

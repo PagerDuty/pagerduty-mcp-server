@@ -1315,7 +1315,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
         mock_client.rput.assert_called_once_with(
             "/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/global",
-            json=update_request.model_dump(),
+            json=update_request.model_dump(exclude_none=True),
         )
         self.assertIsInstance(result, EventOrchestrationGlobal)
         self.assertEqual(result.orchestration_path.type, "global")
@@ -1539,7 +1539,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
         mock_client.rput.assert_called_once_with(
             "/event_orchestrations/ORCH123/unrouted",
-            json=update_request.model_dump(),
+            json=update_request.model_dump(exclude_none=True),
         )
         self.assertIsInstance(result, EventOrchestrationUnrouted)
         self.assertEqual(result.orchestration_path.type, "unrouted")
@@ -1765,7 +1765,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
         mock_client.rput.assert_called_once_with(
             "/event_orchestrations/services/PC2D9ML",
-            json=update_request.model_dump(),
+            json=update_request.model_dump(exclude_none=True),
         )
         self.assertIsInstance(result, EventOrchestrationService)
         self.assertEqual(result.orchestration_path.type, "service")

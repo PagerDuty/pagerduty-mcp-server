@@ -67,6 +67,7 @@ from .oncalls import Oncall, OncallQuery
 from .references import (
     IncidentReference,
     IntegrationReference,
+    PriorityReference,
     ScheduleReference,
     ServiceReference,
     TeamReference,

@@ -30,6 +30,7 @@ def list_incidents(
     since: datetime | None = None,
     until: datetime | None = None,
     urgencies: list[str] | None = None,
+    priorities: list[str] | None = None,
     limit: int | None = None,
 ) -> ListResponseModel[Incident]:
     """List incidents with optional filtering.
@@ -40,6 +41,7 @@ def list_incidents(
         since: Filter incidents created after this datetime
         until: Filter incidents created before this datetime
         urgencies: Filter by urgency (high, low)
+        priorities: Filter by priority IDs (use list_priorities to resolve names to IDs)
         limit: Max results to return (default 1000)
 
     Returns:
@@ -54,6 +56,8 @@ def list_incidents(
         params["until"] = until.isoformat()
     if urgencies:
         params["urgencies[]"] = urgencies
+    if priorities:
+        params["priorities[]"] = priorities
 
     if request_scope in ["assigned", "teams"]:
         user_data = ContextResolver.get_user()

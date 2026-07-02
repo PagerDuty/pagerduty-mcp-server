@@ -191,8 +191,10 @@ cython_debug/
 #  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
-.cursorindexingignoretest_results_*.json
+.cursorindexingignore
+test_results_*.json
 test_run_output.log
+.mcp.json
 
 # Docusaurus website
 website/node_modules/

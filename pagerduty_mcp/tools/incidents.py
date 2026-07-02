@@ -57,7 +57,9 @@ def list_incidents(
     if urgencies:
         params["urgencies[]"] = urgencies
     if priorities:
-        params["priorities[]"] = priorities
+        # The List Incidents endpoint filters on priority via priority_ids[]; priorities[] is
+        # silently ignored by the API, so the filter must use priority_ids[] to take effect.
+        params["priority_ids[]"] = priorities
 
     if request_scope in ["assigned", "teams"]:
         user_data = ContextResolver.get_user()

@@ -338,6 +338,9 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_event_orchestration_router | Event Orchestrations | Gets the router configuration for an event orchestration | ✅         |
 | get_event_orchestration_service | Event Orchestrations | Gets the service orchestration configuration for a specific service | ✅         |
 | list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅         |
+| update_event_orchestration_global | Event Orchestrations | Updates the global orchestration rules for an event orchestration | ❌         |
+| update_event_orchestration_unrouted | Event Orchestrations | Updates the unrouted orchestration rules for an event orchestration | ❌         |
+| update_event_orchestration_service | Event Orchestrations | Updates the service orchestration rules for a specific service | ❌         |
 | update_event_orchestration_router | Event Orchestrations | Updates the router configuration for an event orchestration | ❌         |
 | append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router | ❌         |
 | list_escalation_policies | Escalation Policy  | Lists escalation policies                           | ✅         |

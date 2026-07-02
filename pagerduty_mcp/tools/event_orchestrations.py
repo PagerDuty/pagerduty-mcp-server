@@ -4,10 +4,15 @@ from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
     EventOrchestration,
     EventOrchestrationGlobal,
+    EventOrchestrationGlobalUpdateRequest,
+    EventOrchestrationQuery,
     EventOrchestrationRouter,
     EventOrchestrationRouterUpdateRequest,
     EventOrchestrationRuleCreateRequest,
     EventOrchestrationService,
+    EventOrchestrationServiceUpdateRequest,
+    EventOrchestrationUnrouted,
+    EventOrchestrationUnroutedUpdateRequest,
     ListResponseModel,
 )
 from pagerduty_mcp.utils import paginate
@@ -138,6 +143,76 @@ def append_event_orchestration_router_rule(
     update_request = EventOrchestrationRouterUpdateRequest.from_path(updated_path)
 
     return update_event_orchestration_router(orchestration_id, update_request)
+
+
+def update_event_orchestration_global(
+    orchestration_id: str, global_update: EventOrchestrationGlobalUpdateRequest
+) -> EventOrchestrationGlobal:
+    """Update the Global Orchestration rules for an event orchestration.
+
+    Performs a full replacement of the global orchestration path (all rule sets and
+    catch_all). Retrieve the current configuration with get_event_orchestration_global,
+    modify it, and pass the full updated set of rules.
+
+    Rule conditions use PCL expressions, e.g. "event.summary matches part 'timeout'".
+
+    Args:
+        orchestration_id: The ID of the event orchestration to update global rules for
+        global_update: The full updated global orchestration configuration
+
+    Returns:
+        The updated global orchestration configuration
+    """
+    response = get_client().rput(
+        f"/event_orchestrations/{orchestration_id}/global", json=global_update.model_dump(exclude_none=True)
+    )
+    return EventOrchestrationGlobal.from_api_response(response)
+
+
+def update_event_orchestration_unrouted(
+    orchestration_id: str, unrouted_update: EventOrchestrationUnroutedUpdateRequest
+) -> EventOrchestrationUnrouted:
+    """Update the Unrouted Orchestration rules for an event orchestration.
+
+    Unrouted rules handle events that did not match any routing condition. Performs a
+    full replacement of the unrouted path. Retrieve the current configuration first,
+    modify it, and pass the full updated set of rules.
+
+    Rule conditions use PCL expressions, e.g. "event.severity matches 'critical'".
+
+    Args:
+        orchestration_id: The ID of the event orchestration to update unrouted rules for
+        unrouted_update: The full updated unrouted orchestration configuration
+
+    Returns:
+        The updated unrouted orchestration configuration
+    """
+    response = get_client().rput(
+        f"/event_orchestrations/{orchestration_id}/unrouted", json=unrouted_update.model_dump(exclude_none=True)
+    )
+    return EventOrchestrationUnrouted.from_api_response(response)
+
+
+def update_event_orchestration_service(
+    service_id: str, service_update: EventOrchestrationServiceUpdateRequest
+) -> EventOrchestrationService:
+    """Update the Service Orchestration rules for a specific service.
+
+    Performs a full replacement of the service orchestration path. Retrieve the current
+    configuration with get_event_orchestration_service, modify it, and pass the full
+    updated set of rules. Rule conditions use PCL expressions.
+
+    Args:
+        service_id: The ID of the service to update orchestration rules for
+        service_update: The full updated service orchestration configuration
+
+    Returns:
+        The updated service orchestration configuration
+    """
+    response = get_client().jput(
+        f"/event_orchestrations/services/{service_id}", json=service_update.model_dump(exclude_none=True)
+    )
+    return EventOrchestrationService.from_api_response(response)
 
 
 def get_event_orchestration_service(service_id: str) -> EventOrchestrationService:

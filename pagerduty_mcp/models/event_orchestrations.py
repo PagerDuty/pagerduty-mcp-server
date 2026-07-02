@@ -552,6 +552,226 @@ class EventOrchestrationGlobalPath(BaseModel):
     )
 
 
+class EventOrchestrationGlobalPathUpdateRequest(BaseModel):
+    """Global orchestration path for update requests, excluding readonly fields."""
+
+    type: Literal["global"] = Field(
+        description="Indicates that these are a set of 'global' rules.", default="global"
+    )
+    sets: list[EventOrchestrationGlobalRuleSet] = Field(
+        description="You must define at least a 'start' set, but you can also define any number of additional sets."
+    )
+    catch_all: EventOrchestrationGlobalCatchAll = Field(
+        description=(
+            "When none of the rules match an event, the event will be routed according to the catch_all settings."
+        )
+    )
+    # Explicitly excludes readonly fields (created_at, updated_at, version, parent, self)
+    # that cause JSON serialization errors and must not be sent in update requests.
+
+
+class EventOrchestrationGlobalUpdateRequest(BaseModel):
+    """Request model for updating a global event orchestration configuration."""
+
+    orchestration_path: EventOrchestrationGlobalPathUpdateRequest = Field(
+        description="The global orchestration path configuration to update"
+    )
+
+    @classmethod
+    def from_path(cls, path: EventOrchestrationGlobalPath) -> "EventOrchestrationGlobalUpdateRequest":
+        """Create update request from an EventOrchestrationGlobalPath, excluding readonly fields."""
+        update_path = EventOrchestrationGlobalPathUpdateRequest(
+            type="global", sets=path.sets, catch_all=path.catch_all
+        )
+        return cls(orchestration_path=update_path)
+
+
+class EventOrchestrationServicePathUpdateRequest(BaseModel):
+    """Service orchestration path for update requests, excluding readonly fields."""
+
+    type: Literal["service"] = Field(
+        description="Indicates that these are sets of rules belonging to a service.", default="service"
+    )
+    sets: list[EventOrchestrationServiceRuleSet] = Field(
+        description=(
+            "A Service Orchestration must contain at least a 'start' set, but can contain "
+            "any number of additional sets."
+        )
+    )
+    catch_all: EventOrchestrationServiceCatchAll = Field(
+        description="When none of the Rules in a set match an event, we apply the catch_all actions to the event."
+    )
+    # Excludes readonly fields (created_at, updated_at, version, parent, self)
+    # and service-specific migrated_* fields that must not be sent in update requests.
+
+
+class EventOrchestrationServiceUpdateRequest(BaseModel):
+    """Request model for updating a service orchestration configuration."""
+
+    orchestration_path: EventOrchestrationServicePathUpdateRequest = Field(
+        description="The service orchestration path configuration to update"
+    )
+
+    @classmethod
+    def from_path(cls, path: EventOrchestrationServicePath) -> "EventOrchestrationServiceUpdateRequest":
+        """Create update request from an EventOrchestrationServicePath, excluding readonly fields."""
+        update_path = EventOrchestrationServicePathUpdateRequest(
+            type="service", sets=path.sets, catch_all=path.catch_all
+        )
+        return cls(orchestration_path=update_path)
+
+
+class EventOrchestrationUnroutedActions(BaseModel):
+    """Actions for Unrouted Orchestration catch_all rules.
+
+    Unrouted actions support severity, event_action, variables, and extractions.
+    No route_to (to a service), no drop_event, no priority — those are service/global only.
+    """
+
+    severity: Literal["info", "error", "warning", "critical"] | None = Field(
+        description="Set the severity of the resulting alert.",
+        default=None,
+    )
+    event_action: Literal["trigger", "resolve"] | None = Field(
+        description="Set whether the resulting alert status is trigger or resolve.",
+        default=None,
+    )
+    variables: list[dict[str, Any]] | None = Field(
+        description="Populate variables from event payloads and use those variables in other event actions.",
+        default=None,
+    )
+    extractions: list[dict[str, Any]] | None = Field(
+        description="Dynamically extract values to set and modify new and existing PD-CEF fields.",
+        default=None,
+    )
+    suppress: bool | None = Field(
+        description="If true, the resulting alert is suppressed.",
+        default=None,
+    )
+
+
+class EventOrchestrationUnroutedRuleActions(EventOrchestrationUnroutedActions):
+    """Actions for Unrouted Orchestration rules (extends catch_all actions with route_to)."""
+
+    route_to: str | None = Field(
+        description=(
+            "The ID of a Set from this Unrouted Orchestration whose rules you also want to use "
+            "with events that match this rule."
+        ),
+        default=None,
+    )
+
+
+class EventOrchestrationUnroutedRule(EventOrchestrationPathRuleBase):
+    """Rule for Unrouted Orchestration."""
+
+    actions: EventOrchestrationUnroutedRuleActions = Field(
+        description="When an event matches this rule, these are the actions that will be taken."
+    )
+
+
+class EventOrchestrationUnroutedRuleSet(EventOrchestrationPathRuleSetBase):
+    """Rule set for Unrouted Orchestration."""
+
+    rules: list[EventOrchestrationUnroutedRule] = Field(description="List of rules in this set")
+
+
+class EventOrchestrationUnroutedCatchAll(BaseModel):
+    """Catch-all actions for Unrouted Orchestration."""
+
+    actions: EventOrchestrationUnroutedActions = Field(
+        description="These are the actions that will be taken when no rules match."
+    )
+
+
+class EventOrchestrationUnroutedPath(BaseModel):
+    """Unrouted Orchestration path configuration."""
+
+    type: Literal["unrouted"] = Field(
+        description="Indicates that these are a 'unrouted' type set of rules.",
+        json_schema_extra={"readOnly": True},
+    )
+    parent: EventOrchestrationGlobalParent = Field(json_schema_extra={"readOnly": True})
+    self: str | None = Field(
+        description="The API show URL at which the object is accessible",
+        json_schema_extra={"readOnly": True},
+        default=None,
+    )
+    sets: list[EventOrchestrationUnroutedRuleSet] = Field(
+        description=(
+            "An Unrouted Orchestration must contain at least a 'start' set, but can contain "
+            "any number of additional sets."
+        )
+    )
+    catch_all: EventOrchestrationUnroutedCatchAll = Field(
+        description="When none of the Rules in a set match an event, we apply the catch_all actions to the event."
+    )
+    created_at: datetime | None = Field(
+        description="The date/time the object was created.", json_schema_extra={"readOnly": True}, default=None
+    )
+    updated_at: datetime | None = Field(
+        description="The date/time the object was last updated.", json_schema_extra={"readOnly": True}, default=None
+    )
+    version: str | None = Field(
+        description="Version of these Orchestration Rules", json_schema_extra={"readOnly": True}, default=None
+    )
+
+
+class EventOrchestrationUnrouted(BaseModel):
+    """Unrouted Orchestration response model."""
+
+    orchestration_path: EventOrchestrationUnroutedPath | None = Field(
+        description="The unrouted orchestration path configuration", default=None
+    )
+
+    @classmethod
+    def from_api_response(cls, response_data: dict[str, Any]) -> "EventOrchestrationUnrouted":
+        """Create EventOrchestrationUnrouted from PagerDuty API response.
+
+        Handles both wrapped and direct response formats:
+        - Wrapped: {"orchestration_path": {...}}
+        - Direct: {...} (unrouted orchestration data directly)
+        """
+        if "orchestration_path" in response_data:
+            return cls.model_validate(response_data)
+
+        return cls(orchestration_path=EventOrchestrationUnroutedPath.model_validate(response_data))
+
+
+class EventOrchestrationUnroutedPathUpdateRequest(BaseModel):
+    """Unrouted orchestration path for update requests, excluding readonly fields."""
+
+    type: Literal["unrouted"] = Field(
+        description="Indicates that these are a 'unrouted' type set of rules.", default="unrouted"
+    )
+    sets: list[EventOrchestrationUnroutedRuleSet] = Field(
+        description=(
+            "An Unrouted Orchestration must contain at least a 'start' set, but can contain "
+            "any number of additional sets."
+        )
+    )
+    catch_all: EventOrchestrationUnroutedCatchAll = Field(
+        description="When none of the Rules in a set match an event, we apply the catch_all actions to the event."
+    )
+    # Explicitly excludes readonly fields (created_at, updated_at, version, parent, self).
+
+
+class EventOrchestrationUnroutedUpdateRequest(BaseModel):
+    """Request model for updating an unrouted event orchestration configuration."""
+
+    orchestration_path: EventOrchestrationUnroutedPathUpdateRequest = Field(
+        description="The unrouted orchestration path configuration to update"
+    )
+
+    @classmethod
+    def from_path(cls, path: EventOrchestrationUnroutedPath) -> "EventOrchestrationUnroutedUpdateRequest":
+        """Create update request from an EventOrchestrationUnroutedPath, excluding readonly fields."""
+        update_path = EventOrchestrationUnroutedPathUpdateRequest(
+            type="unrouted", sets=path.sets, catch_all=path.catch_all
+        )
+        return cls(orchestration_path=update_path)
+
+
 class EventOrchestrationService(BaseModel):
     """Service Orchestration response model."""
 

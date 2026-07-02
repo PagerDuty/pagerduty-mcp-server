@@ -1,5 +1,8 @@
+from typing import Any
+
 from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import ListResponseModel, User, UserQuery
+from pagerduty_mcp.models import ListResponseModel, User
+from pagerduty_mcp.models.users import CreateUserRequest
 
 
 def get_user_data() -> User:
@@ -12,17 +15,42 @@ def get_user_data() -> User:
     return User.model_validate(response)
 
 
-def list_users(query_model: UserQuery | None = None) -> ListResponseModel[User]:
+def list_users(
+    query: str | None = None,
+    teams_ids: list[str] | None = None,
+    limit: int | None = 100,
+) -> ListResponseModel[User]:
     """List users, optionally filtering by name (query) and team IDs.
 
     Args:
-        query_model: Optional filtering parameters
+        query: Filters the result, showing only the records whose name matches the query.
+        teams_ids: Filter users by team IDs.
+        limit: Pagination limit. Default 100.
 
     Returns:
         List of users matching the criteria.
     """
-    if query_model is None:
-        query_model = UserQuery()
-    response = get_client().rget("/users", params=query_model.to_params())
+    params: dict[str, Any] = {}
+    if query:
+        params["query"] = query
+    if teams_ids:
+        params["team_ids[]"] = teams_ids
+    if limit:
+        params["limit"] = limit
+
+    response = get_client().rget("/users", params=params)
     users = [User(**user) for user in response]
     return ListResponseModel[User](response=users)
+
+
+def create_user(request: CreateUserRequest) -> User:
+    """Create a new PagerDuty user account. No invitation email is sent.
+
+    Args:
+        request: User creation parameters (name, email, role, time_zone)
+
+    Returns:
+        The created User object.
+    """
+    response = get_client().rpost("/users", json=request.model_dump())
+    return User.model_validate(response)

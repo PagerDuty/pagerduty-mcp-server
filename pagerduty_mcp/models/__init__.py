@@ -38,7 +38,6 @@ from .incident_workflows import (
     IncidentWorkflowInstance,
     IncidentWorkflowInstanceCreate,
     IncidentWorkflowInstanceRequest,
-    IncidentWorkflowQuery,
     InlineStepInput,
     Step,
 )
@@ -112,7 +111,8 @@ from .status_pages import (
     StatusPageStatusReference,
 )
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
-from .users import User, UserQuery
+from .users import CreateUserRequest, User, UserQuery
+from .webhooks import ExtensionSchema, WebhookCreate, WebhookSubscription, WebhookUpdate
 
 __all__ = [
     "MAX_RESULTS",
@@ -123,9 +123,10 @@ __all__ = [
     "AlertGroupingSetting",
     "AlertGroupingSettingCreate",
     "AlertGroupingSettingCreateRequest",
+    # TODO: Remove remaining *Query models from __all__ once PRs D and E
+    # land the updated test files that no longer import them directly.
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
-    "AlertQuery",
     "Assignment",
     "AssignmentInput",
     "ChangeEvent",
@@ -149,7 +150,7 @@ __all__ = [
     "EventOrchestrationRuleCreateRequest",
     "EventOrchestrationRuleSet",
     "EventOrchestrationService",
-    "GetIncidentQuery",
+    "ExtensionSchema",
     "Incident",
     "IncidentCreate",
     "IncidentCreateRequest",
@@ -163,7 +164,6 @@ __all__ = [
     "IncidentWorkflowInstance",
     "IncidentWorkflowInstanceCreate",
     "IncidentWorkflowInstanceRequest",
-    "IncidentWorkflowQuery",
     "InlineStepInput",
     "IntegrationReference",
     "IntelligentGroupingConfig",
@@ -228,4 +228,8 @@ __all__ = [
     "User",
     "UserQuery",
     "UserReference",
+    "CreateUserRequest",
+    "WebhookCreate",
+    "WebhookSubscription",
+    "WebhookUpdate",
 ]

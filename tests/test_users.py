@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 from pagerduty_mcp.models.base import DEFAULT_PAGINATION_LIMIT, MAXIMUM_PAGINATION_LIMIT
 from pagerduty_mcp.models.references import TeamReference
-from pagerduty_mcp.models.users import User, UserQuery
-from pagerduty_mcp.tools.users import get_user_data, list_users
+from pagerduty_mcp.models.users import CreateUserRequest, User, UserQuery
+from pagerduty_mcp.tools.users import create_user, get_user_data, list_users
 
 
 class TestUserTools(unittest.TestCase):
@@ -51,6 +51,7 @@ class TestUserTools(unittest.TestCase):
         self.mock_client.reset_mock()
         # Clear any side effects
         self.mock_client.rget.side_effect = None
+        self.mock_client.rpost.side_effect = None
 
     @patch("pagerduty_mcp.tools.users.get_client")
     def test_get_user_data_success(self, mock_get_client):
@@ -92,13 +93,13 @@ class TestUserTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.users.get_client")
     def test_list_users_no_query_model(self, mock_get_client):
-        """Test that list_users can be called with no arguments (no query_model)."""
+        """Test that list_users can be called with no arguments."""
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_users_list_response
 
         result = list_users()
 
-        expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"limit": 100}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
         self.assertEqual(len(result.response), 2)
 
@@ -108,11 +109,11 @@ class TestUserTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_users_list_response
 
-        result = list_users(UserQuery())
+        result = list_users()
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"limit": 100}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result
@@ -130,11 +131,11 @@ class TestUserTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = [self.sample_users_list_response[0]]
 
-        result = list_users(UserQuery(query="John"))
+        result = list_users(query="John")
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"query": "John", "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"query": "John", "limit": 100}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result
@@ -148,11 +149,11 @@ class TestUserTools(unittest.TestCase):
         self.mock_client.rget.return_value = [self.sample_users_list_response[1]]
 
         team_ids = ["TEAM2", "TEAM3"]
-        result = list_users(UserQuery(teams_ids=team_ids))
+        result = list_users(teams_ids=team_ids)
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"team_ids[]": team_ids, "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": team_ids, "limit": 100}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result
@@ -165,7 +166,7 @@ class TestUserTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_users_list_response
 
-        result = list_users(UserQuery(limit=50))
+        result = list_users(limit=50)
 
         # Verify API call
         mock_get_client.assert_called_once()
@@ -182,7 +183,7 @@ class TestUserTools(unittest.TestCase):
         self.mock_client.rget.return_value = [self.sample_users_list_response[0]]
 
         team_ids = ["TEAM1"]
-        result = list_users(UserQuery(query="John", teams_ids=team_ids, limit=10))
+        result = list_users(query="John", teams_ids=team_ids, limit=10)
 
         # Verify API call
         mock_get_client.assert_called_once()
@@ -199,11 +200,11 @@ class TestUserTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = []
 
-        result = list_users(UserQuery(query="NonExistentUser"))
+        result = list_users(query="NonExistentUser")
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"query": "NonExistentUser", "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"query": "NonExistentUser", "limit": 100}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result
@@ -216,7 +217,7 @@ class TestUserTools(unittest.TestCase):
         self.mock_client.rget.side_effect = Exception("API Error")
 
         with self.assertRaises(Exception) as context:
-            list_users(UserQuery())
+            list_users()
 
         self.assertEqual(str(context.exception), "API Error")
         mock_get_client.assert_called_once()
@@ -274,25 +275,23 @@ class TestUserTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = [self.sample_users_list_response[0]]
 
-        result = list_users(UserQuery(teams_ids=["TEAM1"]))
+        result = list_users(teams_ids=["TEAM1"])
 
         # Verify API call
         mock_get_client.assert_called_once()
-        expected_params = {"team_ids[]": ["TEAM1"], "limit": DEFAULT_PAGINATION_LIMIT}
+        expected_params = {"team_ids[]": ["TEAM1"], "limit": 100}
         self.mock_client.rget.assert_called_once_with("/users", params=expected_params)
 
         # Verify result
         self.assertEqual(len(result.response), 1)
 
     @patch("pagerduty_mcp.tools.users.get_client")
-    def test_list_users_with_query_model(self, mock_get_client):
-        """Test listing users using UserQuery model - FastMCP compatible approach."""
+    def test_list_users_with_all_params(self, mock_get_client):
+        """Test listing users using flat params."""
         mock_get_client.return_value = self.mock_client
         self.mock_client.rget.return_value = self.sample_users_list_response
 
-        # Test the new approach using UserQuery model
-        query_model = UserQuery(query="John", teams_ids=["TEAM1"], limit=10)
-        result = list_users(query_model)
+        result = list_users(query="John", teams_ids=["TEAM1"], limit=10)
 
         # Verify API call
         mock_get_client.assert_called_once()
@@ -301,6 +300,72 @@ class TestUserTools(unittest.TestCase):
 
         # Verify result
         self.assertEqual(len(result.response), 2)
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_success_unwrapped_response(self, mock_get_client):
+        """Test create_user when API returns the user object directly."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = self.sample_user_response
+
+        request = CreateUserRequest(name="John Doe", email="john.doe@example.com")
+        result = create_user(request)
+
+        self.assertIsInstance(result, User)
+        self.assertEqual(result.id, "USER123")
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_calls_api_correctly(self, mock_get_client):
+        """Test that create_user calls rpost with the correct arguments."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.return_value = self.sample_user_response
+
+        request = CreateUserRequest(name="John Doe", email="john.doe@example.com")
+        create_user(request)
+
+        self.mock_client.rpost.assert_called_once_with(
+            "/users",
+            json=request.model_dump(),
+        )
+
+    @patch("pagerduty_mcp.tools.users.get_client")
+    def test_create_user_client_error(self, mock_get_client):
+        """Test create_user propagates client exceptions."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.rpost.side_effect = Exception("Create Error")
+
+        with self.assertRaises(Exception) as ctx:
+            create_user(CreateUserRequest(name="John Doe", email="john.doe@example.com"))
+
+        self.assertEqual(str(ctx.exception), "Create Error")
+
+
+class TestUserModelTimeZoneAndJobTitle(unittest.TestCase):
+    """Tests for time_zone and job_title fields on the User read model (from PR #131)."""
+
+    def test_user_model_job_title_and_time_zone_default_none(self):
+        """time_zone and job_title default to None — backwards compatible with existing payloads."""
+        user = User(name="Test User", email="test@example.com", role="user", teams=[])
+        self.assertIsNone(user.job_title)
+        self.assertIsNone(user.time_zone)
+
+    def test_user_model_job_title_and_time_zone_populated(self):
+        """time_zone and job_title round-trip from API payload."""
+        user = User(
+            name="Test User",
+            email="test@example.com",
+            role="user",
+            teams=[],
+            job_title="Senior Engineer",
+            time_zone="America/New_York",
+        )
+        self.assertEqual(user.job_title, "Senior Engineer")
+        self.assertEqual(user.time_zone, "America/New_York")
+
+    def test_user_model_time_zone_iana_format(self):
+        """time_zone accepts standard IANA timezone names."""
+        for tz in ("Europe/Lisbon", "Asia/Tokyo", "UTC", "America/Chicago"):
+            user = User(name="u", email="u@example.com", role="user", teams=[], time_zone=tz)
+            self.assertEqual(user.time_zone, tz)
 
 
 if __name__ == "__main__":

@@ -76,7 +76,7 @@ class TestServiceTools(unittest.TestCase):
     @patch("pagerduty_mcp.tools.services.paginate")
     @patch("pagerduty_mcp.tools.services.get_client")
     def test_list_services_no_query_model(self, mock_get_client, mock_paginate):
-        """Test that list_services can be called with no arguments (no query_model)."""
+        """Test that list_services can be called with no arguments."""
         mock_get_client.return_value = self.mock_client
         mock_paginate.return_value = self.sample_services_list_response
 
@@ -97,7 +97,6 @@ class TestServiceTools(unittest.TestCase):
         # Verify paginate call
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={})
 
-        # Verify result
         self.assertEqual(len(result.response), 2)
         self.assertIsInstance(result.response[0], Service)
         self.assertIsInstance(result.response[1], Service)
@@ -119,7 +118,6 @@ class TestServiceTools(unittest.TestCase):
         expected_params = {"query": "Web"}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
-        # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].name, "Web Application Service")
 
@@ -136,7 +134,6 @@ class TestServiceTools(unittest.TestCase):
         expected_params = {"team_ids[]": ["TEAM2"]}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
-        # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].name, "Database Service")
 
@@ -149,11 +146,9 @@ class TestServiceTools(unittest.TestCase):
 
         result = list_services(limit=50)
 
-        # Verify paginate call
         expected_params = {"limit": 50}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
-        # Verify result
         self.assertEqual(len(result.response), 2)
 
     @patch("pagerduty_mcp.tools.services.paginate")
@@ -165,11 +160,9 @@ class TestServiceTools(unittest.TestCase):
 
         result = list_services(query="Web", teams_ids=["TEAM1"], limit=10)
 
-        # Verify paginate call
         expected_params = {"query": "Web", "team_ids[]": ["TEAM1"], "limit": 10}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
-        # Verify result
         self.assertEqual(len(result.response), 1)
         self.assertEqual(result.response[0].name, "Web Application Service")
 
@@ -186,7 +179,6 @@ class TestServiceTools(unittest.TestCase):
         expected_params = {"query": "NonExistentService"}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
-        # Verify result
         self.assertEqual(len(result.response), 0)
 
     @patch("pagerduty_mcp.tools.services.paginate")

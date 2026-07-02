@@ -61,8 +61,6 @@ Step-by-step PagerDuty account setup:
 - ✅ Direct access to all PagerDuty MCP tools
 - ✅ Simple deployment: `uv run pagerduty-mcp`
 
-See [mcp-apps/README.md](mcp-apps/README.md) for development instructions and customization.
-
 ## Prerequisites
 
 *   [asdf-vm](https://asdf-vm.com/) installed.
@@ -318,6 +316,15 @@ To integrate the Docker container with MCP clients, you can use Docker as the co
     }
     ```
 
+## Configuration
+
+The MCP server is configured via environment variables:
+
+| Environment Variable | Required | Default | Description |
+|---|---|---|---|
+| `PAGERDUTY_USER_API_KEY` | Yes | — | Your PagerDuty User API Token. |
+| `PAGERDUTY_API_HOST` | No | `https://api.pagerduty.com` | PagerDuty API base URL. Use `https://api.eu.pagerduty.com` for EU accounts. |
+
 ## Available Tools and Resources
 
 This section describes the tools provided by the PagerDuty MCP server. They are categorized based on whether they only read data or can modify data in your PagerDuty account.
@@ -390,6 +397,13 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | list_status_page_severities | Status Pages    | Lists available severity levels for a status page   | ✅         |
 | list_status_page_statuses | Status Pages      | Lists available statuses for a status page          | ✅         |
 | list_status_pages        | Status Pages       | Lists all status pages with optional filtering      | ✅         |
+| create_webhook_subscription | Webhooks        | Creates a new webhook subscription (returns signing secret) | ❌         |
+| delete_webhook_subscription | Webhooks        | Deletes a webhook subscription                      | ❌         |
+| get_webhook_subscription    | Webhooks        | Retrieves a specific webhook subscription           | ✅         |
+| list_webhook_subscriptions  | Webhooks        | Lists webhook subscriptions with optional type filtering | ✅         |
+| update_webhook_subscription | Webhooks        | Updates an existing webhook subscription            | ❌         |
+| get_extension_schema        | Extension Schemas | Retrieves a specific extension schema             | ✅         |
+| list_extension_schemas      | Extension Schemas | Lists available extension schemas (vendors)       | ✅         |
 
 
 ## Support

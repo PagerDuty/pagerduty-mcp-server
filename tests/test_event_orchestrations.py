@@ -1734,7 +1734,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
     def test_update_event_orchestration_service_success(self, mock_get_client):
-        """update_event_orchestration_service calls rput with correct path and payload."""
+        """update_event_orchestration_service calls jput with correct path and payload."""
         from pagerduty_mcp.models.event_orchestrations import (
             EventOrchestrationServicePath,
             EventOrchestrationServiceUpdateRequest,
@@ -1755,7 +1755,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         }
 
         mock_client = MagicMock()
-        mock_client.rput.return_value = service_response
+        mock_client.jput.return_value = service_response
         mock_get_client.return_value = mock_client
 
         path = EventOrchestrationServicePath.model_validate(service_response["orchestration_path"])
@@ -1763,7 +1763,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
         result = update_event_orchestration_service("PC2D9ML", update_request)
 
-        mock_client.rput.assert_called_once_with(
+        mock_client.jput.assert_called_once_with(
             "/event_orchestrations/services/PC2D9ML",
             json=update_request.model_dump(exclude_none=True),
         )
@@ -1791,7 +1791,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         }
 
         mock_client = MagicMock()
-        mock_client.rput.return_value = direct_response
+        mock_client.jput.return_value = direct_response
         mock_get_client.return_value = mock_client
 
         path = EventOrchestrationServicePath.model_validate(direct_response)
@@ -1861,7 +1861,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_service
 
         mock_client = MagicMock()
-        mock_client.rput.side_effect = RuntimeError("404 Not Found")
+        mock_client.jput.side_effect = RuntimeError("404 Not Found")
         mock_get_client.return_value = mock_client
 
         path = EventOrchestrationServicePath.model_validate(

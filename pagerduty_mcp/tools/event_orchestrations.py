@@ -188,7 +188,7 @@ def update_event_orchestration_service(
     Returns:
         The updated service orchestration configuration
     """
-    response = get_client().rput(
+    response = get_client().jput(
         f"/event_orchestrations/services/{service_id}", json=service_update.model_dump(exclude_none=True)
     )
     return EventOrchestrationService.from_api_response(response)

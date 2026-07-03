@@ -15,16 +15,12 @@ from .incidents import (
 )
 from .oncalls import list_oncalls
 from .schedules import (
+    create_schedule,
     create_schedule_override,
     get_schedule,
     list_schedule_users,
     list_schedules,
-)
-from .schedules_v3 import (
-    create_schedule_v3,
-    get_schedule_v3,
-    list_schedules_v3,
-    update_schedule_v3,
+    update_schedule,
 )
 from .services import (
     create_service,
@@ -59,13 +55,10 @@ read_tools = [
     # Users
     get_user_data,
     list_users,
-    # Schedules (v2)
+    # Schedules (unified across layer-based v2 and shift-based v3)
     list_schedules,
     get_schedule,
     list_schedule_users,
-    # Schedules (v3)
-    list_schedules_v3,
-    get_schedule_v3,
     # On-calls
     list_oncalls,
     # Escalation Policies
@@ -88,11 +81,10 @@ write_tools = [
     delete_team,
     add_team_member,
     remove_team_member,
-    # Schedules (v2)
+    # Schedules (unified): create/update target shift-based (v3); overrides are layer-based (v2)
+    create_schedule,
+    update_schedule,
     create_schedule_override,
-    # Schedules (v3)
-    create_schedule_v3,
-    update_schedule_v3,
     # Escalation Policies - currently disabled
     # create_escalation_policy,
 ]

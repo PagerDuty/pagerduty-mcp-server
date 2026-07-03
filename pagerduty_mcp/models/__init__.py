@@ -14,10 +14,14 @@ from .oncalls import Oncall, OncallQuery
 from .references import IncidentReference, ScheduleReference, ServiceReference, TeamReference, UserReference
 from .schedules import (
     Schedule,
+    ScheduleDetail,
     ScheduleLayer,
     ScheduleLayerUser,
     ScheduleOverrideCreate,
     ScheduleQuery,
+    SchedulesListResponse,
+    ScheduleSummary,
+    SourceStatus,
 )
 from .schedules_v3 import ScheduleV3, ScheduleV3Create, ScheduleV3Update
 from .services import Service, ServiceCreate, ServiceQuery
@@ -41,18 +45,22 @@ __all__ = [
     "Oncall",
     "OncallQuery",
     "Schedule",
+    "ScheduleDetail",
     "ScheduleLayer",
     "ScheduleLayerUser",
     "ScheduleOverrideCreate",
     "ScheduleQuery",
     "ScheduleReference",
+    "ScheduleSummary",
     "ScheduleV3",
     "ScheduleV3Create",
     "ScheduleV3Update",
+    "SchedulesListResponse",
     "Service",
     "ServiceCreate",
     "ServiceQuery",
     "ServiceReference",
+    "SourceStatus",
     "Team",
     "TeamCreateRequest",
     "TeamMemberAdd",

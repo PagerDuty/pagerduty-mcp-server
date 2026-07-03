@@ -29,7 +29,7 @@ def list_webhook_subscriptions(
         params["filter_type"] = filter_type
     if limit:
         params["limit"] = limit
-    response = paginate(client=get_client(), entity="webhook_subscriptions", params=params)
+    response = paginate(client=get_client(), entity="webhook_subscriptions", params=params, maximum_records=limit or 1000)
     subscriptions = [WebhookSubscription(**sub) for sub in response]
     return ListResponseModel[WebhookSubscription](response=subscriptions)
 
@@ -112,7 +112,7 @@ def list_extension_schemas(
     params: dict[str, Any] = {}
     if limit:
         params["limit"] = limit
-    response = paginate(client=get_client(), entity="extension_schemas", params=params)
+    response = paginate(client=get_client(), entity="extension_schemas", params=params, maximum_records=limit or 1000)
     schemas = [ExtensionSchema(**schema) for schema in response]
     return ListResponseModel[ExtensionSchema](response=schemas)
 

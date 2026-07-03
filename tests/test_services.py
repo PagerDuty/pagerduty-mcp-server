@@ -8,6 +8,7 @@ from pagerduty_mcp.models.services import Service, ServiceCreate, ServiceQuery
 from pagerduty_mcp.tools.services import (
     create_service,
     get_service,
+    get_technical_service_dependencies,
     list_services,
     update_service,
 )
@@ -93,6 +94,7 @@ class TestServiceTools(unittest.TestCase):
 
         result = list_services()
 
+        # Verify paginate call
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params={})
 
         self.assertEqual(len(result.response), 2)
@@ -112,6 +114,7 @@ class TestServiceTools(unittest.TestCase):
 
         result = list_services(query="Web")
 
+        # Verify paginate call
         expected_params = {"query": "Web"}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
@@ -127,6 +130,7 @@ class TestServiceTools(unittest.TestCase):
 
         result = list_services(teams_ids=["TEAM2"])
 
+        # Verify paginate call
         expected_params = {"team_ids[]": ["TEAM2"]}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
@@ -171,6 +175,7 @@ class TestServiceTools(unittest.TestCase):
 
         result = list_services(query="NonExistentService")
 
+        # Verify paginate call
         expected_params = {"query": "NonExistentService"}
         mock_paginate.assert_called_once_with(client=self.mock_client, entity="services", params=expected_params)
 
@@ -207,6 +212,8 @@ class TestServiceTools(unittest.TestCase):
         self.assertEqual(result.description, "Main web application service")
         self.assertIsInstance(result.escalation_policy, EscalationPolicyReference)
         self.assertEqual(result.escalation_policy.id, "EP123")
+        self.assertIsNotNone(result.teams)
+        assert result.teams is not None
         self.assertEqual(len(result.teams), 2)
         self.assertIsInstance(result.teams[0], TeamReference)
         self.assertEqual(result.teams[0].id, "TEAM1")
@@ -430,6 +437,61 @@ class TestServiceTools(unittest.TestCase):
         )
 
         self.assertEqual(service.type, "service")
+
+
+
+class TestGetTechnicalServiceDependencies(unittest.TestCase):
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_success(self, mock_get_client):
+        """Test successful retrieval of technical service dependencies."""
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "relationships": [
+                {
+                    "supporting_service": {"id": "S1", "type": "service"},
+                    "dependent_service": {"id": "S2", "type": "service"},
+                }
+            ]
+        }
+        mock_client.get.return_value = mock_response
+        mock_get_client.return_value = mock_client
+
+        result = get_technical_service_dependencies("S2")
+
+        mock_client.get.assert_called_once_with("/service_dependencies/technical_services/S2")
+        mock_response.raise_for_status.assert_called_once()
+        self.assertIn('"relationships"', result)
+
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_empty_relationships(self, mock_get_client):
+        """Test that an empty relationships list is handled correctly."""
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"relationships": []}
+        mock_client.get.return_value = mock_response
+        mock_get_client.return_value = mock_client
+
+        result = get_technical_service_dependencies("S1")
+
+        mock_response.raise_for_status.assert_called_once()
+        self.assertIn("relationships", result)
+
+    @patch("pagerduty_mcp.tools.services.get_client")
+    def test_http_error_propagates(self, mock_get_client):
+        """Test that HTTP errors from raise_for_status propagate correctly."""
+        from unittest.mock import MagicMock
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.raise_for_status.side_effect = Exception("404 Not Found")
+        mock_client.get.return_value = mock_response
+        mock_get_client.return_value = mock_client
+
+        with self.assertRaises(Exception) as context:
+            get_technical_service_dependencies("INVALID")
+
+        self.assertIn("404", str(context.exception))
 
 
 if __name__ == "__main__":

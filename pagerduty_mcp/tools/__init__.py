@@ -9,6 +9,18 @@ from .alerts import (
     get_alert_from_incident,
     list_alerts_from_incident,
 )
+from .analytics import (
+    get_incident_metrics_all,
+    get_incident_metrics_by_service,
+    get_incident_metrics_by_team,
+    get_responder_load_metrics,
+    get_responder_metrics,
+)
+from .business_services import (
+    get_business_service_dependencies,
+    list_business_services,
+)
+from .priorities import list_priorities
 from .change_events import (
     get_change_event,
     list_change_events,
@@ -66,6 +78,7 @@ from .schedules import (
 from .services import (
     create_service,
     get_service,
+    get_technical_service_dependencies,
     list_services,
     update_service,
 )
@@ -126,6 +139,7 @@ read_tools = [
     # Services
     list_services,
     get_service,
+    get_technical_service_dependencies,
     # Teams
     list_teams,
     get_team,
@@ -158,6 +172,17 @@ read_tools = [
     list_status_page_statuses,
     get_status_page_post,
     list_status_page_post_updates,
+    # Analytics
+    get_responder_metrics,
+    get_incident_metrics_by_service,
+    get_incident_metrics_by_team,
+    get_responder_load_metrics,
+    get_incident_metrics_all,
+    # Business Services
+    list_business_services,
+    get_business_service_dependencies,
+    # Priorities
+    list_priorities,
     # Webhooks
     list_webhook_subscriptions,
     get_webhook_subscription,

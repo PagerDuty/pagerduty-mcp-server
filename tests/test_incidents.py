@@ -268,6 +268,18 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(params["urgencies[]"], ["high"])
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
+    def test_list_incidents_priorities_filter(self, mock_paginate):
+        """Priorities filter must be sent as priority_ids[] (priorities[] is ignored by the API)."""
+        mock_paginate.return_value = [self.sample_incident_data]
+
+        _ = list_incidents(priorities=["PGRZCZB", "PCFOBKO"])
+
+        params = mock_paginate.call_args[1]["params"]
+        self.assertIn("priority_ids[]", params)
+        self.assertEqual(params["priority_ids[]"], ["PGRZCZB", "PCFOBKO"])
+        self.assertNotIn("priorities[]", params)
+
+    @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_with_date_range(self, mock_paginate):
         """Test listing incidents with since/until date range."""
         mock_paginate.return_value = [self.sample_incident_data]

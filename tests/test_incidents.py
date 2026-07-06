@@ -8,7 +8,6 @@ from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.models import (
     MAX_RESULTS,
     Alert,
-    AlertQuery,
     Assignment,
     AssignmentInput,
     GetIncidentQuery,
@@ -1424,10 +1423,8 @@ class TestAlertTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = [self.sample_alert_data]
 
-        query_model = AlertQuery(limit=10, offset=0)
-
         # Act
-        result = list_alerts_from_incident("PINCIDENT123", query_model)
+        result = list_alerts_from_incident("PINCIDENT123", limit=10, offset=0)
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)
@@ -1445,10 +1442,8 @@ class TestAlertTools(unittest.TestCase):
         mock_get_client.return_value = mock_client
         mock_paginate.return_value = []
 
-        query_model = AlertQuery()
-
         # Act
-        result = list_alerts_from_incident("PINCIDENT123", query_model)
+        result = list_alerts_from_incident("PINCIDENT123")
 
         # Assert
         self.assertIsInstance(result, ListResponseModel)

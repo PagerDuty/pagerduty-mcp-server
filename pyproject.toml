@@ -30,7 +30,6 @@ root = "tests"
 extraPaths = ["."]
 reportOptionalMemberAccess = false
 reportOptionalSubscript = false
-reportArgumentType = false
 reportAttributeAccessIssue = false
 reportCallIssue = false
 

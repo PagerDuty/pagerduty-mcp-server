@@ -295,8 +295,10 @@ class TestEscalationPolicyTools(unittest.TestCase):
         self.assertEqual(target.summary, "John Doe - Senior Engineer")
 
         # Verify references
+        assert result.services is not None
         self.assertEqual(len(result.services), 1)
         self.assertEqual(result.services[0].id, "SVC123")
+        assert result.teams is not None
         self.assertEqual(len(result.teams), 1)
         self.assertEqual(result.teams[0].id, "TEAM123")
 

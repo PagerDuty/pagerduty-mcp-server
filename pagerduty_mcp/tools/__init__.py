@@ -76,7 +76,6 @@ from .schedules import (
     update_schedule,
 )
 from .schedules_v3 import (
-    create_schedule_v3,
     create_schedule_v3_custom_shifts,
     create_schedule_v3_overrides,
     create_schedule_v3_rotation,
@@ -86,7 +85,6 @@ from .schedules_v3 import (
     delete_schedule_v3_override,
     delete_schedule_v3_rotation,
     delete_schedule_v3_rotation_event,
-    get_schedule_v3,
     get_schedule_v3_custom_shift,
     get_schedule_v3_override,
     get_schedule_v3_rotation,
@@ -95,8 +93,6 @@ from .schedules_v3 import (
     list_schedule_v3_overrides,
     list_schedule_v3_rotation_events,
     list_schedule_v3_rotations,
-    list_schedules_v3,
-    update_schedule_v3,
     update_schedule_v3_custom_shift,
     update_schedule_v3_override,
     update_schedule_v3_rotation_event,
@@ -173,13 +169,11 @@ read_tools = [
     # Users
     get_user_data,
     list_users,
-    # Schedules (v2)
+    # Schedules (unified across layer-based v2 and shift-based v3)
     list_schedules,
     get_schedule,
     list_schedule_users,
-    # Schedules (v3)
-    list_schedules_v3,
-    get_schedule_v3,
+    # Schedules (v3 sub-resources)
     list_schedule_v3_rotations,
     get_schedule_v3_rotation,
     list_schedule_v3_rotation_events,
@@ -250,13 +244,11 @@ write_tools = [
     delete_team,
     add_team_member,
     remove_team_member,
-    # Schedules
+    # Schedules (unified): create/update target shift-based (v3); overrides are layer-based (v2)
     create_schedule,
-    create_schedule_override,
     update_schedule,
-    # Schedules (v3)
-    create_schedule_v3,
-    update_schedule_v3,
+    create_schedule_override,
+    # Schedules (v3 sub-resources)
     delete_schedule_v3,
     create_schedule_v3_rotation,
     delete_schedule_v3_rotation,

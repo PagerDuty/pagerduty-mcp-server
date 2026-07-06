@@ -10,7 +10,6 @@ from pagerduty_mcp.models.schedules_v3 import (
     OverrideShift,
     OverrideShiftCreate,
     OverrideShiftUpdate,
-    ShiftMember,
     Rotation,
     RotationEvent,
     RotationEventCreate,
@@ -18,6 +17,7 @@ from pagerduty_mcp.models.schedules_v3 import (
     ScheduleV3,
     ScheduleV3Create,
     ScheduleV3Update,
+    ShiftMember,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,25 +49,45 @@ def _unwrap_list(response: Any, key: str) -> list:
     return []
 
 
-# ---- Schedule tools ----
+def _unwrap_schedule(response: Any) -> dict:
+    """Extract schedule dict from API response, handling both wrapped and unwrapped forms."""
+    if isinstance(response, dict) and "schedule" in response:
+        return response["schedule"]
+    return response
 
 
-def list_schedules_v3(
+def _extract_api_message(resp: Any) -> str:
+    """Pull the human-readable error message out of a v3 API error body."""
+    try:
+        body = resp.json()
+    except Exception:  # noqa: BLE001 - any parse failure falls back to raw text
+        return getattr(resp, "text", "") or "unknown error"
+    if isinstance(body, dict):
+        err = body.get("error")
+        if isinstance(err, dict):
+            return err.get("message") or err.get("code") or str(err)
+        if isinstance(err, str):
+            return err
+    return str(body)
+
+
+def _check_v3_response(resp: Any) -> None:
+    """Raise an informative error on a non-2xx v3 response.
+
+    We surface the API's own message (e.g. "This is a layer-based schedule. Use the v2
+    Schedules API to access it.") so the caller never gets an opaque failure or a silent no-op.
+    """
+    if getattr(resp, "ok", True):
+        return
+    status = getattr(resp, "status_code", "?")
+    raise RuntimeError(f"PagerDuty v3 Schedules API error (HTTP {status}): {_extract_api_message(resp)}")
+
+
+def _get_v3_schedules_page(
     query: str | None = None,
     limit: int | None = None,
-) -> ListResponseModel[ScheduleV3]:
-    """List v3 schedules with optional filtering.
-
-    Use this tool to list schedules created with PagerDuty's next-gen scheduling system (v3).
-    Classic (v2) schedules are listed with list_schedules.
-
-    Args:
-        query: Filter v3 schedules by name
-        limit: Max results to return
-
-    Returns:
-        List of v3 schedules
-    """
+) -> tuple[list[dict], bool]:
+    """Fetch one page of raw v3 schedule references and whether more pages exist."""
     params: dict[str, Any] = {}
     if query:
         params["query"] = query
@@ -76,13 +96,33 @@ def list_schedules_v3(
 
     client = get_client()
     resp = client.get(_v3_url(client, "/v3/schedules"), params=params)
-    resp.raise_for_status()
+    _check_v3_response(resp)
     data = resp.json()
 
-    raw_schedules = _unwrap_list(data, "schedules")
-    if not raw_schedules and not isinstance(data, dict | list):
-        logger.warning("Unexpected response format from /v3/schedules: %s", type(data).__name__)
+    if isinstance(data, dict) and "schedules" in data:
+        return data["schedules"], bool(data.get("more"))
+    if isinstance(data, list):
+        return data, False
+    logger.warning("Unexpected response format from /v3/schedules: %s", type(data).__name__)
+    return [], False
 
+
+def list_schedules_v3(
+    query: str | None = None,
+    limit: int | None = None,
+) -> ListResponseModel[ScheduleV3]:
+    """List v3 (shift-based) schedules. Internal helper — not registered as an MCP tool.
+
+    The unified `list_schedules` tool calls this so the LLM sees a single schedule list.
+
+    Args:
+        query: Filter v3 schedules by name
+        limit: Max results to return
+
+    Returns:
+        List of v3 schedules
+    """
+    raw_schedules, _ = _get_v3_schedules_page(query=query, limit=limit)
     schedules = [ScheduleV3(**s) for s in raw_schedules]
     return ListResponseModel[ScheduleV3](response=schedules)
 
@@ -94,23 +134,23 @@ def get_schedule_v3(schedule_id: str) -> ScheduleV3:
         schedule_id: The ID of the v3 schedule to retrieve
 
     Returns:
-        v3 schedule details including time zone and teams
+        v3 schedule details including rotations, events, and time zone
     """
     client = get_client()
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}"))
-    resp.raise_for_status()
-    return ScheduleV3.model_validate(_unwrap(resp.json(), "schedule"))
+    _check_v3_response(resp)
+    return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))
 
 
 def create_schedule_v3(schedule_data: ScheduleV3Create) -> ScheduleV3:
     """Create a new v3 schedule.
 
-    Creates the schedule container. Add rotations and events as separate steps using
+    Rotations can be embedded in the create payload, or added afterwards with
     create_schedule_v3_rotation and create_schedule_v3_rotation_event.
 
     Args:
         schedule_data: Data for the new v3 schedule, including name and time_zone (required),
-            plus optional description and teams
+            plus optional description, teams, and rotations
 
     Returns:
         The created v3 schedule
@@ -120,19 +160,20 @@ def create_schedule_v3(schedule_data: ScheduleV3Create) -> ScheduleV3:
         _v3_url(client, "/v3/schedules"),
         json={"schedule": schedule_data.model_dump(exclude_none=True)},
     )
-    resp.raise_for_status()
-    return ScheduleV3.model_validate(_unwrap(resp.json(), "schedule"))
+    _check_v3_response(resp)
+    return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))
 
 
 def update_schedule_v3(schedule_id: str, schedule_data: ScheduleV3Update) -> ScheduleV3:
-    """Update an existing v3 schedule's metadata (name, time_zone, description, teams).
+    """Update an existing v3 schedule.
 
-    To manage rotations, events, custom shifts, or overrides use the dedicated tools
-    for those sub-resources.
+    To manage rotation events, custom shifts, or overrides incrementally, use the
+    dedicated tools for those sub-resources. Note the API requires time_zone on
+    every update, even when changing unrelated fields.
 
     Args:
         schedule_id: The ID of the v3 schedule to update
-        schedule_data: Updated schedule metadata (only provided fields are changed)
+        schedule_data: Updated schedule data (only provided fields are changed)
 
     Returns:
         The updated v3 schedule
@@ -142,8 +183,8 @@ def update_schedule_v3(schedule_id: str, schedule_data: ScheduleV3Update) -> Sch
         _v3_url(client, f"/v3/schedules/{schedule_id}"),
         json={"schedule": schedule_data.model_dump(exclude_none=True)},
     )
-    resp.raise_for_status()
-    return ScheduleV3.model_validate(_unwrap(resp.json(), "schedule"))
+    _check_v3_response(resp)
+    return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))
 
 
 def delete_schedule_v3(schedule_id: str) -> str:
@@ -157,7 +198,7 @@ def delete_schedule_v3(schedule_id: str) -> str:
     """
     client = get_client()
     resp = client.delete(_v3_url(client, f"/v3/schedules/{schedule_id}"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return f"Schedule {schedule_id} deleted successfully."
 
 
@@ -175,7 +216,7 @@ def list_schedule_v3_rotations(schedule_id: str) -> ListResponseModel[Rotation]:
     """
     client = get_client()
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}/rotations"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     raw = _unwrap_list(resp.json(), "rotations")
     return ListResponseModel[Rotation](response=[Rotation(**r) for r in raw])
 
@@ -197,7 +238,7 @@ def create_schedule_v3_rotation(schedule_id: str) -> Rotation:
         _v3_url(client, f"/v3/schedules/{schedule_id}/rotations"),
         json={},
     )
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return Rotation.model_validate(_unwrap(resp.json(), "rotation"))
 
 
@@ -213,7 +254,7 @@ def get_schedule_v3_rotation(schedule_id: str, rotation_id: str) -> Rotation:
     """
     client = get_client()
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return Rotation.model_validate(_unwrap(resp.json(), "rotation"))
 
 
@@ -229,7 +270,7 @@ def delete_schedule_v3_rotation(schedule_id: str, rotation_id: str) -> str:
     """
     client = get_client()
     resp = client.delete(_v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return f"Rotation {rotation_id} deleted from schedule {schedule_id}."
 
 
@@ -248,7 +289,7 @@ def list_schedule_v3_rotation_events(schedule_id: str, rotation_id: str) -> List
     """
     client = get_client()
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}/events"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     raw = _unwrap_list(resp.json(), "events")
     return ListResponseModel[RotationEvent](response=[RotationEvent(**e) for e in raw])
 
@@ -291,7 +332,7 @@ def create_schedule_v3_rotation_event(
         _v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}/events"),
         json=payload,
     )
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return RotationEvent.model_validate(_unwrap(resp.json(), "event"))
 
 
@@ -307,10 +348,8 @@ def get_schedule_v3_rotation_event(schedule_id: str, rotation_id: str, event_id:
         The rotation event
     """
     client = get_client()
-    resp = client.get(
-        _v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}/events/{event_id}")
-    )
-    resp.raise_for_status()
+    resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}/events/{event_id}"))
+    _check_v3_response(resp)
     return RotationEvent.model_validate(_unwrap(resp.json(), "event"))
 
 
@@ -342,7 +381,7 @@ def update_schedule_v3_rotation_event(
         _v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}/events/{event_id}"),
         json=payload,
     )
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return RotationEvent.model_validate(_unwrap(resp.json(), "event"))
 
 
@@ -358,10 +397,8 @@ def delete_schedule_v3_rotation_event(schedule_id: str, rotation_id: str, event_
         Confirmation message
     """
     client = get_client()
-    resp = client.delete(
-        _v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}/events/{event_id}")
-    )
-    resp.raise_for_status()
+    resp = client.delete(_v3_url(client, f"/v3/schedules/{schedule_id}/rotations/{rotation_id}/events/{event_id}"))
+    _check_v3_response(resp)
     return f"Event {event_id} deleted from rotation {rotation_id}."
 
 
@@ -388,7 +425,7 @@ def list_schedule_v3_custom_shifts(
     client = get_client()
     params = {"since": since, "until": until}
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}/custom_shifts"), params=params)
-    resp.raise_for_status()
+    _check_v3_response(resp)
     raw = _unwrap_list(resp.json(), "custom_shifts")
     return ListResponseModel[CustomShift](response=[CustomShift(**s) for s in raw])
 
@@ -421,7 +458,7 @@ def create_schedule_v3_custom_shifts(
     client = get_client()
     payload = {"custom_shifts": [s.model_dump(exclude_none=True) for s in custom_shifts]}
     resp = client.post(_v3_url(client, f"/v3/schedules/{schedule_id}/custom_shifts"), json=payload)
-    resp.raise_for_status()
+    _check_v3_response(resp)
     raw = _unwrap_list(resp.json(), "custom_shifts")
     return ListResponseModel[CustomShift](response=[CustomShift(**s) for s in raw])
 
@@ -438,7 +475,7 @@ def get_schedule_v3_custom_shift(schedule_id: str, custom_shift_id: str) -> Cust
     """
     client = get_client()
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}/custom_shifts/{custom_shift_id}"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return CustomShift.model_validate(_unwrap(resp.json(), "custom_shift"))
 
 
@@ -463,7 +500,7 @@ def update_schedule_v3_custom_shift(
         _v3_url(client, f"/v3/schedules/{schedule_id}/custom_shifts/{custom_shift_id}"),
         json=payload,
     )
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return CustomShift.model_validate(_unwrap(resp.json(), "custom_shift"))
 
 
@@ -479,7 +516,7 @@ def delete_schedule_v3_custom_shift(schedule_id: str, custom_shift_id: str) -> s
     """
     client = get_client()
     resp = client.delete(_v3_url(client, f"/v3/schedules/{schedule_id}/custom_shifts/{custom_shift_id}"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return f"Custom shift {custom_shift_id} deleted from schedule {schedule_id}."
 
 
@@ -504,7 +541,7 @@ def list_schedule_v3_overrides(
     client = get_client()
     params = {"since": since, "until": until}
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}/overrides"), params=params)
-    resp.raise_for_status()
+    _check_v3_response(resp)
     raw = _unwrap_list(resp.json(), "overrides")
     return ListResponseModel[OverrideShift](response=[OverrideShift(**o) for o in raw])
 
@@ -538,7 +575,7 @@ def create_schedule_v3_overrides(
     client = get_client()
     payload = {"overrides": [o.model_dump(exclude_none=True) for o in overrides]}
     resp = client.post(_v3_url(client, f"/v3/schedules/{schedule_id}/overrides"), json=payload)
-    resp.raise_for_status()
+    _check_v3_response(resp)
     raw = _unwrap_list(resp.json(), "overrides")
     return ListResponseModel[OverrideShift](response=[OverrideShift(**o) for o in raw])
 
@@ -555,7 +592,7 @@ def get_schedule_v3_override(schedule_id: str, override_id: str) -> OverrideShif
     """
     client = get_client()
     resp = client.get(_v3_url(client, f"/v3/schedules/{schedule_id}/overrides/{override_id}"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return OverrideShift.model_validate(_unwrap(resp.json(), "override"))
 
 
@@ -596,7 +633,7 @@ def update_schedule_v3_override(
         _v3_url(client, f"/v3/schedules/{schedule_id}/overrides/{override_id}"),
         json=payload,
     )
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return OverrideShift.model_validate(_unwrap(resp.json(), "override"))
 
 
@@ -612,5 +649,5 @@ def delete_schedule_v3_override(schedule_id: str, override_id: str) -> str:
     """
     client = get_client()
     resp = client.delete(_v3_url(client, f"/v3/schedules/{schedule_id}/overrides/{override_id}"))
-    resp.raise_for_status()
+    _check_v3_response(resp)
     return f"Override {override_id} deleted from schedule {schedule_id}."

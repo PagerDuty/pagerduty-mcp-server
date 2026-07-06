@@ -4,8 +4,14 @@ from pydantic import BaseModel, Field
 
 
 class ScheduleV3(BaseModel):
-    """A PagerDuty v3 schedule (next-gen scheduling system)."""
+    """A PagerDuty v3 schedule (next-gen, shift-based scheduling system)."""
 
+    # Normalized discriminator shared with the v2 Schedule model so both can live in a
+    # single discriminated union (ScheduleDetail) without losing their distinct shapes.
+    kind: Literal["shift_based"] = Field(
+        default="shift_based",
+        description="Identifies this as a next-gen shift-based (v3) schedule",
+    )
     id: str | None = Field(default=None, description="The ID of the v3 schedule")
     name: str | None = Field(default=None, description="The name of the v3 schedule")
     description: str | None = Field(default=None, description="A description of the v3 schedule")
@@ -30,6 +36,13 @@ class ScheduleV3Create(BaseModel):
     teams: list[dict[str, Any]] | None = Field(
         default=None, description="Teams to associate with this schedule (each must have an 'id' field)"
     )
+    rotations: list[dict[str, Any]] | None = Field(
+        default=None,
+        description=(
+            "Rotations for the schedule. Each rotation contains events, which contain "
+            "custom_shifts that define on-call coverage windows."
+        ),
+    )
 
 
 class ScheduleV3Update(BaseModel):
@@ -41,6 +54,7 @@ class ScheduleV3Update(BaseModel):
     teams: list[dict[str, Any]] | None = Field(
         default=None, description="Updated teams to associate with this schedule"
     )
+    rotations: list[dict[str, Any]] | None = Field(default=None, description="Updated rotations for the v3 schedule")
 
 
 # --- Rotation models ---
@@ -102,12 +116,8 @@ class RotationEvent(BaseModel):
     id: str | None = Field(default=None, description="The ID of the rotation event")
     type: str | None = Field(default=None, description="Resource type identifier")
     name: str | None = Field(default=None, description="Display name for this event")
-    start_time: dict[str, Any] | None = Field(
-        default=None, description="ZonedDateTime: {date_time, time_zone}"
-    )
-    end_time: dict[str, Any] | None = Field(
-        default=None, description="ZonedDateTime: {date_time, time_zone}"
-    )
+    start_time: dict[str, Any] | None = Field(default=None, description="ZonedDateTime: {date_time, time_zone}")
+    end_time: dict[str, Any] | None = Field(default=None, description="ZonedDateTime: {date_time, time_zone}")
     effective_since: str | None = Field(
         default=None, description="ISO 8601 datetime when this event starts producing shifts"
     )
@@ -117,9 +127,7 @@ class RotationEvent(BaseModel):
     recurrence: list[str] | None = Field(
         default=None, description="RFC 5545 recurrence rules (e.g. ['RRULE:FREQ=WEEKLY'])"
     )
-    assignment_strategy: dict[str, Any] | None = Field(
-        default=None, description="How users are assigned on-call"
-    )
+    assignment_strategy: dict[str, Any] | None = Field(default=None, description="How users are assigned on-call")
     self: str | None = Field(default=None, description="API URL for this event")
     html_url: str | None = Field(default=None, description="PagerDuty UI URL for this event")
 
@@ -170,15 +178,11 @@ class RotationEventUpdate(BaseModel):
     end_time: ZonedDateTime = Field(
         description="End of the recurring time window. Use ZonedDateTime: {date_time, time_zone}"
     )
-    effective_since: str = Field(
-        description="ISO 8601 datetime when this event starts producing shifts"
-    )
+    effective_since: str = Field(description="ISO 8601 datetime when this event starts producing shifts")
     effective_until: str | None = Field(
         default=None, description="ISO 8601 datetime when this event stops producing shifts. Null for indefinite."
     )
-    recurrence: list[str] = Field(
-        description="RFC 5545 recurrence rules. Example: ['RRULE:FREQ=WEEKLY']"
-    )
+    recurrence: list[str] = Field(description="RFC 5545 recurrence rules. Example: ['RRULE:FREQ=WEEKLY']")
     assignment_strategy: AssignmentStrategy = Field(description="How users are assigned on-call")
 
 
@@ -198,9 +202,7 @@ class CustomShiftCreate(BaseModel):
     type: Literal["custom_shift"] = Field(default="custom_shift", description="Must be 'custom_shift'")
     start_time: str = Field(description="ISO 8601 datetime for when this shift starts (e.g. '2025-03-15T09:00:00Z')")
     end_time: str = Field(description="ISO 8601 datetime for when this shift ends (e.g. '2025-03-15T17:00:00Z')")
-    assignments: list[CustomShiftAssignmentCreate] = Field(
-        description="Exactly one assignment per custom shift"
-    )
+    assignments: list[CustomShiftAssignmentCreate] = Field(description="Exactly one assignment per custom shift")
 
 
 class CustomShift(BaseModel):
@@ -221,9 +223,7 @@ class CustomShiftUpdate(BaseModel):
     type: Literal["custom_shift"] = Field(default="custom_shift", description="Must be 'custom_shift'")
     start_time: str = Field(description="ISO 8601 start datetime")
     end_time: str = Field(description="ISO 8601 end datetime")
-    assignments: list[CustomShiftAssignmentCreate] = Field(
-        description="Assignments (exactly one per shift)"
-    )
+    assignments: list[CustomShiftAssignmentCreate] = Field(description="Assignments (exactly one per shift)")
 
 
 # --- Override models ---

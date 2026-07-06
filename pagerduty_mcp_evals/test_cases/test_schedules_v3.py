@@ -34,22 +34,22 @@ class SchedulesV3CompetencyTest(AgentCompetencyTest):
     def __init__(self, **kwargs) -> None:
         mock_responses = [
             MockMCPToolInvocationResponse(
-                tool_name="list_schedules_v3",
+                tool_name="list_schedules",
                 parameters=lambda params: True,
                 response={"response": [_SAMPLE_SCHEDULE]},
             ),
             MockMCPToolInvocationResponse(
-                tool_name="get_schedule_v3",
+                tool_name="get_schedule",
                 parameters=lambda params: params.get("schedule_id") == "SCHED123",
                 response=_SAMPLE_SCHEDULE,
             ),
             MockMCPToolInvocationResponse(
-                tool_name="create_schedule_v3",
+                tool_name="create_schedule",
                 parameters=lambda params: True,
                 response=_SAMPLE_SCHEDULE,
             ),
             MockMCPToolInvocationResponse(
-                tool_name="update_schedule_v3",
+                tool_name="update_schedule",
                 parameters=lambda params: params.get("schedule_id") == "SCHED123",
                 response=_SAMPLE_SCHEDULE,
             ),
@@ -129,20 +129,20 @@ class SchedulesV3CompetencyTest(AgentCompetencyTest):
 
 SCHEDULES_V3_COMPETENCY_TESTS = [
     SchedulesV3CompetencyTest(
-        query="List all v3 schedules in PagerDuty",
-        expected_tool_calls=[MockToolCall(name="list_schedules_v3", parameters={})],
-        description="List v3 schedules",
+        query="List all schedules in PagerDuty, including next-gen shift-based ones",
+        expected_tool_calls=[MockToolCall(name="list_schedules")],
+        description="List schedules across both scheduling systems",
     ),
     SchedulesV3CompetencyTest(
         query="Get the v3 schedule with ID SCHED123",
-        expected_tool_calls=[MockToolCall(name="get_schedule_v3", parameters={"schedule_id": "SCHED123"})],
+        expected_tool_calls=[MockToolCall(name="get_schedule", parameters={"schedule_id": "SCHED123"})],
         description="Get specific v3 schedule by ID",
     ),
     SchedulesV3CompetencyTest(
         query="Create a new v3 schedule called Engineering On-Call in the America/New_York timezone",
         expected_tool_calls=[
             MockToolCall(
-                name="create_schedule_v3",
+                name="create_schedule",
                 parameters={
                     "schedule_data": {
                         "name": "Engineering On-Call",

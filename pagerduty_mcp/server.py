@@ -74,16 +74,16 @@ def run(
     *,
     enable_write_tools: bool = False,
     transport: Transport = Transport.stdio,
-    host: str = "127.0.0.1",
-    port: int = 8000,
+    host: str = typer.Option(default="127.0.0.1", envvar="MCP_HOST", help="Host to bind to for HTTP-based transports"),
+    port: int = typer.Option(default=8000, envvar="MCP_PORT", help="Port to bind to for HTTP-based transports"),
 ) -> None:
     """Run the MCP server with the specified configuration.
 
     Args:
         enable_write_tools: Flag to enable write tools
         transport: Transport protocol to use (stdio, sse, or streamable-http)
-        host: Host to bind to for HTTP-based transports
-        port: Port to bind to for HTTP-based transports
+        host: Host to bind to for HTTP-based transports (env: MCP_HOST)
+        port: Port to bind to for HTTP-based transports (env: MCP_PORT)
     """
     ContextResolver.set_strategy(ApplicationContextStrategy())
 

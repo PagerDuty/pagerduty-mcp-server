@@ -270,7 +270,7 @@ The server supports three MCP transports, selected via the `--transport` flag:
 | `streamable-http` | Long-running remote/server deployments. MCP endpoint at `/mcp`. |     |
 | `sse`             | Legacy Server-Sent Events transport.                        |         |
 
-For HTTP-based transports, `--host` (default `127.0.0.1`) and `--port` (default `8000`) control the listen address.
+For HTTP-based transports, `--host` (default `127.0.0.1`) and `--port` (default `8000`) control the listen address. These can also be set via environment variables `MCP_HOST` and `MCP_PORT`.
 
 **Example: run as a remote streamable-HTTP server**
 
@@ -279,13 +279,21 @@ pagerduty-mcp --transport streamable-http --host 0.0.0.0 --port 8000
 # MCP endpoint: http://localhost:8000/mcp
 ```
 
+**Using environment variables:**
+
+```bash
+MCP_HOST=0.0.0.0 MCP_PORT=8000 pagerduty-mcp --transport streamable-http
+```
+
 **Docker:**
 
 ```bash
 docker run -d -p 8000:8000 \
   -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  -e MCP_HOST=0.0.0.0 \
+  -e MCP_PORT=8000 \
   pagerduty-mcp:latest \
-  --transport streamable-http --host 0.0.0.0 --port 8000
+  --transport streamable-http
 ```
 
 The default remains `stdio` so existing local integrations are unaffected.

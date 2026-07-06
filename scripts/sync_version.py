@@ -2,18 +2,8 @@
 """Sync version from pyproject.toml to server.json."""
 
 import json
-import sys
+import tomllib as tomli
 from pathlib import Path
-
-try:
-    # Python 3.11+ has tomllib in stdlib
-    import tomllib as tomli
-except ImportError:
-    try:
-        import tomli
-    except ImportError:
-        print("Error: tomli is required. Install with: uv add --dev tomli", file=sys.stderr)
-        sys.exit(1)
 
 
 def sync_version():

@@ -61,7 +61,7 @@ class Schedule(BaseModel):
         return "schedule"
 
     @classmethod
-    def from_api_response(cls, response_data: dict[str, Any]) -> "Schedule":
+    def from_api_response(cls, response_data: dict[str, Any] | list | None) -> "Schedule":
         """Create Schedule from PagerDuty API response.
 
         Handles both wrapped and direct response formats:

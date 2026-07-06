@@ -211,9 +211,9 @@ class StatusPagePostUpdate(BaseModel):
         return "status_page_post_update"
 
     @classmethod
-    def from_api_response(cls, response_data: dict[str, Any]) -> "StatusPagePostUpdate":
+    def from_api_response(cls, response_data: dict[str, Any] | list) -> "StatusPagePostUpdate":
         """Handle both wrapped and unwrapped API responses."""
-        if "post_update" in response_data:
+        if isinstance(response_data, dict) and "post_update" in response_data:
             return cls.model_validate(response_data["post_update"])
         return cls.model_validate(response_data)
 
@@ -255,9 +255,9 @@ class StatusPagePost(BaseModel):
         return "status_page_post"
 
     @classmethod
-    def from_api_response(cls, response_data: dict[str, Any]) -> "StatusPagePost":
+    def from_api_response(cls, response_data: dict[str, Any] | list) -> "StatusPagePost":
         """Handle both wrapped and unwrapped API responses."""
-        if "post" in response_data:
+        if isinstance(response_data, dict) and "post" in response_data:
             return cls.model_validate(response_data["post"])
         return cls.model_validate(response_data)
 

@@ -15,7 +15,7 @@ pagerduty-mcp = "pagerduty_mcp.__main__:main"
 pagerduty-mcp-evals = "pagerduty_mcp_evals.__main__:main"
 
 [tool.pyright]
-include = ["app"]
+include = ["pagerduty_mcp", "pagerduty_mcp_evals", "tests", "scripts"]
 exclude = []
 defineConstant = { DEBUG = true }
 reportMissingImports = "error"

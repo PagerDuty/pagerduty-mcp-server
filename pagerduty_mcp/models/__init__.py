@@ -85,7 +85,24 @@ from .schedules import (
     ScheduleQuery,
     ScheduleUpdateRequest,
 )
-from .schedules_v3 import ScheduleV3, ScheduleV3Create, ScheduleV3Update
+from .schedules_v3 import (
+    AssignmentStrategy,
+    CustomShift,
+    CustomShiftCreate,
+    CustomShiftUpdate,
+    OverrideShift,
+    OverrideShiftCreate,
+    OverrideShiftUpdate,
+    Rotation,
+    RotationEvent,
+    RotationEventCreate,
+    RotationEventUpdate,
+    ScheduleV3,
+    ScheduleV3Create,
+    ScheduleV3Update,
+    ShiftMember,
+    ZonedDateTime,
+)
 from .services import Service, ServiceCreate, ServiceQuery
 from .status_pages import (
     StatusPage,

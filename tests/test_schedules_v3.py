@@ -166,9 +166,7 @@ class TestScheduleV3Tools(unittest.TestCase):
 
         result = list_schedules_v3()
 
-        self.mock_client.get.assert_called_once_with(
-            f"{BASE_URL}/v3/schedules", params={}
-        )
+        self.mock_client.get.assert_called_once_with(f"{BASE_URL}/v3/schedules", params={})
         self.assertEqual(len(result.response), 1)
         self.assertIsInstance(result.response[0], ScheduleV3)
         self.assertEqual(result.response[0].id, "SCHED123")
@@ -253,22 +251,70 @@ class TestScheduleV3Tools(unittest.TestCase):
 
     @patch("pagerduty_mcp.tools.schedules_v3.get_client")
     def test_update_schedule_v3(self, mock_get_client):
-        """Test update_schedule_v3 puts correct payload and returns ScheduleV3."""
+        """Test update_schedule_v3 with name and time_zone puts payload as-is without a GET."""
         mock_get_client.return_value = self.mock_client
         updated = dict(self.sample_schedule)
         updated["name"] = "Engineering On-Call (Updated)"
         self.mock_client.put.return_value = _mock_response({"schedule": updated})
 
-        update_data = ScheduleV3Update(name="Engineering On-Call (Updated)")
+        update_data = ScheduleV3Update(name="Engineering On-Call (Updated)", time_zone="America/New_York")
 
         result = update_schedule_v3("SCHED123", update_data)
 
+        self.mock_client.get.assert_not_called()
         self.mock_client.put.assert_called_once_with(
             f"{BASE_URL}/v3/schedules/SCHED123",
             json={"schedule": update_data.model_dump(exclude_none=True)},
         )
         self.assertIsInstance(result, ScheduleV3)
         self.assertEqual(result.name, "Engineering On-Call (Updated)")
+
+    @patch("pagerduty_mcp.tools.schedules_v3.get_client")
+    def test_update_schedule_v3_partial_backfills_required_fields(self, mock_get_client):
+        """A description-only update fetches the schedule and backfills name and time_zone.
+
+        The v3 PUT endpoint rejects requests missing name/time_zone with
+        "Invalid Input Provided: Time zone cannot be empty." — partial updates
+        must therefore read-modify-write.
+        """
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.get.return_value = _mock_response({"schedule": self.sample_schedule})
+        updated = dict(self.sample_schedule)
+        updated["description"] = "temp test artifact (updated)"
+        self.mock_client.put.return_value = _mock_response({"schedule": updated})
+
+        result = update_schedule_v3("SCHED123", ScheduleV3Update(description="temp test artifact (updated)"))
+
+        self.mock_client.get.assert_called_once_with(f"{BASE_URL}/v3/schedules/SCHED123")
+        self.mock_client.put.assert_called_once_with(
+            f"{BASE_URL}/v3/schedules/SCHED123",
+            json={
+                "schedule": {
+                    "description": "temp test artifact (updated)",
+                    "name": "Engineering On-Call",
+                    "time_zone": "America/New_York",
+                }
+            },
+        )
+        self.assertEqual(result.description, "temp test artifact (updated)")
+
+    @patch("pagerduty_mcp.tools.schedules_v3.get_client")
+    def test_update_schedule_v3_error_includes_api_detail(self, mock_get_client):
+        """v3 error responses surface the detail from the `errors` array, not just the generic message."""
+        mock_get_client.return_value = self.mock_client
+        self.mock_client.get.return_value = _mock_response({"schedule": self.sample_schedule})
+        error_resp = _mock_response(
+            {"error": {"code": 2001, "errors": ["Time zone cannot be empty."], "message": "Invalid Input Provided"}}
+        )
+        error_resp.ok = False
+        error_resp.status_code = 400
+        self.mock_client.put.return_value = error_resp
+
+        with self.assertRaises(RuntimeError) as ctx:
+            update_schedule_v3("SCHED123", ScheduleV3Update(description="x"))
+
+        self.assertIn("Invalid Input Provided", str(ctx.exception))
+        self.assertIn("Time zone cannot be empty.", str(ctx.exception))
 
 
 if __name__ == "__main__":
@@ -301,9 +347,7 @@ class TestScheduleV3RotationTools(unittest.TestCase):
 
         result = list_schedule_v3_rotations(self.schedule_id)
 
-        self.mock_client.get.assert_called_once_with(
-            f"{BASE_URL}/v3/schedules/{self.schedule_id}/rotations"
-        )
+        self.mock_client.get.assert_called_once_with(f"{BASE_URL}/v3/schedules/{self.schedule_id}/rotations")
         self.assertEqual(len(result.response), 1)
         self.assertIsInstance(result.response[0], Rotation)
         self.assertEqual(result.response[0].id, "ROT123")
@@ -453,9 +497,7 @@ class TestScheduleV3RotationEventTools(unittest.TestCase):
                 "shifts_per_member": 1,
             },
         )
-        result = update_schedule_v3_rotation_event(
-            self.schedule_id, self.rotation_id, self.event_id, event_data
-        )
+        result = update_schedule_v3_rotation_event(self.schedule_id, self.rotation_id, self.event_id, event_data)
 
         self.mock_client.put.assert_called_once_with(
             f"{BASE_URL}/v3/schedules/{self.schedule_id}/rotations/{self.rotation_id}/events/{self.event_id}",
@@ -470,9 +512,7 @@ class TestScheduleV3RotationEventTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         self.mock_client.delete.return_value = _mock_response({})
 
-        result = delete_schedule_v3_rotation_event(
-            self.schedule_id, self.rotation_id, self.event_id
-        )
+        result = delete_schedule_v3_rotation_event(self.schedule_id, self.rotation_id, self.event_id)
 
         self.mock_client.delete.assert_called_once_with(
             f"{BASE_URL}/v3/schedules/{self.schedule_id}/rotations/{self.rotation_id}/events/{self.event_id}"
@@ -512,9 +552,7 @@ class TestScheduleV3CustomShiftTools(unittest.TestCase):
     def test_list_schedule_v3_custom_shifts(self, mock_get_client):
         """Test list_schedule_v3_custom_shifts returns a list of CustomShift objects."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.get.return_value = _mock_response(
-            {"custom_shifts": [self.sample_shift]}
-        )
+        self.mock_client.get.return_value = _mock_response({"custom_shifts": [self.sample_shift]})
 
         result = list_schedule_v3_custom_shifts(self.schedule_id, self.since, self.until)
 
@@ -530,16 +568,12 @@ class TestScheduleV3CustomShiftTools(unittest.TestCase):
     def test_create_schedule_v3_custom_shifts(self, mock_get_client):
         """Test create_schedule_v3_custom_shifts posts correct payload and returns list."""
         mock_get_client.return_value = self.mock_client
-        self.mock_client.post.return_value = _mock_response(
-            {"custom_shifts": [self.sample_shift]}
-        )
+        self.mock_client.post.return_value = _mock_response({"custom_shifts": [self.sample_shift]})
 
         shift_create = CustomShiftCreate(
             start_time="2025-03-15T09:00:00Z",
             end_time="2025-03-15T17:00:00Z",
-            assignments=[
-                {"type": "shift_assignment", "member": {"type": "user_member", "user_id": "USER123"}}
-            ],
+            assignments=[{"type": "shift_assignment", "member": {"type": "user_member", "user_id": "USER123"}}],
         )
         result = create_schedule_v3_custom_shifts(self.schedule_id, [shift_create])
 
@@ -575,13 +609,9 @@ class TestScheduleV3CustomShiftTools(unittest.TestCase):
         shift_data = CustomShiftUpdate(
             start_time="2025-03-15T09:00:00Z",
             end_time="2025-03-15T18:00:00Z",
-            assignments=[
-                {"type": "shift_assignment", "member": {"type": "user_member", "user_id": "USER123"}}
-            ],
+            assignments=[{"type": "shift_assignment", "member": {"type": "user_member", "user_id": "USER123"}}],
         )
-        result = update_schedule_v3_custom_shift(
-            self.schedule_id, self.custom_shift_id, shift_data
-        )
+        result = update_schedule_v3_custom_shift(self.schedule_id, self.custom_shift_id, shift_data)
 
         self.mock_client.put.assert_called_once_with(
             f"{BASE_URL}/v3/schedules/{self.schedule_id}/custom_shifts/{self.custom_shift_id}",

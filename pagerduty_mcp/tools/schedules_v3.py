@@ -65,7 +65,13 @@ def _extract_api_message(resp: Any) -> str:
     if isinstance(body, dict):
         err = body.get("error")
         if isinstance(err, dict):
-            return err.get("message") or err.get("code") or str(err)
+            message = err.get("message") or err.get("code") or str(err)
+            # The API often puts the actionable detail (e.g. "Time zone cannot be empty.")
+            # in an `errors` array next to a generic message like "Invalid Input Provided".
+            details = err.get("errors")
+            if isinstance(details, list) and details:
+                message = f"{message}: {'; '.join(str(d) for d in details)}"
+            return message
         if isinstance(err, str):
             return err
     return str(body)
@@ -165,11 +171,14 @@ def create_schedule_v3(schedule_data: ScheduleV3Create) -> ScheduleV3:
 
 
 def update_schedule_v3(schedule_id: str, schedule_data: ScheduleV3Update) -> ScheduleV3:
-    """Update an existing v3 schedule.
+    """Update an existing v3 schedule. Partial updates are supported.
+
+    The v3 PUT endpoint requires name and time_zone on every request, so omitted
+    fields are backfilled from the schedule's current values before sending. Only
+    the fields provided in schedule_data actually change.
 
     To manage rotation events, custom shifts, or overrides incrementally, use the
-    dedicated tools for those sub-resources. Note the API requires time_zone on
-    every update, even when changing unrelated fields.
+    dedicated tools for those sub-resources.
 
     Args:
         schedule_id: The ID of the v3 schedule to update
@@ -179,9 +188,18 @@ def update_schedule_v3(schedule_id: str, schedule_data: ScheduleV3Update) -> Sch
         The updated v3 schedule
     """
     client = get_client()
+    payload = schedule_data.model_dump(exclude_none=True)
+
+    # Backfill required fields from the current schedule so partial updates
+    # (e.g. description only) don't 400 with "Time zone cannot be empty."
+    if "name" not in payload or "time_zone" not in payload:
+        current = get_schedule_v3(schedule_id)
+        payload.setdefault("name", current.name)
+        payload.setdefault("time_zone", current.time_zone)
+
     resp = client.put(
         _v3_url(client, f"/v3/schedules/{schedule_id}"),
-        json={"schedule": schedule_data.model_dump(exclude_none=True)},
+        json={"schedule": payload},
     )
     _check_v3_response(resp)
     return ScheduleV3.model_validate(_unwrap_schedule(resp.json()))

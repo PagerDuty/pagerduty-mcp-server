@@ -288,6 +288,7 @@ pagerduty-mcp --transport streamable-http --host 0.0.0.0 --port 8000
 
 ```bash
 MCP_HOST=0.0.0.0 MCP_PORT=8000 pagerduty-mcp --transport streamable-http
+# ⚠️ Only use MCP_HOST=0.0.0.0 behind an authenticating proxy or on a trusted network.
 ```
 
 **Docker:**

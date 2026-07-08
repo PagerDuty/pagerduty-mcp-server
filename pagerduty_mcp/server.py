@@ -88,13 +88,19 @@ def run(
     if not (1 <= port <= 65535):
         raise typer.BadParameter(f"Port must be between 1 and 65535, got {port}", param_hint="--port")
 
+    if port < 1024:
+        logging.getLogger(__name__).warning(
+            "Port %d is a privileged port — binding may fail on non-root processes.", port
+        )
+
     _loopback_addresses = {"127.0.0.1", "::1", "localhost"}
-    if transport != Transport.stdio and host not in _loopback_addresses:
+    normalized_host = host.strip().lower()
+    if transport != Transport.stdio and normalized_host not in _loopback_addresses:
         logging.getLogger(__name__).warning(
             "HTTP transport '%s' bound to '%s' with no built-in authentication — "
             "ensure this endpoint is protected by an authenticating proxy.",
             transport.value,
-            host,
+            normalized_host,
         )
 
     ContextResolver.set_strategy(ApplicationContextStrategy())

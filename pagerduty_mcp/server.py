@@ -73,7 +73,7 @@ for _tool in write_tools:
 def run(
     *,
     enable_write_tools: bool = False,
-    transport: Transport = Transport.stdio,
+    transport: Transport = typer.Option(default=Transport.stdio, help="Transport protocol to use (stdio, sse, or streamable-http)"),
     host: str = typer.Option(default="127.0.0.1", envvar="MCP_HOST", help="Host to bind to for HTTP-based transports"),
     port: int = typer.Option(default=8000, envvar="MCP_PORT", help="Port to bind to for HTTP-based transports"),
 ) -> None:

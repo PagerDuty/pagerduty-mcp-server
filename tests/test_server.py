@@ -1,4 +1,3 @@
-import logging
 import unittest
 import unittest.mock
 from unittest.mock import MagicMock, patch
@@ -160,13 +159,13 @@ class TestServerRun(unittest.TestCase):
         self.assertTrue(any("privileged port" in m for m in cm.output))
 
     def test_write_tools_not_registered_by_default(self):
-        result, mock_fastmcp, mock_mcp = self._invoke()
+        result, _, mock_mcp = self._invoke()
         self.assertEqual(result.exit_code, 0, result.output)
         # Only read_tools should be registered — count must equal len(read_tools)
         self.assertEqual(mock_mcp.add_tool.call_count, len(read_tools))
 
     def test_write_tools_registered_when_flag_set(self):
-        result, mock_fastmcp, mock_mcp = self._invoke(["--enable-write-tools"])
+        result, _, mock_mcp = self._invoke(["--enable-write-tools"])
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertEqual(mock_mcp.add_tool.call_count, len(read_tools) + len(write_tools))
 

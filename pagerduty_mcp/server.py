@@ -98,9 +98,12 @@ def run(
                 "Port %d is a privileged port — binding may fail on non-root processes.", port
             )
 
+        if "\n" in host or "\r" in host:
+            raise typer.BadParameter("Host must not contain newline characters", param_hint="--host")
+
         _loopback_addresses = {"127.0.0.1", "::1", "localhost"}
-        normalized_host = host.strip().lower().replace("\n", "").replace("\r", "")
-        if normalized_host not in _loopback_addresses:
+        normalized_host = host.strip()
+        if normalized_host.lower() not in _loopback_addresses:
             logging.getLogger(__name__).warning(
                 "HTTP transport '%s' bound to '%s' with no built-in authentication — "
                 "ensure this endpoint is protected by an authenticating proxy.",

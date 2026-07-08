@@ -112,6 +112,31 @@ class TestServerRun(unittest.TestCase):
         result, _, _ = self._invoke(["--transport", "invalid"])
         self.assertNotEqual(result.exit_code, 0)
 
+    def test_port_zero_fails(self):
+        result, _, _ = self._invoke(["--port", "0"])
+        self.assertNotEqual(result.exit_code, 0)
+
+    def test_port_out_of_range_fails(self):
+        result, _, _ = self._invoke(["--port", "99999"])
+        self.assertNotEqual(result.exit_code, 0)
+
+    def test_no_warning_for_loopback_variants(self):
+        for loopback in ["127.0.0.1", "::1", "localhost"]:
+            with self.subTest(host=loopback), patch("pagerduty_mcp.server.logging") as mock_logging:
+                mock_logger = MagicMock()
+                mock_logging.getLogger.return_value = mock_logger
+                result, _, _ = self._invoke(["--transport", "streamable-http", "--host", loopback])
+                self.assertEqual(result.exit_code, 0, result.output)
+                mock_logger.warning.assert_not_called()
+
+    def test_warning_emitted_for_non_loopback_http(self):
+        with patch("pagerduty_mcp.server.logging") as mock_logging:
+            mock_logger = MagicMock()
+            mock_logging.getLogger.return_value = mock_logger
+            result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "0.0.0.0"])
+            self.assertEqual(result.exit_code, 0, result.output)
+            mock_logger.warning.assert_called_once()
+
     def test_write_tools_not_registered_by_default(self):
         result, mock_fastmcp, mock_mcp = self._invoke()
         self.assertEqual(result.exit_code, 0, result.output)

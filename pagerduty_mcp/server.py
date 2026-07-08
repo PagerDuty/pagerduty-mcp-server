@@ -85,6 +85,17 @@ def run(
         host: Host to bind to for HTTP-based transports (env: MCP_HOST)
         port: Port to bind to for HTTP-based transports (env: MCP_PORT)
     """
+    if not (1 <= port <= 65535):
+        raise typer.BadParameter(f"Port must be between 1 and 65535, got {port}", param_hint="--port")
+
+    if transport != Transport.stdio and host != "127.0.0.1":
+        logging.getLogger(__name__).warning(
+            "HTTP transport '%s' bound to '%s' with no built-in authentication — "
+            "ensure this endpoint is protected by an authenticating proxy.",
+            transport.value,
+            host,
+        )
+
     ContextResolver.set_strategy(ApplicationContextStrategy())
 
     mcp = FastMCP(

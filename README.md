@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/pagerduty-pagerduty-mcp-server-badge.png)](https://mseep.ai/app/pagerduty-pagerduty-mcp-server)
+
 # PagerDuty's official MCP Server
 
 <!-- mcp-name: io.github.PagerDuty/pagerduty-mcp -->

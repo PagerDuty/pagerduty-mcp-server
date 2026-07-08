@@ -64,6 +64,7 @@ class TestServerRun(unittest.TestCase):
             instructions=unittest.mock.ANY,
             host="127.0.0.1",
             port=8000,
+            transport_security=unittest.mock.ANY,
         )
 
     def test_stdio_does_not_pass_host_or_port_to_fastmcp(self):
@@ -84,6 +85,7 @@ class TestServerRun(unittest.TestCase):
             instructions=unittest.mock.ANY,
             host="0.0.0.0",
             port=9000,
+            transport_security=unittest.mock.ANY,
         )
 
     def test_host_from_env_var(self):
@@ -96,6 +98,7 @@ class TestServerRun(unittest.TestCase):
             instructions=unittest.mock.ANY,
             host="0.0.0.0",
             port=8000,
+            transport_security=unittest.mock.ANY,
         )
 
     def test_port_from_env_var(self):
@@ -108,6 +111,7 @@ class TestServerRun(unittest.TestCase):
             instructions=unittest.mock.ANY,
             host="127.0.0.1",
             port=9000,
+            transport_security=unittest.mock.ANY,
         )
 
     def test_cli_flag_overrides_env_var(self):
@@ -121,7 +125,27 @@ class TestServerRun(unittest.TestCase):
             instructions=unittest.mock.ANY,
             host="192.168.1.1",
             port=8000,
+            transport_security=unittest.mock.ANY,
         )
+
+    def test_dns_rebinding_protection_enabled_for_http(self):
+        from mcp.server.transport_security import TransportSecuritySettings
+        result, mock_fastmcp, _ = self._invoke(["--transport", "streamable-http"])
+        self.assertEqual(result.exit_code, 0, result.output)
+        call_kwargs = mock_fastmcp.call_args.kwargs
+        ts = call_kwargs.get("transport_security")
+        self.assertIsInstance(ts, TransportSecuritySettings)
+        self.assertTrue(ts.enable_dns_rebinding_protection)
+
+    def test_dns_rebinding_allowed_hosts_includes_bind_address(self):
+        from mcp.server.transport_security import TransportSecuritySettings
+        result, mock_fastmcp, _ = self._invoke(
+            ["--transport", "streamable-http", "--host", "0.0.0.0", "--port", "9000"]
+        )
+        self.assertEqual(result.exit_code, 0, result.output)
+        ts = mock_fastmcp.call_args.kwargs.get("transport_security")
+        self.assertIsInstance(ts, TransportSecuritySettings)
+        self.assertIn("0.0.0.0:9000", ts.allowed_hosts)
 
     def test_invalid_transport_fails(self):
         result, _, _ = self._invoke(["--transport", "invalid"])
@@ -139,12 +163,24 @@ class TestServerRun(unittest.TestCase):
         result, _, _ = self._invoke(["--port", "99999"])
         self.assertEqual(result.exit_code, 0, result.output)
 
+    def test_host_with_control_characters_fails(self):
+        for bad_host in ["bad\nhost", "bad\rhost", "bad\x00host"]:
+            with self.subTest(host=bad_host):
+                result, _, _ = self._invoke(["--transport", "streamable-http", "--host", bad_host])
+                self.assertNotEqual(result.exit_code, 0, f"Expected failure for host={bad_host!r}")
+
     def test_no_warning_for_loopback_variants(self):
-        for loopback in ["127.0.0.1", "::1", "localhost", "LOCALHOST", "  127.0.0.1  "]:
+        for loopback in ["127.0.0.1", "::1", "localhost", "LOCALHOST", "  127.0.0.1  ", "127.0.0.2"]:
             with self.subTest(host=loopback):
                 result, _, _ = self._invoke(["--transport", "streamable-http", "--host", loopback])
                 self.assertEqual(result.exit_code, 0, result.output)
                 self.assertNotIn("no built-in authentication", result.output)
+
+    def test_warning_emitted_when_http_env_vars_set_in_stdio_mode(self):
+        with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:
+            result, _, _ = self._invoke(env={"MCP_HOST": "0.0.0.0"})
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertTrue(any("no effect" in m for m in cm.output))
 
     def test_warning_emitted_for_non_loopback_http(self):
         with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:

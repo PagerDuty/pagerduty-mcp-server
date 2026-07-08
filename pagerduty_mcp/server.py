@@ -1,9 +1,11 @@
+import ipaddress
 import logging
 from collections.abc import Callable
 from enum import Enum
 
 import typer
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 
 from pagerduty_mcp.context import ContextResolver
@@ -89,7 +91,15 @@ def run(
 
     fastmcp_kwargs: dict = {"instructions": MCP_SERVER_INSTRUCTIONS}
 
-    if transport != Transport.stdio:
+    if transport == Transport.stdio:
+        _http_env_vars = {k: v for k, v in {"MCP_HOST": host, "MCP_PORT": str(port)}.items()
+                         if v not in ("127.0.0.1", "8000")}
+        if _http_env_vars:
+            logging.getLogger(__name__).warning(
+                "Environment variable(s) %s have no effect when --transport stdio is used.",
+                ", ".join(_http_env_vars),
+            )
+    else:
         if not (1 <= port <= 65535):
             raise typer.BadParameter(f"Port must be between 1 and 65535, got {port}", param_hint="--port")
 
@@ -98,12 +108,16 @@ def run(
                 "Port %d is a privileged port — binding may fail on non-root processes.", port
             )
 
-        if "\n" in host or "\r" in host:
-            raise typer.BadParameter("Host must not contain newline characters", param_hint="--host")
+        if any(c in host for c in ("\n", "\r", "\x00")):
+            raise typer.BadParameter("Host must not contain control characters", param_hint="--host")
 
-        _loopback_addresses = {"127.0.0.1", "::1", "localhost"}
         normalized_host = host.strip()
-        if normalized_host.lower() not in _loopback_addresses:
+        try:
+            is_loopback = ipaddress.ip_address(normalized_host).is_loopback
+        except ValueError:
+            is_loopback = normalized_host.lower() == "localhost"
+
+        if not is_loopback:
             logging.getLogger(__name__).warning(
                 "HTTP transport '%s' bound to '%s' with no built-in authentication — "
                 "ensure this endpoint is protected by an authenticating proxy.",
@@ -113,6 +127,10 @@ def run(
 
         fastmcp_kwargs["host"] = normalized_host
         fastmcp_kwargs["port"] = port
+        fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=[f"{normalized_host}:{port}", "localhost"],
+        )
 
     mcp = FastMCP("PagerDuty MCP Server", **fastmcp_kwargs)
     for tool in read_tools:

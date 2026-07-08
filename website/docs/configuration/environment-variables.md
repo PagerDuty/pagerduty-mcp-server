@@ -17,7 +17,7 @@ The PagerDuty MCP Server uses the following environment variables.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PAGERDUTY_API_HOST` | `https://api.pagerduty.com` | PagerDuty API endpoint. Set to `https://api.eu.pagerduty.com` for EU accounts. |
-| `MCP_HOST` | `127.0.0.1` | Host to bind to for HTTP-based transports (`streamable-http`, `sse`). Set to `0.0.0.0` to listen on all interfaces. |
+| `MCP_HOST` | `127.0.0.1` | Host to bind to for HTTP-based transports (`streamable-http`, `sse`). Set to `0.0.0.0` to listen on all interfaces. ⚠️ HTTP transports have no built-in auth — only expose beyond loopback behind an authenticating proxy or on a trusted network. |
 | `MCP_PORT` | `8000` | Port to bind to for HTTP-based transports. |
 
 ## Setting Variables

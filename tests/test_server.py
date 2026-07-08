@@ -85,7 +85,6 @@ class TestServerRun(unittest.TestCase):
             instructions=unittest.mock.ANY,
             host="0.0.0.0",
             port=9000,
-            transport_security=unittest.mock.ANY,
         )
 
     def test_host_from_env_var(self):
@@ -98,7 +97,6 @@ class TestServerRun(unittest.TestCase):
             instructions=unittest.mock.ANY,
             host="0.0.0.0",
             port=8000,
-            transport_security=unittest.mock.ANY,
         )
 
     def test_port_from_env_var(self):
@@ -125,7 +123,6 @@ class TestServerRun(unittest.TestCase):
             instructions=unittest.mock.ANY,
             host="192.168.1.1",
             port=8000,
-            transport_security=unittest.mock.ANY,
         )
 
     def test_dns_rebinding_protection_enabled_for_http(self):
@@ -147,15 +144,13 @@ class TestServerRun(unittest.TestCase):
         self.assertIsInstance(ts, TransportSecuritySettings)
         self.assertIn("127.0.0.1:9000", ts.allowed_hosts)
 
-    def test_dns_rebinding_wildcard_bind_has_empty_allowed_hosts(self):
-        from mcp.server.transport_security import TransportSecuritySettings
+    def test_dns_rebinding_wildcard_bind_omits_transport_security(self):
         result, mock_fastmcp, _ = self._invoke(
             ["--transport", "streamable-http", "--host", "0.0.0.0", "--port", "9000"]
         )
         self.assertEqual(result.exit_code, 0, result.output)
-        ts = mock_fastmcp.call_args.kwargs.get("transport_security")
-        self.assertIsInstance(ts, TransportSecuritySettings)
-        self.assertEqual(ts.allowed_hosts, [])
+        call_kwargs = mock_fastmcp.call_args.kwargs
+        self.assertNotIn("transport_security", call_kwargs)
 
     def test_invalid_transport_fails(self):
         result, _, _ = self._invoke(["--transport", "invalid"])
@@ -174,7 +169,7 @@ class TestServerRun(unittest.TestCase):
         self.assertEqual(result.exit_code, 0, result.output)
 
     def test_host_with_control_characters_fails(self):
-        for bad_host in ["bad\nhost", "bad\rhost", "bad\x00host"]:
+        for bad_host in ["bad\nhost", "bad\rhost", "bad\x00host", "bad\thost"]:
             with self.subTest(host=bad_host):
                 result, _, _ = self._invoke(["--transport", "streamable-http", "--host", bad_host])
                 self.assertNotEqual(result.exit_code, 0, f"Expected failure for host={bad_host!r}")

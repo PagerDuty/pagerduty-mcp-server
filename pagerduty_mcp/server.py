@@ -108,7 +108,7 @@ def run(
                 "Port %d is a privileged port — binding may fail on non-root processes.", port
             )
 
-        if any(c in host for c in ("\n", "\r", "\x00")):
+        if any(ord(c) < 0x20 for c in host):
             raise typer.BadParameter("Host must not contain control characters", param_hint="--host")
 
         normalized_host = host.strip()
@@ -127,18 +127,15 @@ def run(
 
         fastmcp_kwargs["host"] = normalized_host
         fastmcp_kwargs["port"] = port
-        # For loopback binds, restrict allowed Host headers to prevent DNS rebinding.
-        # For wildcard binds (0.0.0.0), clients connect via their own IP so no fixed
-        # allowlist is possible — the operator is responsible for network-level security.
-        allowed_hosts = (
-            [f"{normalized_host}:{port}", f"localhost:{port}", "localhost"]
-            if is_loopback
-            else []
-        )
-        fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
-            enable_dns_rebinding_protection=True,
-            allowed_hosts=allowed_hosts,
-        )
+        # For loopback binds, enable DNS rebinding protection with an explicit Host
+        # allowlist. For wildcard binds (0.0.0.0), clients connect via their own IP
+        # so no fixed allowlist is possible — omit transport_security and let the
+        # operator handle network-level security (firewall, reverse proxy, etc.).
+        if is_loopback:
+            fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
+                enable_dns_rebinding_protection=True,
+                allowed_hosts=[f"{normalized_host}:{port}", f"localhost:{port}", "localhost"],
+            )
 
     mcp = FastMCP("PagerDuty MCP Server", **fastmcp_kwargs)
     for tool in read_tools:

@@ -94,7 +94,7 @@ def run(
         )
 
     _loopback_addresses = {"127.0.0.1", "::1", "localhost"}
-    normalized_host = host.strip().lower()
+    normalized_host = host.strip().lower().replace("\n", "").replace("\r", "")
     if transport != Transport.stdio and normalized_host not in _loopback_addresses:
         logging.getLogger(__name__).warning(
             "HTTP transport '%s' bound to '%s' with no built-in authentication — "
@@ -108,7 +108,7 @@ def run(
     mcp = FastMCP(
         "PagerDuty MCP Server",
         instructions=MCP_SERVER_INSTRUCTIONS,
-        host=host,
+        host=normalized_host,
         port=port,
     )
     for tool in read_tools:

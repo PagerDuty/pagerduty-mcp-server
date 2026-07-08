@@ -300,6 +300,7 @@ docker run -d -p 8000:8000 \
   -e MCP_PORT=8000 \
   pagerduty-mcp:latest \
   --transport streamable-http
+# ⚠️ Only use MCP_HOST=0.0.0.0 behind an authenticating proxy or on a trusted network.
 ```
 
 The default remains `stdio` so existing local integrations are unaffected.

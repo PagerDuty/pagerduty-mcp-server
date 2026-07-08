@@ -127,9 +127,17 @@ def run(
 
         fastmcp_kwargs["host"] = normalized_host
         fastmcp_kwargs["port"] = port
+        # For loopback binds, restrict allowed Host headers to prevent DNS rebinding.
+        # For wildcard binds (0.0.0.0), clients connect via their own IP so no fixed
+        # allowlist is possible — the operator is responsible for network-level security.
+        allowed_hosts = (
+            [f"{normalized_host}:{port}", f"localhost:{port}", "localhost"]
+            if is_loopback
+            else []
+        )
         fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
             enable_dns_rebinding_protection=True,
-            allowed_hosts=[f"{normalized_host}:{port}", "localhost"],
+            allowed_hosts=allowed_hosts,
         )
 
     mcp = FastMCP("PagerDuty MCP Server", **fastmcp_kwargs)

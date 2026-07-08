@@ -137,7 +137,17 @@ class TestServerRun(unittest.TestCase):
         self.assertIsInstance(ts, TransportSecuritySettings)
         self.assertTrue(ts.enable_dns_rebinding_protection)
 
-    def test_dns_rebinding_allowed_hosts_includes_bind_address(self):
+    def test_dns_rebinding_loopback_restricts_allowed_hosts(self):
+        from mcp.server.transport_security import TransportSecuritySettings
+        result, mock_fastmcp, _ = self._invoke(
+            ["--transport", "streamable-http", "--host", "127.0.0.1", "--port", "9000"]
+        )
+        self.assertEqual(result.exit_code, 0, result.output)
+        ts = mock_fastmcp.call_args.kwargs.get("transport_security")
+        self.assertIsInstance(ts, TransportSecuritySettings)
+        self.assertIn("127.0.0.1:9000", ts.allowed_hosts)
+
+    def test_dns_rebinding_wildcard_bind_has_empty_allowed_hosts(self):
         from mcp.server.transport_security import TransportSecuritySettings
         result, mock_fastmcp, _ = self._invoke(
             ["--transport", "streamable-http", "--host", "0.0.0.0", "--port", "9000"]
@@ -145,7 +155,7 @@ class TestServerRun(unittest.TestCase):
         self.assertEqual(result.exit_code, 0, result.output)
         ts = mock_fastmcp.call_args.kwargs.get("transport_security")
         self.assertIsInstance(ts, TransportSecuritySettings)
-        self.assertIn("0.0.0.0:9000", ts.allowed_hosts)
+        self.assertEqual(ts.allowed_hosts, [])
 
     def test_invalid_transport_fails(self):
         result, _, _ = self._invoke(["--transport", "invalid"])

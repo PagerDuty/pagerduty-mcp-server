@@ -85,32 +85,33 @@ def run(
         host: Host to bind to for HTTP-based transports (env: MCP_HOST)
         port: Port to bind to for HTTP-based transports (env: MCP_PORT)
     """
-    if not (1 <= port <= 65535):
-        raise typer.BadParameter(f"Port must be between 1 and 65535, got {port}", param_hint="--port")
-
-    if port < 1024:
-        logging.getLogger(__name__).warning(
-            "Port %d is a privileged port — binding may fail on non-root processes.", port
-        )
-
-    _loopback_addresses = {"127.0.0.1", "::1", "localhost"}
-    normalized_host = host.strip().lower().replace("\n", "").replace("\r", "")
-    if transport != Transport.stdio and normalized_host not in _loopback_addresses:
-        logging.getLogger(__name__).warning(
-            "HTTP transport '%s' bound to '%s' with no built-in authentication — "
-            "ensure this endpoint is protected by an authenticating proxy.",
-            transport.value,
-            normalized_host,
-        )
-
     ContextResolver.set_strategy(ApplicationContextStrategy())
 
-    mcp = FastMCP(
-        "PagerDuty MCP Server",
-        instructions=MCP_SERVER_INSTRUCTIONS,
-        host=normalized_host,
-        port=port,
-    )
+    fastmcp_kwargs: dict = {"instructions": MCP_SERVER_INSTRUCTIONS}
+
+    if transport != Transport.stdio:
+        if not (1 <= port <= 65535):
+            raise typer.BadParameter(f"Port must be between 1 and 65535, got {port}", param_hint="--port")
+
+        if port < 1024:
+            logging.getLogger(__name__).warning(
+                "Port %d is a privileged port — binding may fail on non-root processes.", port
+            )
+
+        _loopback_addresses = {"127.0.0.1", "::1", "localhost"}
+        normalized_host = host.strip().lower().replace("\n", "").replace("\r", "")
+        if normalized_host not in _loopback_addresses:
+            logging.getLogger(__name__).warning(
+                "HTTP transport '%s' bound to '%s' with no built-in authentication — "
+                "ensure this endpoint is protected by an authenticating proxy.",
+                transport.value,
+                normalized_host,
+            )
+
+        fastmcp_kwargs["host"] = normalized_host
+        fastmcp_kwargs["port"] = port
+
+    mcp = FastMCP("PagerDuty MCP Server", **fastmcp_kwargs)
     for tool in read_tools:
         add_read_only_tool(mcp, tool)
 

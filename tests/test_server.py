@@ -57,8 +57,8 @@ class TestServerRun(unittest.TestCase):
         self.assertEqual(result.exit_code, 0, result.output)
         mock_mcp.run.assert_called_once_with(transport="sse")
 
-    def test_default_host_and_port(self):
-        result, mock_fastmcp, _ = self._invoke()
+    def test_default_host_and_port_for_http_transport(self):
+        result, mock_fastmcp, _ = self._invoke(["--transport", "streamable-http"])
         self.assertEqual(result.exit_code, 0, result.output)
         mock_fastmcp.assert_called_once_with(
             "PagerDuty MCP Server",
@@ -67,8 +67,18 @@ class TestServerRun(unittest.TestCase):
             port=8000,
         )
 
+    def test_stdio_does_not_pass_host_or_port_to_fastmcp(self):
+        result, mock_fastmcp, _ = self._invoke()
+        self.assertEqual(result.exit_code, 0, result.output)
+        mock_fastmcp.assert_called_once_with(
+            "PagerDuty MCP Server",
+            instructions=unittest.mock.ANY,
+        )
+
     def test_custom_host_and_port_via_cli(self):
-        result, mock_fastmcp, _ = self._invoke(["--host", "0.0.0.0", "--port", "9000"])
+        result, mock_fastmcp, _ = self._invoke(
+            ["--transport", "streamable-http", "--host", "0.0.0.0", "--port", "9000"]
+        )
         self.assertEqual(result.exit_code, 0, result.output)
         mock_fastmcp.assert_called_once_with(
             "PagerDuty MCP Server",
@@ -78,7 +88,9 @@ class TestServerRun(unittest.TestCase):
         )
 
     def test_host_from_env_var(self):
-        result, mock_fastmcp, _ = self._invoke(env={"MCP_HOST": "0.0.0.0"})
+        result, mock_fastmcp, _ = self._invoke(
+            ["--transport", "streamable-http"], env={"MCP_HOST": "0.0.0.0"}
+        )
         self.assertEqual(result.exit_code, 0, result.output)
         mock_fastmcp.assert_called_once_with(
             "PagerDuty MCP Server",
@@ -88,7 +100,9 @@ class TestServerRun(unittest.TestCase):
         )
 
     def test_port_from_env_var(self):
-        result, mock_fastmcp, _ = self._invoke(env={"MCP_PORT": "9000"})
+        result, mock_fastmcp, _ = self._invoke(
+            ["--transport", "streamable-http"], env={"MCP_PORT": "9000"}
+        )
         self.assertEqual(result.exit_code, 0, result.output)
         mock_fastmcp.assert_called_once_with(
             "PagerDuty MCP Server",
@@ -99,7 +113,8 @@ class TestServerRun(unittest.TestCase):
 
     def test_cli_flag_overrides_env_var(self):
         result, mock_fastmcp, _ = self._invoke(
-            ["--host", "192.168.1.1"], env={"MCP_HOST": "0.0.0.0"}
+            ["--transport", "streamable-http", "--host", "192.168.1.1"],
+            env={"MCP_HOST": "0.0.0.0"},
         )
         self.assertEqual(result.exit_code, 0, result.output)
         mock_fastmcp.assert_called_once_with(
@@ -113,21 +128,24 @@ class TestServerRun(unittest.TestCase):
         result, _, _ = self._invoke(["--transport", "invalid"])
         self.assertNotEqual(result.exit_code, 0)
 
-    def test_port_zero_fails(self):
-        result, _, _ = self._invoke(["--port", "0"])
+    def test_port_zero_fails_for_http_transport(self):
+        result, _, _ = self._invoke(["--transport", "streamable-http", "--port", "0"])
         self.assertNotEqual(result.exit_code, 0)
 
-    def test_port_out_of_range_fails(self):
-        result, _, _ = self._invoke(["--port", "99999"])
+    def test_port_out_of_range_fails_for_http_transport(self):
+        result, _, _ = self._invoke(["--transport", "streamable-http", "--port", "99999"])
         self.assertNotEqual(result.exit_code, 0)
+
+    def test_port_out_of_range_ignored_for_stdio(self):
+        result, _, _ = self._invoke(["--port", "99999"])
+        self.assertEqual(result.exit_code, 0, result.output)
 
     def test_no_warning_for_loopback_variants(self):
         for loopback in ["127.0.0.1", "::1", "localhost", "LOCALHOST", "  127.0.0.1  "]:
             with self.subTest(host=loopback):
-                with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:
-                    logging.getLogger("pagerduty_mcp.server").warning("_sentinel_")
-                warning_msgs = [m for m in cm.output if "_sentinel_" not in m]
-                self.assertEqual(warning_msgs, [], f"Unexpected warning for loopback host {loopback!r}")
+                result, _, _ = self._invoke(["--transport", "streamable-http", "--host", loopback])
+                self.assertEqual(result.exit_code, 0, result.output)
+                self.assertNotIn("no built-in authentication", result.output)
 
     def test_warning_emitted_for_non_loopback_http(self):
         with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:
@@ -137,7 +155,7 @@ class TestServerRun(unittest.TestCase):
 
     def test_privileged_port_warning(self):
         with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:
-            result, _, _ = self._invoke(["--port", "80"])
+            result, _, _ = self._invoke(["--transport", "streamable-http", "--port", "80"])
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertTrue(any("privileged port" in m for m in cm.output))
 

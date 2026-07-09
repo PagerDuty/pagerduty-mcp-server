@@ -280,7 +280,7 @@ For HTTP-based transports, `--host` (default `127.0.0.1`) and `--port` (default 
 
 ```bash
 pagerduty-mcp --transport streamable-http --host 0.0.0.0 --port 8000
-# MCP endpoint: http://localhost:8000/mcp
+# MCP endpoint: http://<your-machine-ip>:8000/mcp
 # ⚠️ Only use --host 0.0.0.0 behind an authenticating proxy or on a trusted network.
 ```
 

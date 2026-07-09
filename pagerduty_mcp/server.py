@@ -117,7 +117,7 @@ def run(
                 "Port %d is a privileged port — binding may fail on non-root processes.", port
             )
 
-        if any(ord(c) < 0x20 for c in host):
+        if any(ord(c) < 0x20 or ord(c) == 0x7F for c in host):
             raise typer.BadParameter("Host must not contain control characters", param_hint="--host")
 
         normalized_host = host.strip()
@@ -131,6 +131,11 @@ def run(
             is_loopback = addr.is_loopback
             is_ipv6 = addr.version == 6
         except ValueError:
+            if ":" in normalized_host:
+                raise typer.BadParameter(
+                    "Host must not include a port — use --port to specify the port separately",
+                    param_hint="--host",
+                )
             is_loopback = normalized_host.lower() == "localhost"
 
         if not is_loopback:

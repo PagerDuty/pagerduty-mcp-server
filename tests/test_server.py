@@ -194,10 +194,14 @@ class TestServerRun(unittest.TestCase):
         self.assertEqual(result.exit_code, 0, result.output)
 
     def test_host_with_control_characters_fails(self):
-        for bad_host in ["bad\nhost", "bad\rhost", "bad\x00host", "bad\thost"]:
+        for bad_host in ["bad\nhost", "bad\rhost", "bad\x00host", "bad\thost", "bad\x7fhost"]:
             with self.subTest(host=bad_host):
                 result, _, _ = self._invoke(["--transport", "streamable-http", "--host", bad_host])
                 self.assertNotEqual(result.exit_code, 0, f"Expected failure for host={bad_host!r}")
+
+    def test_host_with_embedded_port_fails(self):
+        result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "127.0.0.1:8000"])
+        self.assertNotEqual(result.exit_code, 0)
 
     def test_empty_host_after_strip_fails(self):
         result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "   "])

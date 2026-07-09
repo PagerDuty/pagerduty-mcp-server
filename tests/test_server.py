@@ -145,6 +145,19 @@ class TestServerRun(unittest.TestCase):
         self.assertIn("127.0.0.1:9000", ts.allowed_hosts)
         self.assertIn("127.0.0.1", ts.allowed_hosts)  # bare form for standard-port clients
 
+    def test_dns_rebinding_localhost_hostname_includes_numeric_loopback(self):
+        from mcp.server.transport_security import TransportSecuritySettings
+        result, mock_fastmcp, _ = self._invoke(
+            ["--transport", "streamable-http", "--host", "localhost", "--port", "9000"]
+        )
+        self.assertEqual(result.exit_code, 0, result.output)
+        ts = mock_fastmcp.call_args.kwargs.get("transport_security")
+        self.assertIsInstance(ts, TransportSecuritySettings)
+        self.assertIn("127.0.0.1:9000", ts.allowed_hosts)
+        self.assertIn("127.0.0.1", ts.allowed_hosts)
+        self.assertIn("[::1]:9000", ts.allowed_hosts)
+        self.assertIn("[::1]", ts.allowed_hosts)
+
     def test_dns_rebinding_ipv6_loopback_uses_brackets(self):
         from mcp.server.transport_security import TransportSecuritySettings
         result, mock_fastmcp, _ = self._invoke(

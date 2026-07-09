@@ -149,17 +149,20 @@ def run(
         # operator handle network-level security (firewall, reverse proxy, etc.).
         if is_loopback:
             host_header = f"[{normalized_host}]" if is_ipv6 else normalized_host
-            # Deduplicate while preserving order (e.g. host='localhost' would otherwise
-            # produce duplicate entries since host_header == 'localhost').
-            allowed_hosts = list(dict.fromkeys([
+            candidates = [
                 f"{host_header}:{port}",
                 host_header,           # bare form — some clients omit port from Host header
                 f"localhost:{port}",
                 "localhost",
-            ]))
+            ]
+            # When binding to the 'localhost' hostname, clients may connect via the
+            # numeric loopback addresses (127.0.0.1 or [::1]) and send those as the
+            # Host header. Include both to avoid spurious 421 rejections.
+            if normalized_host.lower() == "localhost":
+                candidates.extend([f"127.0.0.1:{port}", "127.0.0.1", f"[::1]:{port}", "[::1]"])
             fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
                 enable_dns_rebinding_protection=True,
-                allowed_hosts=allowed_hosts,
+                allowed_hosts=list(dict.fromkeys(candidates)),
             )
 
     mcp = FastMCP("PagerDuty MCP Server", **fastmcp_kwargs)

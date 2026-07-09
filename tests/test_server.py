@@ -177,9 +177,9 @@ class TestServerRun(unittest.TestCase):
     def test_no_warning_for_loopback_variants(self):
         for loopback in ["127.0.0.1", "::1", "localhost", "LOCALHOST", "  127.0.0.1  ", "127.0.0.2"]:
             with self.subTest(host=loopback):
-                result, _, _ = self._invoke(["--transport", "streamable-http", "--host", loopback])
+                with self.assertNoLogs("pagerduty_mcp.server", level="WARNING"):
+                    result, _, _ = self._invoke(["--transport", "streamable-http", "--host", loopback])
                 self.assertEqual(result.exit_code, 0, result.output)
-                self.assertNotIn("no built-in authentication", result.output)
 
     def test_warning_emitted_when_http_env_vars_set_in_stdio_mode(self):
         with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:

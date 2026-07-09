@@ -92,12 +92,15 @@ def run(
     fastmcp_kwargs: dict = {"instructions": MCP_SERVER_INSTRUCTIONS}
 
     if transport == Transport.stdio:
-        _http_env_vars = {k: v for k, v in {"MCP_HOST": host, "MCP_PORT": str(port)}.items()
-                         if v not in ("127.0.0.1", "8000")}
-        if _http_env_vars:
+        _ignored = []
+        if host != "127.0.0.1":
+            _ignored.append(f"--host {host!r}")
+        if port != 8000:
+            _ignored.append(f"--port {port}")
+        if _ignored:
             logging.getLogger(__name__).warning(
-                "Environment variable(s) %s have no effect when --transport stdio is used.",
-                ", ".join(_http_env_vars),
+                "%s have no effect when --transport stdio is used.",
+                " and ".join(_ignored),
             )
     else:
         if not (1 <= port <= 65535):

@@ -80,7 +80,7 @@ def run(
     port: int = typer.Option(
         default=8000,
         envvar="MCP_PORT",
-        help="Port to bind to for HTTP-based transports",
+        help="Port to bind to for HTTP-based transports. Must be a valid integer even in stdio mode.",
     ),
 ) -> None:
     """Run the MCP server with the specified configuration.

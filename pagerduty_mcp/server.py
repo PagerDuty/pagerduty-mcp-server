@@ -94,9 +94,9 @@ def run(
     if transport == Transport.stdio:
         _ignored = []
         if host != "127.0.0.1":
-            _ignored.append(f"--host {host!r}")
+            _ignored.append(f"host={host!r}")
         if port != 8000:
-            _ignored.append(f"--port {port}")
+            _ignored.append(f"port={port}")
         if _ignored:
             logging.getLogger(__name__).warning(
                 "%s have no effect when --transport stdio is used.",
@@ -115,8 +115,11 @@ def run(
             raise typer.BadParameter("Host must not contain control characters", param_hint="--host")
 
         normalized_host = host.strip()
+        is_ipv6 = False
         try:
-            is_loopback = ipaddress.ip_address(normalized_host).is_loopback
+            addr = ipaddress.ip_address(normalized_host)
+            is_loopback = addr.is_loopback
+            is_ipv6 = addr.version == 6
         except ValueError:
             is_loopback = normalized_host.lower() == "localhost"
 
@@ -135,9 +138,15 @@ def run(
         # so no fixed allowlist is possible — omit transport_security and let the
         # operator handle network-level security (firewall, reverse proxy, etc.).
         if is_loopback:
+            host_header = f"[{normalized_host}]" if is_ipv6 else normalized_host
             fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
                 enable_dns_rebinding_protection=True,
-                allowed_hosts=[f"{normalized_host}:{port}", f"localhost:{port}", "localhost"],
+                allowed_hosts=[
+                    f"{host_header}:{port}",
+                    host_header,           # bare form — clients may omit port for standard ports
+                    f"localhost:{port}",
+                    "localhost",
+                ],
             )
 
     mcp = FastMCP("PagerDuty MCP Server", **fastmcp_kwargs)

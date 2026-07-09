@@ -64,7 +64,7 @@ def create_escalation_policy(escalation_policy_data: EscalationPolicyCreate) -> 
     Returns:
         The created escalation policy
     """
-    response = get_client().rpost("/escalation_policies", json=escalation_policy_data.model_dump(exclude_none=True))
+    response = get_client().rpost("/escalation_policies", json=escalation_policy_data.model_dump(exclude_unset=True))
 
     if type(response) is dict and "escalation_policy" in response:
         return EscalationPolicy.model_validate(response["escalation_policy"])
@@ -82,7 +82,7 @@ def update_escalation_policy(policy_id: str, escalation_policy_data: EscalationP
     Returns:
         The updated escalation policy
     """
-    response = get_client().rput(f"/escalation_policies/{policy_id}", json=escalation_policy_data.model_dump(exclude_none=True))
+    response = get_client().rput(f"/escalation_policies/{policy_id}", json=escalation_policy_data.model_dump(exclude_unset=True))
 
     if type(response) is dict and "escalation_policy" in response:
         return EscalationPolicy.model_validate(response["escalation_policy"])

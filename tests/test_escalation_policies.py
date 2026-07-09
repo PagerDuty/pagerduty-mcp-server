@@ -447,7 +447,7 @@ class TestEscalationPolicyWriteTools(unittest.TestCase):
         result = create_escalation_policy(policy_create)
 
         mock_get_client.assert_called_once()
-        self.mock_client.rpost.assert_called_once_with("/escalation_policies", json=policy_create.model_dump(exclude_none=True))
+        self.mock_client.rpost.assert_called_once_with("/escalation_policies", json=policy_create.model_dump(exclude_unset=True))
         self.assertIsInstance(result, EscalationPolicy)
         self.assertEqual(result.id, "EP123")
         self.assertEqual(result.name, "Engineering Team Escalation")
@@ -462,7 +462,7 @@ class TestEscalationPolicyWriteTools(unittest.TestCase):
         result = create_escalation_policy(policy_create)
 
         mock_get_client.assert_called_once()
-        self.mock_client.rpost.assert_called_once_with("/escalation_policies", json=policy_create.model_dump(exclude_none=True))
+        self.mock_client.rpost.assert_called_once_with("/escalation_policies", json=policy_create.model_dump(exclude_unset=True))
         self.assertIsInstance(result, EscalationPolicy)
         self.assertEqual(result.id, "EP123")
         self.assertEqual(result.name, "Engineering Team Escalation")
@@ -493,7 +493,7 @@ class TestEscalationPolicyWriteTools(unittest.TestCase):
         result = update_escalation_policy("EP123", policy_create)
 
         mock_get_client.assert_called_once()
-        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_create.model_dump(exclude_none=True))
+        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_create.model_dump(exclude_unset=True))
         self.assertIsInstance(result, EscalationPolicy)
         self.assertEqual(result.id, "EP123")
         self.assertEqual(result.name, "Updated Escalation Policy")
@@ -510,7 +510,7 @@ class TestEscalationPolicyWriteTools(unittest.TestCase):
         result = update_escalation_policy("EP123", policy_create)
 
         mock_get_client.assert_called_once()
-        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_create.model_dump(exclude_none=True))
+        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_create.model_dump(exclude_unset=True))
         self.assertIsInstance(result, EscalationPolicy)
         self.assertEqual(result.id, "EP123")
         self.assertEqual(result.name, "Updated Escalation Policy")

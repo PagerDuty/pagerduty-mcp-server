@@ -203,6 +203,16 @@ class TestServerRun(unittest.TestCase):
         result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "127.0.0.1:8000"])
         self.assertNotEqual(result.exit_code, 0)
 
+    def test_bracketed_ipv6_host_is_accepted(self):
+        result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "[::1]"])
+        self.assertEqual(result.exit_code, 0, result.output)
+
+    def test_invalid_mcp_port_env_var_fails_in_all_modes(self):
+        # MCP_PORT must be a valid integer — Typer validates at CLI startup
+        # regardless of --transport, so MCP_PORT=abc always fails.
+        result, _, _ = self._invoke(env={"MCP_PORT": "abc"})
+        self.assertNotEqual(result.exit_code, 0)
+
     def test_empty_host_after_strip_fails(self):
         result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "   "])
         self.assertNotEqual(result.exit_code, 0)

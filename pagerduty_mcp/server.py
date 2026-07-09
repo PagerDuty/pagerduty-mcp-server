@@ -125,6 +125,9 @@ def run(
             raise typer.BadParameter("Host must not be empty", param_hint="--host")
         if any(c.isspace() for c in normalized_host):
             raise typer.BadParameter("Host must not contain whitespace", param_hint="--host")
+        # Accept bracketed IPv6 notation (e.g. [::1]) commonly copied from URLs.
+        if normalized_host.startswith("[") and normalized_host.endswith("]"):
+            normalized_host = normalized_host[1:-1]
         is_ipv6 = False
         try:
             addr = ipaddress.ip_address(normalized_host)

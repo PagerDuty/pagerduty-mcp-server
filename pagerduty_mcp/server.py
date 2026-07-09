@@ -2,6 +2,7 @@ import ipaddress
 import logging
 from collections.abc import Callable
 from enum import Enum
+from typing import Any
 
 import typer
 from mcp.server.fastmcp import FastMCP
@@ -65,9 +66,20 @@ def add_write_tool(mcp_instance: FastMCP, tool: Callable) -> None:
 def run(
     *,
     enable_write_tools: bool = False,
-    transport: Transport = typer.Option(default=Transport.stdio, help="Transport protocol to use (stdio, sse, or streamable-http)"),
-    host: str = typer.Option(default="127.0.0.1", envvar="MCP_HOST", help="Host to bind to for HTTP-based transports"),
-    port: int = typer.Option(default=8000, envvar="MCP_PORT", help="Port to bind to for HTTP-based transports"),
+    transport: Transport = typer.Option(
+        default=Transport.stdio,
+        help="Transport protocol to use (stdio, sse, or streamable-http)",
+    ),
+    host: str = typer.Option(
+        default="127.0.0.1",
+        envvar="MCP_HOST",
+        help="Host to bind to for HTTP-based transports",
+    ),
+    port: int = typer.Option(
+        default=8000,
+        envvar="MCP_PORT",
+        help="Port to bind to for HTTP-based transports",
+    ),
 ) -> None:
     """Run the MCP server with the specified configuration.
 
@@ -79,7 +91,7 @@ def run(
     """
     ContextResolver.set_strategy(ApplicationContextStrategy())
 
-    fastmcp_kwargs: dict = {"instructions": MCP_SERVER_INSTRUCTIONS}
+    fastmcp_kwargs: dict[str, Any] = {"instructions": MCP_SERVER_INSTRUCTIONS}
 
     if transport == Transport.stdio:
         _ignored = []
@@ -135,14 +147,17 @@ def run(
         # operator handle network-level security (firewall, reverse proxy, etc.).
         if is_loopback:
             host_header = f"[{normalized_host}]" if is_ipv6 else normalized_host
+            # Deduplicate while preserving order (e.g. host='localhost' would otherwise
+            # produce duplicate entries since host_header == 'localhost').
+            allowed_hosts = list(dict.fromkeys([
+                f"{host_header}:{port}",
+                host_header,           # bare form — some clients omit port from Host header
+                f"localhost:{port}",
+                "localhost",
+            ]))
             fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
                 enable_dns_rebinding_protection=True,
-                allowed_hosts=[
-                    f"{host_header}:{port}",
-                    host_header,           # bare form — some clients omit port from Host header
-                    f"localhost:{port}",
-                    "localhost",
-                ],
+                allowed_hosts=allowed_hosts,
             )
 
     mcp = FastMCP("PagerDuty MCP Server", **fastmcp_kwargs)

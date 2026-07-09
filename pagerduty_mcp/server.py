@@ -24,6 +24,8 @@ class Transport(str, Enum):
 
 logging.basicConfig(level=logging.WARNING)
 
+logger = logging.getLogger(__name__)
+
 
 app = typer.Typer()
 
@@ -101,7 +103,7 @@ def run(
             _ignored.append(f"port={port}")
         if _ignored:
             verb = "have" if len(_ignored) > 1 else "has"
-            logging.getLogger(__name__).warning(
+            logger.warning(
                 "%s %s no effect when --transport stdio is used.",
                 " and ".join(_ignored),
                 verb,
@@ -111,7 +113,7 @@ def run(
             raise typer.BadParameter(f"Port must be between 1 and 65535, got {port}", param_hint="--port")
 
         if port < 1024:
-            logging.getLogger(__name__).warning(
+            logger.warning(
                 "Port %d is a privileged port — binding may fail on non-root processes.", port
             )
 
@@ -132,7 +134,7 @@ def run(
             is_loopback = normalized_host.lower() == "localhost"
 
         if not is_loopback:
-            logging.getLogger(__name__).warning(
+            logger.warning(
                 "HTTP transport '%s' bound to '%s' with no built-in authentication — "
                 "ensure this endpoint is protected by an authenticating proxy.",
                 transport.value,

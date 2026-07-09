@@ -190,6 +190,10 @@ class TestServerRun(unittest.TestCase):
         result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "   "])
         self.assertNotEqual(result.exit_code, 0)
 
+    def test_host_with_embedded_space_fails(self):
+        result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "bad host"])
+        self.assertNotEqual(result.exit_code, 0)
+
     def test_no_warning_for_loopback_variants(self):
         for loopback in ["127.0.0.1", "::1", "localhost", "LOCALHOST", "  127.0.0.1  ", "127.0.0.2"]:
             with self.subTest(host=loopback):

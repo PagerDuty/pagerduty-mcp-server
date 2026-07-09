@@ -117,6 +117,8 @@ def run(
         normalized_host = host.strip()
         if not normalized_host:
             raise typer.BadParameter("Host must not be empty", param_hint="--host")
+        if any(c.isspace() for c in normalized_host):
+            raise typer.BadParameter("Host must not contain whitespace", param_hint="--host")
         is_ipv6 = False
         try:
             addr = ipaddress.ip_address(normalized_host)

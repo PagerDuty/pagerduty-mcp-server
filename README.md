@@ -270,7 +270,7 @@ The server supports three MCP transports, selected via the `--transport` flag:
 | `streamable-http` | Long-running remote/server deployments. MCP endpoint at `/mcp`. |     |
 | `sse`             | Legacy Server-Sent Events transport.                        |         |
 
-For HTTP-based transports, `--host` (default `127.0.0.1`) and `--port` (default `8000`) control the listen address. These can also be set via environment variables `MCP_HOST` and `MCP_PORT`.
+For HTTP-based transports, `--host` (default `127.0.0.1`) and `--port` (default `8000`) control the listen address. These can also be set via environment variables `MCP_HOST` and `MCP_PORT`. Note: `MCP_PORT` must always be a valid integer — the CLI parses its type at startup regardless of `--transport`; range validation (1–65535) only applies for HTTP transports.
 
 > ⚠️ **Security — HTTP transports have no built-in authentication.** When running `streamable-http` or `sse`, the MCP endpoint is exposed with **no authentication**, and every request uses the single `PAGERDUTY_USER_API_KEY` the server was started with. Any client that can reach the host/port can invoke tools — including write tools when `--enable-write-tools` is set — with that key's full PagerDuty privileges.
 > - The default bind address is `127.0.0.1` (loopback only) — keep it that way for local use.

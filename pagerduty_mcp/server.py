@@ -97,7 +97,7 @@ def run(
 
     if transport == Transport.stdio:
         _ignored = []
-        if host != "127.0.0.1":
+        if host.strip() != "127.0.0.1":
             _ignored.append(f"host={host!r}")
         if port != 8000:
             _ignored.append(f"port={port}")

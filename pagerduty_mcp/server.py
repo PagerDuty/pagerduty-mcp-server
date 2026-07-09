@@ -149,9 +149,9 @@ def run(
         fastmcp_kwargs["host"] = normalized_host
         fastmcp_kwargs["port"] = port
         # For loopback binds, enable DNS rebinding protection with an explicit Host
-        # allowlist. For wildcard binds (0.0.0.0), clients connect via their own IP
-        # so no fixed allowlist is possible — omit transport_security and let the
-        # operator handle network-level security (firewall, reverse proxy, etc.).
+        # allowlist. For any non-loopback bind (e.g. 0.0.0.0, 192.168.1.1), clients
+        # connect via their own IP so no fixed allowlist is possible — omit
+        # transport_security and let the operator handle network-level security.
         if is_loopback:
             host_header = f"[{normalized_host}]" if is_ipv6 else normalized_host
             candidates = [

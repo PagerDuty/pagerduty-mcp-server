@@ -61,14 +61,6 @@ def add_write_tool(mcp_instance: FastMCP, tool: Callable) -> None:
     )
 
 
-mcp = FastMCP(
-    "PagerDuty MCP Server",
-    instructions=MCP_SERVER_INSTRUCTIONS,
-)
-for _tool in read_tools:
-    add_read_only_tool(mcp, _tool)
-
-
 @app.command()
 def run(
     *,

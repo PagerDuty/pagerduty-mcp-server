@@ -67,8 +67,6 @@ mcp = FastMCP(
 )
 for _tool in read_tools:
     add_read_only_tool(mcp, _tool)
-for _tool in write_tools:
-    add_write_tool(mcp, _tool)
 
 
 @app.command()
@@ -98,9 +96,11 @@ def run(
         if port != 8000:
             _ignored.append(f"port={port}")
         if _ignored:
+            verb = "have" if len(_ignored) > 1 else "has"
             logging.getLogger(__name__).warning(
-                "%s have no effect when --transport stdio is used.",
+                "%s %s no effect when --transport stdio is used.",
                 " and ".join(_ignored),
+                verb,
             )
     else:
         if not (1 <= port <= 65535):
@@ -115,6 +115,8 @@ def run(
             raise typer.BadParameter("Host must not contain control characters", param_hint="--host")
 
         normalized_host = host.strip()
+        if not normalized_host:
+            raise typer.BadParameter("Host must not be empty", param_hint="--host")
         is_ipv6 = False
         try:
             addr = ipaddress.ip_address(normalized_host)
@@ -143,7 +145,7 @@ def run(
                 enable_dns_rebinding_protection=True,
                 allowed_hosts=[
                     f"{host_header}:{port}",
-                    host_header,           # bare form — clients may omit port for standard ports
+                    host_header,           # bare form — some clients omit port from Host header
                     f"localhost:{port}",
                     "localhost",
                 ],

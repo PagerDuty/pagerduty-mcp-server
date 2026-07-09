@@ -186,6 +186,10 @@ class TestServerRun(unittest.TestCase):
                 result, _, _ = self._invoke(["--transport", "streamable-http", "--host", bad_host])
                 self.assertNotEqual(result.exit_code, 0, f"Expected failure for host={bad_host!r}")
 
+    def test_empty_host_after_strip_fails(self):
+        result, _, _ = self._invoke(["--transport", "streamable-http", "--host", "   "])
+        self.assertNotEqual(result.exit_code, 0)
+
     def test_no_warning_for_loopback_variants(self):
         for loopback in ["127.0.0.1", "::1", "localhost", "LOCALHOST", "  127.0.0.1  ", "127.0.0.2"]:
             with self.subTest(host=loopback):
@@ -198,6 +202,18 @@ class TestServerRun(unittest.TestCase):
             result, _, _ = self._invoke(env={"MCP_HOST": "0.0.0.0"})
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertTrue(any("no effect" in m for m in cm.output))
+
+    def test_stdio_warning_grammar_singular(self):
+        with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:
+            result, _, _ = self._invoke(env={"MCP_HOST": "0.0.0.0"})
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertTrue(any(" has no effect" in m for m in cm.output))
+
+    def test_stdio_warning_grammar_plural(self):
+        with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:
+            result, _, _ = self._invoke(env={"MCP_HOST": "0.0.0.0", "MCP_PORT": "9000"})
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertTrue(any(" have no effect" in m for m in cm.output))
 
     def test_warning_emitted_for_non_loopback_http(self):
         with self.assertLogs("pagerduty_mcp.server", level="WARNING") as cm:

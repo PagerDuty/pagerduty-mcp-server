@@ -402,8 +402,10 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅         |
 | update_event_orchestration_router | Event Orchestrations | Updates the router configuration for an event orchestration | ❌         |
 | append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router | ❌         |
-| list_escalation_policies | Escalation Policy  | Lists escalation policies                           | ✅         |
+| create_escalation_policy | Escalation Policy  | Creates a new escalation policy                     | ❌         |
 | get_escalation_policy    | Escalation Policy  | Retrieves a specific escalation policy              | ✅         |
+| list_escalation_policies | Escalation Policy  | Lists escalation policies                           | ✅         |
+| update_escalation_policy | Escalation Policy  | Updates an existing escalation policy               | ❌         |
 | add_note_to_incident     | Incidents          | Adds note to an incident                            | ❌         |
 | add_responders           | Incidents          | Adds responders to an incident                      | ❌         |
 | create_incident          | Incidents          | Creates a new incident                              | ❌         |

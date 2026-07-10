@@ -93,7 +93,27 @@ class EscalationPolicy(BaseModel):
 
 class EscalationPolicyCreate(BaseModel):
     escalation_policy: EscalationPolicy = Field(
-        description="The escalation policy to create or update"
+        description="The escalation policy to create. escalation_rules is required."
+    )
+
+
+class EscalationPolicyUpdate(BaseModel):
+    class _PartialEscalationPolicy(BaseModel):
+        name: str | None = Field(default=None, description="The name of the escalation policy")
+        description: str | None = Field(default=None, description="The description of the escalation policy")
+        escalation_rules: list[EscalationRule] | None = Field(
+            default=None, description="The ordered list of escalation rules for the policy"
+        )
+        num_loops: int | None = Field(default=None, description="The number of times the escalation policy will repeat")
+        on_call_handoff_notifications: Literal["if_has_services", "always"] | None = Field(
+            default=None, description="Determines how on call handoff notifications will be sent"
+        )
+        teams: list[TeamReference] | None = Field(
+            default=None, description="The teams associated with this escalation policy"
+        )
+
+    escalation_policy: _PartialEscalationPolicy = Field(
+        description="The fields to update on the escalation policy. Only provided fields are sent."
     )
 
 

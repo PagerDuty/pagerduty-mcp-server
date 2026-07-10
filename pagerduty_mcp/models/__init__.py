@@ -12,7 +12,7 @@ from .alert_grouping_settings import (
 from .alerts import Alert, AlertQuery
 from .base import MAX_RESULTS, ListResponseModel
 from .change_events import ChangeEvent, ChangeEventQuery
-from .escalation_policies import EscalationPolicy, EscalationPolicyCreate, EscalationPolicyQuery
+from .escalation_policies import EscalationPolicy, EscalationPolicyCreate, EscalationPolicyQuery, EscalationPolicyUpdate
 from .event_orchestrations import (
     EventOrchestration,
     EventOrchestrationCatchAll,
@@ -158,6 +158,7 @@ __all__ = [
     "ContentBasedIntelligentConfig",
     "EscalationPolicy",
     "EscalationPolicyCreate",
+    "EscalationPolicyUpdate",
     "EscalationPolicyQuery",
     "EventOrchestration",
     "EventOrchestrationCatchAll",

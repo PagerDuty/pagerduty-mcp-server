@@ -6,6 +6,7 @@ from pagerduty_mcp.models.escalation_policies import (
     EscalationPolicy,
     EscalationPolicyCreate,
     EscalationPolicyQuery,
+    EscalationPolicyUpdate,
     EscalationRule,
     EscalationTarget,
 )
@@ -481,6 +482,10 @@ class TestEscalationPolicyWriteTools(unittest.TestCase):
         self.assertEqual(str(context.exception), "API Error")
         mock_get_client.assert_called_once()
 
+    def _make_escalation_policy_update(self, **kwargs):
+        """Helper: build an EscalationPolicyUpdate with only the given fields."""
+        return EscalationPolicyUpdate(escalation_policy=EscalationPolicyUpdate._PartialEscalationPolicy(**kwargs))
+
     @patch("pagerduty_mcp.tools.escalation_policies.get_client")
     def test_update_escalation_policy_wrapped_response(self, mock_get_client):
         """Test successful escalation policy update with wrapped response."""
@@ -489,11 +494,11 @@ class TestEscalationPolicyWriteTools(unittest.TestCase):
         updated_policy["name"] = "Updated Escalation Policy"
         self.mock_client.rput.return_value = {"escalation_policy": updated_policy}
 
-        policy_create = self._make_escalation_policy_create()
-        result = update_escalation_policy("EP123", policy_create)
+        policy_update = self._make_escalation_policy_update(name="Updated Escalation Policy")
+        result = update_escalation_policy("EP123", policy_update)
 
         mock_get_client.assert_called_once()
-        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_create.model_dump(exclude_unset=True))
+        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_update.model_dump(exclude_unset=True))
         self.assertIsInstance(result, EscalationPolicy)
         self.assertEqual(result.id, "EP123")
         self.assertEqual(result.name, "Updated Escalation Policy")
@@ -506,14 +511,31 @@ class TestEscalationPolicyWriteTools(unittest.TestCase):
         updated_policy["name"] = "Updated Escalation Policy"
         self.mock_client.rput.return_value = updated_policy
 
-        policy_create = self._make_escalation_policy_create()
-        result = update_escalation_policy("EP123", policy_create)
+        policy_update = self._make_escalation_policy_update(name="Updated Escalation Policy")
+        result = update_escalation_policy("EP123", policy_update)
 
         mock_get_client.assert_called_once()
-        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_create.model_dump(exclude_unset=True))
+        self.mock_client.rput.assert_called_once_with("/escalation_policies/EP123", json=policy_update.model_dump(exclude_unset=True))
         self.assertIsInstance(result, EscalationPolicy)
         self.assertEqual(result.id, "EP123")
         self.assertEqual(result.name, "Updated Escalation Policy")
+
+    @patch("pagerduty_mcp.tools.escalation_policies.get_client")
+    def test_update_escalation_policy_partial_name_only(self, mock_get_client):
+        """Test that update with name only does not send escalation_rules (no data loss)."""
+        mock_get_client.return_value = self.mock_client
+        updated_policy = self.sample_escalation_policy_response.copy()
+        updated_policy["name"] = "Renamed Policy"
+        self.mock_client.rput.return_value = {"escalation_policy": updated_policy}
+
+        policy_update = self._make_escalation_policy_update(name="Renamed Policy")
+        result = update_escalation_policy("EP123", policy_update)
+
+        call_json = self.mock_client.rput.call_args.kwargs["json"]
+        # escalation_rules must NOT be sent — would delete existing rules
+        self.assertNotIn("escalation_rules", call_json.get("escalation_policy", {}))
+        self.assertEqual(call_json["escalation_policy"]["name"], "Renamed Policy")
+        self.assertIsInstance(result, EscalationPolicy)
 
     @patch("pagerduty_mcp.tools.escalation_policies.get_client")
     def test_update_escalation_policy_client_error(self, mock_get_client):
@@ -521,10 +543,10 @@ class TestEscalationPolicyWriteTools(unittest.TestCase):
         mock_get_client.return_value = self.mock_client
         self.mock_client.rput.side_effect = Exception("API Error")
 
-        policy_create = self._make_escalation_policy_create()
+        policy_update = self._make_escalation_policy_update(name="Test")
 
         with self.assertRaises(Exception) as context:
-            update_escalation_policy("EP123", policy_create)
+            update_escalation_policy("EP123", policy_update)
 
         self.assertEqual(str(context.exception), "API Error")
         mock_get_client.assert_called_once()

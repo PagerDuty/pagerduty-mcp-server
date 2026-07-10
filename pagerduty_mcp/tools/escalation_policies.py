@@ -1,7 +1,7 @@
 from typing import Any
 
 from pagerduty_mcp.client import get_client
-from pagerduty_mcp.models import EscalationPolicy, EscalationPolicyCreate, ListResponseModel
+from pagerduty_mcp.models import EscalationPolicy, EscalationPolicyCreate, EscalationPolicyUpdate, ListResponseModel
 from pagerduty_mcp.utils import paginate
 
 
@@ -72,7 +72,7 @@ def create_escalation_policy(escalation_policy_data: EscalationPolicyCreate) -> 
     return EscalationPolicy.model_validate(response)
 
 
-def update_escalation_policy(policy_id: str, escalation_policy_data: EscalationPolicyCreate) -> EscalationPolicy:
+def update_escalation_policy(policy_id: str, escalation_policy_data: EscalationPolicyUpdate) -> EscalationPolicy:
     """Update an existing escalation policy.
 
     Args:

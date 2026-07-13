@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.0] - 2026-07-13
+
+### Added
+
+- `create_escalation_policy` and `update_escalation_policy` tools for managing escalation policies (#155)
+- HTTP, SSE, and streamable-http transport support via `MCP_TRANSPORT`, `MCP_HOST`, and `MCP_PORT` environment variables (#159)
+
 ## [1.0.0]
 
 ### Changed — ⚠️ Breaking Change

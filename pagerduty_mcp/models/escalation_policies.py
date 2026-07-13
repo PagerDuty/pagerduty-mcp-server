@@ -12,8 +12,8 @@ from pagerduty_mcp.models.references import (
 
 class EscalationTarget(BaseModel):
     id: str = Field(description="The ID of the escalation target (user or schedule)")
-    type: Literal["user_reference", "schedule_reference"] = Field(
-        description="The type of target - either a user or a schedule reference"
+    type: Literal["user_reference", "schedule_reference", "schedule_v3_reference"] = Field(
+        description="The type of target - a user, a v2 schedule, or a v3 schedule reference"
     )
     summary: str | None = Field(
         default=None,
@@ -51,10 +51,11 @@ class EscalationPolicyReference(BaseModel):
 
 
 class EscalationPolicy(BaseModel):
-    id: str = Field(description="The ID of the escalation policy")
-    summary: str = Field(
+    id: str | None = Field(default=None, description="The ID of the escalation policy")
+    summary: str | None = Field(
+        default=None,
         description="A short-form, server-generated string that provides succinct information"
-        " about the escalation policy"
+        " about the escalation policy",
     )
     name: str = Field(description="The name of the escalation policy")
     description: str | None = Field(default=None, description="The description of the escalation policy")
@@ -88,6 +89,32 @@ class EscalationPolicy(BaseModel):
     @property
     def type(self) -> Literal["escalation_policy"]:
         return "escalation_policy"
+
+
+class EscalationPolicyCreate(BaseModel):
+    escalation_policy: EscalationPolicy = Field(
+        description="The escalation policy to create. escalation_rules is required."
+    )
+
+
+class EscalationPolicyUpdate(BaseModel):
+    class _PartialEscalationPolicy(BaseModel):
+        name: str | None = Field(default=None, description="The name of the escalation policy")
+        description: str | None = Field(default=None, description="The description of the escalation policy")
+        escalation_rules: list[EscalationRule] | None = Field(
+            default=None, description="The ordered list of escalation rules for the policy"
+        )
+        num_loops: int | None = Field(default=None, description="The number of times the escalation policy will repeat")
+        on_call_handoff_notifications: Literal["if_has_services", "always"] | None = Field(
+            default=None, description="Determines how on call handoff notifications will be sent"
+        )
+        teams: list[TeamReference] | None = Field(
+            default=None, description="The teams associated with this escalation policy"
+        )
+
+    escalation_policy: _PartialEscalationPolicy = Field(
+        description="The fields to update on the escalation policy. Only provided fields are sent."
+    )
 
 
 class EscalationPolicyQuery(BaseModel):

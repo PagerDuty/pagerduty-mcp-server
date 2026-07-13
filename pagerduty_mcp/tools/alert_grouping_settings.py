@@ -1,10 +1,11 @@
 """Alert Grouping Settings tools for the PagerDuty MCP server."""
 
+from typing import Any
+
 from pagerduty_mcp.client import get_client
 from pagerduty_mcp.models import (
     AlertGroupingSetting,
     AlertGroupingSettingCreateRequest,
-    AlertGroupingSettingQuery,
     AlertGroupingSettingUpdateRequest,
     ListResponseModel,
 )
@@ -12,22 +13,41 @@ from pagerduty_mcp.utils import paginate
 
 
 def list_alert_grouping_settings(
-    query_model: AlertGroupingSettingQuery | None = None,
+    service_ids: list[str] | None = None,
+    limit: int | None = 1000,
+    after: str | None = None,
+    before: str | None = None,
+    total: bool = False,
 ) -> ListResponseModel[AlertGroupingSetting]:
     """List all alert grouping settings with optional filtering.
 
     Args:
-        query_model: Optional filtering parameters
+        service_ids: An array of service IDs. Only results related to these services will be returned.
+        limit: The number of results per page. Default 1000.
+        after: Cursor to retrieve next page.
+        before: Cursor to retrieve previous page.
+        total: Set to True to include total count in response.
 
     Returns:
         List of alert grouping settings matching the query parameters
     """
-    if query_model is None:
-        query_model = AlertGroupingSettingQuery()
-    params = query_model.to_params()
+    params: dict[str, Any] = {}
+    if service_ids:
+        params["service_ids[]"] = service_ids
+    if limit is not None:
+        params["limit"] = limit
+    if after:
+        params["after"] = after
+    if before:
+        params["before"] = before
+    if total:
+        params["total"] = total
 
     response = paginate(
-        client=get_client(), entity="alert_grouping_settings", params=params, maximum_records=query_model.limit or 1000
+        client=get_client(),
+        entity="alert_grouping_settings",
+        params=params,
+        maximum_records=limit or 1000,
     )
 
     settings = [AlertGroupingSetting(**setting) for setting in response]

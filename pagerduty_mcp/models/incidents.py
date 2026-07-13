@@ -4,7 +4,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
 from pagerduty_mcp.models.base import MAX_RESULTS
-from pagerduty_mcp.models.references import ServiceReference, UserReference
+from pagerduty_mcp.models.references import PriorityReference, ServiceReference, UserReference
 
 IncidentStatus = Literal["triggered", "acknowledged", "resolved"]
 
@@ -212,6 +212,10 @@ class Incident(BaseModel):
     assignments: list[Assignment] | None = Field(
         default=None,
         description="The users assigned to the incident",
+    )
+    priority: PriorityReference | None = Field(
+        default=None,
+        description="The priority of the incident (e.g. P1, P2)",
     )
 
     @computed_field

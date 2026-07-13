@@ -1,15 +1,30 @@
+import ipaddress
 import logging
 from collections.abc import Callable
+from enum import Enum
+from typing import Any
 
 import typer
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 
-from pagerduty_mcp.tools import read_tools, write_tools
 from pagerduty_mcp.context import ContextResolver
 from pagerduty_mcp.context.application_context_strategy import ApplicationContextStrategy
+from pagerduty_mcp.tools import read_tools, write_tools
+
+
+class Transport(str, Enum):
+    """MCP transport protocols supported by the server."""
+
+    stdio = "stdio"
+    sse = "sse"
+    streamable_http = "streamable-http"
+
 
 logging.basicConfig(level=logging.WARNING)
+
+logger = logging.getLogger(__name__)
 
 
 app = typer.Typer()
@@ -50,18 +65,115 @@ def add_write_tool(mcp_instance: FastMCP, tool: Callable) -> None:
 
 
 @app.command()
-def run(*, enable_write_tools: bool = False) -> None:
+def run(
+    *,
+    enable_write_tools: bool = False,
+    transport: Transport = typer.Option(
+        default=Transport.stdio,
+        help="Transport protocol to use (stdio, sse, or streamable-http)",
+    ),
+    host: str = typer.Option(
+        default="127.0.0.1",
+        envvar="MCP_HOST",
+        help="Host to bind to for HTTP-based transports",
+    ),
+    port: int = typer.Option(
+        default=8000,
+        envvar="MCP_PORT",
+        help="Port to bind to for HTTP-based transports. Must be a valid integer even in stdio mode.",
+    ),
+) -> None:
     """Run the MCP server with the specified configuration.
 
     Args:
         enable_write_tools: Flag to enable write tools
+        transport: Transport protocol to use (stdio, sse, or streamable-http)
+        host: Host to bind to for HTTP-based transports (env: MCP_HOST)
+        port: Port to bind to for HTTP-based transports (env: MCP_PORT)
     """
     ContextResolver.set_strategy(ApplicationContextStrategy())
 
-    mcp = FastMCP(
-        "PagerDuty MCP Server",
-        instructions=MCP_SERVER_INSTRUCTIONS,
-    )
+    fastmcp_kwargs: dict[str, Any] = {"instructions": MCP_SERVER_INSTRUCTIONS}
+
+    if transport == Transport.stdio:
+        _ignored = []
+        if host.strip() != "127.0.0.1":
+            _ignored.append(f"host={host!r}")
+        if port != 8000:
+            _ignored.append(f"port={port}")
+        if _ignored:
+            verb = "have" if len(_ignored) > 1 else "has"
+            logger.warning(
+                "%s %s no effect when --transport stdio is used.",
+                " and ".join(_ignored),
+                verb,
+            )
+    else:
+        if not (1 <= port <= 65535):
+            raise typer.BadParameter(f"Port must be between 1 and 65535, got {port}", param_hint="--port")
+
+        if port < 1024:
+            logger.warning(
+                "Port %d is a privileged port — binding may fail on non-root processes.", port
+            )
+
+        if any(ord(c) < 0x20 or ord(c) == 0x7F for c in host):
+            raise typer.BadParameter("Host must not contain control characters", param_hint="--host")
+
+        normalized_host = host.strip()
+        if not normalized_host:
+            raise typer.BadParameter("Host must not be empty", param_hint="--host")
+        if any(c.isspace() for c in normalized_host):
+            raise typer.BadParameter("Host must not contain whitespace", param_hint="--host")
+        # Accept bracketed IPv6 notation (e.g. [::1]) commonly copied from URLs.
+        if normalized_host.startswith("[") and normalized_host.endswith("]"):
+            normalized_host = normalized_host[1:-1]
+        is_ipv6 = False
+        try:
+            addr = ipaddress.ip_address(normalized_host)
+            is_loopback = addr.is_loopback
+            is_ipv6 = addr.version == 6
+        except ValueError:
+            if ":" in normalized_host:
+                raise typer.BadParameter(
+                    "Host must not include a port — use --port to specify the port separately",
+                    param_hint="--host",
+                )
+            is_loopback = normalized_host.lower() == "localhost"
+
+        if not is_loopback:
+            logger.warning(
+                "HTTP transport '%s' bound to '%s' with no built-in authentication — "
+                "ensure this endpoint is protected by an authenticating proxy.",
+                transport.value,
+                normalized_host,
+            )
+
+        fastmcp_kwargs["host"] = normalized_host
+        fastmcp_kwargs["port"] = port
+        # For loopback binds, enable DNS rebinding protection with an explicit Host
+        # allowlist. For any non-loopback bind (e.g. 0.0.0.0, 192.168.1.1), clients
+        # connect via their own IP so no fixed allowlist is possible — omit
+        # transport_security and let the operator handle network-level security.
+        if is_loopback:
+            host_header = f"[{normalized_host}]" if is_ipv6 else normalized_host
+            candidates = [
+                f"{host_header}:{port}",
+                host_header,           # bare form — some clients omit port from Host header
+                f"localhost:{port}",
+                "localhost",
+            ]
+            # When binding to the 'localhost' hostname, clients may connect via the
+            # numeric loopback addresses (127.0.0.1 or [::1]) and send those as the
+            # Host header. Include both to avoid spurious 421 rejections.
+            if normalized_host.lower() == "localhost":
+                candidates.extend([f"127.0.0.1:{port}", "127.0.0.1", f"[::1]:{port}", "[::1]"])
+            fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
+                enable_dns_rebinding_protection=True,
+                allowed_hosts=list(dict.fromkeys(candidates)),
+            )
+
+    mcp = FastMCP("PagerDuty MCP Server", **fastmcp_kwargs)
     for tool in read_tools:
         add_read_only_tool(mcp, tool)
 
@@ -69,4 +181,4 @@ def run(*, enable_write_tools: bool = False) -> None:
         for tool in write_tools:
             add_write_tool(mcp, tool)
 
-    mcp.run()
+    mcp.run(transport=transport.value)

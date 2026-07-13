@@ -16,7 +16,15 @@ from pagerduty_mcp_evals.test_cases.test_alert_grouping_settings import (
     ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
 )
 from pagerduty_mcp_evals.test_cases.test_change_events import CHANGE_EVENTS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_escalation_policies import (
+    ESCALATION_POLICIES_COMPETENCY_TESTS,
+)
 from pagerduty_mcp_evals.test_cases.test_log_entries import LOG_ENTRY_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_analytics import ANALYTICS_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_business_services import BUSINESS_SERVICES_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_priorities import PRIORITIES_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_schedules_v3 import SCHEDULES_V3_COMPETENCY_TESTS
+from pagerduty_mcp_evals.test_cases.test_webhooks import WEBHOOK_COMPETENCY_TESTS
 
 test_mapping = {
     "incidents": INCIDENT_COMPETENCY_TESTS,
@@ -27,8 +35,14 @@ test_mapping = {
     "alert-grouping-settings": ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS,
     "change-events": CHANGE_EVENTS_COMPETENCY_TESTS,
     "log-entries": LOG_ENTRY_COMPETENCY_TESTS,
+    "escalation-policies": ESCALATION_POLICIES_COMPETENCY_TESTS,
     "schedules": SCHEDULES_COMPETENCY_TESTS,
+    "schedules-v3": SCHEDULES_V3_COMPETENCY_TESTS,
     "services": SERVICES_COMPETENCY_TESTS,
+    "analytics": ANALYTICS_COMPETENCY_TESTS,
+    "business-services": BUSINESS_SERVICES_COMPETENCY_TESTS,
+    "priorities": PRIORITIES_COMPETENCY_TESTS,
+    "webhooks": WEBHOOK_COMPETENCY_TESTS,
     "all": (
         INCIDENT_COMPETENCY_TESTS
         + TEAMS_COMPETENCY_TESTS
@@ -38,8 +52,14 @@ test_mapping = {
         + ALERT_GROUPING_SETTINGS_COMPETENCY_TESTS
         + CHANGE_EVENTS_COMPETENCY_TESTS
         + LOG_ENTRY_COMPETENCY_TESTS
+        + ESCALATION_POLICIES_COMPETENCY_TESTS
         + SCHEDULES_COMPETENCY_TESTS
         + SERVICES_COMPETENCY_TESTS
+        + ANALYTICS_COMPETENCY_TESTS
+        + BUSINESS_SERVICES_COMPETENCY_TESTS
+        + PRIORITIES_COMPETENCY_TESTS
+        + WEBHOOK_COMPETENCY_TESTS
+        + SCHEDULES_V3_COMPETENCY_TESTS
     ),
 }
 

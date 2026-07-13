@@ -4,7 +4,7 @@ sidebar_position: 9
 
 # Users
 
-User tools let you retrieve information about the currently authenticated user and list all users in the account.
+User tools let you retrieve information about the currently authenticated user, list users in the account, and create new users.
 
 ## Tools
 
@@ -33,3 +33,23 @@ List users, optionally filtering by name and team IDs.
 **Example prompt:**
 
 > "List all users on the platform team"
+
+---
+
+### `create_user` *(write)*
+
+Create a new PagerDuty user account. No invitation email is sent automatically.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `request` | `CreateUserRequest` | Yes | User creation parameters including `name`, `email`, `role` (default: `"user"`), and `time_zone` (default: `"UTC"`) |
+
+**Valid roles:** `admin`, `limited_user`, `observer`, `owner`, `read_only_user`, `restricted_access`, `read_only_limited_user`, `user`
+
+:::note
+Requires `--enable-write-tools` flag.
+:::
+
+**Example prompt:**
+
+> "Create a new user account for Jane Smith with email jane.smith@example.com in the America/New_York timezone"

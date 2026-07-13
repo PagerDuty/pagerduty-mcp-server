@@ -260,6 +260,51 @@ To integrate the Docker container with MCP clients, you can use Docker as the co
 
 > **Note**: The Docker container uses stdio transport, making it compatible with MCP clients that expect standard input/output communication. Ensure you build the image first using `docker build -t pagerduty-mcp:latest .`
 
+## Transport modes
+
+The server supports three MCP transports, selected via the `--transport` flag:
+
+| Transport         | Use case                                                    | Default |
+|-------------------|-------------------------------------------------------------|---------|
+| `stdio`           | Local clients launched as a subprocess (Cursor, VS Code).   | ✅      |
+| `streamable-http` | Long-running remote/server deployments. MCP endpoint at `/mcp`. |     |
+| `sse`             | Legacy Server-Sent Events transport.                        |         |
+
+For HTTP-based transports, `--host` (default `127.0.0.1`) and `--port` (default `8000`) control the listen address. These can also be set via environment variables `MCP_HOST` and `MCP_PORT`. Note: `MCP_PORT` must always be a valid integer — the CLI parses its type at startup regardless of `--transport`; range validation (1–65535) only applies for HTTP transports.
+
+> ⚠️ **Security — HTTP transports have no built-in authentication.** When running `streamable-http` or `sse`, the MCP endpoint is exposed with **no authentication**, and every request uses the single `PAGERDUTY_USER_API_KEY` the server was started with. Any client that can reach the host/port can invoke tools — including write tools when `--enable-write-tools` is set — with that key's full PagerDuty privileges.
+> - The default bind address is `127.0.0.1` (loopback only) — keep it that way for local use.
+> - Only bind to `0.0.0.0`/a routable address when the endpoint sits behind an authenticating reverse proxy / API gateway (e.g. oauth2-proxy, mTLS) or on a trusted network. Do not expose it directly to untrusted networks.
+
+**Example: run as a remote streamable-HTTP server**
+
+```bash
+pagerduty-mcp --transport streamable-http --host 0.0.0.0 --port 8000
+# MCP endpoint: http://<your-machine-ip>:8000/mcp
+# ⚠️ Only use --host 0.0.0.0 behind an authenticating proxy or on a trusted network.
+```
+
+**Using environment variables:**
+
+```bash
+MCP_HOST=0.0.0.0 MCP_PORT=8000 pagerduty-mcp --transport streamable-http
+# ⚠️ Only use MCP_HOST=0.0.0.0 behind an authenticating proxy or on a trusted network.
+```
+
+**Docker:**
+
+```bash
+docker run -d -p 8000:8000 \
+  -e PAGERDUTY_USER_API_KEY="your-api-key-here" \
+  -e MCP_HOST=0.0.0.0 \
+  -e MCP_PORT=8000 \
+  pagerduty-mcp:latest \
+  --transport streamable-http
+# ⚠️ Only use MCP_HOST=0.0.0.0 behind an authenticating proxy or on a trusted network.
+```
+
+The default remains `stdio` so existing local integrations are unaffected.
+
 ## Set up locally
 
 1.  **Clone the repository** 
@@ -316,6 +361,15 @@ To integrate the Docker container with MCP clients, you can use Docker as the co
     }
     ```
 
+## Configuration
+
+The MCP server is configured via environment variables:
+
+| Environment Variable | Required | Default | Description |
+|---|---|---|---|
+| `PAGERDUTY_USER_API_KEY` | Yes | — | Your PagerDuty User API Token. |
+| `PAGERDUTY_API_HOST` | No | `https://api.pagerduty.com` | PagerDuty API base URL. Use `https://api.eu.pagerduty.com` for EU accounts. |
+
 ## Available Tools and Resources
 
 This section describes the tools provided by the PagerDuty MCP server. They are categorized based on whether they only read data or can modify data in your PagerDuty account.
@@ -329,6 +383,14 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_alert_grouping_setting    | Alert Grouping | Retrieves a specific alert grouping setting         | ✅         |
 | list_alert_grouping_settings  | Alert Grouping | Lists alert grouping settings with filtering        | ✅         |
 | update_alert_grouping_setting | Alert Grouping | Updates an existing alert grouping setting          | ❌         |
+| get_incident_metrics_all      | Analytics      | Retrieves aggregated incident metrics across all services | ✅    |
+| get_incident_metrics_by_service | Analytics    | Retrieves incident metrics grouped by service       | ✅         |
+| get_incident_metrics_by_team  | Analytics      | Retrieves incident metrics grouped by team          | ✅         |
+| get_responder_load_metrics    | Analytics      | Retrieves responder load metrics                    | ✅         |
+| get_responder_metrics         | Analytics      | Retrieves responder performance metrics             | ✅         |
+| get_business_service_dependencies | Business Services | Retrieves dependencies for a specific business service | ✅  |
+| get_technical_service_dependencies | Business Services | Retrieves technical service dependencies for a business service | ✅ |
+| list_business_services        | Business Services | Lists business services                            | ✅         |
 | get_change_event       | Change Events      | Retrieves a specific change event                   | ✅         |
 | list_change_events     | Change Events      | Lists change events with optional filtering         | ✅         |
 | list_incident_change_events | Change Events | Lists change events related to a specific incident  | ✅         |
@@ -340,8 +402,10 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | list_event_orchestrations | Event Orchestrations | Lists event orchestrations with optional filtering | ✅         |
 | update_event_orchestration_router | Event Orchestrations | Updates the router configuration for an event orchestration | ❌         |
 | append_event_orchestration_router_rule | Event Orchestrations | Adds a new routing rule to an event orchestration router | ❌         |
-| list_escalation_policies | Escalation Policy  | Lists escalation policies                           | ✅         |
+| create_escalation_policy | Escalation Policy  | Creates a new escalation policy                     | ❌         |
 | get_escalation_policy    | Escalation Policy  | Retrieves a specific escalation policy              | ✅         |
+| list_escalation_policies | Escalation Policy  | Lists escalation policies                           | ✅         |
+| update_escalation_policy | Escalation Policy  | Updates an existing escalation policy               | ❌         |
 | add_note_to_incident     | Incidents          | Adds note to an incident                            | ❌         |
 | add_responders           | Incidents          | Adds responders to an incident                      | ❌         |
 | create_incident          | Incidents          | Creates a new incident                              | ❌         |
@@ -370,6 +434,7 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | get_user_data            | Users              | Gets the current user's data                        | ✅         |
 | list_users               | Users              | Lists users in the PagerDuty account                | ✅         |
 | list_oncalls             | On-call            | Lists on-call schedules                             | ✅         |
+| list_priorities          | Priorities         | Lists priorities defined in the account             | ✅         |
 | create_schedule_override | Schedules          | Creates an override for a schedule                  | ❌         |
 | get_schedule             | Schedules          | Retrieves a specific schedule                       | ✅         |
 | list_schedule_users      | Schedules          | Lists users in a schedule                           | ✅         |
@@ -388,6 +453,13 @@ This section describes the tools provided by the PagerDuty MCP server. They are 
 | list_status_page_severities | Status Pages    | Lists available severity levels for a status page   | ✅         |
 | list_status_page_statuses | Status Pages      | Lists available statuses for a status page          | ✅         |
 | list_status_pages        | Status Pages       | Lists all status pages with optional filtering      | ✅         |
+| create_webhook_subscription | Webhooks        | Creates a new webhook subscription (returns signing secret) | ❌         |
+| delete_webhook_subscription | Webhooks        | Deletes a webhook subscription                      | ❌         |
+| get_webhook_subscription    | Webhooks        | Retrieves a specific webhook subscription           | ✅         |
+| list_webhook_subscriptions  | Webhooks        | Lists webhook subscriptions with optional type filtering | ✅         |
+| update_webhook_subscription | Webhooks        | Updates an existing webhook subscription            | ❌         |
+| get_extension_schema        | Extension Schemas | Retrieves a specific extension schema             | ✅         |
+| list_extension_schemas      | Extension Schemas | Lists available extension schemas (vendors)       | ✅         |
 
 
 ## Support

@@ -191,97 +191,71 @@ class TestIncidentTools(unittest.TestCase):
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_basic(self, mock_paginate):
         """Test basic incident listing."""
-        # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
 
-        # Test with basic query
-        query = IncidentQuery()
-        result = list_incidents(query)
+        result = list_incidents()
 
-        # Assertions
         self.assertIsInstance(result, ListResponseModel)
         self.assertEqual(len(result.response), 1)
         self.assertIsInstance(result.response[0], Incident)
         self.assertEqual(result.response[0].id, "PINCIDENT123")
 
-        # Verify paginate was called with correct parameters
         mock_paginate.assert_called_once()
         call_args = mock_paginate.call_args
         self.assertEqual(call_args[1]["entity"], "incidents")
-        self.assertEqual(call_args[1]["maximum_records"], 100)
+        self.assertEqual(call_args[1]["maximum_records"], MAX_RESULTS)
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_all(self, mock_paginate):
         """Fetching all incidents doesn't require a user."""
-        # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
         self.mock_context.user = None
 
-        # Test with account level query
-        query = IncidentQuery(request_scope="all")
-        _ = list_incidents(query)
+        _ = list_incidents(request_scope="all")
 
-        # Verify paginate was called without user context
         mock_paginate.assert_called_once()
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_assigned_scope(self, mock_paginate):
         """Test listing incidents with assigned scope."""
-        # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
         self.mock_context.user = self.sample_user_data
 
-        # Test with assigned scope
-        query = IncidentQuery(request_scope="assigned")
-        _ = list_incidents(query)
+        _ = list_incidents(request_scope="assigned")
 
-        # Verify user_ids parameter was added
         call_args = mock_paginate.call_args
         self.assertIn("user_ids[]", call_args[1]["params"])
         self.assertEqual(call_args[1]["params"]["user_ids[]"], ["PUSER123"])
 
-
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_teams_scope(self, mock_paginate):
         """Test listing incidents with teams scope."""
-        # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
         self.mock_context.user = self.sample_user_data
 
-        # Test with teams scope
-        query = IncidentQuery(request_scope="teams")
-        _ = list_incidents(query)
+        _ = list_incidents(request_scope="teams")
 
-        # Verify team_ids parameter was added
         call_args = mock_paginate.call_args
         self.assertIn("team_ids[]", call_args[1]["params"])
         self.assertEqual(call_args[1]["params"]["team_ids[]"], ["PTEAM123"])
 
     def test_list_incidents_user_required_error(self):
         """If the request_scope requires user context but none is available, an error should be raised."""
-        # Setup mocks
         self.mock_context.user = None
 
-        # Test with user required query
-        query = IncidentQuery(request_scope="assigned")
-
         with self.assertRaises(ValueError) as context:
-            list_incidents(query)
+            list_incidents(request_scope="assigned")
 
         self.assertIn("Cannot filter incidents", str(context.exception))
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_with_filters(self, mock_paginate):
         """Test listing incidents with various filters."""
-        # Setup mocks
         mock_paginate.return_value = [self.sample_incident_data]
 
-        # Test with filters
         since_date = datetime(2023, 1, 1)
-        query = IncidentQuery(status=["triggered", "acknowledged"], since=since_date, urgencies=["high"], limit=50)
-        _ = list_incidents(query)
+        _ = list_incidents(statuses=["triggered", "acknowledged"], since=since_date, urgencies=["high"], limit=50)
 
-        # Verify parameters were passed correctly
         call_args = mock_paginate.call_args
         params = call_args[1]["params"]
         self.assertIn("statuses[]", params)
@@ -294,18 +268,28 @@ class TestIncidentTools(unittest.TestCase):
         self.assertEqual(params["urgencies[]"], ["high"])
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
+    def test_list_incidents_priorities_filter(self, mock_paginate):
+        """Priorities filter must be sent as priority_ids[] (priorities[] is ignored by the API)."""
+        mock_paginate.return_value = [self.sample_incident_data]
+
+        _ = list_incidents(priorities=["PGRZCZB", "PCFOBKO"])
+
+        params = mock_paginate.call_args[1]["params"]
+        self.assertIn("priority_ids[]", params)
+        self.assertEqual(params["priority_ids[]"], ["PGRZCZB", "PCFOBKO"])
+        self.assertNotIn("priorities[]", params)
+
+    @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_with_date_range(self, mock_paginate):
-        """Test listing incidents with date_range parameter."""
+        """Test listing incidents with since/until date range."""
         mock_paginate.return_value = [self.sample_incident_data]
 
         since_date = datetime(2023, 1, 1)
         until_date = datetime(2023, 6, 1)
-        query = IncidentQuery(since=since_date, until=until_date, date_range="all")
-        _ = list_incidents(query)
+        _ = list_incidents(since=since_date, until=until_date)
 
         call_args = mock_paginate.call_args
         params = call_args[1]["params"]
-        self.assertEqual(params["date_range"], "all")
         self.assertEqual(params["since"], since_date.isoformat())
         self.assertEqual(params["until"], until_date.isoformat())
 

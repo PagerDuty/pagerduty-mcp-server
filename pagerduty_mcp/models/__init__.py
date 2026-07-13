@@ -12,7 +12,7 @@ from .alert_grouping_settings import (
 from .alerts import Alert, AlertQuery
 from .base import MAX_RESULTS, ListResponseModel
 from .change_events import ChangeEvent, ChangeEventQuery
-from .escalation_policies import EscalationPolicy, EscalationPolicyQuery
+from .escalation_policies import EscalationPolicy, EscalationPolicyCreate, EscalationPolicyQuery, EscalationPolicyUpdate
 from .event_orchestrations import (
     EventOrchestration,
     EventOrchestrationCatchAll,
@@ -38,7 +38,6 @@ from .incident_workflows import (
     IncidentWorkflowInstance,
     IncidentWorkflowInstanceCreate,
     IncidentWorkflowInstanceRequest,
-    IncidentWorkflowQuery,
     InlineStepInput,
     Step,
 )
@@ -68,6 +67,7 @@ from .oncalls import Oncall, OncallQuery
 from .references import (
     IncidentReference,
     IntegrationReference,
+    PriorityReference,
     ScheduleReference,
     ServiceReference,
     TeamReference,
@@ -77,13 +77,35 @@ from .schedules import (
     Schedule,
     ScheduleCreateData,
     ScheduleCreateRequest,
+    ScheduleDetail,
     ScheduleLayer,
     ScheduleLayerCreate,
     ScheduleLayerRestriction,
     ScheduleLayerUser,
     ScheduleOverrideCreate,
     ScheduleQuery,
+    SchedulesListResponse,
+    ScheduleSummary,
     ScheduleUpdateRequest,
+    SourceStatus,
+)
+from .schedules_v3 import (
+    AssignmentStrategy,
+    CustomShift,
+    CustomShiftCreate,
+    CustomShiftUpdate,
+    OverrideShift,
+    OverrideShiftCreate,
+    OverrideShiftUpdate,
+    Rotation,
+    RotationEvent,
+    RotationEventCreate,
+    RotationEventUpdate,
+    ScheduleV3,
+    ScheduleV3Create,
+    ScheduleV3Update,
+    ShiftMember,
+    ZonedDateTime,
 )
 from .services import Service, ServiceCreate, ServiceQuery
 from .status_pages import (
@@ -112,7 +134,8 @@ from .status_pages import (
     StatusPageStatusReference,
 )
 from .teams import Team, TeamCreateRequest, TeamMemberAdd, TeamQuery
-from .users import User, UserQuery
+from .users import CreateUserRequest, User, UserQuery
+from .webhooks import ExtensionSchema, WebhookCreate, WebhookSubscription, WebhookUpdate
 
 __all__ = [
     "MAX_RESULTS",
@@ -123,9 +146,10 @@ __all__ = [
     "AlertGroupingSetting",
     "AlertGroupingSettingCreate",
     "AlertGroupingSettingCreateRequest",
+    # TODO: Remove remaining *Query models from __all__ once PRs D and E
+    # land the updated test files that no longer import them directly.
     "AlertGroupingSettingQuery",
     "AlertGroupingSettingUpdateRequest",
-    "AlertQuery",
     "Assignment",
     "AssignmentInput",
     "ChangeEvent",
@@ -133,6 +157,8 @@ __all__ = [
     "ContentBasedConfig",
     "ContentBasedIntelligentConfig",
     "EscalationPolicy",
+    "EscalationPolicyCreate",
+    "EscalationPolicyUpdate",
     "EscalationPolicyQuery",
     "EventOrchestration",
     "EventOrchestrationCatchAll",
@@ -149,7 +175,7 @@ __all__ = [
     "EventOrchestrationRuleCreateRequest",
     "EventOrchestrationRuleSet",
     "EventOrchestrationService",
-    "GetIncidentQuery",
+    "ExtensionSchema",
     "Incident",
     "IncidentCreate",
     "IncidentCreateRequest",
@@ -163,7 +189,6 @@ __all__ = [
     "IncidentWorkflowInstance",
     "IncidentWorkflowInstanceCreate",
     "IncidentWorkflowInstanceRequest",
-    "IncidentWorkflowQuery",
     "InlineStepInput",
     "IntegrationReference",
     "IntelligentGroupingConfig",
@@ -183,6 +208,7 @@ __all__ = [
     "Schedule",
     "ScheduleCreateData",
     "ScheduleCreateRequest",
+    "ScheduleDetail",
     "ScheduleLayer",
     "ScheduleLayerCreate",
     "ScheduleLayerRestriction",
@@ -190,11 +216,17 @@ __all__ = [
     "ScheduleOverrideCreate",
     "ScheduleQuery",
     "ScheduleReference",
+    "ScheduleSummary",
     "ScheduleUpdateRequest",
+    "ScheduleV3",
+    "ScheduleV3Create",
+    "ScheduleV3Update",
+    "SchedulesListResponse",
     "Service",
     "ServiceCreate",
     "ServiceQuery",
     "ServiceReference",
+    "SourceStatus",
     "StatusPage",
     "StatusPageImpact",
     "StatusPageImpactQuery",
@@ -228,4 +260,8 @@ __all__ = [
     "User",
     "UserQuery",
     "UserReference",
+    "CreateUserRequest",
+    "WebhookCreate",
+    "WebhookSubscription",
+    "WebhookUpdate",
 ]

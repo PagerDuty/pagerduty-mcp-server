@@ -198,9 +198,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incidents",
-                parameters={
-                    "query_model": {"status": ["triggered", "acknowledged", "resolved"]}
-                },
+                parameters={"statuses": ["triggered", "acknowledged", "resolved"]},
             )
         ],
         description="List incidents filtered by status",
@@ -210,7 +208,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incidents",
-                parameters={"query_model": {"status": ["triggered", "acknowledged"]}},
+                parameters={"statuses": ["triggered", "acknowledged"]},
             )
         ],
         description="List incidents filtered by status",
@@ -225,7 +223,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_incidents",
-                parameters={"query_model": {"status": ["triggered"]}},
+                parameters={"statuses": ["triggered"]},
             )
         ],
         description="List incidents filtered by status",
@@ -265,10 +263,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="get_incident",
-                parameters={
-                    "incident_id": "789",
-                    "query_model": {"include": ["escalation_policies", "log_entries"]},
-                },
+                parameters={"incident_id": "789"},
             )
         ],
         description="Get incident with escalation policies and log entries",
@@ -292,11 +287,10 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(
                 name="create_incident",
                 parameters={
-                    "create_model": {
-                        "incident": {
-                            "title": "Testing MCP",
-                            "service": {"id": "1234"},
-                        }
+                    "incident": {
+                        "title": "Testing MCP",
+                        "service": {"id": "1234"},
+                        "urgency": "high",
                     }
                 },
             )
@@ -309,9 +303,7 @@ INCIDENT_COMPETENCY_TESTS = [
             MockToolCall(
                 name="create_incident",
                 parameters={
-                    "create_model": {
-                        "incident": {"title": "Server down", "urgency": "high"}
-                    }
+                    "incident": {"title": "Server down", "urgency": "high"}
                 },
             )
         ],
@@ -445,7 +437,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_alerts_from_incident",
-                parameters={"incident_id": "123", "query_model": {}},
+                parameters={"incident_id": "123"},
             )
         ],
         description="List all alerts for a specific incident",
@@ -455,7 +447,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_alerts_from_incident",
-                parameters={"incident_id": "PINCIDENT123", "query_model": {}},
+                parameters={"incident_id": "PINCIDENT123"},
             )
         ],
         description="List alerts for incident using natural language query",
@@ -465,7 +457,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_alerts_from_incident",
-                parameters={"incident_id": "ABC123", "query_model": {"limit": 10}},
+                parameters={"incident_id": "ABC123", "limit": 10},
             )
         ],
         description="List alerts with limit parameter",
@@ -495,7 +487,7 @@ INCIDENT_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_alerts_from_incident",
-                parameters={"incident_id": "PINCIDENT123", "query_model": {}},
+                parameters={"incident_id": "PINCIDENT123"},
             )
         ],
         description=(

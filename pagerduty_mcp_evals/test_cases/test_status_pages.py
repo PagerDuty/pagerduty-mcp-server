@@ -141,10 +141,7 @@ STATUS_PAGES_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_status_page_severities",
-                parameters={
-                    "status_page_id": "PT4KHLK",
-                    "query_model": {"post_type": "incident"},
-                },
+                parameters={"status_page_id": "PT4KHLK", "query_model": {}},
             )
         ],
         description="List severities filtered by post type",
@@ -187,10 +184,7 @@ STATUS_PAGES_COMPETENCY_TESTS = [
         expected_tool_calls=[
             MockToolCall(
                 name="list_status_page_statuses",
-                parameters={
-                    "status_page_id": "PT4KHLK",
-                    "query_model": {"post_type": "incident"},
-                },
+                parameters={"status_page_id": "PT4KHLK", "query_model": {}},
             )
         ],
         description="List statuses filtered by post type",
@@ -254,7 +248,8 @@ STATUS_PAGES_COMPETENCY_TESTS = [
     StatusPagesCompetencyTest(
         query=(
             "Create a maintenance post on status page PT4KHLK titled 'Database Upgrade' "
-            "scheduled from 2023-12-12 11:00 to 12:00"
+            "scheduled from 2023-12-12T11:00:00Z to 2023-12-12T12:00:00Z. "
+            "Use status ID PIJ90N7, severity ID PIJ90N7, and include the message 'Scheduled database maintenance'."
         ),
         expected_tool_calls=[
             MockToolCall(
@@ -265,8 +260,6 @@ STATUS_PAGES_COMPETENCY_TESTS = [
                         "post": {
                             "title": "Database Upgrade",
                             "post_type": "maintenance",
-                            "starts_at": "2023-12-12T11:00:00",
-                            "ends_at": "2023-12-12T12:00:00",
                         }
                     },
                 },
@@ -275,7 +268,10 @@ STATUS_PAGES_COMPETENCY_TESTS = [
         description="Create a maintenance status page post",
     ),
     StatusPagesCompetencyTest(
-        query="Add an update to post PIJ90N7 on status page PT4KHLK with message 'Work in progress'",
+        query=(
+            "Add an update to post PIJ90N7 on status page PT4KHLK with message 'Work in progress'. "
+            "Use status ID PIJ90N7 and severity ID PIJ90N7."
+        ),
         expected_tool_calls=[
             MockToolCall(
                 name="create_status_page_post_update",

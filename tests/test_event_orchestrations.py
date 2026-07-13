@@ -197,9 +197,8 @@ class TestEventOrchestrationTools(unittest.TestCase):
         # Mock the paginate response
         mock_paginate.return_value = self.sample_orchestrations_list_response
 
-        # Create query and call function
-        query = EventOrchestrationQuery(limit=25, sort_by="name:asc")
-        result = list_event_orchestrations(query)
+        # Call function with flat params
+        result = list_event_orchestrations(limit=25, sort_by="name:asc")
 
         # Assert paginate was called correctly
         mock_paginate.assert_called_once()
@@ -220,8 +219,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         """Test list_event_orchestrations with empty response."""
         mock_paginate.return_value = []
 
-        query = EventOrchestrationQuery()
-        result = list_event_orchestrations(query)
+        result = list_event_orchestrations()
 
         self.assertEqual(len(result.response), 0)
         mock_paginate.assert_called_once()

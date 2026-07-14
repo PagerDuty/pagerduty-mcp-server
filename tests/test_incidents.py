@@ -280,6 +280,17 @@ class TestIncidentTools(unittest.TestCase):
         self.assertNotIn("priorities[]", params)
 
     @patch("pagerduty_mcp.tools.incidents.paginate")
+    def test_list_incidents_service_ids_filter(self, mock_paginate):
+        """Service filter must be sent as service_ids[]."""
+        mock_paginate.return_value = [self.sample_incident_data]
+
+        _ = list_incidents(service_ids=["PSERVICE1", "PSERVICE2"])
+
+        params = mock_paginate.call_args[1]["params"]
+        self.assertIn("service_ids[]", params)
+        self.assertEqual(params["service_ids[]"], ["PSERVICE1", "PSERVICE2"])
+
+    @patch("pagerduty_mcp.tools.incidents.paginate")
     def test_list_incidents_with_date_range(self, mock_paginate):
         """Test listing incidents with since/until date range."""
         mock_paginate.return_value = [self.sample_incident_data]

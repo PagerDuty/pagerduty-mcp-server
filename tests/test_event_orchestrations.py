@@ -1223,5 +1223,694 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(global_orch.orchestration_path.parent.id, "GLOBAL123")
 
 
+    # -------------------------------------------------------------------------
+    # Task 1: Global orchestration update
+    # -------------------------------------------------------------------------
+
+    def test_event_orchestration_global_update_request_model(self):
+        """from_path strips all readonly fields from EventOrchestrationGlobalPath."""
+        import json
+
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationGlobalPath,
+            EventOrchestrationGlobalUpdateRequest,
+        )
+
+        path_data = {
+            "type": "global",
+            "parent": {
+                "id": "GLOBAL123",
+                "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123",
+                "type": "event_orchestration_reference",
+            },
+            "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123/global",
+            "sets": [
+                {
+                    "id": "start",
+                    "rules": [
+                        {
+                            "id": "rule1",
+                            "label": "Drop noisy",
+                            "conditions": [{"expression": "event.source matches 'noisy'"}],
+                            "actions": {"drop_event": True},
+                        }
+                    ],
+                }
+            ],
+            "catch_all": {"actions": {"suppress": True}},
+            "created_at": "2021-11-18T16:42:01Z",
+            "created_by": self.sample_user,
+            "updated_at": "2021-11-18T16:42:01Z",
+            "updated_by": self.sample_user,
+            "version": "v1",
+        }
+
+        path = EventOrchestrationGlobalPath.model_validate(path_data)
+        update_request = EventOrchestrationGlobalUpdateRequest.from_path(path)
+        serialized = update_request.model_dump()
+
+        path_dict = serialized["orchestration_path"]
+        self.assertNotIn("created_at", path_dict)
+        self.assertNotIn("updated_at", path_dict)
+        self.assertNotIn("version", path_dict)
+        self.assertNotIn("parent", path_dict)
+        self.assertNotIn("self", path_dict)
+        self.assertIn("sets", path_dict)
+        self.assertIn("catch_all", path_dict)
+        self.assertEqual(path_dict["type"], "global")
+        json.dumps(serialized)  # must not raise
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_global_success(self, mock_get_client):
+        """update_event_orchestration_global calls rput with correct path and payload."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationGlobalPath,
+            EventOrchestrationGlobalUpdateRequest,
+        )
+        from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_global
+
+        global_response = {
+            "orchestration_path": {
+                "type": "global",
+                "parent": {
+                    "id": "b02e973d-9620-4e0a-9edc-00fedf7d4694",
+                    "self": "https://api.pagerduty.com/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [{"id": "start", "rules": []}],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        mock_client = MagicMock()
+        mock_client.rput.return_value = global_response
+        mock_get_client.return_value = mock_client
+
+        path = EventOrchestrationGlobalPath.model_validate(global_response["orchestration_path"])
+        update_request = EventOrchestrationGlobalUpdateRequest.from_path(path)
+
+        result = update_event_orchestration_global("b02e973d-9620-4e0a-9edc-00fedf7d4694", update_request)
+
+        mock_client.rput.assert_called_once_with(
+            "/event_orchestrations/b02e973d-9620-4e0a-9edc-00fedf7d4694/global",
+            json=update_request.model_dump(exclude_none=True),
+        )
+        self.assertIsInstance(result, EventOrchestrationGlobal)
+        self.assertEqual(result.orchestration_path.type, "global")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_global_direct_response(self, mock_get_client):
+        """update_event_orchestration_global handles unwrapped API response."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationGlobalPath,
+            EventOrchestrationGlobalUpdateRequest,
+        )
+        from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_global
+
+        direct_response = {
+            "type": "global",
+            "parent": {
+                "id": "GLOBAL123",
+                "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123",
+                "type": "event_orchestration_reference",
+            },
+            "sets": [{"id": "start", "rules": []}],
+            "catch_all": {"actions": {"suppress": False}},
+        }
+
+        mock_client = MagicMock()
+        mock_client.rput.return_value = direct_response
+        mock_get_client.return_value = mock_client
+
+        path = EventOrchestrationGlobalPath.model_validate(direct_response)
+        update_request = EventOrchestrationGlobalUpdateRequest.from_path(path)
+
+        result = update_event_orchestration_global("GLOBAL123", update_request)
+
+        self.assertIsInstance(result, EventOrchestrationGlobal)
+        self.assertEqual(result.orchestration_path.type, "global")
+
+    def test_update_event_orchestration_global_payload_structure(self):
+        """Two rule sets and rules are preserved through from_path."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationGlobalPath,
+            EventOrchestrationGlobalUpdateRequest,
+        )
+
+        path = EventOrchestrationGlobalPath.model_validate(
+            {
+                "type": "global",
+                "parent": {
+                    "id": "GLOBAL123",
+                    "self": "https://api.pagerduty.com/event_orchestrations/GLOBAL123",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "id": "r1",
+                                "label": "Drop noisy",
+                                "conditions": [{"expression": "event.source matches 'noisy'"}],
+                                "actions": {"drop_event": True},
+                            },
+                            {
+                                "id": "r2",
+                                "label": "Suppress info",
+                                "conditions": [{"expression": "event.severity matches 'info'"}],
+                                "actions": {"suppress": True},
+                            },
+                        ],
+                    }
+                ],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        )
+        update_request = EventOrchestrationGlobalUpdateRequest.from_path(path)
+
+        serialized = update_request.model_dump()
+        rules = serialized["orchestration_path"]["sets"][0]["rules"]
+        self.assertEqual(len(rules), 2)
+        self.assertEqual(rules[0]["label"], "Drop noisy")
+        self.assertEqual(rules[1]["label"], "Suppress info")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_global_missing_id(self, mock_get_client):
+        """API exception propagates from update_event_orchestration_global."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationGlobalPath,
+            EventOrchestrationGlobalUpdateRequest,
+        )
+        from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_global
+
+        mock_client = MagicMock()
+        mock_client.rput.side_effect = RuntimeError("404 Not Found")
+        mock_get_client.return_value = mock_client
+
+        path = EventOrchestrationGlobalPath.model_validate(
+            {
+                "type": "global",
+                "parent": {
+                    "id": "MISSING",
+                    "self": "https://api.pagerduty.com/event_orchestrations/MISSING",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [{"id": "start", "rules": []}],
+                "catch_all": {"actions": {}},
+            }
+        )
+        update_request = EventOrchestrationGlobalUpdateRequest.from_path(path)
+
+        with self.assertRaises(RuntimeError):
+            update_event_orchestration_global("MISSING", update_request)
+
+    # -------------------------------------------------------------------------
+    # Task 2: Unrouted orchestration
+    # -------------------------------------------------------------------------
+
+    def test_event_orchestration_unrouted_model_validation(self):
+        """EventOrchestrationUnrouted validates from a wrapped dict."""
+        from pagerduty_mcp.models.event_orchestrations import EventOrchestrationUnrouted
+
+        data = {
+            "orchestration_path": {
+                "type": "unrouted",
+                "parent": {
+                    "id": "ORCH123",
+                    "self": "https://api.pagerduty.com/event_orchestrations/ORCH123",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "id": "ru1",
+                                "label": "Reduce severity",
+                                "conditions": [],
+                                "actions": {"severity": "info"},
+                            }
+                        ],
+                    }
+                ],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        result = EventOrchestrationUnrouted.model_validate(data)
+        self.assertEqual(result.orchestration_path.type, "unrouted")
+        self.assertEqual(result.orchestration_path.parent.id, "ORCH123")
+        self.assertEqual(len(result.orchestration_path.sets), 1)
+
+    def test_event_orchestration_unrouted_update_request_model(self):
+        """from_path strips readonly fields for unrouted update request."""
+        import json
+
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationUnroutedPath,
+            EventOrchestrationUnroutedUpdateRequest,
+        )
+
+        path_data = {
+            "type": "unrouted",
+            "parent": {
+                "id": "ORCH123",
+                "self": "https://api.pagerduty.com/event_orchestrations/ORCH123",
+                "type": "event_orchestration_reference",
+            },
+            "self": "https://api.pagerduty.com/event_orchestrations/ORCH123/unrouted",
+            "sets": [{"id": "start", "rules": []}],
+            "catch_all": {"actions": {"severity": "info"}},
+            "created_at": "2021-11-18T16:42:01Z",
+            "updated_at": "2021-11-18T16:42:01Z",
+            "version": "v1",
+        }
+
+        path = EventOrchestrationUnroutedPath.model_validate(path_data)
+        update_request = EventOrchestrationUnroutedUpdateRequest.from_path(path)
+        serialized = update_request.model_dump()
+
+        path_dict = serialized["orchestration_path"]
+        self.assertNotIn("created_at", path_dict)
+        self.assertNotIn("updated_at", path_dict)
+        self.assertNotIn("version", path_dict)
+        self.assertNotIn("parent", path_dict)
+        self.assertNotIn("self", path_dict)
+        self.assertIn("sets", path_dict)
+        self.assertIn("catch_all", path_dict)
+        self.assertEqual(path_dict["type"], "unrouted")
+        json.dumps(serialized)  # must not raise
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_unrouted_success(self, mock_get_client):
+        """update_event_orchestration_unrouted calls rput with correct path and payload."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationUnroutedPath,
+            EventOrchestrationUnroutedUpdateRequest,
+        )
+        from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_unrouted
+
+        unrouted_response = {
+            "orchestration_path": {
+                "type": "unrouted",
+                "parent": {
+                    "id": "ORCH123",
+                    "self": "https://api.pagerduty.com/event_orchestrations/ORCH123",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [{"id": "start", "rules": []}],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        mock_client = MagicMock()
+        mock_client.rput.return_value = unrouted_response
+        mock_get_client.return_value = mock_client
+
+        path = EventOrchestrationUnroutedPath.model_validate(unrouted_response["orchestration_path"])
+        update_request = EventOrchestrationUnroutedUpdateRequest.from_path(path)
+
+        from pagerduty_mcp.models.event_orchestrations import EventOrchestrationUnrouted
+
+        result = update_event_orchestration_unrouted("ORCH123", update_request)
+
+        mock_client.rput.assert_called_once_with(
+            "/event_orchestrations/ORCH123/unrouted",
+            json=update_request.model_dump(exclude_none=True),
+        )
+        self.assertIsInstance(result, EventOrchestrationUnrouted)
+        self.assertEqual(result.orchestration_path.type, "unrouted")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_unrouted_direct_response(self, mock_get_client):
+        """update_event_orchestration_unrouted handles unwrapped API response."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationUnrouted,
+            EventOrchestrationUnroutedPath,
+            EventOrchestrationUnroutedUpdateRequest,
+        )
+        from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_unrouted
+
+        direct_response = {
+            "type": "unrouted",
+            "parent": {
+                "id": "ORCH123",
+                "self": "https://api.pagerduty.com/event_orchestrations/ORCH123",
+                "type": "event_orchestration_reference",
+            },
+            "sets": [{"id": "start", "rules": []}],
+            "catch_all": {"actions": {"severity": "info"}},
+        }
+
+        mock_client = MagicMock()
+        mock_client.rput.return_value = direct_response
+        mock_get_client.return_value = mock_client
+
+        path = EventOrchestrationUnroutedPath.model_validate(direct_response)
+        update_request = EventOrchestrationUnroutedUpdateRequest.from_path(path)
+
+        result = update_event_orchestration_unrouted("ORCH123", update_request)
+
+        self.assertIsInstance(result, EventOrchestrationUnrouted)
+        self.assertEqual(result.orchestration_path.type, "unrouted")
+
+    def test_update_event_orchestration_unrouted_payload_structure(self):
+        """Two rules in start set preserved through from_path for unrouted."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationUnroutedPath,
+            EventOrchestrationUnroutedUpdateRequest,
+        )
+
+        path = EventOrchestrationUnroutedPath.model_validate(
+            {
+                "type": "unrouted",
+                "parent": {
+                    "id": "ORCH123",
+                    "self": "https://api.pagerduty.com/event_orchestrations/ORCH123",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "id": "r1",
+                                "label": "Critical",
+                                "conditions": [{"expression": "event.severity matches 'critical'"}],
+                                "actions": {"severity": "critical"},
+                            },
+                            {
+                                "id": "r2",
+                                "label": "Info",
+                                "conditions": [],
+                                "actions": {"severity": "info"},
+                            },
+                        ],
+                    }
+                ],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        )
+        update_request = EventOrchestrationUnroutedUpdateRequest.from_path(path)
+
+        serialized = update_request.model_dump()
+        rules = serialized["orchestration_path"]["sets"][0]["rules"]
+        self.assertEqual(len(rules), 2)
+        self.assertEqual(rules[0]["label"], "Critical")
+        self.assertEqual(rules[1]["label"], "Info")
+
+    def test_event_orchestration_unrouted_from_api_response_wrapped(self):
+        """EventOrchestrationUnrouted.from_api_response handles wrapped response."""
+        from pagerduty_mcp.models.event_orchestrations import EventOrchestrationUnrouted
+
+        wrapped = {
+            "orchestration_path": {
+                "type": "unrouted",
+                "parent": {
+                    "id": "ORCH123",
+                    "self": "https://api.pagerduty.com/event_orchestrations/ORCH123",
+                    "type": "event_orchestration_reference",
+                },
+                "sets": [{"id": "start", "rules": []}],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        result = EventOrchestrationUnrouted.from_api_response(wrapped)
+        self.assertIsInstance(result, EventOrchestrationUnrouted)
+        self.assertEqual(result.orchestration_path.type, "unrouted")
+
+    def test_event_orchestration_unrouted_from_api_response_direct(self):
+        """EventOrchestrationUnrouted.from_api_response handles direct response."""
+        from pagerduty_mcp.models.event_orchestrations import EventOrchestrationUnrouted
+
+        direct = {
+            "type": "unrouted",
+            "parent": {
+                "id": "ORCH123",
+                "self": "https://api.pagerduty.com/event_orchestrations/ORCH123",
+                "type": "event_orchestration_reference",
+            },
+            "sets": [{"id": "start", "rules": []}],
+            "catch_all": {"actions": {"suppress": True}},
+        }
+
+        result = EventOrchestrationUnrouted.from_api_response(direct)
+        self.assertIsInstance(result, EventOrchestrationUnrouted)
+        self.assertEqual(result.orchestration_path.type, "unrouted")
+
+    # -------------------------------------------------------------------------
+    # Task 3: Service orchestration update
+    # -------------------------------------------------------------------------
+
+    def test_event_orchestration_service_update_request_model(self):
+        """from_path strips all readonly fields including migrated_* for service."""
+        import json
+
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationServicePath,
+            EventOrchestrationServiceUpdateRequest,
+        )
+
+        path_data = {
+            "type": "service",
+            "parent": {
+                "id": "PC2D9ML",
+                "self": "https://api.pagerduty.com/service/PC2D9ML",
+                "type": "service_reference",
+            },
+            "self": "https://api.pagerduty.com/event_orchestrations/service/PC2D9ML",
+            "sets": [
+                {
+                    "id": "start",
+                    "rules": [
+                        {
+                            "id": "sr1",
+                            "label": "Suppress noise",
+                            "conditions": [],
+                            "actions": {"suppress": True},
+                        }
+                    ],
+                }
+            ],
+            "catch_all": {"actions": {"suppress": True}},
+            "created_at": "2021-11-18T16:42:01Z",
+            "created_by": self.sample_user,
+            "updated_at": "2021-11-18T16:42:01Z",
+            "updated_by": self.sample_user,
+            "version": "v1",
+            "migrated_at": "2021-11-18T16:42:01Z",
+            "migrated_by": self.sample_user,
+            "migrated_from": {"id": "OLDRULES"},
+            "migrated_status": "completed",
+            "migrated_via": "API",
+        }
+
+        path = EventOrchestrationServicePath.model_validate(path_data)
+        update_request = EventOrchestrationServiceUpdateRequest.from_path(path)
+        serialized = update_request.model_dump()
+
+        path_dict = serialized["orchestration_path"]
+        # Standard readonly fields must be absent
+        self.assertNotIn("created_at", path_dict)
+        self.assertNotIn("updated_at", path_dict)
+        self.assertNotIn("version", path_dict)
+        self.assertNotIn("parent", path_dict)
+        self.assertNotIn("self", path_dict)
+        # Service-specific migrated_* fields must be absent
+        self.assertNotIn("migrated_at", path_dict)
+        self.assertNotIn("migrated_by", path_dict)
+        self.assertNotIn("migrated_from", path_dict)
+        self.assertNotIn("migrated_status", path_dict)
+        self.assertNotIn("migrated_via", path_dict)
+        # Writable fields must be present
+        self.assertIn("sets", path_dict)
+        self.assertIn("catch_all", path_dict)
+        self.assertEqual(path_dict["type"], "service")
+        json.dumps(serialized)  # must not raise
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_service_success(self, mock_get_client):
+        """update_event_orchestration_service calls jput with correct path and payload."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationServicePath,
+            EventOrchestrationServiceUpdateRequest,
+        )
+        from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_service
+
+        service_response = {
+            "orchestration_path": {
+                "type": "service",
+                "parent": {
+                    "id": "PC2D9ML",
+                    "self": "https://api.pagerduty.com/service/PC2D9ML",
+                    "type": "service_reference",
+                },
+                "sets": [{"id": "start", "rules": []}],
+                "catch_all": {"actions": {"suppress": True}},
+            }
+        }
+
+        mock_client = MagicMock()
+        mock_client.jput.return_value = service_response
+        mock_get_client.return_value = mock_client
+
+        path = EventOrchestrationServicePath.model_validate(service_response["orchestration_path"])
+        update_request = EventOrchestrationServiceUpdateRequest.from_path(path)
+
+        result = update_event_orchestration_service("PC2D9ML", update_request)
+
+        mock_client.jput.assert_called_once_with(
+            "/event_orchestrations/services/PC2D9ML",
+            json=update_request.model_dump(exclude_none=True),
+        )
+        self.assertIsInstance(result, EventOrchestrationService)
+        self.assertEqual(result.orchestration_path.type, "service")
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_service_direct_response(self, mock_get_client):
+        """update_event_orchestration_service handles unwrapped API response."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationServicePath,
+            EventOrchestrationServiceUpdateRequest,
+        )
+        from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_service
+
+        direct_response = {
+            "type": "service",
+            "parent": {
+                "id": "PC2D9ML",
+                "self": "https://api.pagerduty.com/service/PC2D9ML",
+                "type": "service_reference",
+            },
+            "sets": [{"id": "start", "rules": []}],
+            "catch_all": {"actions": {"suppress": False}},
+        }
+
+        mock_client = MagicMock()
+        mock_client.jput.return_value = direct_response
+        mock_get_client.return_value = mock_client
+
+        path = EventOrchestrationServicePath.model_validate(direct_response)
+        update_request = EventOrchestrationServiceUpdateRequest.from_path(path)
+
+        result = update_event_orchestration_service("PC2D9ML", update_request)
+
+        self.assertIsInstance(result, EventOrchestrationService)
+        self.assertEqual(result.orchestration_path.type, "service")
+
+    def test_update_event_orchestration_service_payload_structure(self):
+        """Service-specific actions preserved; migrated fields absent in payload."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationServicePath,
+            EventOrchestrationServiceUpdateRequest,
+        )
+
+        path = EventOrchestrationServicePath.model_validate(
+            {
+                "type": "service",
+                "parent": {
+                    "id": "PC2D9ML",
+                    "self": "https://api.pagerduty.com/service/PC2D9ML",
+                    "type": "service_reference",
+                },
+                "sets": [
+                    {
+                        "id": "start",
+                        "rules": [
+                            {
+                                "id": "sr1",
+                                "label": "Set priority",
+                                "conditions": [{"expression": "event.severity matches 'critical'"}],
+                                "actions": {
+                                    "priority": "P0IN2KQ",
+                                    "variables": [
+                                        {"name": "host", "path": "event.component", "type": "regex", "value": "(.*)"}
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "catch_all": {"actions": {"suppress": True}},
+                "migrated_at": "2021-11-18T16:42:01Z",
+                "migrated_status": "completed",
+            }
+        )
+        update_request = EventOrchestrationServiceUpdateRequest.from_path(path)
+        serialized = update_request.model_dump()
+
+        path_dict = serialized["orchestration_path"]
+        self.assertNotIn("migrated_at", path_dict)
+        self.assertNotIn("migrated_status", path_dict)
+
+        rule_actions = path_dict["sets"][0]["rules"][0]["actions"]
+        self.assertEqual(rule_actions["priority"], "P0IN2KQ")
+        self.assertIsNotNone(rule_actions["variables"])
+
+    @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
+    def test_update_event_orchestration_service_missing_id(self, mock_get_client):
+        """API exception propagates from update_event_orchestration_service."""
+        from pagerduty_mcp.models.event_orchestrations import (
+            EventOrchestrationServicePath,
+            EventOrchestrationServiceUpdateRequest,
+        )
+        from pagerduty_mcp.tools.event_orchestrations import update_event_orchestration_service
+
+        mock_client = MagicMock()
+        mock_client.jput.side_effect = RuntimeError("404 Not Found")
+        mock_get_client.return_value = mock_client
+
+        path = EventOrchestrationServicePath.model_validate(
+            {
+                "type": "service",
+                "parent": {
+                    "id": "MISSING",
+                    "self": "https://api.pagerduty.com/service/MISSING",
+                    "type": "service_reference",
+                },
+                "sets": [{"id": "start", "rules": []}],
+                "catch_all": {"actions": {}},
+            }
+        )
+        update_request = EventOrchestrationServiceUpdateRequest.from_path(path)
+
+        with self.assertRaises(RuntimeError):
+            update_event_orchestration_service("MISSING", update_request)
+
+    # -------------------------------------------------------------------------
+    # Task 4: Import check
+    # -------------------------------------------------------------------------
+
+    def test_new_update_tool_functions_importable(self):
+        """All three new update tool functions are importable and callable."""
+        from pagerduty_mcp.tools.event_orchestrations import (
+            update_event_orchestration_global,
+            update_event_orchestration_service,
+            update_event_orchestration_unrouted,
+        )
+
+        self.assertTrue(callable(update_event_orchestration_global))
+        self.assertTrue(callable(update_event_orchestration_unrouted))
+        self.assertTrue(callable(update_event_orchestration_service))
+
+    # -------------------------------------------------------------------------
+    # Task 5: README documentation check
+    # -------------------------------------------------------------------------
+
+    def test_readme_documents_new_tools(self):
+        """README.md mentions all three new update tools."""
+        import os
+
+        readme_path = os.path.join(os.path.dirname(__file__), "..", "README.md")
+        with open(readme_path) as f:
+            content = f.read()
+
+        self.assertIn("update_event_orchestration_global", content)
+        self.assertIn("update_event_orchestration_unrouted", content)
+        self.assertIn("update_event_orchestration_service", content)
+
+
 if __name__ == "__main__":
     unittest.main()

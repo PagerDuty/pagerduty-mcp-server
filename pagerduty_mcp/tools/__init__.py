@@ -41,7 +41,10 @@ from .event_orchestrations import (
     get_event_orchestration_router,
     get_event_orchestration_service,
     list_event_orchestrations,
+    update_event_orchestration_global,
     update_event_orchestration_router,
+    update_event_orchestration_service,
+    update_event_orchestration_unrouted,
 )
 from .incident_workflows import (
     get_incident_workflow,
@@ -262,6 +265,9 @@ write_tools = [
     # Event Orchestrations
     update_event_orchestration_router,
     append_event_orchestration_router_rule,
+    update_event_orchestration_global,
+    update_event_orchestration_unrouted,
+    update_event_orchestration_service,
     # Status Pages
     create_status_page_post,
     create_status_page_post_update,

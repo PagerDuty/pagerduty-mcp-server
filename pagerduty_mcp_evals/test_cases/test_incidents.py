@@ -1,5 +1,6 @@
 """Tests for incident-related competency questions."""
 
+from pagerduty_mcp.tools.alerts import _is_blank_id
 from pagerduty_mcp_evals.test_cases.agent_competency_test import (
     AgentCompetencyTest,
     MockMCPToolInvocationResponse,
@@ -129,6 +130,18 @@ class IncidentCompetencyTest(AgentCompetencyTest):
                             "suppressed": False,
                         }
                     ]
+                },
+            ),
+            # Mirrors the server-side guard: blank or artifact IDs (empty,
+            # whitespace, quoted-empty, null-like literals) are rejected
+            # before any API call instead of returning a mocked alert.
+            MockMCPToolInvocationResponse(
+                tool_name="get_alert_from_incident",
+                parameters=lambda params: _is_blank_id(str(params.get("incident_id") or ""))
+                or _is_blank_id(str(params.get("alert_id") or "")),
+                response={
+                    "error": "alert_id must be a non-empty string. "
+                    "To list all alerts for an incident, use list_alerts_from_incident instead."
                 },
             ),
             MockMCPToolInvocationResponse(
@@ -468,6 +481,46 @@ INCIDENT_COMPETENCY_TESTS = [
             )
         ],
         description="Get specific alert using natural language query",
+    ),
+    IncidentCompetencyTest(
+        query="Show me the alert details for incident PINCIDENT123",
+        expected_tool_calls=[
+            MockToolCall(
+                name="list_alerts_from_incident",
+                parameters={"incident_id": "PINCIDENT123"},
+            )
+        ],
+        description=(
+            "When no alert ID is known, the agent should list the incident's alerts "
+            "instead of calling get_alert_from_incident with an empty or invented alert_id"
+        ),
+    ),
+    IncidentCompetencyTest(
+        query='Get the alert with ID "" from incident PINCIDENT123',
+        expected_tool_calls=[
+            MockToolCall(
+                name="list_alerts_from_incident",
+                parameters={"incident_id": "PINCIDENT123"},
+            )
+        ],
+        description=(
+            "Recover from an explicitly empty alert_id: calling get_alert_from_incident "
+            "with a blank ID returns the guard error, which should steer the agent to "
+            "list_alerts_from_incident"
+        ),
+    ),
+    IncidentCompetencyTest(
+        query="Get alert null from incident PINCIDENT123",
+        expected_tool_calls=[
+            MockToolCall(
+                name="list_alerts_from_incident",
+                parameters={"incident_id": "PINCIDENT123"},
+            )
+        ],
+        description=(
+            "Recover from a null-literal alert_id: the guard rejects 'null' as an artifact, "
+            "and the error should steer the agent to list_alerts_from_incident"
+        ),
     ),
     # Issue #4: manage_incidents uses flat fields (incident_ids + status/urgency/etc)
     IncidentCompetencyTest(

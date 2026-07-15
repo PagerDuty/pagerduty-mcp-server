@@ -25,6 +25,11 @@ def _is_blank_id(value: str) -> bool:
 def get_alert_from_incident(incident_id: str, alert_id: str) -> Alert:
     """Get a specific alert from an incident.
 
+    Both IDs must be known, non-empty PagerDuty IDs (e.g. "PALERT123").
+    If the alert ID is not known, use list_alerts_from_incident to discover
+    the incident's alerts instead of calling this tool with an empty or
+    placeholder alert_id.
+
     Args:
         incident_id: The ID of the incident
         alert_id: The ID of the alert

@@ -120,7 +120,7 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         result = list_incident_workflows(include=["steps", "team"])
 
         self.assertEqual(len(result.response), 1)
-        self.assertIsNotNone(result.response[0].steps)
+        assert result.response[0].steps is not None
         self.assertEqual(len(result.response[0].steps), 1)
         self.assertEqual(result.response[0].steps[0].name, "Send Status Update")
 
@@ -176,7 +176,7 @@ class TestIncidentWorkflowTools(unittest.TestCase):
         self.assertIsInstance(result, IncidentWorkflow)
         self.assertEqual(result.id, "PSFEVL7")
         self.assertEqual(result.name, "Example Incident Workflow")
-        self.assertIsNotNone(result.steps)
+        assert result.steps is not None
         self.assertEqual(len(result.steps), 1)
         mock_client.rget.assert_called_once_with("/incident_workflows/PSFEVL7")
 

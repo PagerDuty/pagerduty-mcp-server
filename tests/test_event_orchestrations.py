@@ -170,7 +170,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
         # Test invalid sort_by
         with self.assertRaises(ValueError):
-            EventOrchestrationQuery(sort_by="invalid_sort")
+            EventOrchestrationQuery(sort_by="invalid_sort")  # pyright: ignore[reportArgumentType]
 
     def test_event_orchestration_query_to_params_empty(self):
         """Test to_params with default values."""
@@ -245,6 +245,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(result.description, "Send shopping cart alerts to the right services")
         self.assertEqual(result.routes, 0)
         self.assertEqual(result.team.id, "PQYP5MN")
+        assert result.integrations is not None
         self.assertEqual(len(result.integrations), 1)
 
     @patch("pagerduty_mcp.tools.event_orchestrations.get_client")
@@ -311,6 +312,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
         self.assertEqual(orchestration.team.type, "team_reference")
 
         # Test integration
+        assert orchestration.integrations is not None
         self.assertEqual(len(orchestration.integrations), 1)
         integration = orchestration.integrations[0]
         self.assertEqual(integration.id, "9c5ff030-12da-4204-a067-25ee61a8df6c")
@@ -326,7 +328,7 @@ class TestEventOrchestrationTools(unittest.TestCase):
 
     def test_event_orchestration_router_model_validation(self):
         """Test EventOrchestrationRouter model validation."""
-        router = EventOrchestrationRouter(**self.sample_router_response)
+        router = EventOrchestrationRouter(**self.sample_router_response)  # pyright: ignore[reportArgumentType]
 
         # Test orchestration path
         orchestration_path = router.orchestration_path

@@ -15,13 +15,23 @@ pagerduty-mcp = "pagerduty_mcp.__main__:main"
 pagerduty-mcp-evals = "pagerduty_mcp_evals.__main__:main"
 
 [tool.pyright]
-include = ["app"]
-exclude = []
+include = ["pagerduty_mcp", "pagerduty_mcp_evals", "tests", "scripts"]
+exclude = ["tests/evals"]
 defineConstant = { DEBUG = true }
 reportMissingImports = "error"
 reportMissingTypeStubs = false
 pythonVersion = "3.12"
-executionEnvironments = []
+
+# Test code is type-checked less strictly than the library: negative tests
+# intentionally pass invalid arguments, and assertions freely access Optional
+# model fields or union-config subtypes that the runtime mocks always populate.
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+extraPaths = ["."]
+reportOptionalMemberAccess = false
+reportOptionalSubscript = false
+reportAttributeAccessIssue = false
+reportCallIssue = false
 
 [tool.ruff]
 # extends default list https://docs.astral.sh/ruff/settings/#exclude

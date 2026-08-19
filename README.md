@@ -78,6 +78,34 @@ Step-by-step PagerDuty account setup:
 
 ## Using with MCP Clients
 
+### Codex Integration
+
+You can configure this MCP server directly in Codex's `config.toml` file.
+
+1. Locate or create your Codex configuration file at `~/.codex/config.toml`.
+2. Add the following configuration:
+
+    ```bash
+    [mcp_servers.pagerduty-mcp]
+    command = "uvx"
+    args = ["pagerduty-mcp", "--enable-write-tools"]
+
+    [mcp_servers.pagerduty-mcp.env]
+    PAGERDUTY_USER_API_KEY = "your-pagerduty-api-key-here"
+    ```
+
+3. Replace `your-pagerduty-api-key-here` with your PagerDuty User API Token, then restart Codex.
+
+> **Security Note:** This configuration stores the API token in plain text. Ensure `~/.codex/config.toml` is readable only by your user account.
+
+Alternatively, register the server from the command line:
+
+```bash
+codex mcp add pagerduty-mcp \
+  --env PAGERDUTY_USER_API_KEY="your-pagerduty-api-key-here" \
+  -- uvx pagerduty-mcp --enable-write-tools
+```
+
 ### Cursor Integration
 
 You can configure this MCP server directly within Cursor's `settings.json` file, by following these steps:

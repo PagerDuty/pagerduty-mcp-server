@@ -261,7 +261,7 @@ class IncidentCreateRequest(BaseModel):
 
 class IncidentManageRequest(BaseModel):
     incident_ids: list[str] = Field(description="The ID of the incidents to manage")
-    assignement: UserReference | None = Field(
+    assignment: UserReference | None = Field(
         default=None,
         description="The user to assign the incident to",
     )

@@ -1,4 +1,13 @@
-# Website
+# Website (retired)
+
+> [!IMPORTANT]
+> The published documentation site at `https://pagerduty.github.io/pagerduty-mcp-server/` has been
+> retired. The documentation now lives in [`../docs/`](../docs/) and is read directly on GitHub —
+> start from the [Contents table in the README](../README.md#contents).
+>
+> This Docusaurus scaffolding is kept for reference only. Its `docs/` directory was moved to the
+> repository root, so the site no longer builds as-is, and the GitHub Pages deploy workflow has been
+> removed. Edit the Markdown under `../docs/` instead.
 
 This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 

@@ -1,5 +1,9 @@
 # Release Instructions
 
+> [!IMPORTANT]
+> Retired. The documentation site is no longer published — docs now live in [`../docs/`](../docs/) and
+> are read on GitHub. These instructions are kept for historical reference only.
+
 How to publish the PagerDuty MCP Server documentation site to GitHub Pages.
 
 ## Prerequisites

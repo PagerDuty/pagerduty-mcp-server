@@ -196,7 +196,3 @@ test_results_*.json
 test_run_output.log
 .mcp.json
 
-# Docusaurus website
-website/node_modules/
-website/build/
-website/.docusaurus/

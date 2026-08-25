@@ -8,6 +8,8 @@ The PagerDuty MCP Server authenticates using a **PagerDuty User API Token**.
 2. Click your avatar in the top-right → **My Profile**
 3. Select the **User Settings** tab
 4. Scroll to **API Access** → **Create New API User Token**
+   > On **Freemium** accounts, permission to generate User API tokens is limited by user role —
+   > see [user roles](https://support.pagerduty.com/main/docs/user-roles).
 5. Give the token a name (e.g., `mcp-server`) and click **Create Token**
 6. Copy the token immediately — it will not be shown again
 
@@ -39,3 +41,7 @@ export PAGERDUTY_API_HOST="https://api.eu.pagerduty.com"
 - Use environment variable injection (e.g., `$ENV_VAR` references in VS Code settings)
 - Rotate tokens periodically via PagerDuty's API Access settings
 - Use the minimum required permissions for read-only workflows
+
+> [!NOTE]
+> Use of the PagerDuty User API Token is subject to the
+> [PagerDuty Developer Agreement](https://developer.pagerduty.com/docs/pagerduty-developer-agreement).

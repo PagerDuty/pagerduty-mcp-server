@@ -22,24 +22,29 @@ With the PagerDuty MCP Server, you can manage your PagerDuty account directly fr
 
 ## Tool Summary
 
-The server exposes **55 tools** across **14 domains**:
+The server exposes **103 tools** across **19 domains**:
 
 | Domain | Tools | Write Operations |
 |--------|-------|-----------------|
 | Alert Grouping | 5 | create, update, delete |
 | Alerts | 2 | — |
+| Analytics | 5 | — |
+| Business Services | 2 | — |
 | Change Events | 4 | — |
 | Incidents | 10 | create, manage, add responders, add notes |
 | Incident Workflows | 3 | start |
-| Services | 4 | create, update |
+| Services | 5 | create, update |
 | Teams | 8 | create, update, delete, add/remove members |
-| Users | 2 | — |
+| Users | 3 | create |
 | Schedules | 6 | create, update, overrides |
+| Schedules (v3 sub-resources) | 20 | create, update, delete rotations, events, shifts, overrides |
 | On-Call | 1 | — |
+| Priorities | 1 | — |
 | Log Entries | 2 | — |
-| Escalation Policies | 2 | — |
+| Escalation Policies | 4 | create, update |
 | Event Orchestrations | 7 | update router, append rules |
 | Status Pages | 8 | create posts and updates |
+| Webhooks & Extension Schemas | 7 | create, update, delete subscriptions |
 
 Read-only tools are always available. Write tools require the `--enable-write-tools` flag.
 

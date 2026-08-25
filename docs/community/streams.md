@@ -2,16 +2,7 @@
 
 The PagerDuty **Field Developer Engineering (FDE) Team** hosts a regular series of live streams on YouTube and Twitch dedicated to the PagerDuty MCP Server — covering new features, integrations, real-world demos, and a behind-the-scenes look at what's coming next.
 
-<div style={{textAlign: 'center', margin: '2rem 0'}}>
-  <a
-    href="https://www.youtube.com/@Pagerduty/streams"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="button button--primary button--lg"
-  >
-    Watch on YouTube
-  </a>
-</div>
+**[Watch on YouTube](https://www.youtube.com/@Pagerduty/streams)**
 
 ## What to expect
 

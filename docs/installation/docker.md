@@ -2,6 +2,16 @@
 
 The PagerDuty MCP Server is available as a Docker image, providing isolation and portability.
 
+## Build Locally
+
+The published image is used in the examples below. To build from a clone of the repository instead:
+
+```bash
+docker build -t pagerduty-mcp:latest .
+```
+
+Substitute `pagerduty-mcp:latest` for `ghcr.io/pagerduty/pagerduty-mcp:latest` in any command below.
+
 ## Run with Docker
 
 ```bash

@@ -41,7 +41,7 @@ Using environment variables instead of flags:
 MCP_HOST=0.0.0.0 MCP_PORT=8000 pagerduty-mcp --transport streamable-http
 ```
 
-With Docker:
+With Docker (using a [locally built image](../installation/docker.md#build-locally)):
 
 ```bash
 docker run -d -p 8000:8000 \

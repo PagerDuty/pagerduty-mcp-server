@@ -1,6 +1,6 @@
 # Tool Filtering
 
-The PagerDuty MCP Server exposes **55 tools** across 14 domains. While comprehensive, this large number of tools can degrade AI performance — LLMs perform better with a focused, relevant set of tools.
+The PagerDuty MCP Server exposes **103 tools** across 19 domains. While comprehensive, this large number of tools can degrade AI performance — LLMs perform better with a focused, relevant set of tools.
 
 This guide explains how to filter tools using [`mcp-proxy`](https://github.com/TBXark/mcp-proxy), a lightweight proxy server that sits between your MCP client and the PagerDuty MCP Server.
 

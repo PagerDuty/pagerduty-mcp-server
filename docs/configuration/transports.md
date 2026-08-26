@@ -54,4 +54,4 @@ docker run -d -p 8000:8000 \
 
 > [!NOTE]
 > For PagerDuty's own hosted server — no local install, OAuth support — see
-> [Remote MCP Server Setup](../remote-server/setup.md).
+> [Remote MCP Server Setup](https://support.pagerduty.com/main/docs/pagerduty-mcp-server).

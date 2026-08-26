@@ -12,7 +12,7 @@ This guide explains how to filter tools using [`mcp-proxy`](https://github.com/T
 > [!WARNING]
 > **Local Server Only**
 >
-> Tool filtering via `mcp-proxy` is **not available for the [Remote MCP Server](../remote-server/setup.md)**. The proxy works by wrapping a local subprocess — it cannot intercept a remotely-hosted connection.
+> Tool filtering via `mcp-proxy` is **not available for the [Remote MCP Server](https://support.pagerduty.com/main/docs/pagerduty-mcp-server)**. The proxy works by wrapping a local subprocess — it cannot intercept a remotely-hosted connection.
 
 ## How It Works
 

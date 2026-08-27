@@ -19,7 +19,7 @@ your PagerDuty account. Then point your MCP client at the server —
 [Claude Desktop](docs/installation/claude-desktop.md), or [Docker](docs/installation/docker.md).
 
 Prefer no local install? PagerDuty hosts a
-[Remote MCP Server](docs/remote-server/setup.md) with OAuth support.
+[Remote MCP Server](https://support.pagerduty.com/main/docs/pagerduty-mcp-server) with OAuth support.
 
 ## Contents
 
@@ -41,7 +41,8 @@ The full documentation lives in [`docs/`](docs/) and is readable directly on Git
 
 **Remote Server**
 
-- [Remote MCP Server Setup](docs/remote-server/setup.md)
+- [Remote MCP Server Setup](https://support.pagerduty.com/main/docs/pagerduty-mcp-server) — PagerDuty-hosted,
+  no local install. Maintained on the PagerDuty Knowledge Base.
 
 **Configuration**
 

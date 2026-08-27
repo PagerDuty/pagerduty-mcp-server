@@ -37,7 +37,7 @@ The remote PagerDuty MCP Server is OAuth-based. You only need:
 - A PagerDuty account
 - An MCP-compatible client (Cursor, VS Code, Claude Desktop, etc.)
 
-See [Remote Server Setup](../remote-server/setup.md) for details.
+See [Remote MCP Server Setup](https://support.pagerduty.com/main/docs/pagerduty-mcp-server) for details.
 
 ## Supported MCP Clients
 

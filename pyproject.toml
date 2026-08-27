@@ -10,6 +10,11 @@ dependencies = [
     "typer~=0.16.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/PagerDuty/pagerduty-mcp-server"
+Documentation = "https://github.com/PagerDuty/pagerduty-mcp-server/tree/main/docs"
+Issues = "https://github.com/PagerDuty/pagerduty-mcp-server/issues"
+
 [project.scripts]
 pagerduty-mcp = "pagerduty_mcp.__main__:main"
 pagerduty-mcp-evals = "pagerduty_mcp_evals.__main__:main"

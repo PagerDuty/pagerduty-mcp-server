@@ -2,6 +2,11 @@
 
 <!-- mcp-name: io.github.PagerDuty/pagerduty-mcp -->
 
+> [!IMPORTANT]
+> **This repository is deprecated and now read-only.** Development has moved to PagerDuty's
+> hosted [Remote MCP Server](https://support.pagerduty.com/main/docs/pagerduty-mcp-server) —
+> see the docs there for setup instructions.
+
 PagerDuty's local MCP (Model Context Protocol) server which provides tools to interact with your PagerDuty account, allowing you to manage incidents, services, schedules, event orchestrations, and more directly from your MCP-enabled client.
 
 ## Quick start

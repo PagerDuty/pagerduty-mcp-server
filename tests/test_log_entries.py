@@ -192,7 +192,7 @@ class TestLogEntryTools(unittest.TestCase):
         mock_paginate.return_value = [self.sample_log_entry_data]
 
         # Create query with empty strings (simulating MCP interface behavior)
-        query_model = LogEntryQuery(since="", until="")
+        query_model = LogEntryQuery(since="", until="")  # pyright: ignore[reportArgumentType]
 
         # Act
         result = list_log_entries(query_model)
@@ -304,7 +304,7 @@ class TestLogEntryTools(unittest.TestCase):
     def test_log_entry_query_empty_string_validator(self):
         """Test that LogEntryQuery properly handles empty strings."""
         # Empty strings should be converted to None
-        query = LogEntryQuery(since="", until="")
+        query = LogEntryQuery(since="", until="")  # pyright: ignore[reportArgumentType]
 
         self.assertIsNone(query.since)
         self.assertIsNone(query.until)

@@ -296,6 +296,7 @@ class TestChangeEventTools(unittest.TestCase):
         self.assertEqual(result.services[0].id, "P43PBXB")
         self.assertIsInstance(result.integration, IntegrationReference)
         self.assertEqual(result.integration.id, "P0Z3BFB")
+        assert result.links is not None
         self.assertEqual(len(result.links), 1)
         self.assertEqual(result.custom_details["description"], "This is a test change event sent via the Events API v2")
         self.assertEqual(result.type, "change_event")

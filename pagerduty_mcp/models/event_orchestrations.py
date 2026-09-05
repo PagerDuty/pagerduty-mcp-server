@@ -199,14 +199,14 @@ class EventOrchestrationRouter(BaseModel):
     )
 
     @classmethod
-    def from_api_response(cls, response_data: dict[str, Any]) -> "EventOrchestrationRouter":
+    def from_api_response(cls, response_data: dict[str, Any] | list | None) -> "EventOrchestrationRouter":
         """Create EventOrchestrationRouter from PagerDuty API response.
 
         Handles both wrapped and direct response formats:
         - Wrapped: {"orchestration_path": {...}}
         - Direct: {...} (router data directly)
         """
-        if "orchestration_path" in response_data:
+        if isinstance(response_data, dict) and "orchestration_path" in response_data:
             # Response is already wrapped
             return cls.model_validate(response_data)
 
@@ -560,7 +560,7 @@ class EventOrchestrationService(BaseModel):
     )
 
     @classmethod
-    def from_api_response(cls, response_data: dict[str, Any]) -> "EventOrchestrationService":
+    def from_api_response(cls, response_data: dict[str, Any] | list) -> "EventOrchestrationService":
         """Create EventOrchestrationService from PagerDuty API response.
 
         Handles both wrapped and direct response formats:
@@ -581,7 +581,7 @@ class EventOrchestrationGlobal(BaseModel):
     )
 
     @classmethod
-    def from_api_response(cls, response_data: dict[str, Any]) -> "EventOrchestrationGlobal":
+    def from_api_response(cls, response_data: dict[str, Any] | list) -> "EventOrchestrationGlobal":
         """Create EventOrchestrationGlobal from PagerDuty API response.
 
         Handles both wrapped and direct response formats:

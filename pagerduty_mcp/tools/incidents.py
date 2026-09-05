@@ -31,6 +31,7 @@ def list_incidents(
     until: datetime | None = None,
     urgencies: list[str] | None = None,
     priorities: list[str] | None = None,
+    service_ids: list[str] | None = None,
     limit: int | None = None,
 ) -> ListResponseModel[Incident]:
     """List incidents with optional filtering.
@@ -42,6 +43,7 @@ def list_incidents(
         until: Filter incidents created before this datetime
         urgencies: Filter by urgency (high, low)
         priorities: Filter by priority IDs (use list_priorities to resolve names to IDs)
+        service_ids: Filter to incidents on these service IDs
         limit: Max results to return (default 1000)
 
     Returns:
@@ -60,6 +62,8 @@ def list_incidents(
         # The List Incidents endpoint filters on priority via priority_ids[]; priorities[] is
         # silently ignored by the API, so the filter must use priority_ids[] to take effect.
         params["priority_ids[]"] = priorities
+    if service_ids:
+        params["service_ids[]"] = service_ids
 
     if request_scope in ["assigned", "teams"]:
         user_data = ContextResolver.get_user()

@@ -1,10 +1,15 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from pagerduty_mcp.models.base import MAX_RESULTS
 from pagerduty_mcp.models.references import ServiceReference
+from pagerduty_mcp.sanitization import (
+    PROMPT_INJECTION_NOTICE,
+    sanitize_untrusted_data,
+    sanitize_untrusted_text,
+)
 
 
 class IncidentReference(BaseModel):
@@ -40,6 +45,18 @@ class AlertBody(BaseModel):
     contexts: list[dict[str, Any]] | None = None
     details: dict[str, Any] | None = None
 
+    @model_validator(mode="after")
+    def _sanitize_untrusted_content(self) -> "AlertBody":
+        """Strip covert-channel characters from attacker-controllable body content."""
+        if self.contexts is not None:
+            self.contexts = sanitize_untrusted_data(self.contexts)
+        if self.details is not None:
+            self.details = sanitize_untrusted_data(self.details)
+        if self.model_extra:
+            for key, value in self.model_extra.items():
+                self.model_extra[key] = sanitize_untrusted_data(value)
+        return self
+
 
 class Alert(BaseModel):
     """Alert model representing a PagerDuty alert."""
@@ -60,6 +77,18 @@ class Alert(BaseModel):
     severity: str | None = None
     suppressed: bool | None = None
     integration: IntegrationReference | None = None
+
+    @field_validator("summary")
+    @classmethod
+    def _sanitize_summary(cls, value: str) -> str:
+        """Strip covert-channel characters from the attacker-controllable summary."""
+        return sanitize_untrusted_text(value)
+
+    @computed_field
+    @property
+    def security_notice(self) -> str:
+        """Flag alert content as untrusted external input for downstream LLM consumers."""
+        return PROMPT_INJECTION_NOTICE
 
 
 class AlertQuery(BaseModel):

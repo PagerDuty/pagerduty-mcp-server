@@ -555,7 +555,7 @@ INCIDENT_COMPETENCY_TESTS = [
                 parameters={
                     "manage_request": {
                         "incident_ids": ["789"],
-                        "assignement": {"id": "USER456"},
+                        "assignment": {"id": "USER456"},
                     }
                 },
             )

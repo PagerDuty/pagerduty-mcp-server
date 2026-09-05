@@ -186,8 +186,8 @@ def manage_incidents(
         response = _change_incident_status(manage_request.incident_ids, manage_request.status)
     if manage_request.urgency:
         response = _change_incident_urgency(manage_request.incident_ids, manage_request.urgency)
-    if manage_request.assignement:
-        response = _reassign_incident(manage_request.incident_ids, manage_request.assignement)
+    if manage_request.assignment:
+        response = _reassign_incident(manage_request.incident_ids, manage_request.assignment)
     if manage_request.escalation_level:
         response = _escalate_incident(manage_request.incident_ids, manage_request.escalation_level)
 

@@ -642,7 +642,7 @@ class TestIncidentTools(unittest.TestCase):
         assignee = UserReference(id="PUSER123")
         manage_request = IncidentManageRequest(
             incident_ids=["PINC1"],
-            assignement=assignee,  # Note: typo in original code "assignement"
+            assignment=assignee,
         )
         result = manage_incidents(manage_request)
 
